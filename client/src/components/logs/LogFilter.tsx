@@ -11,6 +11,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
@@ -146,7 +147,7 @@ export default function LogFilter({ onFilter, onReset, filters, loading = false 
                       <SelectValue placeholder="All levels" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All levels</SelectItem>
+                      <SelectItem value="all">All levels</SelectItem>
                       <SelectItem value="INFO">Info</SelectItem>
                       <SelectItem value="WARN">Warning</SelectItem>
                       <SelectItem value="ERROR">Error</SelectItem>

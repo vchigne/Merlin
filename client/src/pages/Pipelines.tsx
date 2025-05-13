@@ -103,7 +103,7 @@ export default function Pipelines() {
             <SelectValue placeholder="Filter by agent" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All agents</SelectItem>
+            <SelectItem value="all">All agents</SelectItem>
             {agents.map(agent => (
               <SelectItem key={agent.id} value={agent.id}>
                 {agent.name || agent.id.substring(0, 8)}
