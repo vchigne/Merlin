@@ -52,10 +52,8 @@ export default function AgentHealthGrid() {
         <CardHeader className="border-b border-slate-200 dark:border-slate-700">
           <div className="flex justify-between items-center">
             <CardTitle>Agent Health Status</CardTitle>
-            <Link href="/agents">
-              <a className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+            <Link href="/agents" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
                 View all agents
-              </a>
             </Link>
           </div>
         </CardHeader>
@@ -97,10 +95,8 @@ export default function AgentHealthGrid() {
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
           <CardTitle>Agent Health Status</CardTitle>
-          <Link href="/agents">
-            <a className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
-              View all agents
-            </a>
+          <Link href="/agents" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+            View all agents
           </Link>
         </div>
       </CardHeader>
@@ -111,16 +107,14 @@ export default function AgentHealthGrid() {
             const status = determineAgentStatus(agent.is_healthy, lastPing);
             
             return (
-              <Link key={agent.id} href={`/agents/${agent.id}`}>
-                <a className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors duration-200">
-                  <div className={`w-3 h-3 rounded-full ${getStatusClass(status)} mb-2`}></div>
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300 text-center truncate w-full">
-                    {agent.name || `Agent-${agent.id.substring(0, 8)}`}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {lastPing ? formatRelativeTime(lastPing) : 'Never'}
-                  </div>
-                </a>
+              <Link key={agent.id} href={`/agents/${agent.id}`} className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors duration-200">
+                <div className={`w-3 h-3 rounded-full ${getStatusClass(status)} mb-2`}></div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300 text-center truncate w-full">
+                  {agent.name || `Agent-${agent.id.substring(0, 8)}`}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {lastPing ? formatRelativeTime(lastPing) : 'Never'}
+                </div>
               </Link>
             );
           })}

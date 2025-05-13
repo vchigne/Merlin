@@ -103,41 +103,29 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
         {/* Navigation links */}
         <ScrollArea className="flex-1 py-4 px-3">
           <nav className="space-y-1">
-            <Link href="/">
-              <a className={cn("sidebar-item", location === "/" && "active")}>
+            <Link href="/" className={cn("sidebar-item", location === "/" && "active")}>
                 <LayoutDashboard className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Dashboard</span>}
-              </a>
             </Link>
-            <Link href="/agents">
-              <a className={cn("sidebar-item", location.startsWith("/agents") && "active")}>
+            <Link href="/agents" className={cn("sidebar-item", location.startsWith("/agents") && "active")}>
                 <Bot className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Agents</span>}
-              </a>
             </Link>
-            <Link href="/pipelines">
-              <a className={cn("sidebar-item", location.startsWith("/pipelines") && "active")}>
+            <Link href="/pipelines" className={cn("sidebar-item", location.startsWith("/pipelines") && "active")}>
                 <GitBranch className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Pipelines</span>}
-              </a>
             </Link>
-            <Link href="/jobs">
-              <a className={cn("sidebar-item", location.startsWith("/jobs") && "active")}>
+            <Link href="/jobs" className={cn("sidebar-item", location.startsWith("/jobs") && "active")}>
                 <ListChecks className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Jobs Queue</span>}
-              </a>
             </Link>
-            <Link href="/logs">
-              <a className={cn("sidebar-item", location.startsWith("/logs") && "active")}>
+            <Link href="/logs" className={cn("sidebar-item", location.startsWith("/logs") && "active")}>
                 <FileText className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Logs</span>}
-              </a>
             </Link>
-            <Link href="/explorer">
-              <a className={cn("sidebar-item", location.startsWith("/explorer") && "active")}>
+            <Link href="/explorer" className={cn("sidebar-item", location.startsWith("/explorer") && "active")}>
                 <Search className="w-5 h-5 mr-3" />
                 {!collapsed && <span>GraphQL Explorer</span>}
-              </a>
             </Link>
           </nav>
           
@@ -149,8 +137,7 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
                 </h3>
                 <div className="mt-1 space-y-1">
                   {recentAgents.map((agent: any) => (
-                    <Link key={agent.id} href={`/agents/${agent.id}`}>
-                      <a className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group">
+                    <Link key={agent.id} href={`/agents/${agent.id}`} className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group">
                         <div className={cn(
                           "w-2 h-2 rounded-full mr-3",
                           agent.status === "healthy" && "bg-green-500",
@@ -159,7 +146,6 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
                           agent.status === "offline" && "bg-slate-400"
                         )}></div>
                         <span className="truncate">{agent.name}</span>
-                      </a>
                     </Link>
                   ))}
                 </div>
