@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 // Hasura GraphQL endpoint
 const HASURA_ENDPOINT = 'https://graph.dq.strategio.cloud/v1/graphql';
-const HASURA_ADMIN_SECRET = process.env.HASURA_ADMIN_SECRET || 'D?m.R65w={)8`H;3F>y<r&jadu(PN}L/be%vJ:+SpMKV-"W*ZY';
+const HASURA_ADMIN_SECRET = process.env.HASURA_ADMIN_SECRET;
 
 // Function to execute GraphQL queries
 async function query(queryString: string, variables = {}) {
