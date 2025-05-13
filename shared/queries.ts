@@ -110,9 +110,9 @@ export const PIPELINE_JOBS_QUERY = `
 
 export const PIPELINE_JOB_LOGS_QUERY = `
   query GetPipelineJobLogs($jobId: uuid!) {
-    merlin_agent_PipelineJobLog(where: {pipeline_job_queue_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
+    merlin_agent_PipelineJobLog(where: {pipeline_job_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
       id
-      pipeline_job_queue_id
+      pipeline_job_id
       pipeline_unit_id
       logs
       created_at
@@ -129,9 +129,9 @@ export const PIPELINE_JOB_LOGS_QUERY = `
 
 export const PIPELINE_JOB_LOGS_V2_QUERY = `
   query GetPipelineJobLogsV2($jobId: uuid!) {
-    merlin_agent_PipelineJobLogV2(where: {pipeline_job_queue_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
+    merlin_agent_PipelineJobLogV2(where: {pipeline_job_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
       id
-      pipeline_job_queue_id
+      pipeline_job_id
       pipeline_unit_id
       dqprocess_status_id
       log_order
@@ -146,7 +146,7 @@ export const PIPELINE_JOB_LOGS_V2_BODY_QUERY = `
   query GetPipelineJobLogsV2Body($logId: Int!) {
     merlin_agent_PipelineJobLogV2Body(where: {id: {_eq: $logId}}) {
       id
-      pipeline_job_queue_id
+      pipeline_job_id
       pipeline_unit_id
       pipeline_unit_context_id
       date

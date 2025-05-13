@@ -49,7 +49,7 @@ export function useLogEntries({
     // No podemos filtrar por agente directamente ya que no tenemos la relación
     
     if (jobId) {
-      conditions.push(`pipeline_job_queue_id: {_eq: "${jobId}"}`);
+      conditions.push(`pipeline_job_id: {_eq: "${jobId}"}`);
     }
     
     if (dateFrom) {
@@ -79,7 +79,7 @@ export function useLogEntries({
             offset: $offset
           ) {
             id
-            pipeline_job_queue_id
+            pipeline_job_id
             pipeline_unit_id
             date
             level
@@ -125,7 +125,7 @@ export function useLogEntry(logId: number | string) {
         query GetLogEntry($logId: Int!) {
           merlin_agent_PipelineJobLogV2Body(where: {id: {_eq: $logId}}) {
             id
-            pipeline_job_queue_id
+            pipeline_job_id
             pipeline_unit_id
             date
             level
