@@ -9,38 +9,8 @@ import { executeQuery } from "@/lib/hasura-client";
 import { socket } from "@/lib/socket";
 
 export default function ActivityFeed() {
-  // Información predefinida para asegurar que siempre hay datos que mostrar
-  const defaultActivities = [
-    {
-      id: "default-1",
-      type: "success",
-      message: "Agent-Alpha completed Pipeline: ETL-Daily",
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 min ago
-      timeRelative: "15 minutes ago",
-      relatedEntityType: "agent",
-      relatedEntityId: "agent-1",
-    },
-    {
-      id: "default-2",
-      type: "warning",
-      message: "Warning in Agent-Beta running Pipeline: Data-Import",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
-      timeRelative: "30 minutes ago",
-      relatedEntityType: "agent",
-      relatedEntityId: "agent-2",
-    },
-    {
-      id: "default-3",
-      type: "error",
-      message: "Error in Agent-Gamma running Pipeline: Report-Generator",
-      timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 min ago
-      timeRelative: "45 minutes ago",
-      relatedEntityType: "agent",
-      relatedEntityId: "agent-3",
-    }
-  ];
-  
-  const [activities, setActivities] = useState<any[]>(defaultActivities);
+  // Comenzamos con un array vacío para las actividades
+  const [activities, setActivities] = useState<any[]>([]);
 
   // Fetch recent job logs for activity
   const { data: logData, isLoading } = useQuery({
