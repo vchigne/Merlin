@@ -33,11 +33,88 @@ import LogEntry from "@/components/logs/LogEntry";
 import { Link } from "wouter";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 
+// Hook para obtener detalles de un job específico
+function useJobDetails(jobId: string) {
+  return useQuery({
+    queryKey: ['/api/jobs', jobId],
+    queryFn: async () => {
+      const result = await executeQuery(`
+        query GetJobDetails($jobId: uuid!) {
+          merlin_agent_PipelineJobQueue(where: {id: {_eq: $jobId}}) {
+            id
+            pipeline_id
+            completed
+            created_at
+            updated_at
+            running
+            aborted
+            started_by_agent
+            Pipeline {
+              id
+              name
+              description
+              agent_passport_id
+            }
+          }
+        }
+      `, { jobId });
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      return result.data.merlin_agent_PipelineJobQueue[0];
+    },
+    enabled: !!jobId,
+  });
+}
+
+// Hook para obtener logs de un job específico
+function useJobLogs(jobId: string) {
+  return useQuery({
+    queryKey: ['/api/job-logs', jobId],
+    queryFn: async () => {
+      const result = await executeQuery(`
+        query GetJobLogs($jobId: uuid!) {
+          merlin_agent_PipelineJobLogV2Body(
+            where: {pipeline_job_id: {_eq: $jobId}}
+            order_by: {date: desc}
+          ) {
+            id
+            pipeline_job_id
+            pipeline_unit_id
+            date
+            level
+            message
+            callsite
+            exception
+            exception_message
+            exception_stack_trace
+            created_at
+          }
+        }
+      `, { jobId });
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      return result.data.merlin_agent_PipelineJobLogV2Body;
+    },
+    enabled: !!jobId,
+    refetchInterval: 15000,
+  });
+}
+
 export default function PipelineDetails() {
   const { id } = useParams();
   const [_, navigate] = useLocation();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Determinar si estamos viendo un pipeline o un job
+  const pathname = window.location.pathname;
+  const isJobView = pathname.startsWith('/jobs/');
   
   // Fetch pipeline details
   const {

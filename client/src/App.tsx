@@ -43,6 +43,7 @@ function Router() {
         <Route path="/pipelines" component={Pipelines} />
         <Route path="/pipelines/:id" component={PipelineDetails} />
         <Route path="/jobs" component={Jobs} />
+        <Route path="/jobs/:id" component={PipelineDetails} />
         <Route path="/logs" component={Logs} />
         <Route path="/explorer" component={Explorer} />
         <Route component={NotFound} />
