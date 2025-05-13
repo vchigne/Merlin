@@ -19,7 +19,7 @@ import { Link } from "wouter";
 interface LogEntryProps {
   log: {
     id: number | string;
-    pipeline_job_queue_id?: string;
+    pipeline_job_id?: string;
     pipeline_unit_id?: string;
     date?: string;
     created_at: string;
@@ -149,10 +149,10 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
             )}
             
             {/* No podemos acceder a PipelineJobQueue directamente */}
-            {log.pipeline_job_queue_id && (
+            {log.pipeline_job_id && (
               <span className="flex items-center">
                 <Server className="h-3 w-3 mr-1" />
-                <span className="text-slate-500">{log.pipeline_job_queue_id.substring(0, 8)}</span>
+                <span className="text-slate-500">{log.pipeline_job_id.substring(0, 8)}</span>
               </span>
             )}
           </div>

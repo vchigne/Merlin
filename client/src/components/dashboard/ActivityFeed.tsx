@@ -20,7 +20,7 @@ export default function ActivityFeed() {
         query GetRecentLogs {
           merlin_agent_PipelineJobLogV2Body(limit: 20, order_by: {created_at: desc}) {
             id
-            pipeline_job_queue_id
+            pipeline_job_id
             pipeline_unit_id
             date
             level
@@ -96,7 +96,7 @@ export default function ActivityFeed() {
           timestamp: log.date || log.created_at,
           timeRelative: formatRelativeTime(log.date || log.created_at),
           relatedEntityType: 'log',
-          relatedEntityId: log.pipeline_job_queue_id,
+          relatedEntityId: log.pipeline_job_id,
         };
       });
       
