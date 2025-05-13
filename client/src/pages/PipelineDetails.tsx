@@ -31,7 +31,7 @@ import PipelineFlow from "@/components/pipelines/PipelineFlow";
 import JobItem from "@/components/jobs/JobItem";
 import LogEntry from "@/components/logs/LogEntry";
 import { Link } from "wouter";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatRelativeTime } from "@/lib/utils";
 
 export default function PipelineDetails() {
   const { id } = useParams();

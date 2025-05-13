@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
-import { formatDate, getStatusStyle } from "@/lib/utils";
+import { formatDate, formatRelativeTime, getStatusStyle } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -168,10 +168,10 @@ export default function JobsTable() {
                         </span>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
-                        {formatDate(job.created_at)}
+                        {formatRelativeTime(job.created_at)}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
-                        {formatDate(job.updated_at)}
+                        {formatRelativeTime(job.updated_at)}
                       </TableCell>
                     </TableRow>
                   );
