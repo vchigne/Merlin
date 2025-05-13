@@ -370,101 +370,381 @@ export default function PipelineVisualization() {
                               <p className="text-sm font-medium mb-1">ID de la cola de consultas:</p>
                               <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.id}</p>
                             </div>
-                            {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 && (
+                            
+                            {/* Primero intentamos mostrar las consultas relacionadas */}
+                            {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 ? (
                               <div>
                                 <p className="text-sm font-medium mb-1">Consultas ({unitDetails.details.Queries.length}):</p>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   {unitDetails.details.Queries.map((query: any, index: number) => (
-                                    <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                                      <p className="text-xs font-medium mb-1">Consulta {index + 1}: {query.name}</p>
-                                      <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded text-xs font-mono">
+                                    <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <p className="text-sm font-medium">Consulta {index + 1}: {query.name}</p>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                          {query.sqlconn_id ? 'SQL Connection' : 'Query'}
+                                        </span>
+                                      </div>
+                                      
+                                      {/* SQL query string */}
+                                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono mb-2 overflow-auto max-h-32 whitespace-pre">
                                         {query.query_string}
+                                      </div>
+                                      
+                                      {/* Query metadata */}
+                                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                                        {query.path && (
+                                          <div className="col-span-2">
+                                            <span className="font-medium">Path de salida:</span> {query.path}
+                                          </div>
+                                        )}
+                                        {query.date_format && (
+                                          <div>
+                                            <span className="font-medium">Formato de fecha:</span> {query.date_format}
+                                          </div>
+                                        )}
+                                        {query.separator && (
+                                          <div>
+                                            <span className="font-medium">Separador:</span> {query.separator}
+                                          </div>
+                                        )}
+                                        {query.timeout && (
+                                          <div>
+                                            <span className="font-medium">Timeout:</span> {query.timeout}ms
+                                          </div>
+                                        )}
+                                        {query.retry_count > 0 && (
+                                          <div>
+                                            <span className="font-medium">Reintentos:</span> {query.retry_count}
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   ))}
                                 </div>
                               </div>
+                            ) : (
+                              // Si no hay consultas relacionadas, mostramos el meta-query
+                              <div>
+                                <p className="text-sm font-medium mb-1">Detalles de la cola:</p>
+                                <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                                  <p className="text-sm mb-2">{unitDetails.details.name || 'Sin nombre'}</p>
+                                  {unitDetails.details.description && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{unitDetails.details.description}</p>
+                                  )}
+                                  <div className="text-xs mt-2">
+                                    <p>Creado: {new Date(unitDetails.details.created_at).toLocaleString()}</p>
+                                    <p>Actualizado: {new Date(unitDetails.details.updated_at).toLocaleString()}</p>
+                                  </div>
+                                </div>
+                              </div>
                             )}
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                Las consultas SQL son ejecutadas por el agente para extraer datos.
+                              </p>
+                            </div>
                           </>
                         )}
                         
                         {unitDetails.type === 'Command' && (
                           <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Comando:</p>
-                              <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono text-xs">
-                                {unitDetails.details.target} {unitDetails.details.args}
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-medium">{unitDetails.details.name || 'Comando'}</p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                  {unitDetails.details.instant ? 'Ejecución Instantánea' : 'Ejecución Estándar'}
+                                </span>
                               </div>
-                            </div>
-                            {unitDetails.details.working_directory && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Directorio de trabajo:</p>
-                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.working_directory}</p>
-                              </div>
-                            )}
-                            {unitDetails.details.raw_script && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Script:</p>
-                                <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono text-xs">
-                                  {unitDetails.details.raw_script}
+                              
+                              {/* Command details */}
+                              <div className="space-y-3">
+                                <div>
+                                  <p className="text-xs font-medium mb-1">Comando a ejecutar:</p>
+                                  <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 font-mono text-xs flex items-center">
+                                    <span className="text-green-600 dark:text-green-400 font-bold mr-1">$</span>
+                                    <span>{unitDetails.details.target} {unitDetails.details.args}</span>
+                                  </div>
+                                </div>
+                                
+                                {unitDetails.details.working_directory && (
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Directorio de trabajo:</p>
+                                    <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md text-xs border border-slate-200 dark:border-slate-700">
+                                      {unitDetails.details.working_directory}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {unitDetails.details.description && (
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Descripción:</p>
+                                    <p className="text-xs bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700">
+                                      {unitDetails.details.description}
+                                    </p>
+                                  </div>
+                                )}
+                                
+                                {unitDetails.details.labels && unitDetails.details.labels.length > 0 && (
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Etiquetas:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {unitDetails.details.labels.map((label: string, idx: number) => (
+                                        <span 
+                                          key={idx}
+                                          className="px-2 py-0.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-full"
+                                        >
+                                          {label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Script content if available */}
+                                {unitDetails.details.raw_script && (
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Script:</p>
+                                    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 font-mono text-xs overflow-auto max-h-32 whitespace-pre">
+                                      {unitDetails.details.raw_script}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Output handling */}
+                                <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                                  <div>
+                                    <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                                  </div>
+                                  {unitDetails.details.return_output && unitDetails.details.return_output_type && (
+                                    <div>
+                                      <span className="font-medium">Tipo de salida:</span> {unitDetails.details.return_output_type}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            )}
+                            </div>
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                Los comandos son ejecutados por el agente en la máquina destino.
+                              </p>
+                            </div>
                           </>
                         )}
                         
                         {(unitDetails.type === 'SFTP Download' || unitDetails.type === 'SFTP Upload') && (
                           <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">{unitDetails.type === 'SFTP Download' ? 'Directorio de salida:' : 'Archivo de entrada:'}</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                                {unitDetails.type === 'SFTP Download' ? unitDetails.details.output : unitDetails.details.input}
-                              </p>
-                            </div>
-                            {unitDetails.details.SFTPLink && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Conexión SFTP:</p>
-                                <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                                  <p className="text-sm">{unitDetails.details.SFTPLink.name}</p>
-                                  <p className="text-xs mt-1">Servidor: {unitDetails.details.SFTPLink.host}:{unitDetails.details.SFTPLink.port}</p>
-                                  <p className="text-xs">Usuario: {unitDetails.details.SFTPLink.username}</p>
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-medium">{unitDetails.details.name || unitDetails.type}</p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                                  {unitDetails.type === 'SFTP Download' ? 'Descarga' : 'Carga'}
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-3 mt-2">
+                                {/* Path information */}
+                                <div>
+                                  <p className="text-xs font-medium mb-1">{unitDetails.type === 'SFTP Download' ? 'Directorio de salida:' : 'Archivo de entrada:'}</p>
+                                  <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 text-xs">
+                                    <span className="font-mono">{unitDetails.type === 'SFTP Download' ? unitDetails.details.output : unitDetails.details.input}</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Connection details */}
+                                {unitDetails.details.SFTPLink && (
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Conexión SFTP:</p>
+                                    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className="text-xs font-semibold">{unitDetails.details.SFTPLink.name}</p>
+                                      </div>
+                                      <div className="text-xs grid grid-cols-2 gap-2">
+                                        <div>
+                                          <span className="font-medium">Servidor:</span> 
+                                          <span className="block font-mono mt-0.5">{unitDetails.details.SFTPLink.host}:{unitDetails.details.SFTPLink.port}</span>
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Usuario:</span>
+                                          <span className="block font-mono mt-0.5">{unitDetails.details.SFTPLink.username}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Output handling */}
+                                <div className="mt-2 text-xs">
+                                  <span className="font-medium">Retornar salida:</span> 
+                                  {unitDetails.details.return_output ? 'Sí' : 'No'}
                                 </div>
                               </div>
-                            )}
+                            </div>
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                {unitDetails.type === 'SFTP Download' 
+                                  ? 'Esta tarea descarga archivos desde un servidor SFTP remoto.' 
+                                  : 'Esta tarea sube archivos a un servidor SFTP remoto.'}
+                              </p>
+                            </div>
                           </>
                         )}
                         
                         {unitDetails.type === 'Zip Files' && (
-                          <div>
-                            <p className="text-sm font-medium mb-1">Archivo de salida:</p>
-                            <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
-                          </div>
+                          <>
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-medium">{unitDetails.details.name || 'Comprimir archivos'}</p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                                  Compresión
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-3 mt-2">
+                                <div>
+                                  <p className="text-xs font-medium mb-1">Archivo de salida:</p>
+                                  <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                                    {unitDetails.details.output}
+                                  </div>
+                                </div>
+                                
+                                {/* Output handling */}
+                                <div className="mt-2 text-xs">
+                                  <span className="font-medium">Retornar salida:</span> 
+                                  {unitDetails.details.return_output ? 'Sí' : 'No'}
+                                </div>
+                                
+                                <div className="text-xs">
+                                  <span className="font-medium">Fecha de creación:</span> 
+                                  {new Date(unitDetails.details.created_at).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                Esta tarea comprime archivos y directorios en un archivo zip.
+                              </p>
+                            </div>
+                          </>
                         )}
                         
                         {unitDetails.type === 'Unzip Files' && (
                           <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Archivo de entrada:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.input}</p>
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-medium">{unitDetails.details.name || 'Descomprimir archivos'}</p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                                  Descompresión
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-3 mt-2">
+                                <div>
+                                  <p className="text-xs font-medium mb-1">Archivo de entrada:</p>
+                                  <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                                    {unitDetails.details.input}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <p className="text-xs font-medium mb-1">Directorio de salida:</p>
+                                  <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                                    {unitDetails.details.output}
+                                  </div>
+                                </div>
+                                
+                                {/* Output handling */}
+                                <div className="mt-2 text-xs">
+                                  <span className="font-medium">Retornar salida:</span> 
+                                  {unitDetails.details.return_output ? 'Sí' : 'No'}
+                                </div>
+                                
+                                <div className="text-xs">
+                                  <span className="font-medium">Fecha de creación:</span> 
+                                  {new Date(unitDetails.details.created_at).toLocaleString()}
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Directorio de salida:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                Esta tarea extrae el contenido de un archivo zip en el directorio especificado.
+                              </p>
                             </div>
                           </>
                         )}
                         
                         {unitDetails.type === 'Call Pipeline' && (
-                          <div>
-                            <p className="text-sm font-medium mb-1">Pipeline:</p>
-                            <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                              <p className="text-sm">{unitDetails.details.name}</p>
-                              <p className="text-xs mt-1">ID: {unitDetails.details.id}</p>
-                              {unitDetails.details.description && (
-                                <p className="text-xs mt-1">{unitDetails.details.description}</p>
-                              )}
+                          <>
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-medium">{unitDetails.details.name || 'Llamada a Pipeline'}</p>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                                  Referencia
+                                </span>
+                              </div>
+                              
+                              <div className="mt-2">
+                                <div className="grid grid-cols-1 gap-2">
+                                  {unitDetails.details.description && (
+                                    <div>
+                                      <p className="text-xs font-medium mb-1">Descripción:</p>
+                                      <p className="text-xs bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700">
+                                        {unitDetails.details.description}
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  <div>
+                                    <p className="text-xs font-medium mb-1">Identificador del Pipeline:</p>
+                                    <p className="text-xs bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 font-mono">
+                                      {unitDetails.details.id}
+                                    </p>
+                                  </div>
+                                  
+                                  {unitDetails.details.agent_passport_id && (
+                                    <div>
+                                      <p className="text-xs font-medium mb-1">Agente asignado:</p>
+                                      <p className="text-xs bg-slate-50 dark:bg-slate-800 p-2 rounded-md border border-slate-200 dark:border-slate-700 font-mono">
+                                        {unitDetails.details.agent_passport_id}
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="grid grid-cols-2 gap-2 text-xs mt-1">
+                                    <div>
+                                      <span className="font-medium">Abortar en error:</span> 
+                                      {unitDetails.details.abort_on_error ? 'Sí' : 'No'}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Desechable:</span> 
+                                      {unitDetails.details.disposable ? 'Sí' : 'No'}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-2 text-xs mt-1">
+                                    <div>
+                                      <span className="font-medium">Creado:</span> 
+                                      {new Date(unitDetails.details.created_at).toLocaleString()}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Actualizado:</span> 
+                                      {new Date(unitDetails.details.updated_at).toLocaleString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                            
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                                Esta tarea ejecuta otro pipeline completo como parte de este flujo.
+                              </p>
+                            </div>
+                          </>
                         )}
                         
                         {/* Si no hay detalles específicos, mostrar un mensaje */}
