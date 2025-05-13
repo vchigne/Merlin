@@ -120,7 +120,13 @@ export function useLogEntries({
         .filter(Boolean);
       
       if (agentIds.length > 0) {
-        const uniqueAgentIds = [...new Set(agentIds)];
+        // Create a uniqueAgentIds array without using Set spread
+        const uniqueAgentIds: string[] = [];
+        agentIds.forEach(id => {
+          if (!uniqueAgentIds.includes(id)) {
+            uniqueAgentIds.push(id);
+          }
+        });
         
         const agentsResult = await executeQuery(`
           query GetAgents($agentIds: [uuid!]) {

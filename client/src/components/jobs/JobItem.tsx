@@ -159,10 +159,8 @@ export default function JobItem({ job, compact = false }: JobItemProps) {
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">
-            <Link href={`/jobs/${job.id}`}>
-              <a className="hover:text-primary-600 dark:hover:text-primary-400">
+            <Link href={`/jobs/${job.id}`} className="hover:text-primary-600 dark:hover:text-primary-400">
                 Job #{job.id.substring(0, 8)}
-              </a>
             </Link>
           </CardTitle>
           <Badge variant="outline" className={`flex items-center ${statusBadge.class}`}>
@@ -176,10 +174,8 @@ export default function JobItem({ job, compact = false }: JobItemProps) {
           <div className="flex items-center">
             <GitBranch className="h-4 w-4 text-slate-500 dark:text-slate-400 mr-2" />
             <span className="text-sm text-slate-700 dark:text-slate-300 mr-1">Pipeline:</span>
-            <Link href={`/pipelines/${job.pipeline_id}`}>
-              <a className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+            <Link href={`/pipelines/${job.pipeline_id}`} className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
                 {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
-              </a>
             </Link>
           </div>
           
@@ -187,10 +183,8 @@ export default function JobItem({ job, compact = false }: JobItemProps) {
             <div className="flex items-center">
               <Bot className="h-4 w-4 text-slate-500 dark:text-slate-400 mr-2" />
               <span className="text-sm text-slate-700 dark:text-slate-300 mr-1">Agent:</span>
-              <Link href={`/agents/${job.started_by_agent}`}>
-                <a className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+              <Link href={`/agents/${job.started_by_agent}`} className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
                   {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
-                </a>
               </Link>
             </div>
           )}
@@ -239,11 +233,9 @@ export default function JobItem({ job, compact = false }: JobItemProps) {
           ID: {job.id}
         </div>
         <Link href={`/logs?jobId=${job.id}`}>
-          <a>
-            <Button variant="outline" size="sm">
-              View Logs
-            </Button>
-          </a>
+          <Button variant="outline" size="sm">
+            View Logs
+          </Button>
         </Link>
       </CardFooter>
     </Card>
