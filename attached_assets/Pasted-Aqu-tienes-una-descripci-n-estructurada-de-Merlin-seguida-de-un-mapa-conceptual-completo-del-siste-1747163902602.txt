@@ -1,0 +1,219 @@
+Aquí tienes una descripción estructurada de Merlin, seguida de un mapa conceptual completo del sistema y una descripción detallada e inferida de cada entidad.
+
+🧠 ¿Qué es Merlin?
+Merlin es un sistema de ejecución automatizada basado en agentes y pipelines, diseñado para orquestar procesos complejos que incluyen operaciones sobre archivos, comandos, consultas SQL, integración por SFTP y control de errores.
+
+Está orientado a automatizar flujos de datos y operaciones técnicas, brindando control detallado sobre la ejecución, auditoría, seguridad y modularidad.
+
+🏗️ MAPA CONCEPTUAL DE MERLIN
+plaintext
+Copiar
+Editar
+                                      +----------------------+
+                                      |      MERLIN CORE     |
+                                      +----------------------+
+                                                 |
+     +-------------------+-----------------------+------------------+
+     |                   |                       |                  |
+[AGENTES]          [PIPELINES]           [OPERACIONES]         [CONEXIONES]
+     |                   |                       |                  |
++------------+   +----------------+      +----------------+   +---------------+
+|AgentPassport|   |   Pipeline     |      |   Command      |   |   SQLConn     |
+|AgentVersion |   |   PipelineUnit|      |   Query         |   |   SFTPLink    |
+|AgentUpdateLog|  |   JobQueue    |      |   FileStreams   |   +---------------+
+|AgentPing     |  |   JobLogs     |      |   Zip/UnZip     |
++------------+   +----------------+      +----------------+
+
+🧾 Descripción General de Componentes Principales
+🧩 1. Agentes (AgentPassport, AgentVersion, etc.)
+Función: Son los ejecutores. Pueden representar bots, servicios u otros procesos controlados por Merlin.
+
+AgentPassport: Identidad del agente, su versión, estado (enabled, is_testing), y si debe ser observado (watch).
+
+AgentVersion: Registro de versiones del agente con URLs para descarga.
+
+AgentUpdateLog: Logs de actualizaciones del agente, incluyendo errores y advertencias.
+
+AgentPassportPing: Metadata operativa y de conexión del agente en tiempo real.
+
+➡️ Merlin puede tener múltiples agentes, cada uno con configuración y versiones independientes, y control de salud y estado en tiempo real.
+
+🔁 2. Pipelines
+Función: Definen flujos de ejecución con tareas secuenciales o condicionales.
+
+Pipeline: Representa un flujo de trabajo general, con abortos condicionales y notificaciones.
+
+PipelineUnit: Unidad ejecutable (query, comando, descarga, etc.). Permite controlar reintentos, timeout, errores y encadenamiento con otros pipelines.
+
+PipelineCall: Control de acceso a la ejecución por agente.
+
+PipelineJobQueue: Instancias de ejecución de un pipeline, con seguimiento de estado (running, completed, aborted).
+
+PipelineJobLog / PipelineJobLogV2 / PipelineJobLogV2Body: Registro detallado de ejecuciones, logs por paso, errores, advertencias, duración.
+
+➡️ Sistema muy robusto, permite crear pipelines de ejecución automática con lógica, permisos, reintentos, seguimiento y encadenamiento.
+
+⚙️ 3. Operaciones
+Función: Son las acciones que Merlin puede ejecutar como pasos de un pipeline.
+
+Command: Ejecuta comandos del sistema con argumentos, scripts y control de salida.
+
+Query: Ejecuta SQL con opciones avanzadas: orden, formato, encabezados, encoding, reintentos, compatibilidad SQL Server, etc.
+
+FileStream*: Abstracciones de flujos de entrada/salida de archivos.
+
+FileStreamSftpDownloader, Uploader: interacción con SFTP.
+
+FileStreamZip, Unzip: compresión y descompresión.
+
+Zip, UnZip: Procesos definidos de compresión con configuraciones propias.
+
+QueryQueue: Cola de ejecución para queries.
+
+SFTPDownloader, SFTPUploader: Abstracción de procesos sobre SFTP, asociados a conexiones.
+
+SQLConn: Conexiones a bases de datos SQL con driver y cadena de conexión.
+
+➡️ Estas operaciones son los bloques funcionales de Merlin. Cada una puede ser medida, auditada, reintentada y combinada.
+
+🔐 4. Conexiones Externas
+Función: Vinculan Merlin a sistemas externos para ejecución de tareas.
+
+SFTPLink: Conexión a servidores SFTP, incluyendo puerto, usuario y contraseña.
+
+SQLConn: Conexión a base de datos con soporte para diferentes drivers.
+
+➡️ Permiten que los pipelines no solo sean locales, sino integrados a ecosistemas de datos externos.
+
+🔄 5. Lógica de Flujo y Orquestación
+Merlin se comporta como un motor de flujo de datos y procesos, con las siguientes capacidades integradas:
+
+Capacidad	Implementación
+Reintentos	retry_count, retry_after_milliseconds en PipelineUnit, Query
+Timeout	timeout_milliseconds
+Control de errores	continue_on_error, abort_on_timeout, notify_on_error_webhook
+Encadenamiento	call_pipeline en PipelineUnit
+Control visual	posx, posy en unidades de pipeline (sugerencia para interfaz gráfica)
+Etiquetas para clasificación	labels en muchas entidades
+Seguridad por agente	PipelineCall
+Trazabilidad	JobLog, LogV2Body, exception_stack_trace, level, callsite, etc.
+Auditoría de actualización	AgentUpdateLog, updated_at generalizado
+
+✨ Características Diferenciadoras
+Plataforma modular y extensible.
+
+Soporte completo para flujos de datos empresariales.
+
+Altísima trazabilidad y control.
+
+Diseñada con visión de producto: separación clara entre ejecución, configuración, monitoreo y seguridad.
+
+📘 Ejemplo de Flujo en Merlin
+plaintext
+Copiar
+Editar
+1. Agente inicia ejecución de pipeline → Validado por `PipelineCall`
+2. Se crea instancia en `PipelineJobQueue`
+3. Se ejecutan `PipelineUnit` en secuencia:
+     a. Descargar archivo por SFTP
+     b. Descomprimir
+     c. Ejecutar Query sobre SQL Server
+     d. Comprimir resultado
+     e. Subir resultado a SFTP
+4. Cada paso genera logs en `PipelineJobLog` y `PipelineJobLogV2Body`
+5. En caso de error, notificación por webhook y email
+¿Quieres que prepare un diagrama visual de este modelo conceptual o un caso de uso armado con ejemplos de agentes y pipelines? También puedo ayudarte a definir un pipeline de ejemplo como JSON o YAML para una carga automatizada.
+
+
+
+
+
+
+
+Dijiste:
+si el diarama visual y los casos de uso y el pipeline de ejmplo 
+ChatGPT dijo:
+No se pudo generar el diagrama visual debido a un error técnico en la herramienta de generación de imágenes. Si quieres, puedo darte una versión diagramada en texto o ayudarte a prepararlo en una herramienta como Draw.io, Lucidchart o incluso PowerPoint.
+
+Mientras tanto, te presento lo siguiente:
+
+📦 Caso de Uso 1: Descarga, Procesamiento y Subida de Archivos
+🎯 Objetivo:
+Tomar un archivo desde un servidor SFTP, descomprimirlo, ejecutar una consulta sobre SQL Server usando los datos, y subir el resultado a otro SFTP.
+
+🧱 Componentes Involucrados
+Tipo	Entidad
+Agente	AgentPassport
+Pipeline	Pipeline
+Unidades del pipeline	PipelineUnit
+Operaciones	SFTPDownloader, UnZip, Query, Zip, SFTPUploader
+Conexiones	SFTPLink, SQLConn
+
+🧪 Pipeline de Ejemplo (Formato JSON simplificado)
+json
+Copiar
+Editar
+{
+  "pipeline": {
+    "id": "pipeline_ventas_diarias",
+    "name": "Pipeline Ventas Diarias",
+    "abort_on_error": true,
+    "agent_passport_id": "agente_merlin_001",
+    "units": [
+      {
+        "id": "unidad_descarga",
+        "sftp_downloader_id": "descarga_diaria_sftp",
+        "order": 1,
+        "retry_count": 3
+      },
+      {
+        "id": "unidad_unzip",
+        "unzip_id": "descomprimir_csv",
+        "order": 2
+      },
+      {
+        "id": "unidad_query",
+        "query_queue_id": "cola_query_sqlserver",
+        "order": 3,
+        "timeout_milliseconds": 10000
+      },
+      {
+        "id": "unidad_zip",
+        "zip_id": "comprimir_salida",
+        "order": 4
+      },
+      {
+        "id": "unidad_upload",
+        "sftp_uploader_id": "subida_resultado",
+        "order": 5
+      }
+    ]
+  }
+}
+💼 Caso de Uso 2: Ejecución de Script SQL parametrizado desde un agente controlado
+Objetivo:
+Un agente autorizado ejecuta una consulta SQL diaria sobre una base de datos de ventas y guarda el resultado en un archivo comprimido.
+
+Se controla:
+
+Reintentos,
+
+Tiempos de espera,
+
+Logs,
+
+Notificaciones por error.
+
+Entidades clave
+AgentPassport: agente con permisos para ejecutar este pipeline.
+
+PipelineCall: vincula agente con pipeline.
+
+Query: consulta predefinida con opciones avanzadas.
+
+QueryQueue: define la cola donde se ejecuta.
+
+Zip: compresión del archivo.
+
+SFTPUploader: envío a servidor remoto.
+

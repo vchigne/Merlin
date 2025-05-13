@@ -1,0 +1,234 @@
+Tabla	Campos	Tipo_de_dato	Descripción	Comentario
+AngentPassport	id	string	Código único identificador	
+AngentPassport	name	string	Nombre del agente	
+AngentPassport	description	string	Descripción del agente	
+AngentPassport	is_testing	bool	Es de prueba	
+AngentPassport	enabled	bool	Agente habilitado	
+AngentPassport	fabric_x_data_note_id	string		
+AngentPassport	watch	bool		
+AngentPassport	agent_version_id	string	ID de la versión del agente	Referenciado de la tabla AgentVersion
+AngentPassport	check_agent_update	bool		
+AngentPassport	is_healthy	bool		
+AngentPassport	auto_clean_update	bool		
+AgentPassportPing	agent_passport_id	string	ID de la versión del agente	Referenciado de la tabla AgentPassport
+AgentPassportPing	hostname	string	Nombre del equipo	
+AgentPassportPing	ips	string	IPs del equipo	
+AgentPassportPing	created_at	timestamp	Fecha de creación	
+AgentPassportPing	last_ping_at	timestamp	Fecha del último ping realizado	
+AgentPassportPing	agent_local_time	timestamp	Tiempo local en el equipo del agente	
+AgentPassportPing	current_directory	string	Directorio donde se ubica el programa del agente merlín	
+AgentPassportPing	os_version	string	Versión del sistema operativo	
+AgentPassportPing	agent_version_from_source_code	string	Versión instalada de agente merlín	
+AgentUpdateLog	id	string	Código único identificador	
+AgentUpdateLog	agent_passport_id	string	ID de la versión del agente	Referenciado de la tabla AgentPassport
+AgentUpdateLog	logs	string		
+AgentUpdateLog	warnings	string		
+AgentUpdateLog	errors	string		
+AgentUpdateLog	checked_by_notificator	bool		
+AgentUpdateLog	created_at	timestamp	Fecha de creación	
+AgentUpdateLog	updated_at	timestamp	Fecha de modificación	
+AgentVersion	version	string	Versión del agente	
+AgentVersion	url	string	URL de descarga	
+AgentVersion	created_at	timestamp	Fecha de creación	
+AgentVersion	updated_at	timestamp	Fecha de modificación	
+AgentVersion	url2	string	Url 2	
+AgentVersion	url3	string	Url3	
+Command	id	string	Código único identificador	
+Command	target	string	Nombre del programa/comando	
+Command	working_directory	string	Ruta donde se ejecutará el comando/programa	
+Command	args	string	Argumentos que recibe el comando/programa	
+Command	created_at	timestamp	Fecha de creación	
+Command	updated_at	timestamp	Fecha de modificación	
+Command	instant	bool		
+Command	name	string	Nombre asignado del proceso de comando	
+Command	description	string	Descripción del proceso	
+Command	dq_process_id	string		
+Command	raw_script	string	Filas de comando para ejecución en consola	Cuando el target es cmd.exe
+Command	return_output	bool	Mostrar el resultado de lo ejecutado	
+Command	return_output_type	string	PATHS	
+Command	labels	array	Etiquetas	
+FileStreamSftpDownloader	id	string	Código único identificador	
+FileStreamSftpDownloader	input	string	Ruta del archivo en el SFTP	
+FileStreamSftpDownloader	output	string	Ruta donde se descargará el archivo	
+FileStreamSftpDownloader	return_output	bool	Mostrar el resultado de lo ejecutado	
+FileStreamSftpDownloader	created_at	timestamp	Fecha de creación	
+FileStreamSftpDownloader	updated_at	timestamp	Fecha de modificación	
+FileStreamSftpDownloader	sftp_downloader_id	string	ID de descarga de sftp	Referenciado de la tabla SFTPDownloader
+FileStreamSftpDownloader	labels	array	Etiquetas	
+FileStreamSftpUploader	id	string	Código único identificador	
+FileStreamSftpUploader	input	string	Ruta donde se encuentra el archivo a subir al sftp	
+FileStreamSftpUploader	output	string	Ruta del sftp donde se subirá el archivo	
+FileStreamSftpUploader	return_output	bool	Mostrar el resultado de lo ejecutado	
+FileStreamSftpUploader	created_at	timestamp	Fecha de creación	
+FileStreamSftpUploader	updated_at	timestamp	Fecha de modificación	
+FileStreamSftpUploader	sftp_uploader_id	string	ID de carga a sftp	Referenciado de la tabla SFTPUploader
+FileStreamUnzip	id	string	Código único identificador	
+FileStreamUnzip	input	string	Ruta completa del archivo comprimido	
+FileStreamUnzip	output	string	Ruta de la carpeta donde se descomprimirá el archivo	
+FileStreamUnzip	return_output	bool	Mostrar el resultado de lo ejecutado	
+FileStreamUnzip	created_at	timestamp	Fecha de creación	
+FileStreamUnzip	updated_at	timestamp	Fecha de modificación	
+FileStreamUnzip	unzip_id	string	ID de descompresión de archivo	Referenciado de la tabla UnZip
+FileStreamUnzip	labels	array	Etiquetas	
+FileStreamZip	id	string	Código único identificador	
+FileStreamZip	input	string	Ruta del archivo o de la carpeta donde se encuentran los archivos	
+FileStreamZip	return_output	bool	Mostrar el resultado de lo ejecutado	
+FileStreamZip	created_at	timestamp	Fecha de creación	
+FileStreamZip	updated_at	timestamp	Fecha de modificación	
+FileStreamZip	zip_id	string	ID de compresión de archivo	Referenciado de la tabla Zip
+FileStreamZip	wildcard_exp	string	Expresión regex filtrar los archivos	
+Pipeline	id	string	Código único identificador	
+Pipeline	name	string	Nombre asignado al Pipeline	
+Pipeline	description	string	Descripción del pipeline	
+Pipeline	abort_on_error	bool	Abortar acción en caso de error	
+Pipeline	notify_on_abort_email_id	string		
+Pipeline	notify_on_abort_webhook_id	string		
+Pipeline	created_at	timestamp	Fecha de creación	
+Pipeline	updated_at	timestamp	Fecha de modificación	
+Pipeline	agent_passport_id	string	ID del agente al cual pertenecerá	Referenciado de la tabla AgentPassport
+Pipeline	disposable	bool		
+PipelineCall	id	string	Código único identificador	
+PipelineCall	pipeline_id	string	ID del pipeline	Referenciado de la tabla Pipeline
+PipelineCall	allowed_agent_id	string	ID del agente al cual se le dará permiso de ejecución	Referenciado de la tabla AgentPassport
+PipelineCall	created_at	timestamp	Fecha de creación	
+PipelineCall	updated_at	timestamp	Fecha de actualización	
+PipelineJobLog	id	string	Código único identificador	
+PipelineJobLog	pipeline_job_queue_id	string	ID de la cola de ejecución	Referenciado de la tabla PipelineJobQueue
+PipelineJobLog	pipeline_unit_id	string	ID de la unidad de pipeline	Referenciado de la tabla PipelineUnit
+PipelineJobLog	logs	string	Logs recibidos resultado de la ejecución de procesos	
+PipelineJobLog	created_at	timestamp	Fecha de creación	
+PipelineJobLog	updated_at	timestamp	Fecha de ejecución	
+PipelineJobLog	warnings	string	Advertencia mostrada en la ejecución	
+PipelineJobLog	errors	string	Error presentado en la ejecución	
+PipelineJobLog	dqprocess_status_id	string		
+PipelineJobLog	log_order	integer	Número de orden de ejecución	
+PipelineJobLog	milliseconds	integer	Tiempo de ejcución	
+PipelineJobLog	checked_by_notificator	bool		
+PipelineJobLogV2	id	integer	Código único identificador	
+PipelineJobLogV2	pipeline_job_queue_id	string	ID de la cola de ejecución	Referenciado de la tabla PipelineJobQueue
+PipelineJobLogV2	pipeline_unit_id	string	ID de la unidad de pipeline	Referenciado de la tabla PipelineUnit
+PipelineJobLogV2	dqprocess_status_id	string		
+PipelineJobLogV2	log_order	integer	Número de orden de ejecución	
+PipelineJobLogV2	milliseconds	integer	Tiempo de ejcución	
+PipelineJobLogV2	checked_by_notificator	bool		
+PipelineJobLogV2	created_at	timestamp	Fecha de creación	
+PipelineJobLogV2Body	id	integer	Código único identificador	
+PipelineJobLogV2Body	pipeline_job_queue_id	string	ID de la cola de ejecución	Referenciado de la tabla PipelineJobQueue
+PipelineJobLogV2Body	pipeline_unit_id	string	ID de la unidad de pipeline	Referenciado de la tabla PipelineUnit
+PipelineJobLogV2Body	pipeline_unit_context_id	string		
+PipelineJobLogV2Body	date	timestamp	Fecha de ejecución	
+PipelineJobLogV2Body	level	string	Nivel de log (INFO, WARN, ERROR, FATAL)	
+PipelineJobLogV2Body	message	string	Mensaje recibido como resultado de la ejecución del proceso	
+PipelineJobLogV2Body	callsite	string	Servicio/Módulo que envió el mensaje	
+PipelineJobLogV2Body	exception	string	Excepción resultante	
+PipelineJobLogV2Body	exception_message	string	Mensaje devuelto por la excepción	
+PipelineJobLogV2Body	exception_stack_trace	string	Seguimiento de la excepción	
+PipelineJobLogV2Body	created_at	timestamp	Fecha de creación	
+PipelineJobQueue	id	string	Código único identificador	
+PipelineJobQueue	pipeline_id	string	ID del pipeline al cual pertenece	Referenciado de la tabla Pipeline
+PipelineJobQueue	completed	bool	Se completó la tarea	
+PipelineJobQueue	created_at	timestamp	Fecha de creación	
+PipelineJobQueue	updated_at	timestamp	Fecha de modificación	
+PipelineJobQueue	running	bool	Se encuentra ejecutando	
+PipelineJobQueue	aborted	bool	Fue abortado	
+PipelineJobQueue	started_by_agent	string		
+PipelineUnit	id	string	Código único identificador	
+PipelineUnit	command_id	string	ID del proceso de ejecución de comando	Referenciado de la tabla Command
+PipelineUnit	query_queue_id	string	ID del proceso de cola de queries	Referenciado de la tabla QueryQueue
+PipelineUnit	sftp_downloader_id	string	ID del proceso de descarga desde sftp	Referenciado de la tabla SFTPDownloader
+PipelineUnit	sftp_uploader_id	string	ID del proceso de carga desde sftp	Referenciado de la tabla SFTPUploader
+PipelineUnit	zip_id	string	ID del proceso de compresión	Referenciado de la tabla Zip
+PipelineUnit	unzip_id	string	ID del proceso de descompresión	Referenciado de la tabla UnZip
+PipelineUnit	pipeline_id	string	ID del pipeline al cual pertenece	Referenciado de la tabla Pipeline
+PipelineUnit	pipeline_unit_id	string	ID de la unidad de pipeline al cual va a suceder en la ejecución	Referenciado de la tabla PipelineUnit
+PipelineUnit	created_at	timestamp	Fecha de creación	
+PipelineUnit	updated_at	timestamp	Fecha de modificación	
+PipelineUnit	comment	string	Comentarios	
+PipelineUnit	retry_after_milliseconds	integer	Tiempo de espera en milisegundos para reintento	
+PipelineUnit	retry_count	integer	Número de reintentos	
+PipelineUnit	timeout_milliseconds	integer	Tiempo de espera en milisegundos para timeout	
+PipelineUnit	abort_on_timeout	bool	Abortar acción en caso de timeout	
+PipelineUnit	continue_on_error	bool	Continuar ejecución a pesar de error	
+PipelineUnit	notify_on_error_email	string		
+PipelineUnit	notify_on_error_webhook	string		
+PipelineUnit	notify_on_timeout_email	string		
+PipelineUnit	notify_on_timeout_webhook	string		
+PipelineUnit	posx	integer		
+PipelineUnit	posy	integer		
+PipelineUnit	call_pipeline	string	ID del pipeline que se llamará a ejecutar	"Referenciado de la tabla Pipeline
+El permiso se concede en la tabla PipelineCall"
+Query	id	string	Código único identificador	
+Query	order	integer	Orden de ejecución	
+Query	name	string	Nombre asignado a la query	
+Query	query_string	string	Script que se ejecutará	
+Query	path	string	Ruta donde se dejará el archivo generado	
+Query	print_headers	bool	Escribir datos con encabezado	
+Query	created_at	timestamp	Fecha de creación	
+Query	updated_at	timestamp	Fecha de modificación	
+Query	enabled	bool	Se encuentra habilitado	
+Query	sqlconn_id	string	ID de conexión de sql	Referenciado de la tabla SQLConn
+Query	return_output	bool	Mostrar el resultado de lo ejecutado	
+Query	query_queue_id	string	ID de cola de ejecución de queries	Referenciado de la tabla QueryQueue
+Query	date_format	string	Formato de fecha para los campos de fecha	
+Query	separator	string	Separador de columnas	
+Query	chunks	integer	Bloque de cantidad de filas a escribir en el archivo generado	
+Query	target_encoding	string	Codificación de datos	
+Query	timeout	integer	Tiempo límite de ejecución en milisegundos	
+Query	mssql_compatibility_level	string	Nivel de compatibilidad del sql server	
+Query	retry_count	integer	Cantidad de reintentos	
+Query	retry_after_milliseconds	integer	Tiempo de espera ejecutar reintento	
+Query	remove_pipes_in_columns	bool	Remover pipelines de las columnas de datos	
+Query	trim_columns	bool	Remover espacios al inicio y final de las columnas	
+Query	labels	array	Etiquetas	
+Query	force_dot_decimal_separator	bool	Forzar punto como separado decimal	
+QueryQueue	id	string	Código único identificador	
+QueryQueue	name	string	Nombre asignado a la cola de quieries	
+QueryQueue	description	string	Descripción de la cola de quieries	
+QueryQueue	created_at	timestamp	Fecha de creación	
+QueryQueue	updated_at	timestamp	Fecha de modificación	
+SFTPDownloader	id	string	Código único identificador	
+SFTPDownloader	name	string	Nombre asigando al proceso de descarga de sftp	
+SFTPDownloader	output	string	Ruta donde será descargado el archivo	
+SFTPDownloader	return_output	bool	Mostrar el resultado de lo ejecutado	
+SFTPDownloader	sftp_link_id	string	ID de conexión al sftp	Referenciado de la tabla SFTPLink
+SFTPDownloader	created_at	timestamp	Fecha de creación	
+SFTPDownloader	updated_at	timestamp	Fecha de actualización	
+SFTPDownloader	input	string	Ruta completa del archivo a descargar desde el sftp	
+SFTPDownloader	description	string	Descripción del proceso	
+SFTPDownloader	labels	array	Etiquetas	
+SFTPLink	id	string	Código único identificador	
+SFTPLink	name	string	Nombre de la conexión SFTP	
+SFTPLink	server	string	Servidor del SFTP	
+SFTPLink	port	integer	Puerto del SFTP	
+SFTPLink	user	string	Usuario del SFTP	
+SFTPLink	password	string	Contraseña del SFTP	
+SFTPLink	created_at	timestamp	Fecha de creación	
+SFTPLink	updated_at	timestamp	Fecha de edición	
+SFTPUploader	id	string	Código único identificador	
+SFTPUploader	name	string	Nombre asigando al proceso de carga de sftp	
+SFTPUploader	output	string	Ruta completa del archivo que será cargado	
+SFTPUploader	return_output	bool	Mostrar el resultado de lo ejecutado	
+SFTPUploader	sftp_link_id	string	ID de la conexión SFTP	Referenciado de la tabla SFTPLink
+SFTPUploader	created_at	timestamp	Fecha de creación	
+SFTPUploader	updated_at	timestamp	Fecha de edición	
+SFTPUploader	description	string	Descripción del proceso	
+SQLConn	id	string	Código único identificador	
+SQLConn	connstring	string	String de la conexión a base de datos	Ejm: Server=WIN-12345678;Database=DB_Test;User Id=sa;Password=password1!;
+SQLConn	driver	string	Tipo de driver para conexión a base de datos	Ejm: MSSQL
+SQLConn	created_at	timestamp	Fecha de creación	
+SQLConn	updated_at	timestamp	Fecha de modificación	
+SQLConn	name	string	Nombre asignado a la conexión sql	
+UnZip	id	string	Código único identificador	
+UnZip	name	string	Nombre asigando al proceso de descompresión de archivo	
+UnZip	output	string	Ruta de la carpeta donde se descomprimirá el archivo	
+UnZip	return_output	bool	Mostrar el resultado de lo ejecutado	
+UnZip	created_at	timestamp	Fecha de creación	
+UnZip	updated_at	timestamp	Fecha de modificación	
+UnZip	description	string	Descripción del proceso	
+Zip	id	string	Código único identificador	
+Zip	name	string	Nombre asigando al proceso de compresión de archivo	
+Zip	output	string	Ruta completa del archivo comprimido	
+Zip	return_output	bool	Mostrar el resultado de lo ejecutado	
+Zip	created_at	timestamp	Fecha de creación	
+Zip	updated_at	timestamp	Fecha de modificación	
+Zip	description	string	Descripción del proceso	
