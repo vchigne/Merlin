@@ -109,26 +109,20 @@ export default function JobItem({ job, compact = false }: JobItemProps) {
           </Badge>
           <div>
             <h3 className="text-sm font-medium">
-              <Link href={`/jobs/${job.id}`}>
-                <a className="hover:text-primary-600 dark:hover:text-primary-400">
+              <Link href={`/jobs/${job.id}`} className="hover:text-primary-600 dark:hover:text-primary-400">
                   Job #{job.id.substring(0, 8)}
-                </a>
               </Link>
             </h3>
             <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
               <GitBranch className="h-3 w-3 mr-1" />
-              <Link href={`/pipelines/${job.pipeline_id}`}>
-                <a className="hover:underline text-primary-600 dark:text-primary-400 mr-3">
+              <Link href={`/pipelines/${job.pipeline_id}`} className="hover:underline text-primary-600 dark:text-primary-400 mr-3">
                   {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
-                </a>
               </Link>
               {job.started_by_agent && (
                 <>
                   <Bot className="h-3 w-3 mr-1" />
-                  <Link href={`/agents/${job.started_by_agent}`}>
-                    <a className="hover:underline text-primary-600 dark:text-primary-400">
+                  <Link href={`/agents/${job.started_by_agent}`} className="hover:underline text-primary-600 dark:text-primary-400">
                       {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
-                    </a>
                   </Link>
                 </>
               )}

@@ -75,10 +75,8 @@ export default function PipelineCard({ pipeline }: PipelineCardProps) {
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <Link href={`/pipelines/${pipeline.id}`}>
-            <a className="text-lg font-medium hover:text-primary-600 transition-colors">
+          <Link href={`/pipelines/${pipeline.id}`} className="text-lg font-medium hover:text-primary-600 transition-colors">
               {pipeline.name || `Pipeline-${pipeline.id.substring(0, 8)}`}
-            </a>
           </Link>
           {pipeline.disposable && (
             <Badge variant="outline" className="bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800">
@@ -98,10 +96,8 @@ export default function PipelineCard({ pipeline }: PipelineCardProps) {
           {pipeline.agent_passport_id && (
             <div className="flex items-center text-xs">
               <Bot className="h-3.5 w-3.5 mr-1.5 text-slate-500 dark:text-slate-400" />
-              <Link href={`/agents/${pipeline.agent_passport_id}`}>
-                <a className="text-primary-600 dark:text-primary-400 hover:underline">
+              <Link href={`/agents/${pipeline.agent_passport_id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
                   {pipeline.AgentPassport?.name || `Agent-${pipeline.agent_passport_id.substring(0, 8)}`}
-                </a>
               </Link>
             </div>
           )}

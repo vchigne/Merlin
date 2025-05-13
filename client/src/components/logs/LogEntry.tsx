@@ -151,10 +151,8 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
             {log.PipelineJobQueue?.started_by_agent && (
               <span className="flex items-center">
                 <Server className="h-3 w-3 mr-1" />
-                <Link href={`/agents/${log.PipelineJobQueue.started_by_agent}`}>
-                  <a className="hover:underline text-primary-600 dark:text-primary-400">
+                <Link href={`/agents/${log.PipelineJobQueue.started_by_agent}`} className="hover:underline text-primary-600 dark:text-primary-400">
                     {log.AgentPassport?.name || log.PipelineJobQueue.started_by_agent.substring(0, 8)}
-                  </a>
                 </Link>
               </span>
             )}
@@ -168,10 +166,8 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
             {log.PipelineJobQueue?.Pipeline && (
               <div>
                 <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline</h4>
-                <Link href={`/pipelines/${log.PipelineJobQueue.Pipeline.id}`}>
-                  <a className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                <Link href={`/pipelines/${log.PipelineJobQueue.Pipeline.id}`} className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
                     {log.PipelineJobQueue.Pipeline.name}
-                  </a>
                 </Link>
               </div>
             )}
