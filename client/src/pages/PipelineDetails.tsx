@@ -194,18 +194,18 @@ export default function PipelineDetails() {
   return (
     <div className="space-y-6">
       {/* Page title and back button */}
-      <div className="flex items-center">
+      <div className="flex flex-wrap sm:flex-row items-center gap-2 sm:gap-0">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate("/pipelines")}
-          className="mr-2"
+          className="px-2 mr-auto sm:mr-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Pipelines
+          <span className="text-sm">Back</span>
         </Button>
-        <Separator orientation="vertical" className="h-6 mx-2" />
-        <h1 className="text-2xl font-bold dark:text-white">
+        <Separator orientation="vertical" className="h-6 mx-2 hidden sm:block" />
+        <h1 className="text-xl sm:text-2xl font-bold dark:text-white w-full sm:w-auto order-first sm:order-none mb-2 sm:mb-0">
           Pipeline Details
         </h1>
       </div>
@@ -232,18 +232,18 @@ export default function PipelineDetails() {
           {/* Overview Card */}
           <Card>
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0">
                 <div>
-                  <CardTitle className="text-xl">
+                  <CardTitle className="text-lg sm:text-xl">
                     {isPipelineLoading ? (
-                      <Skeleton className="h-7 w-56" />
+                      <Skeleton className="h-6 sm:h-7 w-48 sm:w-56" />
                     ) : (
                       pipeline?.name || id?.substring(0, 8)
                     )}
                   </CardTitle>
-                  <CardDescription className="mt-1">
+                  <CardDescription className="mt-1 line-clamp-2 sm:line-clamp-none">
                     {isPipelineLoading ? (
-                      <Skeleton className="h-4 w-96" />
+                      <Skeleton className="h-4 w-full sm:w-96" />
                     ) : (
                       pipeline?.description || "No description available"
                     )}
@@ -254,9 +254,10 @@ export default function PipelineDetails() {
                   size="sm"
                   onClick={handleRefresh}
                   disabled={isLoading || isRefreshing}
+                  className="self-end sm:self-start"
                 >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Refresh
+                  <RefreshCw className={`mr-1 sm:mr-2 h-3.5 sm:h-4 w-3.5 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="text-xs sm:text-sm">Refresh</span>
                 </Button>
               </div>
             </CardHeader>
@@ -350,10 +351,10 @@ export default function PipelineDetails() {
           
           {/* Tabs */}
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="overview">Pipeline Flow</TabsTrigger>
-              <TabsTrigger value="jobs">Job History</TabsTrigger>
-              <TabsTrigger value="logs">Logs</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-3 mb-2">
+              <TabsTrigger value="overview" className="text-sm sm:text-base">Flow</TabsTrigger>
+              <TabsTrigger value="jobs" className="text-sm sm:text-base">Jobs</TabsTrigger>
+              <TabsTrigger value="logs" className="text-sm sm:text-base">Logs</TabsTrigger>
             </TabsList>
             
             {/* Overview Tab */}
