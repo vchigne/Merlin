@@ -40,13 +40,13 @@ export function useLogEntries({
       ]`);
     }
     
+    // No podemos acceder directamente a PipelineJobQueue, así que filtramos por ID
+    // pero esto no establecerá la relación completa
     if (pipelineId) {
-      conditions.push(`PipelineJobQueue: {pipeline_id: {_eq: "${pipelineId}"}}`);
+      conditions.push(`pipeline_unit_id: {_ilike: "%${pipelineId}%"}`);
     }
     
-    if (agentId) {
-      conditions.push(`PipelineJobQueue: {started_by_agent: {_eq: "${agentId}"}}`);
-    }
+    // No podemos filtrar por agente directamente ya que no tenemos la relación
     
     if (jobId) {
       conditions.push(`pipeline_job_queue_id: {_eq: "${jobId}"}`);
@@ -89,18 +89,6 @@ export function useLogEntries({
             exception_message
             exception_stack_trace
             created_at
-            PipelineJobQueue {
-              pipeline_id
-              started_by_agent
-              Pipeline {
-                id
-                name
-              }
-            }
-            PipelineUnit {
-              id
-              comment
-            }
           }
           merlin_agent_PipelineJobLogV2Body_aggregate(${whereClause}) {
             aggregate {
@@ -114,48 +102,10 @@ export function useLogEntries({
         throw new Error(result.errors[0].message);
       }
       
-      // Get agents for log entries
-      const agentIds = result.data.merlin_agent_PipelineJobLogV2Body
-        .map((log: any) => log.PipelineJobQueue?.started_by_agent)
-        .filter(Boolean);
+      // No podemos acceder a PipelineJobQueue directamente, así que no intentamos 
+      // obtener información de agentes de esta manera
       
-      if (agentIds.length > 0) {
-        // Create a uniqueAgentIds array without using Set spread
-        const uniqueAgentIds: string[] = [];
-        agentIds.forEach(id => {
-          if (!uniqueAgentIds.includes(id)) {
-            uniqueAgentIds.push(id);
-          }
-        });
-        
-        const agentsResult = await executeQuery(`
-          query GetAgents($agentIds: [uuid!]) {
-            merlin_agent_AgentPassport(where: {id: {_in: $agentIds}}) {
-              id
-              name
-            }
-          }
-        `, { agentIds: uniqueAgentIds });
-        
-        if (!agentsResult.errors) {
-          const agentsMap = new Map();
-          agentsResult.data.merlin_agent_AgentPassport.forEach((agent: any) => {
-            agentsMap.set(agent.id, agent);
-          });
-          
-          // Add agent info to logs
-          result.data.merlin_agent_PipelineJobLogV2Body = result.data.merlin_agent_PipelineJobLogV2Body.map((log: any) => {
-            const agentId = log.PipelineJobQueue?.started_by_agent;
-            if (agentId && agentsMap.has(agentId)) {
-              return {
-                ...log,
-                AgentPassport: agentsMap.get(agentId)
-              };
-            }
-            return log;
-          });
-        }
-      }
+      // En su lugar, recuperamos toda la información disponible de los logs
       
       return {
         logs: result.data.merlin_agent_PipelineJobLogV2Body,
@@ -185,18 +135,6 @@ export function useLogEntry(logId: number | string) {
             exception_message
             exception_stack_trace
             created_at
-            PipelineJobQueue {
-              pipeline_id
-              started_by_agent
-              Pipeline {
-                id
-                name
-              }
-            }
-            PipelineUnit {
-              id
-              comment
-            }
           }
         }
       `, { logId: Number(logId) });

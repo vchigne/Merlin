@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { executeQuery } from "@/lib/hasura-client";
-import { socket } from "@/lib/socket";
+import { getSocket } from "@/lib/socket";
 
 export default function ActivityFeed() {
   // Comenzamos con un array vacío para las actividades
@@ -25,13 +25,8 @@ export default function ActivityFeed() {
             date
             level
             message
+            callsite
             created_at
-            PipelineJobQueue {
-              Pipeline {
-                name
-              }
-              started_by_agent
-            }
           }
         }
       `);
@@ -82,25 +77,15 @@ export default function ActivityFeed() {
         if (log.level === 'WARN') type = 'warning';
         if (log.level === 'ERROR' || log.level === 'FATAL') type = 'error';
         
-        // Format message
+        // Format message - simplificado para usar solo lo que tenemos disponible
         let message = log.message || 'Activity logged';
-        const agentName = agentMap.get(log.PipelineJobQueue?.started_by_agent) || log.PipelineJobQueue?.started_by_agent;
-        const pipelineName = log.PipelineJobQueue?.Pipeline?.name;
         
-        if (agentName && pipelineName) {
-          if (type === 'error') {
-            message = `Error in ${agentName} running Pipeline: ${pipelineName}`;
-          } else if (type === 'warning') {
-            message = `Warning in ${agentName} running Pipeline: ${pipelineName}`;
-          } else {
-            // Format based on message content
-            if (log.message?.includes('start')) {
-              message = `${agentName} started Pipeline: ${pipelineName}`;
-            } else if (log.message?.includes('complet')) {
-              message = `${agentName} completed Pipeline: ${pipelineName}`;
-            } else {
-              message = `Activity from ${agentName} in Pipeline: ${pipelineName}`;
-            }
+        // Extraer información del mensaje o callsite si está disponible
+        if (log.callsite) {
+          // El callsite a veces contiene información del contexto
+          const parts = log.callsite.split('/');
+          if (parts.length > 1) {
+            message = `Activity in ${parts[parts.length - 1]}: ${message}`;
           }
         }
         
@@ -110,8 +95,8 @@ export default function ActivityFeed() {
           message,
           timestamp: log.date || log.created_at,
           timeRelative: formatRelativeTime(log.date || log.created_at),
-          relatedEntityType: log.PipelineJobQueue?.started_by_agent ? 'agent' : undefined,
-          relatedEntityId: log.PipelineJobQueue?.started_by_agent,
+          relatedEntityType: 'log',
+          relatedEntityId: log.pipeline_job_queue_id,
         };
       });
       
@@ -124,6 +109,7 @@ export default function ActivityFeed() {
 
   // Listen for real-time updates
   useEffect(() => {
+    const socket = getSocket();
     if (!socket) return;
 
     const handleLogUpdate = (newLogs: any[]) => {
@@ -135,9 +121,11 @@ export default function ActivityFeed() {
     socket.on('update:recentLogs', handleLogUpdate);
 
     return () => {
-      socket.off('update:recentLogs', handleLogUpdate);
+      if (socket) {
+        socket.off('update:recentLogs', handleLogUpdate);
+      }
     };
-  }, [socket]);
+  }, []);
 
   // Get icon color based on activity type
   const getTypeColor = (type: string) => {
