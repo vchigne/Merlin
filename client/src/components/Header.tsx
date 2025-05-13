@@ -60,8 +60,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <h1 className="text-xl font-semibold dark:text-white md:hidden">Merlin Observer</h1>
         </div>
         
-        <div className="flex items-center space-x-2">
-          {/* API connection status badge */}
+        <div className="flex items-center space-x-1 md:space-x-2">
+          {/* API connection status */}
           <TooltipProvider>
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
@@ -80,6 +80,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             </Tooltip>
           </TooltipProvider>
           
+          {/* Connection indicator for mobile */}
+          <div className={`md:hidden flex h-2 w-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+          
           {/* Last updated */}
           <div className="hidden md:flex items-center text-xs text-slate-500 dark:text-slate-400">
             <RefreshCw className="h-3 w-3 mr-1.5" />
@@ -89,17 +92,17 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           {/* Manual refresh button */}
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="text-slate-500 dark:text-slate-400"
+            className="text-slate-500 dark:text-slate-400 px-2"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span className="sr-only">Refresh data</span>
           </Button>
           
           {/* READ ONLY badge */}
-          <Badge variant="secondary" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-0">
+          <Badge variant="secondary" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-0 text-[10px] md:text-xs">
             READ ONLY
           </Badge>
           
@@ -107,7 +110,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <ThemeToggle />
           
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="sm" className="relative px-2">
             <Bell className="h-4 w-4" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
             <span className="sr-only">Notifications</span>

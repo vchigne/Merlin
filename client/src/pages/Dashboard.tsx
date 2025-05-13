@@ -63,11 +63,11 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Dashboard title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
         <h1 className="text-2xl font-bold dark:text-white">Dashboard</h1>
         <div className="flex space-x-2">
           <select 
-            className="block pl-3 pr-10 py-2 text-base border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-slate-800 dark:text-white"
+            className="block pl-3 pr-10 py-1.5 sm:py-2 text-sm sm:text-base border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md bg-white dark:bg-slate-800 dark:text-white"
             value={timeFrame}
             onChange={(e) => setTimeFrame(e.target.value)}
           >

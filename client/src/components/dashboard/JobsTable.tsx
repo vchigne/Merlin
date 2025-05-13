@@ -123,12 +123,12 @@ export default function JobsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Job ID</TableHead>
-                <TableHead>Pipeline</TableHead>
-                <TableHead>Agent</TableHead>
+                <TableHead className="w-[80px] md:w-auto">Job ID</TableHead>
+                <TableHead className="hidden sm:table-cell">Pipeline</TableHead>
+                <TableHead className="hidden md:table-cell">Agent</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead className="hidden sm:table-cell">Created</TableHead>
+                <TableHead className="hidden md:table-cell">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,15 +145,19 @@ export default function JobsTable() {
                   
                   return (
                     <TableRow key={job.id}>
-                      <TableCell className="font-medium">{job.id.substring(0, 10)}</TableCell>
-                      <TableCell>
-                        <Link href={`/pipelines/${job.pipeline_id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                      <TableCell className="font-medium text-sm md:text-base">
+                        <Link href={`/jobs/${job.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                          {job.id.substring(0, 7)}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Link href={`/pipelines/${job.pipeline_id}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
                           {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {job.started_by_agent && (
-                          <Link href={`/agents/${job.started_by_agent}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                          <Link href={`/agents/${job.started_by_agent}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
                             {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
                           </Link>
                         )}
@@ -163,10 +167,10 @@ export default function JobsTable() {
                           {statusStyle.label}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500 dark:text-slate-400">
+                      <TableCell className="hidden sm:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
                         {formatDate(job.created_at)}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500 dark:text-slate-400">
+                      <TableCell className="hidden md:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
                         {formatDate(job.updated_at)}
                       </TableCell>
                     </TableRow>
