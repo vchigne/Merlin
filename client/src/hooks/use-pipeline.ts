@@ -79,7 +79,7 @@ export function usePipeline(pipelineId: string) {
     queryKey: ['/api/pipelines', pipelineId],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetPipeline($pipelineId: String!) {
+        query GetPipeline($pipelineId: uuid!) {
           merlin_agent_Pipeline(where: {id: {_eq: $pipelineId}}) {
             id
             name
@@ -122,7 +122,7 @@ export function usePipelineUnits(pipelineId: string) {
     queryKey: ['/api/pipelines', pipelineId, 'units'],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetPipelineUnits($pipelineId: String!) {
+        query GetPipelineUnits($pipelineId: uuid!) {
           merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
             id
             pipeline_id

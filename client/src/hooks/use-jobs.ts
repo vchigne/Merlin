@@ -22,11 +22,11 @@ export function useJobs({
     const conditions: string[] = [];
     
     if (filters.pipelineId) {
-      conditions.push(`pipeline_id: {_eq: "${filters.pipelineId}"}`);
+      conditions.push(`pipeline_id: {_eq: ${filters.pipelineId}}`);
     }
     
     if (filters.agentId) {
-      conditions.push(`started_by_agent: {_eq: "${filters.agentId}"}`);
+      conditions.push(`started_by_agent: {_eq: ${filters.agentId}}`);
     }
     
     if (filters.status) {
@@ -108,7 +108,7 @@ export function useJob(jobId: string) {
     queryKey: ['/api/jobs', jobId],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetJob($jobId: String!) {
+        query GetJob($jobId: uuid!) {
           merlin_agent_PipelineJobQueue(where: {id: {_eq: $jobId}}) {
             id
             pipeline_id

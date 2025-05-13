@@ -157,10 +157,8 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
                 </h3>
                 <div className="mt-1 space-y-1">
                   {recentPipelines.map((pipeline: any) => (
-                    <Link key={pipeline.id} href={`/pipelines/${pipeline.id}`}>
-                      <a className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group">
-                        <span className="truncate">{pipeline.name}</span>
-                      </a>
+                    <Link key={pipeline.id} href={`/pipelines/${pipeline.id}`} className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 group">
+                      <span className="truncate">{pipeline.name}</span>
                     </Link>
                   ))}
                 </div>
