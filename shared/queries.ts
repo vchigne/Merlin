@@ -223,7 +223,7 @@ export const QUERY_QUEUE_QUERY = `
 `;
 
 export const QUERY_DETAILS_QUERY = `
-  query GetQuery($id: String!) {
+  query GetQuery($id: uuid!) {
     merlin_agent_Query(where: {query_queue_id: {_eq: $id}}) {
       id
       order
@@ -254,7 +254,7 @@ export const QUERY_DETAILS_QUERY = `
 `;
 
 export const SFTP_DOWNLOADER_QUERY = `
-  query GetSFTPDownloader($id: String!) {
+  query GetSFTPDownloader($id: uuid!) {
     merlin_agent_SFTPDownloader(where: {id: {_eq: $id}}) {
       id
       name
@@ -266,7 +266,7 @@ export const SFTP_DOWNLOADER_QUERY = `
 `;
 
 export const SFTP_UPLOADER_QUERY = `
-  query GetSFTPUploader($id: String!) {
+  query GetSFTPUploader($id: uuid!) {
     merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
       id
       name
@@ -278,7 +278,7 @@ export const SFTP_UPLOADER_QUERY = `
 `;
 
 export const ZIP_QUERY = `
-  query GetZip($id: String!) {
+  query GetZip($id: uuid!) {
     merlin_agent_Zip(where: {id: {_eq: $id}}) {
       id
       name
@@ -291,7 +291,7 @@ export const ZIP_QUERY = `
 `;
 
 export const UNZIP_QUERY = `
-  query GetUnzip($id: String!) {
+  query GetUnzip($id: uuid!) {
     merlin_agent_UnZip(where: {id: {_eq: $id}}) {
       id
       name
