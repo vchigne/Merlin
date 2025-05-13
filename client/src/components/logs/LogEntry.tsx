@@ -120,41 +120,43 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border border-slate-200 dark:border-slate-700 rounded-md mb-3">
-      <div className="flex items-center p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50" onClick={() => setIsOpen(!isOpen)}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
-            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </Button>
-        </CollapsibleTrigger>
-        
-        <div className="flex-1 flex flex-col md:flex-row md:items-center md:justify-between ml-2">
-          <div className="flex items-center">
-            {getLevelBadge()}
-            <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-1">
-              {getMessage()}
-            </span>
-          </div>
+      <div className="p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50" onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="p-0 h-6 w-6 mt-1 flex-shrink-0">
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
           
-          <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 mt-1 md:mt-0">
-            <span className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {formatDate(log.date || log.created_at)}
-            </span>
+          <div className="flex-1 ml-2">
+            <div className="flex flex-wrap gap-2 items-start">
+              <div className="flex-shrink-0 mt-1">{getLevelBadge()}</div>
+              <div className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 break-words max-w-full">
+                {getMessage()}
+              </div>
+            </div>
             
-            {executionTime && (
+            <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 mt-2">
               <span className="flex items-center">
-                <Terminal className="h-3 w-3 mr-1" />
-                {executionTime}
+                <Clock className="h-3 w-3 mr-1" />
+                {formatDate(log.date || log.created_at)}
               </span>
-            )}
-            
-            {/* No podemos acceder a PipelineJobQueue directamente */}
-            {log.pipeline_job_id && (
-              <span className="flex items-center">
-                <Server className="h-3 w-3 mr-1" />
-                <span className="text-slate-500">{log.pipeline_job_id.substring(0, 8)}</span>
-              </span>
-            )}
+              
+              {executionTime && (
+                <span className="flex items-center">
+                  <Terminal className="h-3 w-3 mr-1" />
+                  {executionTime}
+                </span>
+              )}
+              
+              {/* No podemos acceder a PipelineJobQueue directamente */}
+              {log.pipeline_job_id && (
+                <span className="flex items-center">
+                  <Server className="h-3 w-3 mr-1" />
+                  <span className="text-slate-500">{log.pipeline_job_id.substring(0, 8)}</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
