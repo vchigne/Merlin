@@ -113,12 +113,12 @@ export default function PipelineDetails() {
       const result = await executeQuery(`
         query GetPipelineLogs($id: uuid!) {
           merlin_agent_PipelineJobLogV2Body(
-            where: {PipelineJobQueue: {pipeline_id: {_eq: $id}}}
+            where: {pipeline_job_id: {_eq: $id}}
             order_by: {created_at: desc}
             limit: 20
           ) {
             id
-            pipeline_job_queue_id
+            pipeline_job_id
             pipeline_unit_id
             date
             level

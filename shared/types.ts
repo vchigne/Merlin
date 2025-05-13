@@ -109,7 +109,7 @@ export interface PipelineJobQueue {
 
 export interface PipelineJobLog {
   id: string;
-  pipeline_job_queue_id: string;
+  pipeline_job_id: string;
   pipeline_unit_id: string;
   logs: string;
   created_at: string;
@@ -124,7 +124,7 @@ export interface PipelineJobLog {
 
 export interface PipelineJobLogV2 {
   id: number;
-  pipeline_job_queue_id: string;
+  pipeline_job_id: string;
   pipeline_unit_id: string;
   dqprocess_status_id: string;
   log_order: number;
@@ -135,7 +135,7 @@ export interface PipelineJobLogV2 {
 
 export interface PipelineJobLogV2Body {
   id: number;
-  pipeline_job_queue_id: string;
+  pipeline_job_id: string;
   pipeline_unit_id: string;
   pipeline_unit_context_id: string;
   date: string;
