@@ -1,0 +1,11 @@
+A  must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+at https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=9fc1173c:880:13
+at renderWithHooks (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:11548:26)
+at updateForwardRef (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:14325:28)
+at beginWork (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:15946:22)
+at beginWork$1 (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:19753:22)
+at performUnitOfWork (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:19198:20)
+at workLoopSync (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:19137:13)
+at renderRootSync (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:19116:15)
+at recoverFromConcurrentError (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:18736:28)
+at performSyncWorkOnRoot (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=9fc1173c:18879:28)
