@@ -46,7 +46,7 @@ export default function Jobs() {
   
   // Build filters for the API
   const apiFilters = {
-    status: statusFilter as 'completed' | 'running' | 'error' | 'all' | undefined
+    status: statusFilter === 'all' ? undefined : statusFilter as 'completed' | 'running' | 'error' | undefined
   };
   
   // Fetch jobs
@@ -68,7 +68,7 @@ export default function Jobs() {
   };
   
   // Filter jobs based on search and date range
-  const filteredJobs = jobsData?.jobs.filter(job => {
+  const filteredJobs = jobsData?.jobs.filter((job: any) => {
     // Search filter
     const nameMatch = 
       (job.Pipeline?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,7 +144,7 @@ export default function Jobs() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Status</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="running">Running</SelectItem>
                   <SelectItem value="error">Error</SelectItem>
