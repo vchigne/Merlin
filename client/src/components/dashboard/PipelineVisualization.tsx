@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
-import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY, COMMAND_QUERY, QUERY_QUEUE_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
+import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY, COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,6 +75,7 @@ export default function PipelineVisualization() {
         query = COMMAND_QUERY;
         variables = { id: unit.command_id };
       } else if (unit.query_queue_id) {
+        // Para las colas de consulta, obtenemos primero la metadata de la cola
         query = QUERY_QUEUE_QUERY;
         variables = { id: unit.query_queue_id };
       } else if (unit.sftp_downloader_id) {
@@ -115,6 +116,19 @@ export default function PipelineVisualization() {
             data = result.data.merlin_agent_Command[0];
           } else if (unit.query_queue_id) {
             data = result.data.merlin_agent_QueryQueue[0];
+            
+            if (data) {
+              // Realizamos una segunda consulta para obtener las consultas SQL detalladas
+              try {
+                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unit.query_queue_id });
+                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
+                  // Agregamos las consultas al objeto de datos 
+                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                }
+              } catch (error) {
+                console.error("Error fetching SQL queries:", error);
+              }
+            }
           } else if (unit.sftp_downloader_id) {
             data = result.data.merlin_agent_SFTPDownloader[0];
           } else if (unit.sftp_uploader_id) {
