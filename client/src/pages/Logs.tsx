@@ -25,7 +25,7 @@ export default function Logs() {
   const [location] = useLocation();
   const [filters, setFilters] = useState({
     search: "",
-    level: "",
+    level: "all", // Cambiamos de "" a "all" para evitar errores en los selectores
     pipelineId: "",
     agentId: "",
     jobId: "",

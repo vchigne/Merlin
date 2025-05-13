@@ -25,11 +25,11 @@ export function useLogEntries({
   dateFrom,
   dateTo
 }: UseLogEntriesOptions = {}) {
-  // Build where conditions based on filters
-  const buildWhereClause = useCallback(() => {
+  // Build filter conditions
+  const buildFilterConditions = useCallback(() => {
     const conditions: string[] = [];
     
-    if (level) {
+    if (level && level !== 'all') {
       conditions.push(`level: {_eq: "${level}"}`);
     }
     
@@ -60,43 +60,78 @@ export function useLogEntries({
       conditions.push(`date: {_lte: "${dateTo.toISOString()}"}`);
     }
     
-    return conditions.length > 0 
-      ? `where: {${conditions.join(', ')}}` 
-      : '';
+    return conditions;
   }, [level, search, pipelineId, agentId, jobId, dateFrom, dateTo]);
 
   return useQuery({
     queryKey: ['/api/logs', { limit, offset, level, search, pipelineId, agentId, jobId, dateFrom, dateTo }],
     queryFn: async () => {
-      const whereClause = buildWhereClause();
+      const filterConditions = buildFilterConditions();
+      const hasFilters = filterConditions.length > 0;
+      const variables: Record<string, any> = { limit, offset };
       
-      const result = await executeQuery(`
-        query GetLogEntries($limit: Int!, $offset: Int!) {
-          merlin_agent_PipelineJobLogV2Body(
-            ${whereClause}
-            order_by: {date: desc}
-            limit: $limit
-            offset: $offset
-          ) {
-            id
-            pipeline_job_id
-            pipeline_unit_id
-            date
-            level
-            message
-            callsite
-            exception
-            exception_message
-            exception_stack_trace
-            created_at
-          }
-          merlin_agent_PipelineJobLogV2Body_aggregate(${whereClause}) {
-            aggregate {
-              count
+      let result;
+      
+      if (hasFilters) {
+        // Query with filters
+        const whereClause = `where: {${filterConditions.join(', ')}}`;
+        
+        result = await executeQuery(`
+          query GetLogEntriesWithFilters($limit: Int!, $offset: Int!) {
+            merlin_agent_PipelineJobLogV2Body(
+              ${whereClause}
+              order_by: {date: desc}
+              limit: $limit
+              offset: $offset
+            ) {
+              id
+              pipeline_job_id
+              pipeline_unit_id
+              date
+              level
+              message
+              callsite
+              exception
+              exception_message
+              exception_stack_trace
+              created_at
+            }
+            merlin_agent_PipelineJobLogV2Body_aggregate(${whereClause}) {
+              aggregate {
+                count
+              }
             }
           }
-        }
-      `, { limit, offset });
+        `, variables);
+      } else {
+        // Query without filters
+        result = await executeQuery(`
+          query GetLogEntries($limit: Int!, $offset: Int!) {
+            merlin_agent_PipelineJobLogV2Body(
+              order_by: {date: desc}
+              limit: $limit
+              offset: $offset
+            ) {
+              id
+              pipeline_job_id
+              pipeline_unit_id
+              date
+              level
+              message
+              callsite
+              exception
+              exception_message
+              exception_stack_trace
+              created_at
+            }
+            merlin_agent_PipelineJobLogV2Body_aggregate {
+              aggregate {
+                count
+              }
+            }
+          }
+        `, variables);
+      }
       
       if (result.errors) {
         throw new Error(result.errors[0].message);
