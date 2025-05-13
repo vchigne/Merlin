@@ -109,7 +109,7 @@ export const PIPELINE_JOBS_QUERY = `
 `;
 
 export const PIPELINE_JOB_LOGS_QUERY = `
-  query GetPipelineJobLogs($jobId: String!) {
+  query GetPipelineJobLogs($jobId: uuid!) {
     merlin_agent_PipelineJobLog(where: {pipeline_job_queue_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
       id
       pipeline_job_queue_id
@@ -128,7 +128,7 @@ export const PIPELINE_JOB_LOGS_QUERY = `
 `;
 
 export const PIPELINE_JOB_LOGS_V2_QUERY = `
-  query GetPipelineJobLogsV2($jobId: String!) {
+  query GetPipelineJobLogsV2($jobId: uuid!) {
     merlin_agent_PipelineJobLogV2(where: {pipeline_job_queue_id: {_eq: $jobId}}, order_by: {log_order: asc}) {
       id
       pipeline_job_queue_id
@@ -190,7 +190,7 @@ export const AGENT_HEALTH_STATUS_QUERY = `
 `;
 
 export const COMMAND_QUERY = `
-  query GetCommand($id: String!) {
+  query GetCommand($id: uuid!) {
     merlin_agent_Command(where: {id: {_eq: $id}}) {
       id
       target
@@ -211,7 +211,7 @@ export const COMMAND_QUERY = `
 `;
 
 export const QUERY_QUEUE_QUERY = `
-  query GetQueryQueue($id: String!) {
+  query GetQueryQueue($id: uuid!) {
     merlin_agent_QueryQueue(where: {id: {_eq: $id}}) {
       id
       name

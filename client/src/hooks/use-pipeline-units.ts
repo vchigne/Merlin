@@ -64,7 +64,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
         `;
       case 'sftp_download':
         return `
-          query GetSFTPDownloaderDetails($id: String!) {
+          query GetSFTPDownloaderDetails($id: uuid!) {
             merlin_agent_SFTPDownloader(where: {id: {_eq: $id}}) {
               id
               name
@@ -80,7 +80,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
         `;
       case 'sftp_upload':
         return `
-          query GetSFTPUploaderDetails($id: String!) {
+          query GetSFTPUploaderDetails($id: uuid!) {
             merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
               id
               name
@@ -96,7 +96,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
         `;
       case 'zip':
         return `
-          query GetZipDetails($id: String!) {
+          query GetZipDetails($id: uuid!) {
             merlin_agent_Zip(where: {id: {_eq: $id}}) {
               id
               name
@@ -107,7 +107,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
         `;
       case 'unzip':
         return `
-          query GetUnzipDetails($id: String!) {
+          query GetUnzipDetails($id: uuid!) {
             merlin_agent_UnZip(where: {id: {_eq: $id}}) {
               id
               name
