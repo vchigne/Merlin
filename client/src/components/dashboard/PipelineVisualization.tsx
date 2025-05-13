@@ -128,8 +128,8 @@ export default function PipelineVisualization() {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="relative w-full h-[300px]">
+      <CardContent className="p-3 sm:p-6">
+        <div className="relative w-full h-[300px] overflow-x-auto overflow-y-auto pb-4">
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -139,7 +139,7 @@ export default function PipelineVisualization() {
               No units defined for this pipeline
             </div>
           ) : (
-            <div className="relative w-full h-full">
+            <div className="relative w-full min-w-[800px] h-full">
               {/* A simplified representation of pipeline flow */}
               {pipelineUnits.map((unit: any, index: number) => {
                 const unitType = getUnitType(unit);
@@ -150,10 +150,10 @@ export default function PipelineVisualization() {
                 return (
                   <div 
                     key={unit.id}
-                    className={`absolute w-40 h-16 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-3 shadow-sm ${status === 'pending' ? 'opacity-50' : ''}`}
+                    className={`absolute w-36 sm:w-40 h-16 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-2 sm:p-3 shadow-sm ${status === 'pending' ? 'opacity-50' : ''}`}
                     style={{ top: `${yPos}px`, left: `${xPos}px` }}
                   >
-                    <div className="text-sm font-medium dark:text-white truncate">
+                    <div className="text-xs sm:text-sm font-medium dark:text-white truncate">
                       {unitType}
                     </div>
                     <div className="flex mt-1">
@@ -243,6 +243,7 @@ export default function PipelineVisualization() {
             </div>
           )}
         </div>
+        <div className="text-xs text-center text-slate-500 mt-2 italic">Desliza para ver el flujo completo</div>
       </CardContent>
     </Card>
   );

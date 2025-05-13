@@ -294,7 +294,7 @@ export default function PipelineDetails() {
                       Created: {isPipelineLoading ? (
                         <Skeleton className="h-4 w-32 inline-block" />
                       ) : (
-                        formatDate(pipeline?.created_at || "")
+                        formatRelativeTime(pipeline?.created_at || "")
                       )}
                     </span>
                   </div>
@@ -340,7 +340,7 @@ export default function PipelineDetails() {
               </CardFooter>
             ) : pipeline?.PipelineJobQueues && pipeline.PipelineJobQueues.length > 0 ? (
               <CardFooter className="pt-3 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
-                Last job execution: {formatDate(pipeline.PipelineJobQueues[0].created_at)}
+                Last job execution: {formatRelativeTime(pipeline.PipelineJobQueues[0].created_at)}
               </CardFooter>
             ) : (
               <CardFooter className="pt-3 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
