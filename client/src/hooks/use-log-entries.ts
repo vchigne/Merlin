@@ -123,7 +123,7 @@ export function useLogEntries({
         const uniqueAgentIds = [...new Set(agentIds)];
         
         const agentsResult = await executeQuery(`
-          query GetAgents($agentIds: [String!]) {
+          query GetAgents($agentIds: [uuid!]) {
             merlin_agent_AgentPassport(where: {id: {_in: $agentIds}}) {
               id
               name

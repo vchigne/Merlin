@@ -55,10 +55,8 @@ export default function JobsTable() {
         <CardHeader className="border-b border-slate-200 dark:border-slate-700">
           <div className="flex justify-between items-center">
             <CardTitle>Recent Jobs</CardTitle>
-            <Link href="/jobs">
-              <a className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+            <Link href="/jobs" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
                 View all jobs
-              </a>
             </Link>
           </div>
         </CardHeader>
@@ -115,10 +113,8 @@ export default function JobsTable() {
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
           <CardTitle>Recent Jobs</CardTitle>
-          <Link href="/jobs">
-            <a className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+          <Link href="/jobs" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
               View all jobs
-            </a>
           </Link>
         </div>
       </CardHeader>
@@ -151,18 +147,14 @@ export default function JobsTable() {
                     <TableRow key={job.id}>
                       <TableCell className="font-medium">{job.id.substring(0, 10)}</TableCell>
                       <TableCell>
-                        <Link href={`/pipelines/${job.pipeline_id}`}>
-                          <a className="text-primary-600 dark:text-primary-400 hover:underline">
-                            {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
-                          </a>
+                        <Link href={`/pipelines/${job.pipeline_id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                          {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
                         </Link>
                       </TableCell>
                       <TableCell>
                         {job.started_by_agent && (
-                          <Link href={`/agents/${job.started_by_agent}`}>
-                            <a className="text-primary-600 dark:text-primary-400 hover:underline">
-                              {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
-                            </a>
+                          <Link href={`/agents/${job.started_by_agent}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                            {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
                           </Link>
                         )}
                       </TableCell>
