@@ -103,10 +103,6 @@ export function useLogEntries({
                 }
                 started_by_agent
               }
-              AgentPassport {
-                id
-                name
-              }
             }
             merlin_agent_PipelineJobLogV2Body_aggregate(${whereClause}) {
               aggregate {
@@ -142,10 +138,6 @@ export function useLogEntries({
                   name
                 }
                 started_by_agent
-              }
-              AgentPassport {
-                id
-                name
               }
             }
             merlin_agent_PipelineJobLogV2Body_aggregate {
@@ -201,10 +193,6 @@ export function useLogEntry(logId: number | string) {
                 name
               }
               started_by_agent
-            }
-            AgentPassport {
-              id
-              name
             }
           }
         }

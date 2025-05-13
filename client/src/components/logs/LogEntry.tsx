@@ -48,10 +48,6 @@ interface LogEntryProps {
       id: string;
       comment?: string;
     };
-    AgentPassport?: {
-      id: string;
-      name: string;
-    };
   };
   expanded?: boolean;
 }
@@ -195,23 +191,14 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
             )}
             
             {/* Información del Agente */}
-            {(log.AgentPassport || log.PipelineJobQueue?.started_by_agent) && (
+            {log.PipelineJobQueue?.started_by_agent && (
               <div>
                 <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Agente</h4>
                 <div className="flex items-center gap-2 mt-1">
                   <User className="h-4 w-4 text-green-500" />
-                  {log.AgentPassport && (
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      <Link to={`/agents/${log.AgentPassport.id}`} className="text-green-500 hover:underline inline-flex items-center">
-                        {log.AgentPassport.name} <ExternalLink className="h-3 w-3 ml-1" />
-                      </Link>
-                    </p>
-                  )}
-                  {!log.AgentPassport && log.PipelineJobQueue?.started_by_agent && (
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      ID del Agente: {log.PipelineJobQueue.started_by_agent.substring(0, 8)}
-                    </p>
-                  )}
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                    ID del Agente: {log.PipelineJobQueue.started_by_agent.substring(0, 8)}
+                  </p>
                 </div>
               </div>
             )}
