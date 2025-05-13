@@ -15,12 +15,6 @@ export function usePipelines({
   agentId,
   includeJobInfo = true
 }: UsePipelinesOptions = {}) {
-  // Build where clause based on filters - doing it as a JS object to ensure proper query formation
-  let whereClause = '';
-  if (agentId) {
-    whereClause = `where: {agent_passport_id: {_eq: "${agentId}"}}`;
-  }
-  
   // Build include jobs fragment based on option
   const jobsFragment = includeJobInfo ? `
     PipelineJobQueues(limit: 1, order_by: {created_at: desc}) {
@@ -35,36 +29,69 @@ export function usePipelines({
   return useQuery({
     queryKey: ['/api/pipelines', { limit, offset, agentId }],
     queryFn: async () => {
-      // Create a query with or without the where clause
-      let query = `
-        query GetPipelines($limit: Int!, $offset: Int!) {
-          merlin_agent_Pipeline(
-            ${whereClause ? whereClause + '\n            ' : ''}order_by: {created_at: desc}
-            limit: $limit
-            offset: $offset
-          ) {
-            id
-            name
-            description
-            abort_on_error
-            agent_passport_id
-            created_at
-            updated_at
-            disposable
-            AgentPassport {
-              name
-            }
-            ${jobsFragment}
-          }
-          merlin_agent_Pipeline_aggregate(${whereClause ? whereClause : ''}) {
-            aggregate {
-              count
-            }
-          }
-        }
-      `;
+      // Determine if we need to filter by agent
+      let result;
       
-      const result = await executeQuery(query, { limit, offset });
+      if (agentId) {
+        // Use a query with agent filter
+        result = await executeQuery(`
+          query GetPipelinesWithAgent($limit: Int!, $offset: Int!, $agentId: uuid!) {
+            merlin_agent_Pipeline(
+              where: {agent_passport_id: {_eq: $agentId}}
+              order_by: {created_at: desc}
+              limit: $limit
+              offset: $offset
+            ) {
+              id
+              name
+              description
+              abort_on_error
+              agent_passport_id
+              created_at
+              updated_at
+              disposable
+              AgentPassport {
+                name
+              }
+              ${jobsFragment}
+            }
+            merlin_agent_Pipeline_aggregate(where: {agent_passport_id: {_eq: $agentId}}) {
+              aggregate {
+                count
+              }
+            }
+          }
+        `, { limit, offset, agentId });
+      } else {
+        // Use a query without agent filter
+        result = await executeQuery(`
+          query GetPipelines($limit: Int!, $offset: Int!) {
+            merlin_agent_Pipeline(
+              order_by: {created_at: desc}
+              limit: $limit
+              offset: $offset
+            ) {
+              id
+              name
+              description
+              abort_on_error
+              agent_passport_id
+              created_at
+              updated_at
+              disposable
+              AgentPassport {
+                name
+              }
+              ${jobsFragment}
+            }
+            merlin_agent_Pipeline_aggregate {
+              aggregate {
+                count
+              }
+            }
+          }
+        `, { limit, offset });
+      }
       
       if (result.errors) {
         throw new Error(result.errors[0].message);
