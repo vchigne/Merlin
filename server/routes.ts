@@ -17,7 +17,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { query, variables } = req.body;
       
       // Security check: ensure this is a read-only query
-      if (!isReadOnlyQuery(query)) {
+      const isReadOnly = isReadOnlyQuery(query);
+      if (!isReadOnly) {
+        console.log('Forbidden non-read-only query detected:', query.slice(0, 100) + '...');
         return res.status(403).json({
           error: "Forbidden: Only read-only queries are allowed"
         });
@@ -92,17 +94,14 @@ function isReadOnlyQuery(query: string): boolean {
   // Normalize whitespace
   const normalizedQuery = queryWithoutComments.replace(/\s+/g, ' ').trim().toLowerCase();
 
-  // Check for mutations, subscriptions, and other write operations
-  const hasMutation = normalizedQuery.includes('mutation');
-  const hasSubscription = normalizedQuery.includes('subscription');
-  const hasInsert = normalizedQuery.includes('insert');
-  const hasUpdate = normalizedQuery.includes('update');
-  const hasDelete = normalizedQuery.includes('delete');
-  const hasAlter = normalizedQuery.includes('alter');
-  const hasCreate = normalizedQuery.includes('create');
-  const hasDrop = normalizedQuery.includes('drop');
+  // Check if it's explicitly a mutation or subscription
+  if (normalizedQuery.startsWith('mutation') || normalizedQuery.startsWith('subscription')) {
+    return false;
+  }
+
+  // Check for typical mutation keywords that aren't in column/table names
+  const hasMutationKeyword = /\s+insert\s+into|\s+update\s+|\s+delete\s+from|\s+alter\s+|\s+create\s+|\s+drop\s+/.test(normalizedQuery);
   
   // Return true if query contains only read operations
-  return !(hasMutation || hasSubscription || hasInsert || hasUpdate || 
-           hasDelete || hasAlter || hasCreate || hasDrop);
+  return !hasMutationKeyword;
 }
