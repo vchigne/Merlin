@@ -119,67 +119,72 @@ export default function JobsTable() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px] md:w-auto">Job ID</TableHead>
-                <TableHead className="hidden sm:table-cell">Pipeline</TableHead>
-                <TableHead className="hidden md:table-cell">Agent</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Created</TableHead>
-                <TableHead className="hidden md:table-cell">Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {!data || data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-slate-500 dark:text-slate-400 h-24">
-                    No jobs found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data.map((job: any) => {
-                  const status = getJobStatus(job);
-                  const statusStyle = getStatusStyle(status);
-                  
-                  return (
-                    <TableRow key={job.id}>
-                      <TableCell className="font-medium text-sm md:text-base">
-                        <Link href={`/jobs/${job.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
-                          {job.id.substring(0, 7)}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Link href={`/pipelines/${job.pipeline_id}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
-                          {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {job.started_by_agent && (
-                          <Link href={`/agents/${job.started_by_agent}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
-                            {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
-                          </Link>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyle.badgeClass}`}>
-                          {statusStyle.label}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
-                        {formatRelativeTime(job.created_at)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs md:text-sm text-slate-500 dark:text-slate-400">
-                        {formatRelativeTime(job.updated_at)}
+        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="min-w-full inline-block align-middle">
+            <div className="overflow-hidden">
+              <Table className="min-w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px] md:w-auto whitespace-nowrap">Job ID</TableHead>
+                    <TableHead className="whitespace-nowrap">Pipeline</TableHead>
+                    <TableHead className="whitespace-nowrap">Agent</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Created</TableHead>
+                    <TableHead className="whitespace-nowrap">Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {!data || data.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-slate-500 dark:text-slate-400 h-24">
+                        No jobs found
                       </TableCell>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                  ) : (
+                    data.map((job: any) => {
+                      const status = getJobStatus(job);
+                      const statusStyle = getStatusStyle(status);
+                      
+                      return (
+                        <TableRow key={job.id}>
+                          <TableCell className="font-medium text-sm md:text-base whitespace-nowrap">
+                            <Link href={`/jobs/${job.id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
+                              {job.id.substring(0, 7)}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <Link href={`/pipelines/${job.pipeline_id}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
+                              {job.Pipeline?.name || job.pipeline_id.substring(0, 8)}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {job.started_by_agent && (
+                              <Link href={`/agents/${job.started_by_agent}`} className="text-primary-600 dark:text-primary-400 hover:underline text-xs md:text-sm">
+                                {job.AgentPassport?.name || job.started_by_agent.substring(0, 8)}
+                              </Link>
+                            )}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyle.badgeClass}`}>
+                              {statusStyle.label}
+                            </span>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-xs md:text-sm text-slate-500 dark:text-slate-400">
+                            {formatRelativeTime(job.created_at)}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-xs md:text-sm text-slate-500 dark:text-slate-400">
+                            {formatRelativeTime(job.updated_at)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
+        <div className="text-xs text-center text-slate-500 mt-1 p-1 lg:hidden">Desliza para ver más columnas</div>
       </CardContent>
     </Card>
   );
