@@ -41,7 +41,7 @@ export default function Pipelines() {
   } = usePipelines({
     limit,
     offset,
-    agentId: agentFilter || undefined,
+    agentId: agentFilter && agentFilter !== "all" ? agentFilter : undefined,
   });
   
   // Fetch agents for filtering
@@ -103,7 +103,7 @@ export default function Pipelines() {
             <SelectValue placeholder="Filter by agent" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All agents</SelectItem>
+            <SelectItem value="">All agents</SelectItem>
             {agents.map(agent => (
               <SelectItem key={agent.id} value={agent.id}>
                 {agent.name || agent.id.substring(0, 8)}

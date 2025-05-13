@@ -15,8 +15,11 @@ export function usePipelines({
   agentId,
   includeJobInfo = true
 }: UsePipelinesOptions = {}) {
-  // Build where clause based on filters
-  const whereClause = agentId ? `where: {agent_passport_id: {_eq: "${agentId}"}}` : '';
+  // Build where clause based on filters - doing it as a JS object to ensure proper query formation
+  let whereClause = '';
+  if (agentId) {
+    whereClause = `where: {agent_passport_id: {_eq: "${agentId}"}}`;
+  }
   
   // Build include jobs fragment based on option
   const jobsFragment = includeJobInfo ? `
@@ -32,7 +35,8 @@ export function usePipelines({
   return useQuery({
     queryKey: ['/api/pipelines', { limit, offset, agentId }],
     queryFn: async () => {
-      const result = await executeQuery(`
+      // Create a query with or without the where clause
+      let query = `
         query GetPipelines($limit: Int!, $offset: Int!) {
           merlin_agent_Pipeline(
             ${whereClause ? whereClause + '\n            ' : ''}order_by: {created_at: desc}
@@ -58,7 +62,9 @@ export function usePipelines({
             }
           }
         }
-      `, { limit, offset });
+      `;
+      
+      const result = await executeQuery(query, { limit, offset });
       
       if (result.errors) {
         throw new Error(result.errors[0].message);
