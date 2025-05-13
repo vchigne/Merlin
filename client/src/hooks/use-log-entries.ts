@@ -95,6 +95,18 @@ export function useLogEntries({
               exception_message
               exception_stack_trace
               created_at
+              PipelineJobQueue {
+                id
+                Pipeline {
+                  id
+                  name
+                }
+                started_by_agent
+              }
+              AgentPassport {
+                id
+                name
+              }
             }
             merlin_agent_PipelineJobLogV2Body_aggregate(${whereClause}) {
               aggregate {
@@ -182,6 +194,18 @@ export function useLogEntry(logId: number | string) {
             exception_message
             exception_stack_trace
             created_at
+            PipelineJobQueue {
+              id
+              Pipeline {
+                id
+                name
+              }
+              started_by_agent
+            }
+            AgentPassport {
+              id
+              name
+            }
           }
         }
       `, { logId: Number(logId) });

@@ -9,7 +9,10 @@ import {
   XCircle,
   Terminal, 
   Clock, 
-  Server
+  Server,
+  User,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,7 @@ interface LogEntryProps {
     errors?: string;
     milliseconds?: number;
     PipelineJobQueue?: {
+      id?: string;
       Pipeline?: {
         id: string;
         name: string;
@@ -164,8 +168,55 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
       <CollapsibleContent>
         <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <div className="space-y-3">
-            {/* No podemos acceder a información de Pipeline */}
+            {/* Información del Job y Pipeline */}
+            {(log.PipelineJobQueue?.Pipeline || log.pipeline_job_id) && (
+              <div>
+                <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline / Job</h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  {log.PipelineJobQueue?.Pipeline && (
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      {log.PipelineJobQueue.Pipeline.name}
+                      {' - '}
+                      <Link to={`/jobs/${log.pipeline_job_id}`} className="text-blue-500 hover:underline inline-flex items-center">
+                        Ver Job <ExternalLink className="h-3 w-3 ml-1" />
+                      </Link>
+                    </p>
+                  )}
+                  {!log.PipelineJobQueue?.Pipeline && log.pipeline_job_id && (
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      <Link to={`/jobs/${log.pipeline_job_id}`} className="text-blue-500 hover:underline inline-flex items-center">
+                        Job {log.pipeline_job_id.substring(0, 8)} <ExternalLink className="h-3 w-3 ml-1" />
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             
+            {/* Información del Agente */}
+            {(log.AgentPassport || log.PipelineJobQueue?.started_by_agent) && (
+              <div>
+                <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Agente</h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <User className="h-4 w-4 text-green-500" />
+                  {log.AgentPassport && (
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      <Link to={`/agents/${log.AgentPassport.id}`} className="text-green-500 hover:underline inline-flex items-center">
+                        {log.AgentPassport.name} <ExternalLink className="h-3 w-3 ml-1" />
+                      </Link>
+                    </p>
+                  )}
+                  {!log.AgentPassport && log.PipelineJobQueue?.started_by_agent && (
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      ID del Agente: {log.PipelineJobQueue.started_by_agent.substring(0, 8)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Unit ID */}
             {log.pipeline_unit_id && (
               <div>
                 <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline Unit ID</h4>
