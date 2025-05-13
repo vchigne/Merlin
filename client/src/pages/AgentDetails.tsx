@@ -30,7 +30,7 @@ export default function AgentDetails() {
     queryFn: async () => {
       console.log('Fetching agent details for ID:', id);
       const result = await executeQuery(`
-        query GetAgent($id: String!) {
+        query GetAgent($id: uuid!) {
           merlin_agent_AgentPassport(where: {id: {_eq: $id}}) {
             id
             name
@@ -43,7 +43,7 @@ export default function AgentDetails() {
             check_agent_update
             is_healthy
             auto_clean_update
-            AgentPassportPing(limit: 1, order_by: {last_ping_at: desc}) {
+            AgentPassportPings(limit: 1, order_by: {last_ping_at: desc}) {
               last_ping_at
               hostname
               ips
@@ -85,7 +85,7 @@ export default function AgentDetails() {
     queryKey: ['/api/agents/logs', id],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetAgentLogs($id: String!) {
+        query GetAgentLogs($id: uuid!) {
           merlin_agent_AgentUpdateLog(
             where: {agent_passport_id: {_eq: $id}}
             order_by: {created_at: desc}
@@ -121,7 +121,7 @@ export default function AgentDetails() {
     queryKey: ['/api/agents/pipelines', id],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetAgentPipelines($id: String!) {
+        query GetAgentPipelines($id: uuid!) {
           merlin_agent_Pipeline(
             where: {agent_passport_id: {_eq: $id}}
             order_by: {created_at: desc}
@@ -167,7 +167,7 @@ export default function AgentDetails() {
     queryKey: ['/api/agents/jobs', id],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetAgentJobs($id: String!) {
+        query GetAgentJobs($id: uuid!) {
           merlin_agent_PipelineJobQueue(
             where: {started_by_agent: {_eq: $id}}
             order_by: {created_at: desc}

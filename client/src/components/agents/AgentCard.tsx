@@ -71,10 +71,8 @@ export default function AgentCard({ agent }: AgentCardProps) {
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <Link href={`/agents/${agent.id}`}>
-            <a className="text-lg font-medium hover:text-primary-600 transition-colors">
-              {agent.name || `Agent-${agent.id.substring(0, 8)}`}
-            </a>
+          <Link href={`/agents/${agent.id}`} className="text-lg font-medium hover:text-primary-600 transition-colors">
+            {agent.name || `Agent-${agent.id.substring(0, 8)}`}
           </Link>
           <div className="flex space-x-2">
             {agent.is_testing && (
