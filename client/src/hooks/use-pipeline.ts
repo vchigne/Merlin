@@ -218,7 +218,7 @@ export function usePipelineUnits(pipelineId: string) {
             }
             PipelineJobLogs(limit: 1, order_by: {created_at: desc}) {
               id
-              pipeline_job_queue_id
+              pipeline_job_id
             }
           }
         }

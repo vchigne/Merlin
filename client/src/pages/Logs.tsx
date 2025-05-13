@@ -110,7 +110,7 @@ export default function Logs() {
         const date = formatDate(log.date || log.created_at);
         const level = log.level || "INFO";
         const message = (log.message || "").replace(/,/g, " ").replace(/\n/g, " ");
-        const jobId = log.pipeline_job_queue_id || "";
+        const jobId = log.pipeline_job_id || "";
         const unitId = log.pipeline_unit_id || "";
         
         return [

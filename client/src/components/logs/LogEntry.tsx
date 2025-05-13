@@ -210,7 +210,7 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
             )}
             
             <div className="text-xs text-slate-500 dark:text-slate-400">
-              Log ID: {log.id} {log.pipeline_job_queue_id && `• Job ID: ${log.pipeline_job_queue_id}`}
+              Log ID: {log.id} {log.pipeline_job_id && `• Job ID: ${log.pipeline_job_id}`}
             </div>
           </div>
         </div>
