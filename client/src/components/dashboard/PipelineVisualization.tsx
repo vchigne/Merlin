@@ -16,6 +16,18 @@ export default function PipelineVisualization() {
   const [unitDetails, setUnitDetails] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   
+  // Determine node types for visualization
+  const getUnitType = (unit: any) => {
+    if (unit.command_id) return 'Command';
+    if (unit.query_queue_id) return 'SQL Query';
+    if (unit.sftp_downloader_id) return 'SFTP Download';
+    if (unit.sftp_uploader_id) return 'SFTP Upload';
+    if (unit.zip_id) return 'Zip Files';
+    if (unit.unzip_id) return 'Unzip Files';
+    if (unit.call_pipeline) return 'Call Pipeline';
+    return 'Unit';
+  };
+  
   // Fetch pipelines
   const { data: pipelinesData, isLoading: isPipelinesLoading } = useQuery({
     queryKey: ['/api/pipelines'],
@@ -156,18 +168,6 @@ export default function PipelineVisualization() {
         details: null
       });
     }
-  };
-  
-  // Determine node types for visualization
-  const getUnitType = (unit: any) => {
-    if (unit.command_id) return 'Command';
-    if (unit.query_queue_id) return 'SQL Query';
-    if (unit.sftp_downloader_id) return 'SFTP Download';
-    if (unit.sftp_uploader_id) return 'SFTP Upload';
-    if (unit.zip_id) return 'Zip Files';
-    if (unit.unzip_id) return 'Unzip Files';
-    if (unit.call_pipeline) return 'Call Pipeline';
-    return 'Unit';
   };
   
   // Get status for visualization (mocked as we don't have real execution data)
