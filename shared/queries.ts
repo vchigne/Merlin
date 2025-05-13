@@ -63,7 +63,7 @@ export const PIPELINE_QUERY = `
 `;
 
 export const PIPELINE_UNITS_QUERY = `
-  query GetPipelineUnits($pipelineId: String!) {
+  query GetPipelineUnits($pipelineId: uuid!) {
     merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
       id
       command_id

@@ -24,7 +24,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
     switch (type) {
       case 'command':
         return `
-          query GetCommandDetails($id: String!) {
+          query GetCommandDetails($id: uuid!) {
             merlin_agent_Command(where: {id: {_eq: $id}}) {
               id
               target
@@ -41,7 +41,7 @@ export function usePipelineUnitDetails(unitId: string, type: string) {
         `;
       case 'query':
         return `
-          query GetQueryDetails($id: String!) {
+          query GetQueryDetails($id: uuid!) {
             merlin_agent_QueryQueue(where: {id: {_eq: $id}}) {
               id
               name
