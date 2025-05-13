@@ -63,7 +63,7 @@ export default function PipelineDetails() {
     queryKey: ['/api/pipelines/jobs', id],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetPipelineJobs($id: String!) {
+        query GetPipelineJobs($id: uuid!) {
           merlin_agent_PipelineJobQueue(
             where: {pipeline_id: {_eq: $id}}
             order_by: {created_at: desc}
@@ -111,7 +111,7 @@ export default function PipelineDetails() {
     queryKey: ['/api/pipelines/logs', id],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetPipelineLogs($id: String!) {
+        query GetPipelineLogs($id: uuid!) {
           merlin_agent_PipelineJobLogV2Body(
             where: {PipelineJobQueue: {pipeline_id: {_eq: $id}}}
             order_by: {created_at: desc}
@@ -279,10 +279,8 @@ export default function PipelineDetails() {
                         {isPipelineLoading ? (
                           <Skeleton className="h-4 w-32 inline-block" />
                         ) : (
-                          <Link href={`/agents/${pipeline.agent_passport_id}`}>
-                            <a className="text-primary-600 dark:text-primary-400 hover:underline">
+                          <Link href={`/agents/${pipeline.agent_passport_id}`} className="text-primary-600 dark:text-primary-400 hover:underline">
                               {pipeline.AgentPassport?.name || pipeline.agent_passport_id.substring(0, 8)}
-                            </a>
                           </Link>
                         )}
                       </span>
