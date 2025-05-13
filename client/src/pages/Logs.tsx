@@ -103,23 +103,23 @@ export default function Logs() {
   const exportLogs = () => {
     if (!logsData?.logs) return;
     
-    const headers = ["ID", "Date", "Level", "Message", "Pipeline", "Agent"];
+    const headers = ["ID", "Date", "Level", "Message", "Job ID", "Unit ID"];
     const csvContent = [
       headers.join(","),
       ...logsData.logs.map(log => {
-        const pipeline = log.PipelineJobQueue?.Pipeline?.name || "";
-        const agent = log.AgentPassport?.name || "";
         const date = formatDate(log.date || log.created_at);
         const level = log.level || "INFO";
         const message = (log.message || "").replace(/,/g, " ").replace(/\n/g, " ");
+        const jobId = log.pipeline_job_queue_id || "";
+        const unitId = log.pipeline_unit_id || "";
         
         return [
           log.id,
           date,
           level,
           `"${message}"`,
-          `"${pipeline}"`,
-          `"${agent}"`
+          `"${jobId}"`,
+          `"${unitId}"`
         ].join(",");
       })
     ].join("\n");

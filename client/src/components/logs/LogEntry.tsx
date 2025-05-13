@@ -148,12 +148,11 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
               </span>
             )}
             
-            {log.PipelineJobQueue?.started_by_agent && (
+            {/* No podemos acceder a PipelineJobQueue directamente */}
+            {log.pipeline_job_queue_id && (
               <span className="flex items-center">
                 <Server className="h-3 w-3 mr-1" />
-                <Link href={`/agents/${log.PipelineJobQueue.started_by_agent}`} className="hover:underline text-primary-600 dark:text-primary-400">
-                    {log.AgentPassport?.name || log.PipelineJobQueue.started_by_agent.substring(0, 8)}
-                </Link>
+                <span className="text-slate-500">{log.pipeline_job_queue_id.substring(0, 8)}</span>
               </span>
             )}
           </div>
@@ -163,20 +162,13 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
       <CollapsibleContent>
         <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <div className="space-y-3">
-            {log.PipelineJobQueue?.Pipeline && (
-              <div>
-                <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline</h4>
-                <Link href={`/pipelines/${log.PipelineJobQueue.Pipeline.id}`} className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
-                    {log.PipelineJobQueue.Pipeline.name}
-                </Link>
-              </div>
-            )}
+            {/* No podemos acceder a información de Pipeline */}
             
-            {log.PipelineUnit && (
+            {log.pipeline_unit_id && (
               <div>
-                <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline Unit</h4>
-                <p className="text-sm">
-                  {log.PipelineUnit.comment || log.PipelineUnit.id}
+                <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline Unit ID</h4>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  {log.pipeline_unit_id}
                 </p>
               </div>
             )}
