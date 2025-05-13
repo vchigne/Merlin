@@ -28,6 +28,7 @@ export default function AgentDetails() {
   } = useQuery({
     queryKey: ['/api/agents', id],
     queryFn: async () => {
+      console.log('Fetching agent details for ID:', id);
       const result = await executeQuery(`
         query GetAgent($id: String!) {
           merlin_agent_AgentPassport(where: {id: {_eq: $id}}) {
@@ -42,15 +43,28 @@ export default function AgentDetails() {
             check_agent_update
             is_healthy
             auto_clean_update
+            AgentPassportPing(limit: 1, order_by: {last_ping_at: desc}) {
+              last_ping_at
+              hostname
+              ips
+              os_version
+              agent_version_from_source_code
+            }
           }
         }
       `, { id });
       
       if (result.errors) {
+        console.error('Error fetching agent details:', result.errors);
         throw new Error(result.errors[0].message);
       }
       
-      return result.data.merlin_agent_AgentPassport[0];
+      const agentData = result.data.merlin_agent_AgentPassport[0];
+      if (!agentData) {
+        throw new Error('Agent not found');
+      }
+      
+      return agentData;
     },
     enabled: !!id,
   });

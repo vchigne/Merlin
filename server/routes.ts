@@ -88,20 +88,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 // Function to check if a query is read-only
 function isReadOnlyQuery(query: string): boolean {
-  // Remove comments
-  const queryWithoutComments = query.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-  
-  // Normalize whitespace
-  const normalizedQuery = queryWithoutComments.replace(/\s+/g, ' ').trim().toLowerCase();
+  try {
+    // Remove comments
+    const queryWithoutComments = query.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    
+    // Normalize whitespace
+    const normalizedQuery = queryWithoutComments.replace(/\s+/g, ' ').trim().toLowerCase();
 
-  // Check if it's explicitly a mutation or subscription
-  if (normalizedQuery.startsWith('mutation') || normalizedQuery.startsWith('subscription')) {
+    // If the query is empty after normalization, it's not valid but not harmful
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    // Check if it's explicitly a mutation or subscription
+    if (normalizedQuery.startsWith('mutation') || normalizedQuery.startsWith('subscription')) {
+      return false;
+    }
+
+    // GraphQL queries usually start with 'query'
+    if (normalizedQuery.startsWith('query')) {
+      return true;
+    }
+
+    // SQL mutations would have these patterns
+    const dangerousPatterns = [
+      /\binsert\s+into\b/i,
+      /\bupdate\s+\w+\s+set\b/i,
+      /\bdelete\s+from\b/i,
+      /\balter\s+table\b/i,
+      /\bcreate\s+(table|database|index)\b/i,
+      /\bdrop\s+(table|database|index)\b/i
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(normalizedQuery)) {
+        return false;
+      }
+    }
+    
+    // Assume it's read-only if no dangerous patterns are found
+    return true;
+  } catch (error) {
+    console.error("Error in isReadOnlyQuery:", error);
+    // If there's an error in the validation, be safe and reject the query
     return false;
   }
-
-  // Check for typical mutation keywords that aren't in column/table names
-  const hasMutationKeyword = /\s+insert\s+into|\s+update\s+|\s+delete\s+from|\s+alter\s+|\s+create\s+|\s+drop\s+/.test(normalizedQuery);
-  
-  // Return true if query contains only read operations
-  return !hasMutationKeyword;
 }
