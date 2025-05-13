@@ -17,16 +17,16 @@ export function useJobs({
   offset = 0, 
   filters = {}
 }: UseJobsOptions = {}) {
-  // Build the where clause based on filters
-  const buildWhereClause = useCallback(() => {
+  // Build filter conditions
+  const buildFilterConditions = useCallback(() => {
     const conditions: string[] = [];
     
     if (filters.pipelineId) {
-      conditions.push(`pipeline_id: {_eq: ${filters.pipelineId}}`);
+      conditions.push(`pipeline_id: {_eq: "${filters.pipelineId}"}`);
     }
     
     if (filters.agentId) {
-      conditions.push(`started_by_agent: {_eq: ${filters.agentId}}`);
+      conditions.push(`started_by_agent: {_eq: "${filters.agentId}"}`);
     }
     
     if (filters.status) {
@@ -43,52 +43,96 @@ export function useJobs({
       }
     }
     
-    return conditions.length > 0 
-      ? `where: {${conditions.join(', ')}}` 
-      : '';
+    return conditions;
   }, [filters]);
 
   return useQuery({
     queryKey: ['/api/jobs', { limit, offset, ...filters }],
     queryFn: async () => {
-      const whereClause = buildWhereClause();
+      const filterConditions = buildFilterConditions();
+      const hasFilters = filterConditions.length > 0;
+      const variables: Record<string, any> = { limit, offset };
       
-      const result = await executeQuery(`
-        query GetJobs($limit: Int!, $offset: Int!) {
-          merlin_agent_PipelineJobQueue(
-            ${whereClause}
-            order_by: {created_at: desc}
-            limit: $limit
-            offset: $offset
-          ) {
-            id
-            pipeline_id
-            completed
-            running
-            aborted
-            created_at
-            updated_at
-            started_by_agent
-            Pipeline {
-              name
-            }
-            AgentPassport {
-              name
-            }
-            PipelineJobLogs(limit: 3) {
+      let result;
+      
+      if (hasFilters) {
+        // Query with filters
+        const whereClause = `where: {${filterConditions.join(', ')}}`;
+        
+        result = await executeQuery(`
+          query GetJobsWithFilters($limit: Int!, $offset: Int!) {
+            merlin_agent_PipelineJobQueue(
+              ${whereClause}
+              order_by: {created_at: desc}
+              limit: $limit
+              offset: $offset
+            ) {
               id
-              logs
-              warnings
-              errors
+              pipeline_id
+              completed
+              running
+              aborted
+              created_at
+              updated_at
+              started_by_agent
+              Pipeline {
+                name
+              }
+              AgentPassport {
+                name
+              }
+              PipelineJobLogs(limit: 3) {
+                id
+                logs
+                warnings
+                errors
+              }
+            }
+            merlin_agent_PipelineJobQueue_aggregate(${whereClause}) {
+              aggregate {
+                count
+              }
             }
           }
-          merlin_agent_PipelineJobQueue_aggregate(${whereClause}) {
-            aggregate {
-              count
+        `, variables);
+      } else {
+        // Query without filters
+        result = await executeQuery(`
+          query GetJobs($limit: Int!, $offset: Int!) {
+            merlin_agent_PipelineJobQueue(
+              order_by: {created_at: desc}
+              limit: $limit
+              offset: $offset
+            ) {
+              id
+              pipeline_id
+              completed
+              running
+              aborted
+              created_at
+              updated_at
+              started_by_agent
+              Pipeline {
+                name
+              }
+              AgentPassport {
+                name
+              }
+              PipelineJobLogs(limit: 3) {
+                id
+                logs
+                warnings
+                errors
+              }
+            }
+            merlin_agent_PipelineJobQueue_aggregate {
+              aggregate {
+                count
+              }
             }
           }
-        }
-      `, { limit, offset });
+        `, variables);
+      }
       
       if (result.errors) {
         throw new Error(result.errors[0].message);
