@@ -35,8 +35,7 @@ export function usePipelines({
       const result = await executeQuery(`
         query GetPipelines($limit: Int!, $offset: Int!) {
           merlin_agent_Pipeline(
-            ${whereClause}
-            order_by: {created_at: desc}
+            ${whereClause ? whereClause + '\n            ' : ''}order_by: {created_at: desc}
             limit: $limit
             offset: $offset
           ) {
@@ -53,7 +52,7 @@ export function usePipelines({
             }
             ${jobsFragment}
           }
-          merlin_agent_Pipeline_aggregate(${whereClause}) {
+          merlin_agent_Pipeline_aggregate(${whereClause ? whereClause : ''}) {
             aggregate {
               count
             }
