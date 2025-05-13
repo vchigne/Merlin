@@ -62,7 +62,7 @@ export default function AgentDetailsPanel({
   };
 
   // Get the last ping from either direct agentPings prop or from agent.AgentPassportPing
-  const lastPing = agentPings?.[0] || agent?.AgentPassportPing?.[0];
+  const lastPing = agentPings?.[0] || (Array.isArray(agent?.AgentPassportPing) ? agent?.AgentPassportPing?.[0] : agent?.AgentPassportPing);
   
   // Determine agent status based on health flag and last ping time
   const status = determineAgentStatus(

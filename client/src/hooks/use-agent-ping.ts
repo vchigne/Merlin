@@ -12,7 +12,7 @@ export function useAgentPing({ agentId, enabled = true }: UseAgentPingOptions) {
     queryKey: ['/api/agents/ping', agentId],
     queryFn: async () => {
       const result = await executeQuery(`
-        query GetAgentPings($agentId: String!) {
+        query GetAgentPings($agentId: uuid!) {
           merlin_agent_AgentPassportPing(
             where: {agent_passport_id: {_eq: $agentId}},
             order_by: {last_ping_at: desc},

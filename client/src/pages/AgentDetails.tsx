@@ -43,7 +43,7 @@ export default function AgentDetails() {
             check_agent_update
             is_healthy
             auto_clean_update
-            AgentPassportPings(limit: 1, order_by: {last_ping_at: desc}) {
+            AgentPassportPing {
               last_ping_at
               hostname
               ips
