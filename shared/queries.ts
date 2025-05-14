@@ -395,6 +395,8 @@ export const SFTP_LINK_USAGE_QUERY = `
     downloaders: merlin_agent_SFTPDownloader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
+      output
+      return_output
       PipelineUnits {
         id
         pipeline {
@@ -410,6 +412,8 @@ export const SFTP_LINK_USAGE_QUERY = `
     uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
+      input
+      return_output
       PipelineUnits {
         id
         pipeline {
