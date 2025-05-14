@@ -187,13 +187,15 @@ export const AGENT_HEALTH_STATUS_QUERY = `
         last_ping_at
         hostname
         ips
+        created_at
       }
-      PipelineJobQueues(limit: 10, order_by: {created_at: desc}) {
+      PipelineJobQueues(limit: 20, order_by: {created_at: desc}) {
         id
         completed
         running
         aborted
         created_at
+        updated_at
       }
     }
   }
