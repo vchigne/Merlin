@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronsUpDown, Info } from "lucide-react";
+import { Check, Search, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -24,78 +23,54 @@ export default function PipelineSearch({
   const [searchQuery, setSearchQuery] = useState("");
   const [showDebug, setShowDebug] = useState(false);
   const [debugResults, setDebugResults] = useState<string[]>([]);
-  
-  // Función dedicada para buscar MDLZ
-  const findMDLZPipelines = () => {
-    // Buscamos sin importar mayúsculas/minúsculas
-    const mdlzPipelines = pipelines.filter(p => 
-      (p.name?.toUpperCase().includes('MDLZ') || 
-      p.description?.toUpperCase().includes('MDLZ') || 
-      p.id?.toUpperCase().includes('MDLZ'))
-    );
-    
-    setDebugResults([
-      `Total de pipelines: ${pipelines.length}`,
-      `Pipelines que contienen "MDLZ": ${mdlzPipelines.length}`,
-      ...mdlzPipelines.slice(0, 5).map(p => `- "${p.name}" (ID: ${p.id?.substring(0, 8)}...)`)
-    ]);
-    
-    setShowDebug(true);
-    
-    // Si hay resultados, actualiza también los pipelines filtrados para mostrarlos
-    if (mdlzPipelines.length > 0) {
-      setFilteredResults(mdlzPipelines);
-      // No actualizamos la consulta para evitar un ciclo infinito con el useEffect
-      if (searchQuery !== "MDLZ") {
-        setSearchQuery("MDLZ");
-      }
-    }
-  };
-  
-  // Estado local para el filtrado
   const [filteredResults, setFilteredResults] = useState<any[]>([]);
-  
-  // Función de filtrado que se ejecuta cuando cambia la búsqueda
-  useEffect(() => {
+
+  // Función principal de búsqueda que se llama en varios lugares
+  const performSearch = (query: string) => {
     if (!pipelines || pipelines.length === 0) {
       setDebugResults([`No hay pipelines disponibles`]);
       setFilteredResults([]);
       return;
     }
     
-    if (searchQuery.trim() === "") {
+    if (query.trim() === "") {
       setDebugResults([`Mostrando todos los ${pipelines.length} pipelines`]);
       setFilteredResults(pipelines);
       return;
     }
+
+    // Usar toUpperCase para una búsqueda insensible a mayúsculas/minúsculas
+    const upperQuery = query.toUpperCase();
     
-    // Usar toUpperCase para ser consistente con la búsqueda de MDLZ
-    const query = searchQuery.toUpperCase();
-    
-    // Comprobar si estamos buscando MDLZ explícitamente
-    if (query === 'MDLZ') {
-      findMDLZPipelines();
-      return; // La función findMDLZPipelines ya actualiza filteredPipelines
-    }
-    
-    // Filtro mejorado que busca en mayúsculas para ser consistente
-    const results = pipelines.filter(pipeline => {
-      const nameMatch = pipeline.name?.toUpperCase().includes(query) || false;
-      const descMatch = pipeline.description?.toUpperCase().includes(query) || false;
-      const idMatch = pipeline.id?.toUpperCase().includes(query) || false;
-      
-      return nameMatch || descMatch || idMatch;
-    });
+    // Filtrar pipelines por nombre, descripción o ID
+    const results = pipelines.filter(pipeline => 
+      (pipeline.name?.toUpperCase().includes(upperQuery) || 
+       pipeline.description?.toUpperCase().includes(upperQuery) || 
+       pipeline.id?.toUpperCase().includes(upperQuery))
+    );
     
     setDebugResults([
       `Total de pipelines: ${pipelines.length}`,
-      `Resultados para "${searchQuery}": ${results.length}`
+      `Resultados para "${query}": ${results.length}`,
+      ...results.slice(0, 5).map(p => `- "${p.name}" (ID: ${p.id?.substring(0, 8)}...)`)
     ]);
     
     setFilteredResults(results);
+  };
+  
+  // Función específica para buscar MDLZ
+  const findMDLZPipelines = () => {
+    setSearchQuery("MDLZ");
+    performSearch("MDLZ");
+    setShowDebug(true);
+  };
+  
+  // Actualizar resultados cuando cambia la búsqueda o los pipelines
+  useEffect(() => {
+    performSearch(searchQuery);
   }, [pipelines, searchQuery]);
   
-  // Usamos el estado local en lugar del useMemo
+  // Para acceder en la UI
   const filteredPipelines = filteredResults;
 
   // Obtener el nombre del pipeline seleccionado
@@ -108,66 +83,82 @@ export default function PipelineSearch({
   return (
     <div>
       <div className="flex space-x-2 items-center mb-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[250px] justify-between"
-              disabled={isLoading}
-            >
-              {isLoading ? "Cargando..." : getSelectedPipelineName()}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0">
-            <Command>
-              <CommandInput
-                placeholder="Buscar pipeline..."
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-                className="h-9"
-              />
-              <CommandEmpty>No se encontraron pipelines</CommandEmpty>
-              <CommandGroup>
-                <ScrollArea className="h-[300px]">
-                  {filteredPipelines.map((pipeline) => (
-                    <CommandItem
-                      key={pipeline.id}
-                      value={pipeline.id}
-                      onSelect={(value) => {
-                        onSelectPipeline(value);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={`mr-2 h-4 w-4 ${
-                          selectedPipelineId === pipeline.id ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
+        <div className="flex-grow relative">
+          <div className="relative">
+            <Input
+              className="w-full pr-10"
+              placeholder="Buscar pipeline..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="absolute right-3 top-2">
+              <Search className="h-4 w-4 text-slate-400" />
+            </div>
+          </div>
+          
+          {/* Dropdown con resultados */}
+          {open && searchQuery.trim() !== "" && filteredPipelines.length > 0 && (
+            <Card className="absolute left-0 top-full mt-1 w-full z-50">
+              <ScrollArea className="h-[250px]">
+                {filteredPipelines.map((pipeline) => (
+                  <div
+                    key={pipeline.id}
+                    className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer
+                      ${selectedPipelineId === pipeline.id ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
+                    onClick={() => {
+                      onSelectPipeline(pipeline.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center">
+                      {selectedPipelineId === pipeline.id && (
+                        <Check className="mr-2 h-4 w-4" />
+                      )}
                       <div className="flex-1">
                         <p className="text-sm font-medium">{pipeline.name}</p>
                         {pipeline.description && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                          <p className="text-xs text-muted-foreground truncate">
                             {pipeline.description}
                           </p>
                         )}
                       </div>
-                    </CommandItem>
-                  ))}
-                </ScrollArea>
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </Card>
+          )}
+          
+          {/* Mensaje de "No se encontraron pipelines" */}
+          {open && searchQuery.trim() !== "" && filteredPipelines.length === 0 && (
+            <Card className="absolute left-0 top-full mt-1 p-4 w-full z-50 text-center">
+              No se encontraron pipelines
+            </Card>
+          )}
+        </div>
+        
+        <Button
+          variant="outline"
+          className="whitespace-nowrap"
+          onClick={() => {
+            const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
+            if (selectedPipeline) {
+              alert(`Pipeline seleccionado: ${selectedPipeline.name}`);
+            } else {
+              alert('Ningún pipeline seleccionado');
+            }
+          }}
+        >
+          {isLoading ? "Cargando..." : (selectedPipelineId ? getSelectedPipelineName() : "Seleccionar pipeline")}
+        </Button>
         
         <Button 
           variant="ghost" 
           size="icon"
           onClick={() => {
             setShowDebug(!showDebug);
-            if (!showDebug && searchQuery.toLowerCase() === 'mdlz') {
+            setOpen(true);
+            if (!showDebug) {
               findMDLZPipelines();
             }
           }}
@@ -183,8 +174,8 @@ export default function PipelineSearch({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <h4 className="font-semibold text-sm">Diagnóstico de búsqueda</h4>
-                <Badge variant={debugResults.length > 0 ? 'default' : 'destructive'}>
-                  {debugResults.length} resultados
+                <Badge variant={filteredPipelines.length > 0 ? 'default' : 'destructive'}>
+                  {filteredPipelines.length} resultados
                 </Badge>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md text-xs font-mono overflow-auto max-h-[200px]">
@@ -199,7 +190,10 @@ export default function PipelineSearch({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => findMDLZPipelines()}
+                  onClick={() => {
+                    findMDLZPipelines();
+                    setOpen(true);
+                  }}
                 >
                   Buscar MDLZ
                 </Button>
