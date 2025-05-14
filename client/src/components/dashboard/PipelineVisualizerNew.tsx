@@ -402,10 +402,10 @@ export default function PipelineVisualizerNew() {
                           onClick={() => fetchUnitDetails(unit)}
                         >
                           <div className="p-2 h-full flex flex-col justify-center">
-                            <div className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                            <div className="font-medium text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                               {unitType}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden text-ellipsis">
                               {unit.comment || 'Sin descripción'}
                             </div>
                           </div>
