@@ -31,6 +31,9 @@ export function useAgentStatus(): AgentStatusResult {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  // Debug: Log raw agent data
+  console.log('Raw agent data from API:', data);
+  
   // Process agents to add status information
   const processedAgents = data?.map((agent: any) => {
     // Fix any data inconsistency before processing
@@ -42,8 +45,24 @@ export function useAgentStatus(): AgentStatusResult {
       PipelineJobQueues: agent.PipelineJobQueues || []
     };
     
+    console.log('Processing agent:', {
+      id: agent.id,
+      name: agent.name,
+      hasPings: agent.AgentPassportPing?.length > 0,
+      totalPings: agent.AgentPassportPing?.length,
+      hasJobs: agent.PipelineJobQueues?.length > 0,
+      totalJobs: agent.PipelineJobQueues?.length
+    });
+    
     // Use the advanced algorithm to determine status
     const healthInfo = determineAgentStatus(normalizedAgent);
+    console.log('Agent health info result:', {
+      id: agent.id,
+      name: agent.name,
+      status: healthInfo.status,
+      pingRatePercent: healthInfo.pingRatePercent,
+      jobSuccessRatePercent: healthInfo.jobSuccessRatePercent,
+    });
     
     return {
       ...agent,

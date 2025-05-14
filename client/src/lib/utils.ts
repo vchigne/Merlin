@@ -148,9 +148,18 @@ export function safeJsonParse(jsonString: string, fallback: any = null): any {
 // Determine agent health status based on ping history and job execution success rates
 export function determineAgentStatus(
   agent: { 
+    id?: string,
+    name?: string,
     is_healthy?: boolean,
-    AgentPassportPing?: { last_ping_at: string }[],
-    PipelineJobQueues?: { completed: boolean, running: boolean, aborted: boolean }[]
+    AgentPassportPing?: { last_ping_at: string, created_at?: string, hostname?: string, ips?: string }[],
+    PipelineJobQueues?: { 
+      id?: string, 
+      completed: boolean, 
+      running: boolean, 
+      aborted: boolean,
+      created_at?: string,
+      updated_at?: string
+    }[]
   }
 ): {
   status: string,
@@ -186,6 +195,14 @@ export function determineAgentStatus(
   
   // PASO 2: Calcular tasa de pings recibidos
   const pings = agent.AgentPassportPing || [];
+  console.log('Calculando ping rate:', {
+    agentId: agent.id,
+    agentName: agent.name,
+    hasPings: pings.length > 0,
+    lastPing: lastPing ? new Date(lastPing).toISOString() : 'none',
+    diffMinutes: diffMinutes
+  });
+  
   if (pings.length > 0) {
     // Si hemos recibido al menos un ping en la última hora, asumimos un buen ratio de ping
     if (diffMinutes <= 60) {
@@ -202,27 +219,47 @@ export function determineAgentStatus(
       // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
       result.pingRatePercent = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
     }
+  } else {
+    console.log('No hay pings para el agente:', agent.id, agent.name);
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
   const jobs = agent.PipelineJobQueues || [];
+  console.log('Calculando job success rate:', {
+    agentId: agent.id,
+    agentName: agent.name,
+    totalJobs: jobs.length,
+    jobsData: jobs.map(job => ({
+      id: job.id,
+      completed: job.completed,
+      running: job.running,
+      aborted: job.aborted,
+      created_at: job.created_at,
+      updated_at: job.updated_at
+    }))
+  });
+  
   if (jobs.length > 0) {
     result.jobsAnalyzed = jobs.length;
     
     // Contamos solo trabajos que han terminado (completed=true o aborted=true)
     const finishedJobs = jobs.filter(job => job.completed || job.aborted);
+    console.log('Jobs finalizados:', finishedJobs.length, 'de', jobs.length);
     
     if (finishedJobs.length > 0) {
       // De los trabajos terminados, contamos los exitosos (completed=true, aborted=false)
       const successfulJobs = finishedJobs.filter(job => job.completed && !job.aborted).length;
+      console.log('Jobs exitosos:', successfulJobs, 'de', finishedJobs.length);
       result.jobSuccessRatePercent = Math.round((successfulJobs / finishedJobs.length) * 100);
     } else {
       // Si hay trabajos pero ninguno ha terminado, asumimos que están en curso
       // Asignamos un valor por defecto optimista (80% de éxito esperado)
+      console.log('No hay jobs finalizados, usando valor predeterminado 80%');
       result.jobSuccessRatePercent = 80;
     }
   } else {
     // Si no hay trabajos recientes, asumimos que no hay problemas (100% de éxito)
+    console.log('No hay jobs para el agente:', agent.id, agent.name);
     result.jobSuccessRatePercent = 100;
   }
   
