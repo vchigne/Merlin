@@ -136,69 +136,53 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         <CardTitle>Pipeline Flow</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="pipeline-flow-container bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 overflow-auto">
-          {/* SVG para dibujar todas las conexiones */}
-          <svg className="absolute top-0 left-0 w-full h-full" style={{ zIndex: 1 }}>
-            <defs>
-              {flowElements.edges.map(edge => (
+        <div className="relative h-[500px] w-full overflow-auto bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+          {/* Contenedor para las conexiones */}
+          <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+            <svg width="100%" height="100%" className="absolute top-0 left-0">
+              <defs>
                 <marker
-                  key={`marker-${edge.id}`}
-                  id={`arrowhead-${edge.id}`}
-                  markerWidth="15"
-                  markerHeight="10"
-                  refX="9"
+                  id="arrow"
+                  viewBox="0 0 10 10"
+                  refX="5"
                   refY="5"
-                  orient="auto"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
                 >
-                  <polygon 
-                    points="0 0, 15 5, 0 10" 
-                    className="pipeline-arrow"
-                  />
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
                 </marker>
-              ))}
-            </defs>
-            
-            {/* Dibujar bordes (conexiones) */}
-            {flowElements.edges.map((edge) => {
-              const sourceNode = flowElements.nodes.find(n => n.id === edge.source);
-              const targetNode = flowElements.nodes.find(n => n.id === edge.target);
+              </defs>
               
-              if (!sourceNode || !targetNode) return null;
-              
-              const sourceStatus = getUnitStatus(sourceNode.id);
-              const targetStatus = getUnitStatus(targetNode.id);
-              
-              // Calcular puntos de inicio y fin
-              // Centro del nodo de origen
-              const sourceX = sourceNode.position.x + 104; // Mitad del ancho (208/2)
-              const sourceY = sourceNode.position.y + 40;  // Aproximadamente centro vertical
-              
-              // Centro del nodo de destino
-              const targetX = targetNode.position.x + 104;
-              const targetY = targetNode.position.y + 40;
-              
-              // Determinar si la conexión está activa
-              const isActive = sourceStatus === 'completed' && 
-                              (targetStatus === 'running' || targetStatus === 'completed');
-              
-              // Calcular un punto de control para una curva suave
-              const controlPointX = (sourceX + targetX) / 2;
-              const controlPointY = (sourceY + targetY) / 2 - 50; // Desplazar hacia arriba
-              
-              // Crear un path para la curva
-              const path = `M ${sourceX} ${sourceY} Q ${controlPointX} ${controlPointY}, ${targetX} ${targetY}`;
-              
-              return (
-                <path
-                  key={edge.id}
-                  d={path}
-                  className={`pipeline-edge ${isActive ? 'active' : ''}`}
-                  markerEnd={`url(#arrowhead-${edge.id})`}
-                  strokeDasharray={targetStatus === 'pending' ? "5,5" : ""}
-                />
-              );
-            })}
-          </svg>
+              {/* Dibujar las líneas de conexión */}
+              {flowElements.edges.map((edge) => {
+                const sourceNode = flowElements.nodes.find(n => n.id === edge.source);
+                const targetNode = flowElements.nodes.find(n => n.id === edge.target);
+                
+                if (!sourceNode || !targetNode) return null;
+                
+                // Puntos de inicio y fin
+                const startX = sourceNode.position.x + 104;  // Centro del nodo
+                const startY = sourceNode.position.y + 60;   // Parte inferior
+                const endX = targetNode.position.x + 104;    // Centro del nodo
+                const endY = targetNode.position.y + 10;     // Parte superior
+                
+                // Línea recta con flecha
+                return (
+                  <line
+                    key={edge.id}
+                    x1={startX}
+                    y1={startY}
+                    x2={endX}
+                    y2={endY}
+                    stroke="#475569"
+                    strokeWidth="2"
+                    markerEnd="url(#arrow)"
+                  />
+                );
+              })}
+            </svg>
+          </div>
           
           {/* Dibujar nodos */}
           {flowElements.nodes.map((node) => {
@@ -209,7 +193,7 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
               <div 
                 key={node.id}
                 className={`absolute w-52 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
-                style={{ top: `${node.position.y}px`, left: `${node.position.x}px`, zIndex: 2 }}
+                style={{ top: `${node.position.y}px`, left: `${node.position.x}px`, zIndex: 1 }}
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
