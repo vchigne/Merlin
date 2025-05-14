@@ -149,8 +149,8 @@ export function safeJsonParse(jsonString: string, fallback: any = null): any {
 export function determineAgentStatus(
   agent: { 
     is_healthy?: boolean,
-    AgentPassportPing?: { last_ping_at: string }[],
-    PipelineJobQueues?: { completed: boolean, running: boolean, aborted: boolean }[]
+    AgentPassportPings?: { last_ping_at: string }[],
+    PipelineJobQueue?: { completed: boolean, running: boolean, aborted: boolean }[]
   }
 ): {
   status: string,
@@ -169,7 +169,7 @@ export function determineAgentStatus(
   };
   
   // PASO 1: Verificar el último ping para determinar conectividad básica
-  const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
+  const lastPing = agent.AgentPassportPings?.[0]?.last_ping_at;
   if (!lastPing) {
     return result; // Sin ping registrado = offline
   }
@@ -186,7 +186,7 @@ export function determineAgentStatus(
   
   // PASO 2: Calcular tasa de pings recibidos (últimos 10 pings)
   // Considerando intervalos de 30 minutos entre pings
-  const pings = agent.AgentPassportPing || [];
+  const pings = agent.AgentPassportPings || [];
   if (pings.length > 0) {
     // Estimamos cuántos pings deberíamos haber recibido en las últimas 5 horas
     // (10 pings con intervalo de 30 minutos = 5 horas)
@@ -203,7 +203,7 @@ export function determineAgentStatus(
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
-  const jobs = agent.PipelineJobQueues || [];
+  const jobs = agent.PipelineJobQueue || [];
   if (jobs.length > 0) {
     result.jobsAnalyzed = jobs.length;
     

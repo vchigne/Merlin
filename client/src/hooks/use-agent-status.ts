@@ -33,12 +33,14 @@ export function useAgentStatus(): AgentStatusResult {
 
   // Process agents to add status information
   const processedAgents = data?.map((agent: any) => {
-    const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
-    const status = determineAgentStatus(agent.is_healthy, lastPing);
+    // Usamos el nuevo algoritmo avanzado para determinar el estado
+    const healthInfo = determineAgentStatus(agent);
     
     return {
       ...agent,
-      status,
+      status: healthInfo.status,
+      pingRatePercent: healthInfo.pingRatePercent,
+      jobSuccessRatePercent: healthInfo.jobSuccessRatePercent,
     };
   }) || [];
 
