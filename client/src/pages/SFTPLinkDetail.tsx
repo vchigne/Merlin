@@ -122,8 +122,8 @@ export default function SFTPLinkDetailPage() {
                   <div className="flex items-start">
                     <Server className="h-5 w-5 mr-2 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Host</p>
-                      <p className="text-sm text-muted-foreground">{sftpLink.host}</p>
+                      <p className="font-medium">Server</p>
+                      <p className="text-sm text-muted-foreground">{sftpLink.server}</p>
                     </div>
                   </div>
                   
@@ -139,7 +139,7 @@ export default function SFTPLinkDetailPage() {
                     <User className="h-5 w-5 mr-2 text-muted-foreground" />
                     <div>
                       <p className="font-medium">Username</p>
-                      <p className="text-sm text-muted-foreground">{sftpLink.username}</p>
+                      <p className="text-sm text-muted-foreground">{sftpLink.user}</p>
                     </div>
                   </div>
                   

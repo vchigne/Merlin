@@ -18,6 +18,8 @@ import AgentDetails from "@/pages/AgentDetails";
 import PipelineDetails from "@/pages/PipelineDetails";
 import Connections from "@/pages/Connections";
 import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
+import SQLConnectionDetail from "@/pages/SQLConnectionDetail";
+import CommandDetail from "@/pages/CommandDetail";
 import NotFound from "@/pages/not-found";
 import { initializeSocket } from "./lib/socket";
 
