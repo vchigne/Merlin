@@ -27,6 +27,9 @@ export default function SQLConnectionDetailPage() {
   const { data: sqlConnection, isLoading, error } = useSQLConnectionDetail(id);
   const { data: usageData, isLoading: isLoadingUsage } = useSQLConnectionUsage(id);
   
+  // Agregar logs para debugging
+  console.log("SQL Connection Detail:", sqlConnection);
+  
   useDocumentTitle(sqlConnection ? `SQL Connection: ${sqlConnection.name}` : "SQL Connection Details");
   
   if (isLoading) {
@@ -193,13 +196,13 @@ export default function SQLConnectionDetailPage() {
               <TabsContent value="queries">
                 {isLoadingUsage ? (
                   <Skeleton className="h-40 w-full" />
-                ) : usageData?.queries?.length ? (
+                ) : sqlConnection?.queries?.length ? (
                   <div className="space-y-4">
-                    {usageData.queries.map((query: any) => (
+                    {sqlConnection.queries.map((query: any) => (
                       <Card key={query.id}>
                         <CardHeader className="py-4">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg">{query.name}</CardTitle>
+                            <CardTitle className="text-lg">{query.name || "Sin nombre"}</CardTitle>
                             <Badge variant={query.enabled ? "secondary" : "outline"}>
                               {query.enabled ? "Enabled" : "Disabled"}
                             </Badge>
