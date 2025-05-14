@@ -31,7 +31,7 @@ interface MerlinContextType {
   lastUpdated: Date;
 }
 
-const MerlinContext = createContext<MerlinContextType | undefined>(undefined);
+export const MerlinContext = createContext<MerlinContextType | undefined>(undefined);
 
 export function MerlinProvider({ children }: { children: ReactNode }) {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
@@ -166,7 +166,7 @@ export function MerlinProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useMerlinContext() {
+export const useMerlinContext = () => {
   const context = useContext(MerlinContext);
   if (context === undefined) {
     throw new Error('useMerlinContext must be used within a MerlinProvider');
