@@ -73,6 +73,7 @@ export default function SQLConnectionsTable() {
                 id: string;
                 name: string;
                 driver: string;
+                connstring: string;
                 updated_at?: string;
               }) => (
                 <TableRow key={conn.id}>

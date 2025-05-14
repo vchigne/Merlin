@@ -73,13 +73,13 @@ export default function SFTPLinksTable() {
               {sftpLinks.map((link: { 
                 id: string; 
                 name: string; 
-                host: string; 
+                server: string; 
                 port: number; 
                 updated_at?: string 
               }) => (
                 <TableRow key={link.id}>
                   <TableCell className="font-medium">{link.name}</TableCell>
-                  <TableCell>{link.host}</TableCell>
+                  <TableCell>{link.server}</TableCell>
                   <TableCell>{link.port}</TableCell>
                   <TableCell>
                     {link.updated_at ? (

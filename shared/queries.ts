@@ -355,9 +355,9 @@ export const SFTP_LINKS_QUERY = `
     merlin_agent_SFTPLink(limit: $limit) {
       id
       name
-      host
+      server
       port
-      username
+      user
       created_at
       updated_at
     }
@@ -432,7 +432,7 @@ export const SQL_CONNECTIONS_QUERY = `
       id
       name
       driver
-      connection_string
+      connstring
       created_at
       updated_at
     }
@@ -445,10 +445,10 @@ export const SQL_CONNECTION_DETAIL_QUERY = `
       id
       name
       driver
-      connection_string
+      connstring
       created_at
       updated_at
-      merlin_agent_Query {
+      Queries {
         id
         name
         query_string

@@ -249,7 +249,7 @@ export interface SQLConn {
   id: string;
   name: string;
   driver: string;
-  connection_string: string;
+  connstring: string;
   created_at: string;
   updated_at: string;
 }
