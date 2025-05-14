@@ -22,18 +22,47 @@ export default function PipelineSearch({
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
 
-  // Filtrar pipelines basados en la búsqueda
+  // Filtrar pipelines basados en la búsqueda con prioridad a coincidencias al inicio de palabras
   useEffect(() => {
     if (pipelines) {
       if (searchQuery.trim() === "") {
         setFilteredPipelines(pipelines);
       } else {
         const query = searchQuery.toLowerCase();
-        const filtered = pipelines.filter(
-          (pipeline) =>
-            pipeline.name.toLowerCase().includes(query) ||
-            (pipeline.description && pipeline.description.toLowerCase().includes(query))
-        );
+        
+        // Función que puntúa la relevancia de la coincidencia
+        const scoreMatch = (text: string, query: string): number => {
+          if (!text) return 0;
+          const lowerText = text.toLowerCase();
+          
+          // Mayor puntuación si coincide desde el inicio
+          if (lowerText.startsWith(query)) return 100;
+          
+          // Buscar coincidencias al inicio de las palabras
+          const words = lowerText.split(/\s+/);
+          for (const word of words) {
+            if (word.startsWith(query)) return 80;
+          }
+          
+          // Buscar coincidencias en cualquier parte, pero con menor prioridad
+          if (lowerText.includes(query)) return 50;
+          
+          return 0;
+        };
+        
+        // Filtrar y ordenar por puntuación
+        const filtered = pipelines
+          .map(pipeline => {
+            const nameScore = scoreMatch(pipeline.name, query);
+            const descScore = scoreMatch(pipeline.description, query);
+            return {
+              ...pipeline,
+              score: Math.max(nameScore, descScore)
+            };
+          })
+          .filter(p => p.score > 0)
+          .sort((a, b) => b.score - a.score);
+        
         setFilteredPipelines(filtered);
       }
     }
@@ -85,8 +114,20 @@ export default function PipelineSearch({
                       selectedPipelineId === pipeline.id ? "opacity-100" : "opacity-0"
                     }`}
                   />
-                  <div>
-                    <p className="text-sm font-medium">{pipeline.name}</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium flex items-center">
+                      {pipeline.name}
+                      {pipeline.score >= 100 && (
+                        <span className="ml-2 text-xs px-1 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-sm">
+                          Exacta
+                        </span>
+                      )}
+                      {pipeline.score >= 80 && pipeline.score < 100 && (
+                        <span className="ml-2 text-xs px-1 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-sm">
+                          Inicio
+                        </span>
+                      )}
+                    </p>
                     {pipeline.description && (
                       <p className="text-xs text-muted-foreground truncate max-w-[200px]">
                         {pipeline.description}
