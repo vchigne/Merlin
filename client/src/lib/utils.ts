@@ -191,11 +191,14 @@ export function determineAgentStatus(
   
   // PASO 1: Verificar el estado explícito del agente (si existe)
   // Si está explícitamente marcado en la base de datos, respetamos ese valor
+  // pero no hacemos status final, ya que aún necesitamos los datos de ping para completar el análisis
   if (agent.is_healthy === true) {
     console.log('Agente explícitamente marcado como healthy en la BD');
+    // Guardamos el estado pero no lo hacemos final aún
     result.status = 'healthy';
   } else if (agent.is_healthy === false) {
     console.log('Agente explícitamente marcado como unhealthy en la BD');
+    // Guardamos el estado pero no lo hacemos final aún
     result.status = 'error';
   }
   
@@ -316,8 +319,8 @@ export function determineAgentStatus(
   }
 
   // Para agentes que tienen pings, utilizamos los nuevos criterios basados en tiempo
-  // Esto es independiente de cualquier otra métrica
-  if (agent.is_healthy !== true && agent.is_healthy !== false) { // Solo si no hay is_healthy explícito en la BD
+  // Usamos una verificación más robusta que no provoque errores de tipo
+  if (typeof agent.is_healthy === 'undefined') { // Solo si no hay is_healthy explícito en la BD
     if (diffMinutes < 5) {
       // Ping muy reciente (menos de 5 minutos): consideramos el agente como saludable
       console.log('Ping muy reciente (<5 min), agente ACTIVO');
