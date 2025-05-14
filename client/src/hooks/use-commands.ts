@@ -69,14 +69,11 @@ interface PipelineUnit {
   posy?: number;
   created_at?: string;
   updated_at?: string;
-  pipeline?: {
+  Pipeline?: {
     id: string;
     name: string;
     description?: string;
-    agent_passport?: {
-      id: string;
-      name: string;
-    };
+    agent_passport_id?: string;
   };
 }
 

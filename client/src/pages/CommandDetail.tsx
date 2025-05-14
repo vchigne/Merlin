@@ -277,7 +277,7 @@ export default function CommandDetailPage() {
                   <Card key={unit.id}>
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">{unit.pipeline?.name || 'Unnamed Pipeline'}</CardTitle>
+                        <CardTitle className="text-lg">{unit.Pipeline?.name || 'Unnamed Pipeline'}</CardTitle>
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/pipelines/${unit.pipeline_id}`}>
                             View Pipeline
@@ -285,9 +285,9 @@ export default function CommandDetailPage() {
                         </Button>
                       </div>
                       <CardDescription>
-                        Agent: {unit.pipeline?.agent_passport?.name || 'Unknown'}
-                        {unit.pipeline?.description && (
-                          <p className="mt-1">{unit.pipeline.description}</p>
+                        Agent ID: {unit.Pipeline?.agent_passport_id || 'Unknown'}
+                        {unit.Pipeline?.description && (
+                          <p className="mt-1">{unit.Pipeline.description}</p>
                         )}
                       </CardDescription>
                     </CardHeader>

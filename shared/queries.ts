@@ -527,14 +527,11 @@ export const COMMAND_USAGE_QUERY = `
       posy
       created_at
       updated_at
-      pipeline {
+      Pipeline {
         id
         name
         description
-        agent_passport {
-          id
-          name
-        }
+        agent_passport_id
       }
     }
   }
