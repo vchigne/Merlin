@@ -166,7 +166,7 @@ export function MerlinProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useMerlinContext = () => {
+export function useMerlinContext() {
   const context = useContext(MerlinContext);
   if (context === undefined) {
     throw new Error('useMerlinContext must be used within a MerlinProvider');
