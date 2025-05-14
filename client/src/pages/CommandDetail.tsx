@@ -147,14 +147,14 @@ export default function CommandDetailPage() {
                     <div>
                       <p className="font-medium">DQProcess</p>
                       <div className="mt-1">
-                        {command.dq_process ? (
+                        {command.DQProcess ? (
                           <div>
                             <Badge variant="secondary" className="mb-1">
-                              {command.dq_process.name || 'Unnamed Process'}
+                              {command.DQProcess.name || 'Unnamed Process'}
                             </Badge>
-                            {command.dq_process.description && (
+                            {command.DQProcess.description && (
                               <p className="text-sm text-muted-foreground mt-1">
-                                {command.dq_process.description}
+                                {command.DQProcess.description}
                               </p>
                             )}
                           </div>

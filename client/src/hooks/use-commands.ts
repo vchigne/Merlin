@@ -95,7 +95,7 @@ interface CommandDetailResponse {
   return_output_type: string;
   labels: string[];
   dq_process_id: string;
-  dq_process?: {
+  DQProcess?: {
     id: string;
     name: string;
     description: string;
