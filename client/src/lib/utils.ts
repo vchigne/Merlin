@@ -151,7 +151,9 @@ export function determineAgentStatus(
     id?: string,
     name?: string,
     is_healthy?: boolean,
-    AgentPassportPing?: { last_ping_at: string, created_at?: string, hostname?: string, ips?: string }[],
+    AgentPassportPing?: 
+      | { last_ping_at: string, created_at?: string, hostname?: string, ips?: string } 
+      | { last_ping_at: string, created_at?: string, hostname?: string, ips?: string }[],
     PipelineJobQueues?: { 
       id?: string, 
       completed: boolean, 
@@ -180,21 +182,27 @@ export function determineAgentStatus(
   // PASO 1: Verificar el último ping para determinar conectividad básica
   console.log('Iniciando análisis de agente:', agent.id, agent.name);
   
-  // Si el agente está marcado como saludable en la base de datos, darle prioridad
+  // Si el agente está marcado como saludable en la base de datos, no asumimos automáticamente que es healthy
+  // Solo lo usamos como un dato más en la evaluación general
   if (agent.is_healthy) {
     console.log('Agente marcado como saludable en la base de datos');
-    result.status = 'healthy';
-    result.pingRatePercent = 90; // Valor alto por defecto para agentes marcados como saludables
-    result.jobSuccessRatePercent = 90;
-    // Continuamos el análisis para refinar estos valores
+    // No asignamos estado aquí, lo determinaremos basado en datos reales
   }
   
-  const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
+  // El ping viene como un objeto, no como array
+  let lastPing = null;
+  if (agent.AgentPassportPing) {
+    // @ts-ignore - Ignorar errores de tipo ya que sabemos que la estructura es correcta
+    lastPing = agent.AgentPassportPing.last_ping_at;
+  }
+  
   console.log('Último ping:', lastPing ? new Date(lastPing).toISOString() : 'ninguno');
   
   if (!lastPing) {
     console.log('No hay pings registrados, agente offline');
     result.status = 'offline';
+    result.pingRatePercent = 0;
+    result.jobSuccessRatePercent = 0;
     return result; // Sin ping registrado = offline
   }
   
@@ -211,41 +219,32 @@ export function determineAgentStatus(
     return result;
   }
   
-  // PASO 2: Calcular tasa de pings recibidos
-  const pings = agent.AgentPassportPing || [];
+  // PASO 2: Calcular tasa de pings recibidos basada en data real
   console.log('Calculando ping rate:', {
     agentId: agent.id,
     agentName: agent.name,
-    hasPings: pings.length > 0,
+    hasPings: lastPing !== undefined && lastPing !== null,
     lastPing: lastPing ? new Date(lastPing).toISOString() : 'none',
     diffMinutes: diffMinutes
   });
   
-  if (pings.length > 0) {
-    // Si hemos recibido al menos un ping en la última hora, asumimos un buen ratio de ping
-    if (diffMinutes <= 60) {
-      // Si solo tenemos un ping, pero fue en la última hora, asumimos un buen estado
-      // Ajustamos la tasa según lo reciente que sea el ping
-      if (diffMinutes <= 30) {
-        result.pingRatePercent = 100; // Ping muy reciente (últimos 30 minutos)
-        console.log('Ping muy reciente (<30 min), estableciendo ping rate a 100%');
-      } else {
-        result.pingRatePercent = 80; // Ping en los últimos 30-60 minutos
-        console.log('Ping reciente (30-60 min), estableciendo ping rate a 80%');
-      }
+  // Tenemos un ping válido, calculamos el ping rate basado en lo reciente que sea
+  if (diffMinutes <= 60) {
+    // Ping en la última hora: muy buena conectividad
+    if (diffMinutes <= 30) {
+      result.pingRatePercent = 100; // Ping muy reciente (últimos 30 minutos)
+      console.log('Ping muy reciente (<30 min), estableciendo ping rate a 100%');
     } else {
-      // Para pings más antiguos, reducimos gradualmente la tasa
-      const hoursSinceLastPing = diffMinutes / 60;
-      // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
-      const calculatedRate = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
-      result.pingRatePercent = Math.max(30, calculatedRate); // Mínimo 30% para agentes con pings
-      console.log('Ping antiguo, estableciendo ping rate a', result.pingRatePercent + '%');
+      result.pingRatePercent = 80; // Ping en los últimos 30-60 minutos
+      console.log('Ping reciente (30-60 min), estableciendo ping rate a 80%');
     }
   } else {
-    console.log('No hay pings para el agente:', agent.id, agent.name);
-    // En lugar de 0%, usar un valor mínimo para agentes sin pings pero que están en la base de datos
-    result.pingRatePercent = 50;
-    console.log('Usando valor predeterminado de ping rate: 50%');
+    // Para pings más antiguos, reducimos gradualmente la tasa
+    const hoursSinceLastPing = diffMinutes / 60;
+    // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
+    const calculatedRate = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
+    result.pingRatePercent = calculatedRate; // Valor real, puede ser 0% si hace mucho tiempo
+    console.log('Ping antiguo, estableciendo ping rate a', result.pingRatePercent + '%');
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
@@ -254,7 +253,8 @@ export function determineAgentStatus(
     agentId: agent.id,
     agentName: agent.name,
     totalJobs: jobs.length,
-    jobsData: jobs.map(job => ({
+    // Solo imprimimos los primeros 2 trabajos para no sobrecargar los logs
+    jobsData: jobs.slice(0, 2).map(job => ({
       id: job.id,
       completed: job.completed,
       running: job.running,
@@ -276,20 +276,18 @@ export function determineAgentStatus(
       const successfulJobs = finishedJobs.filter(job => job.completed && !job.aborted).length;
       console.log('Jobs exitosos:', successfulJobs, 'de', finishedJobs.length);
       const calculatedRate = Math.round((successfulJobs / finishedJobs.length) * 100);
-      // Garantizar un mínimo de 40% para agentes que tienen trabajos
-      result.jobSuccessRatePercent = Math.max(40, calculatedRate);
-      console.log('Job success rate calculado:', calculatedRate + '%, ajustado a:', result.jobSuccessRatePercent + '%');
+      // Usamos el valor calculado real, basado en datos
+      result.jobSuccessRatePercent = calculatedRate;
+      console.log('Job success rate calculado:', calculatedRate + '%');
     } else {
-      // Si hay trabajos pero ninguno ha terminado, asumimos que están en curso
-      // Asignamos un valor por defecto optimista (80% de éxito esperado)
-      console.log('No hay jobs finalizados, usando valor predeterminado 80%');
-      result.jobSuccessRatePercent = 80;
+      // Si hay trabajos pero ninguno ha terminado, no podemos calcular el éxito (Unknown)
+      console.log('No hay jobs finalizados, no es posible calcular tasa de éxito');
+      result.jobSuccessRatePercent = 0; // Indicar que no tenemos datos suficientes
     }
   } else {
-    // Si no hay trabajos recientes, usar un valor por defecto más conservador (75%)
+    // Si no hay trabajos recientes, no podemos calcular el éxito (Unknown)
     console.log('No hay jobs para el agente:', agent.id, agent.name);
-    result.jobSuccessRatePercent = 75;
-    console.log('Usando valor predeterminado de job success rate: 75%');
+    result.jobSuccessRatePercent = 0; // Valor real: no hay datos
   }
   
   // PASO 4: Determinar estado final combinando todos los factores
