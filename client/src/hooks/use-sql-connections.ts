@@ -55,7 +55,20 @@ export function useSQLConnectionDetail(id: string) {
       });
       
       const result = await response.json();
-      return result.data.merlin_agent_SQLConn_by_pk;
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      // Obtenemos los datos del primer elemento del array connection
+      // y las consultas asociadas
+      const connection = result.data?.connection?.[0] || null;
+      const queries = result.data?.queries || [];
+      
+      // Devolvemos un objeto con la conexión y sus consultas
+      return {
+        ...connection,
+        queries
+      };
     },
     enabled: !!id,
   });

@@ -411,24 +411,27 @@ export const SQL_CONNECTIONS_QUERY = `
 
 export const SQL_CONNECTION_DETAIL_QUERY = `
   query GetSQLConnectionDetail($id: uuid!) {
-    merlin_agent_SQLConn_by_pk(id: $id) {
+    connection: merlin_agent_SQLConn(where: {id: {_eq: $id}}, limit: 1) {
       id
       name
       driver
       connstring
       created_at
       updated_at
-      Queries {
-        id
-        name
-        query_string
-        path
-        enabled
-        chunks
-        date_format
-        separator
-        target_encoding
-      }
+    }
+    queries: merlin_agent_Query(where: {sqlconn_id: {_eq: $id}}, limit: 50) {
+      id
+      name
+      query_string
+      path
+      enabled
+      chunks
+      date_format
+      separator
+      target_encoding
+      timeout
+      return_output
+      order
     }
   }
 `;
