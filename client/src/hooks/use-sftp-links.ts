@@ -100,8 +100,8 @@ export function useSFTPLinkUsage(id: string) {
       }
       
       return {
-        downloaders: result.data?.merlin_agent_SFTPDownloader || [],
-        uploaders: result.data?.merlin_agent_SFTPUploader || []
+        downloaders: result.data?.downloaders || [],
+        uploaders: result.data?.uploaders || []
       };
     },
     enabled: !!id,
