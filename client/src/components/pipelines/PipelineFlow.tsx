@@ -136,8 +136,71 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         <CardTitle>Pipeline Flow</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="relative h-[500px] w-full overflow-auto bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
-          {/* Draw nodes */}
+        <div className="pipeline-flow-container bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 overflow-auto">
+          {/* SVG para dibujar todas las conexiones */}
+          <svg className="absolute top-0 left-0 w-full h-full" style={{ zIndex: 1 }}>
+            <defs>
+              {flowElements.edges.map(edge => (
+                <marker
+                  key={`marker-${edge.id}`}
+                  id={`arrowhead-${edge.id}`}
+                  markerWidth="15"
+                  markerHeight="10"
+                  refX="9"
+                  refY="5"
+                  orient="auto"
+                >
+                  <polygon 
+                    points="0 0, 15 5, 0 10" 
+                    className="pipeline-arrow"
+                  />
+                </marker>
+              ))}
+            </defs>
+            
+            {/* Dibujar bordes (conexiones) */}
+            {flowElements.edges.map((edge) => {
+              const sourceNode = flowElements.nodes.find(n => n.id === edge.source);
+              const targetNode = flowElements.nodes.find(n => n.id === edge.target);
+              
+              if (!sourceNode || !targetNode) return null;
+              
+              const sourceStatus = getUnitStatus(sourceNode.id);
+              const targetStatus = getUnitStatus(targetNode.id);
+              
+              // Calcular puntos de inicio y fin
+              // Centro del nodo de origen
+              const sourceX = sourceNode.position.x + 104; // Mitad del ancho (208/2)
+              const sourceY = sourceNode.position.y + 40;  // Aproximadamente centro vertical
+              
+              // Centro del nodo de destino
+              const targetX = targetNode.position.x + 104;
+              const targetY = targetNode.position.y + 40;
+              
+              // Determinar si la conexión está activa
+              const isActive = sourceStatus === 'completed' && 
+                              (targetStatus === 'running' || targetStatus === 'completed');
+              
+              // Calcular un punto de control para una curva suave
+              const controlPointX = (sourceX + targetX) / 2;
+              const controlPointY = (sourceY + targetY) / 2 - 50; // Desplazar hacia arriba
+              
+              // Crear un path para la curva
+              const path = `M ${sourceX} ${sourceY} Q ${controlPointX} ${controlPointY}, ${targetX} ${targetY}`;
+              
+              return (
+                <path
+                  key={edge.id}
+                  d={path}
+                  className={`pipeline-edge ${isActive ? 'active' : ''}`}
+                  markerEnd={`url(#arrowhead-${edge.id})`}
+                  strokeDasharray={targetStatus === 'pending' ? "5,5" : ""}
+                />
+              );
+            })}
+          </svg>
+          
+          {/* Dibujar nodos */}
           {flowElements.nodes.map((node) => {
             const unitType = node.data.type;
             const status = getUnitStatus(node.id);
@@ -146,7 +209,7 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
               <div 
                 key={node.id}
                 className={`absolute w-52 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
-                style={{ top: `${node.position.y}px`, left: `${node.position.x}px` }}
+                style={{ top: `${node.position.y}px`, left: `${node.position.x}px`, zIndex: 2 }}
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
@@ -174,60 +237,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </Badge>
                 </div>
               </div>
-            );
-          })}
-          
-          {/* Draw edges */}
-          {flowElements.edges.map((edge) => {
-            const sourceNode = flowElements.nodes.find(n => n.id === edge.source);
-            const targetNode = flowElements.nodes.find(n => n.id === edge.target);
-            
-            if (!sourceNode || !targetNode) return null;
-            
-            const sourceStatus = getUnitStatus(sourceNode.id);
-            const targetStatus = getUnitStatus(targetNode.id);
-            
-            // Calculate line coordinates
-            const sourceX = sourceNode.position.x + 24;
-            const sourceY = sourceNode.position.y + 24;
-            const targetX = targetNode.position.x + 24;
-            const targetY = targetNode.position.y + 24;
-            
-            // Determine active state for styling
-            const isActive = sourceStatus === 'completed' && 
-                            (targetStatus === 'running' || targetStatus === 'completed');
-            
-            return (
-              <svg 
-                key={edge.id}
-                className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                style={{ zIndex: -1 }}
-              >
-                <defs>
-                  <marker
-                    id={`arrowhead-${edge.id}`}
-                    markerWidth="10"
-                    markerHeight="7"
-                    refX="0"
-                    refY="3.5"
-                    orient="auto"
-                  >
-                    <polygon 
-                      points="0 0, 10 3.5, 0 7" 
-                      className={isActive ? "fill-blue-500 dark:fill-blue-400" : "fill-slate-400 dark:fill-slate-600"} 
-                    />
-                  </marker>
-                </defs>
-                <line
-                  x1={sourceX}
-                  y1={sourceY}
-                  x2={targetX}
-                  y2={targetY}
-                  className={`stroke-2 ${isActive ? "stroke-blue-500 dark:stroke-blue-400" : "stroke-slate-400 dark:stroke-slate-600"}`}
-                  strokeDasharray={targetStatus === 'pending' ? "4 2" : ""}
-                  markerEnd={`url(#arrowhead-${edge.id})`}
-                />
-              </svg>
             );
           })}
         </div>
