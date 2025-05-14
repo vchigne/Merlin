@@ -218,33 +218,17 @@ export default function SFTPLinkDetailPage() {
                       <Card key={downloader.id}>
                         <CardHeader className="py-4">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg">{downloader.name}</CardTitle>
-                            <Badge variant="outline">{downloader.output}</Badge>
+                            <CardTitle className="text-lg">
+                              {downloader.name || "Downloader sin nombre"}
+                            </CardTitle>
+                            {downloader.output && (
+                              <Badge variant="outline">{downloader.output}</Badge>
+                            )}
                           </div>
-                          {downloader.merlin_agent_PipelineUnit && downloader.merlin_agent_PipelineUnit.length > 0 && (
-                            <CardDescription>
-                              Usado en {downloader.merlin_agent_PipelineUnit.length} unidad(es) de pipeline
-                            </CardDescription>
-                          )}
+                          <CardDescription>
+                            {downloader.return_output ? "Retorna salida" : "No retorna salida"}
+                          </CardDescription>
                         </CardHeader>
-                        {downloader.merlin_agent_PipelineUnit && downloader.merlin_agent_PipelineUnit.length > 0 && (
-                          <CardContent>
-                            <div className="space-y-2">
-                              {downloader.merlin_agent_PipelineUnit.map((unit: any) => (
-                                <div key={unit.id} className="flex items-center justify-between">
-                                  <div className="text-sm">
-                                    <span className="font-medium">{unit.pipeline?.name || 'Pipeline desconocido'}</span>
-                                    {unit.pipeline?.agent_passport && (
-                                      <span className="text-muted-foreground ml-2">
-                                        (Agente: {unit.pipeline.agent_passport.name})
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        )}
                       </Card>
                     ))}
                   </div>
@@ -264,33 +248,17 @@ export default function SFTPLinkDetailPage() {
                       <Card key={uploader.id}>
                         <CardHeader className="py-4">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg">{uploader.name}</CardTitle>
-                            <Badge variant="outline">{uploader.input}</Badge>
+                            <CardTitle className="text-lg">
+                              {uploader.name || "Uploader sin nombre"}
+                            </CardTitle>
+                            {uploader.input && (
+                              <Badge variant="outline">{uploader.input}</Badge>
+                            )}
                           </div>
-                          {uploader.merlin_agent_PipelineUnit && uploader.merlin_agent_PipelineUnit.length > 0 && (
-                            <CardDescription>
-                              Usado en {uploader.merlin_agent_PipelineUnit.length} unidad(es) de pipeline
-                            </CardDescription>
-                          )}
+                          <CardDescription>
+                            {uploader.return_output ? "Retorna salida" : "No retorna salida"}
+                          </CardDescription>
                         </CardHeader>
-                        {uploader.merlin_agent_PipelineUnit && uploader.merlin_agent_PipelineUnit.length > 0 && (
-                          <CardContent>
-                            <div className="space-y-2">
-                              {uploader.merlin_agent_PipelineUnit.map((unit: any) => (
-                                <div key={unit.id} className="flex items-center justify-between">
-                                  <div className="text-sm">
-                                    <span className="font-medium">{unit.pipeline?.name || 'Pipeline desconocido'}</span>
-                                    {unit.pipeline?.agent_passport && (
-                                      <span className="text-muted-foreground ml-2">
-                                        (Agente: {unit.pipeline.agent_passport.name})
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        )}
                       </Card>
                     ))}
                   </div>

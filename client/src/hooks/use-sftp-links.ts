@@ -70,34 +70,12 @@ interface SFTPLinkUsage {
     name: string;
     output: string;
     return_output: boolean;
-    merlin_agent_PipelineUnit?: Array<{
-      id: string;
-      pipeline?: {
-        id: string;
-        name: string;
-        agent_passport?: {
-          id: string;
-          name: string;
-        };
-      };
-    }>;
   }>;
   uploaders: Array<{
     id: string;
     name: string;
     input: string;
     return_output: boolean;
-    merlin_agent_PipelineUnit?: Array<{
-      id: string;
-      pipeline?: {
-        id: string;
-        name: string;
-        agent_passport?: {
-          id: string;
-          name: string;
-        };
-      };
-    }>;
   }>;
 }
 
