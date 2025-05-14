@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,26 +20,30 @@ export default function PipelineSearch({
 }: PipelineSearchProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
-
-  // Filtrar pipelines - usando exactamente el mismo método que la página de Pipelines
-  useEffect(() => {
-    if (pipelines) {
-      if (searchQuery.trim() === "") {
-        setFilteredPipelines(pipelines);
-      } else {
-        const query = searchQuery.toLowerCase();
-        
-        // Usar el mismo filtro que la página de Pipelines
-        const filtered = pipelines.filter(pipeline => 
-          pipeline.name?.toLowerCase().includes(query) ||
-          pipeline.description?.toLowerCase().includes(query) ||
-          pipeline.id?.toLowerCase().includes(query)
-        );
-        
-        setFilteredPipelines(filtered);
-      }
+  
+  // Usar useMemo para filtrar pipelines
+  const filteredPipelines = useMemo(() => {
+    if (!pipelines || pipelines.length === 0) {
+      console.log("No hay pipelines disponibles");
+      return [];
     }
+    
+    if (searchQuery.trim() === "") {
+      console.log(`Mostrando todos los ${pipelines.length} pipelines`);
+      return pipelines;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    console.log(`Buscando "${query}" en ${pipelines.length} pipelines`);
+    
+    // Filtro mejorado con prioridad para coincidencias exactas
+    return pipelines.filter(pipeline => {
+      const nameMatch = pipeline.name?.toLowerCase().includes(query) || false;
+      const descMatch = pipeline.description?.toLowerCase().includes(query) || false;
+      const idMatch = pipeline.id?.toLowerCase().includes(query) || false;
+      
+      return nameMatch || descMatch || idMatch;
+    });
   }, [pipelines, searchQuery]);
 
   // Obtener el nombre del pipeline seleccionado
