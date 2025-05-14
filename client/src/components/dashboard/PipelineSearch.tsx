@@ -27,56 +27,76 @@ export default function PipelineSearch({
   
   // Función dedicada para buscar MDLZ
   const findMDLZPipelines = () => {
+    // Buscamos sin importar mayúsculas/minúsculas
     const mdlzPipelines = pipelines.filter(p => 
-      p.name?.includes('MDLZ') || 
-      p.description?.includes('MDLZ') || 
-      p.id?.includes('MDLZ')
+      (p.name?.toUpperCase().includes('MDLZ') || 
+      p.description?.toUpperCase().includes('MDLZ') || 
+      p.id?.toUpperCase().includes('MDLZ'))
     );
     
     setDebugResults([
       `Total de pipelines: ${pipelines.length}`,
       `Pipelines que contienen "MDLZ": ${mdlzPipelines.length}`,
-      ...mdlzPipelines.map(p => `- "${p.name}" (ID: ${p.id?.substring(0, 8)}...)`)
+      ...mdlzPipelines.slice(0, 5).map(p => `- "${p.name}" (ID: ${p.id?.substring(0, 8)}...)`)
     ]);
     
     setShowDebug(true);
+    
+    // Si hay resultados, actualiza también los pipelines filtrados para mostrarlos
+    if (mdlzPipelines.length > 0) {
+      setFilteredResults(mdlzPipelines);
+      // No actualizamos la consulta para evitar un ciclo infinito con el useEffect
+      if (searchQuery !== "MDLZ") {
+        setSearchQuery("MDLZ");
+      }
+    }
   };
   
-  // Usar useMemo para filtrar pipelines
-  const filteredPipelines = useMemo(() => {
+  // Estado local para el filtrado
+  const [filteredResults, setFilteredResults] = useState<any[]>([]);
+  
+  // Función de filtrado que se ejecuta cuando cambia la búsqueda
+  useEffect(() => {
     if (!pipelines || pipelines.length === 0) {
       setDebugResults([`No hay pipelines disponibles`]);
-      return [];
+      setFilteredResults([]);
+      return;
     }
     
     if (searchQuery.trim() === "") {
       setDebugResults([`Mostrando todos los ${pipelines.length} pipelines`]);
-      return pipelines;
+      setFilteredResults(pipelines);
+      return;
     }
     
-    const query = searchQuery.toLowerCase();
+    // Usar toUpperCase para ser consistente con la búsqueda de MDLZ
+    const query = searchQuery.toUpperCase();
     
-    // Comprobar si estamos buscando MDLZ, en ese caso probamos todas las variantes
-    if (query === 'mdlz') {
+    // Comprobar si estamos buscando MDLZ explícitamente
+    if (query === 'MDLZ') {
       findMDLZPipelines();
+      return; // La función findMDLZPipelines ya actualiza filteredPipelines
     }
     
-    // Filtro mejorado con prioridad para coincidencias exactas
+    // Filtro mejorado que busca en mayúsculas para ser consistente
     const results = pipelines.filter(pipeline => {
-      const nameMatch = pipeline.name?.toLowerCase().includes(query) || false;
-      const descMatch = pipeline.description?.toLowerCase().includes(query) || false;
-      const idMatch = pipeline.id?.toLowerCase().includes(query) || false;
+      const nameMatch = pipeline.name?.toUpperCase().includes(query) || false;
+      const descMatch = pipeline.description?.toUpperCase().includes(query) || false;
+      const idMatch = pipeline.id?.toUpperCase().includes(query) || false;
       
       return nameMatch || descMatch || idMatch;
     });
     
-    setDebugResults(prev => [
-      ...prev,
-      `Buscando "${query}" - Resultados: ${results.length}`
+    setDebugResults([
+      `Total de pipelines: ${pipelines.length}`,
+      `Resultados para "${searchQuery}": ${results.length}`
     ]);
     
-    return results;
+    setFilteredResults(results);
   }, [pipelines, searchQuery]);
+  
+  // Usamos el estado local en lugar del useMemo
+  const filteredPipelines = filteredResults;
 
   // Obtener el nombre del pipeline seleccionado
   const getSelectedPipelineName = () => {
