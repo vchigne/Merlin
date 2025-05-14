@@ -25,16 +25,23 @@ export default function PipelineSearch({
   // Filtrar pipelines basados en la búsqueda fulltext simple
   useEffect(() => {
     if (pipelines) {
+      // Imprimir datos para depuración
+      console.log("Pipelines disponibles:", pipelines);
+      
       if (searchQuery.trim() === "") {
         setFilteredPipelines(pipelines);
       } else {
         const query = searchQuery.toLowerCase();
+        console.log("Búsqueda:", query);
         
         // Filtrar pipelines que contienen la consulta en su nombre
-        const filtered = pipelines.filter(pipeline => 
-          pipeline.name.toLowerCase().includes(query)
-        );
+        const filtered = pipelines.filter(pipeline => {
+          const match = pipeline.name.toLowerCase().includes(query);
+          console.log(`Pipeline: ${pipeline.name}, Contiene '${query}': ${match}`);
+          return match;
+        });
         
+        console.log("Pipelines filtrados:", filtered);
         setFilteredPipelines(filtered);
       }
     }
