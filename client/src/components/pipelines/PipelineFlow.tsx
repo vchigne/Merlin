@@ -24,6 +24,7 @@ import {
   Terminal, 
   AlertCircle
 } from "lucide-react";
+import "@/styles/pipeline-flow.css";
 
 interface PipelineFlowProps {
   pipelineUnits: any[];
@@ -144,18 +145,25 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
             return (
               <div 
                 key={node.id}
-                className={`absolute w-48 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
+                className={`absolute w-52 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
                 style={{ top: `${node.position.y}px`, left: `${node.position.x}px` }}
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mb-2">
                   {getUnitIcon(unitType)}
-                  <div className="text-sm font-medium dark:text-white truncate max-w-full">
+                  <div className="text-sm font-medium dark:text-white truncate max-w-[90%]">
                     {node.data.label}
                   </div>
                 </div>
-                <div className="flex mt-2">
+                
+                {node.data.description && (
+                  <div className="text-xs text-slate-600 dark:text-slate-300 mb-2 max-w-full overflow-hidden text-ellipsis">
+                    {node.data.description}
+                  </div>
+                )}
+                
+                <div className="flex mt-1">
                   <Badge variant="outline" className={`text-xs ${
                     status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
                     status === 'running' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 animate-pulse' :
@@ -165,11 +173,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </Badge>
                 </div>
-                {node.data.description && (
-                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300 truncate max-w-full">
-                    {node.data.description}
-                  </div>
-                )}
               </div>
             );
           })}

@@ -1,0 +1,35 @@
+.pipeline-node {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.dark .pipeline-node {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+.pipeline-node:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.pipeline-node.completed {
+  border-left: 4px solid #22c55e;
+}
+
+.pipeline-node.running {
+  border-left: 4px solid #3b82f6;
+}
+
+.pipeline-node.error {
+  border-left: 4px solid #ef4444;
+}
+
+.pipeline-node.pending {
+  border-left: 4px solid #94a3b8;
+}
