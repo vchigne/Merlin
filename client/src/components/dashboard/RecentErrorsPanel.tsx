@@ -169,24 +169,24 @@ export default function RecentErrorsPanel() {
                       <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
                     </Link>
                     
-                    <div className="flex flex-wrap items-center text-xs text-slate-500 dark:text-slate-400 mt-1 space-x-4">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <span className="inline-flex items-center">
-                        <GitBranch className="h-3.5 w-3.5 mr-1" />
-                        <Link href={`/pipelines/${pipelineId}`} className="hover:text-primary-600 dark:hover:text-primary-400">
-                          {truncateText(pipelineName, 25)}
+                        <GitBranch className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                        <Link href={`/pipelines/${pipelineId}`} className="hover:text-primary-600 dark:hover:text-primary-400 truncate">
+                          {truncateText(pipelineName, 20)}
                         </Link>
                       </span>
                       
                       <span className="inline-flex items-center">
-                        <Bot className="h-3.5 w-3.5 mr-1" />
-                        <Link href={`/agents/${agentId}`} className="hover:text-primary-600 dark:hover:text-primary-400">
-                          {truncateText(agentName, 20)}
+                        <Bot className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                        <Link href={`/agents/${agentId}`} className="hover:text-primary-600 dark:hover:text-primary-400 truncate">
+                          {truncateText(agentName, 15)}
                         </Link>
                       </span>
                       
-                      <span className="group">
+                      <span className="group whitespace-nowrap">
                         <span>{formatFriendlyDate(log.created_at)}</span>
-                        <span className="tooltip-date hidden group-hover:block absolute bg-slate-800 text-white px-2 py-1 rounded text-xs -mt-8 ml-2">
+                        <span className="tooltip-date hidden group-hover:block absolute bg-slate-800 text-white px-2 py-1 rounded text-xs -mt-8 ml-2 z-10">
                           {formatDate(log.created_at, "yyyy-MM-dd HH:mm:ss")}
                         </span>
                       </span>

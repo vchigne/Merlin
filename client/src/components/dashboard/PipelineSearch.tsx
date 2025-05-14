@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Search, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Check, Search } from "lucide-react";
 
 interface PipelineSearchProps {
   pipelines: any[];
@@ -21,8 +19,6 @@ export default function PipelineSearch({
 }: PipelineSearchProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDebug, setShowDebug] = useState(false);
-  const [debugResults, setDebugResults] = useState<string[]>([]);
   const [filteredResults, setFilteredResults] = useState<any[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,21 +34,19 @@ export default function PipelineSearch({
     setOpen(true);
   };
 
-  // Función principal de búsqueda que se llama en varios lugares
+  // Función de búsqueda principal
   const performSearch = (query: string) => {
     if (!pipelines || pipelines.length === 0) {
-      setDebugResults([`No hay pipelines disponibles`]);
       setFilteredResults([]);
       return;
     }
     
     if (query.trim() === "") {
-      setDebugResults([`Mostrando todos los ${pipelines.length} pipelines`]);
       setFilteredResults(pipelines);
       return;
     }
 
-    // Usar toUpperCase para una búsqueda insensible a mayúsculas/minúsculas
+    // Búsqueda insensible a mayúsculas/minúsculas
     const upperQuery = query.toUpperCase();
     
     // Filtrar pipelines por nombre, descripción o ID
@@ -62,26 +56,7 @@ export default function PipelineSearch({
        pipeline.id?.toUpperCase().includes(upperQuery))
     );
     
-    setDebugResults([
-      `Total de pipelines: ${pipelines.length}`,
-      `Resultados para "${query}": ${results.length}`,
-      ...results.slice(0, 5).map(p => `- "${p.name}" (ID: ${p.id?.substring(0, 8)}...)`)
-    ]);
-    
     setFilteredResults(results);
-  };
-  
-  // Función específica para buscar MDLZ
-  const findMDLZPipelines = () => {
-    setSearchQuery("MDLZ");
-    performSearch("MDLZ");
-    setShowDebug(true);
-    setOpen(true);
-    
-    // Focus en el input después de la búsqueda
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
   };
   
   // Seleccionar un pipeline
@@ -164,68 +139,10 @@ export default function PipelineSearch({
         <Button
           variant="outline"
           className="whitespace-nowrap"
-          onClick={() => {
-            const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
-            if (selectedPipeline) {
-              alert(`Pipeline seleccionado: ${selectedPipeline.name}`);
-            } else {
-              alert('Ningún pipeline seleccionado');
-            }
-          }}
         >
           {isLoading ? "Cargando..." : (selectedPipelineId ? getSelectedPipelineName() : "Seleccionar pipeline")}
         </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => {
-            setShowDebug(!showDebug);
-            setOpen(true);
-            if (!showDebug) {
-              findMDLZPipelines();
-            }
-          }}
-        >
-          <Info className="h-4 w-4" />
-        </Button>
       </div>
-      
-      {/* Panel de depuración */}
-      {showDebug && (
-        <Card className="mb-4">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h4 className="font-semibold text-sm">Diagnóstico de búsqueda</h4>
-                <Badge variant={filteredPipelines.length > 0 ? 'default' : 'destructive'}>
-                  {filteredPipelines.length} resultados
-                </Badge>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md text-xs font-mono overflow-auto max-h-[200px]">
-                {debugResults.map((line, index) => (
-                  <div key={index} className="py-1">{line}</div>
-                ))}
-                {debugResults.length === 0 && (
-                  <div className="text-slate-500 dark:text-slate-400">No hay información de depuración disponible</div>
-                )}
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    findMDLZPipelines();
-                    setOpen(true);
-                  }}
-                >
-                  Buscar MDLZ
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

@@ -59,12 +59,17 @@ export default function PipelineVisualizerNew() {
       let x, y;
       
       if (!unit.posx && !unit.posy) {
-        // Disposición automática para el dashboard (horizontal)
-        x = (index % 4) * 180 + 10;
-        y = Math.floor(index / 4) * 100 + 10;
+        // Disposición automática responsiva para el dashboard
+        const columnCount = window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 4;
+        const spacing = window.innerWidth < 640 ? 150 : 180;
+        
+        x = (index % columnCount) * spacing + 10;
+        y = Math.floor(index / columnCount) * 100 + 10;
       } else {
-        // Usar coordenadas existentes
-        x = unit.posx * 180 + 10;
+        // Usar coordenadas existentes con ajustes responsivos
+        const spacing = window.innerWidth < 640 ? 150 : 180;
+        
+        x = unit.posx * spacing + 10;
         y = unit.posy * 100 + 10;
       }
       
@@ -283,7 +288,7 @@ export default function PipelineVisualizerNew() {
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full h-[300px] overflow-x-auto overflow-y-auto pb-4">
+        <div className="relative w-full h-[300px] overflow-auto pb-4">
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -293,7 +298,7 @@ export default function PipelineVisualizerNew() {
               No hay unidades definidas para este pipeline
             </div>
           ) : (
-            <div className="relative w-full min-w-[800px] h-full">
+            <div className="relative w-full min-w-[400px] md:min-w-[600px] lg:min-w-[800px] h-full">
               {/* Procesamos las unidades para posicionarlas y crear las conexiones */}
               {(() => {
                 const { nodes, connections } = processUnits(pipelineUnits);
@@ -385,11 +390,11 @@ export default function PipelineVisualizerNew() {
                       return (
                         <div 
                           key={unit.id}
-                          className={`absolute w-36 sm:w-40 h-16 bg-slate-100 dark:bg-slate-700 border-2 ${
+                          className={`absolute w-32 xs:w-36 sm:w-40 h-14 sm:h-16 bg-slate-100 dark:bg-slate-700 border-2 ${
                             status === 'completed' ? 'border-green-500 dark:border-green-400' :
                             status === 'running' ? 'border-amber-500 dark:border-amber-400' :
                             'border-slate-300 dark:border-slate-600'
-                          } rounded-md shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer`}
+                          } rounded-md shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer text-xs sm:text-sm`}
                           style={{ 
                             left: `${unit.posX}px`, 
                             top: `${unit.posY}px` 
