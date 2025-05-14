@@ -385,34 +385,12 @@ export const SFTP_LINK_USAGE_QUERY = `
       name
       output
       return_output
-      merlin_agent_PipelineUnit {
-        id
-        pipeline {
-          id
-          name
-          agent_passport {
-            id
-            name
-          }
-        }
-      }
     }
     uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
       input
       return_output
-      merlin_agent_PipelineUnit {
-        id
-        pipeline {
-          id
-          name
-          agent_passport {
-            id
-            name
-          }
-        }
-      }
     }
   }
 `;
