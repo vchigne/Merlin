@@ -145,19 +145,90 @@ export function safeJsonParse(jsonString: string, fallback: any = null): any {
   }
 }
 
-// Determine agent health status based on ping time and health flag
-export function determineAgentStatus(isHealthy: boolean, lastPingAt?: string): string {
-  if (!isHealthy) return "error";
+// Determine agent health status based on ping history and job execution success rates
+export function determineAgentStatus(
+  agent: { 
+    is_healthy?: boolean,
+    AgentPassportPing?: { last_ping_at: string }[],
+    PipelineJobQueues?: { completed: boolean, running: boolean, aborted: boolean }[]
+  }
+): {
+  status: string,
+  pingRatePercent: number,
+  jobSuccessRatePercent: number,
+  lastPingMinutes: number,
+  jobsAnalyzed: number
+} {
+  // Default values
+  const result = {
+    status: "offline",
+    pingRatePercent: 0,
+    jobSuccessRatePercent: 0,
+    lastPingMinutes: -1,
+    jobsAnalyzed: 0
+  };
   
-  if (!lastPingAt) return "offline";
+  // PASO 1: Verificar el último ping para determinar conectividad básica
+  const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
+  if (!lastPing) {
+    return result; // Sin ping registrado = offline
+  }
   
-  const lastPing = new Date(lastPingAt);
   const now = new Date();
-  const diffMinutes = (now.getTime() - lastPing.getTime()) / (1000 * 60);
+  const lastPingDate = new Date(lastPing);
+  const diffMinutes = (now.getTime() - lastPingDate.getTime()) / (1000 * 60);
+  result.lastPingMinutes = Math.round(diffMinutes);
   
-  if (diffMinutes > 10) return "offline";
-  if (diffMinutes > 5) return "warning";
-  return "healthy";
+  // Si no hay ping en los últimos 60 minutos, el agente está offline
+  if (diffMinutes > 60) {
+    return result;
+  }
+  
+  // PASO 2: Calcular tasa de pings recibidos (últimos 10 pings)
+  // Considerando intervalos de 30 minutos entre pings
+  const pings = agent.AgentPassportPing || [];
+  if (pings.length > 0) {
+    // Estimamos cuántos pings deberíamos haber recibido en las últimas 5 horas
+    // (10 pings con intervalo de 30 minutos = 5 horas)
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+    
+    // Contamos cuántos pings hemos recibido en ese período
+    // Nota: Si hay menos de 10 pings disponibles, eso también indica una tasa más baja
+    const receivedPings = pings.filter(ping => 
+      new Date(ping.last_ping_at) >= fiveHoursAgo
+    ).length;
+    
+    // Calculamos qué porcentaje representa de los 10 esperados
+    result.pingRatePercent = Math.min(100, Math.round((receivedPings / 10) * 100));
+  }
+  
+  // PASO 3: Calcular tasa de éxito de trabajos
+  const jobs = agent.PipelineJobQueues || [];
+  if (jobs.length > 0) {
+    result.jobsAnalyzed = jobs.length;
+    
+    // Contamos trabajos exitosos (completed=true, aborted=false)
+    const successfulJobs = jobs.filter(job => job.completed && !job.aborted).length;
+    result.jobSuccessRatePercent = Math.round((successfulJobs / jobs.length) * 100);
+  }
+  
+  // PASO 4: Determinar estado final combinando todos los factores
+  
+  // Error: Más del 50% de los trabajos fallaron o más del 50% de los pings esperados no fueron recibidos
+  if (result.jobSuccessRatePercent < 50 || result.pingRatePercent < 50) {
+    result.status = "error";
+    return result;
+  }
+  
+  // Warning: Ping entre 30-60 minutos, tasa de éxito de trabajos entre 50-80%, o tasa de fallos de ping entre 50-80%
+  if (diffMinutes > 30 || result.jobSuccessRatePercent < 80 || result.pingRatePercent < 80) {
+    result.status = "warning";
+    return result;
+  }
+  
+  // Healthy: Ping en los últimos 30 minutos, más del 80% de trabajos exitosos, y menos del 20% de fallos de ping
+  result.status = "healthy";
+  return result;
 }
 
 // Strip HTML tags from text

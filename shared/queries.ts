@@ -182,8 +182,18 @@ export const AGENT_HEALTH_STATUS_QUERY = `
       id
       name
       is_healthy
-      AgentPassportPing {
+      enabled
+      AgentPassportPing(limit: 10, order_by: {last_ping_at: desc}) {
         last_ping_at
+        hostname
+        ips
+      }
+      PipelineJobQueues(limit: 10, order_by: {created_at: desc}) {
+        id
+        completed
+        running
+        aborted
+        created_at
       }
     }
   }

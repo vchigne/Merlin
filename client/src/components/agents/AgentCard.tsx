@@ -6,7 +6,10 @@ import {
   XCircle, 
   Clock,
   Server,
-  Wifi
+  Wifi,
+  BarChart2,
+  Activity,
+  Signal
 } from "lucide-react";
 import { 
   Card, 
@@ -17,6 +20,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 interface AgentCardProps {
   agent: {
@@ -31,6 +36,13 @@ interface AgentCardProps {
       hostname?: string;
       ips?: string;
     }[];
+    PipelineJobQueues?: {
+      id: string;
+      completed: boolean;
+      running: boolean;
+      aborted: boolean;
+      created_at: string;
+    }[];
   };
 }
 
@@ -39,7 +51,9 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const hostname = agent.AgentPassportPing?.[0]?.hostname;
   const ips = agent.AgentPassportPing?.[0]?.ips;
   
-  const status = determineAgentStatus(!!agent.is_healthy, lastPing);
+  // Utilizamos el nuevo algoritmo avanzado para determinar el estado
+  const agentHealthInfo = determineAgentStatus(agent);
+  const status = agentHealthInfo.status;
   
   const getStatusIcon = () => {
     switch (status) {
@@ -65,6 +79,18 @@ export default function AgentCard({ agent }: AgentCardProps) {
       default:
         return 'bg-slate-100 text-slate-700 dark:bg-slate-900/20 dark:text-slate-400';
     }
+  };
+  
+  const getMetricColor = (value: number) => {
+    if (value >= 80) return "text-green-600 dark:text-green-400";
+    if (value >= 50) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
+  };
+  
+  const getProgressColor = (value: number) => {
+    if (value >= 80) return "bg-green-500";
+    if (value >= 50) return "bg-amber-500";
+    return "bg-red-500";
   };
   
   return (
@@ -95,7 +121,8 @@ export default function AgentCard({ agent }: AgentCardProps) {
           </p>
         )}
         
-        <div className="space-y-2">
+        {/* Información del sistema */}
+        <div className="space-y-2 mb-3">
           {hostname && (
             <div className="flex items-center text-xs">
               <Server className="h-3.5 w-3.5 mr-1.5 text-slate-500 dark:text-slate-400" />
@@ -118,6 +145,40 @@ export default function AgentCard({ agent }: AgentCardProps) {
               </Tooltip>
             </div>
           )}
+        </div>
+        
+        {/* Separador */}
+        <Separator className="my-2" />
+        
+        {/* KPIs */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {/* Ping Rate */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center">
+                <Signal className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Ping Rate</span>
+              </div>
+              <span className={`text-xs font-bold ${getMetricColor(agentHealthInfo.pingRatePercent)}`}>
+                {agentHealthInfo.pingRatePercent}%
+              </span>
+            </div>
+            <Progress value={agentHealthInfo.pingRatePercent} className="h-1.5" indicatorClassName={getProgressColor(agentHealthInfo.pingRatePercent)} />
+          </div>
+          
+          {/* Job Success */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center">
+                <Activity className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Job Success</span>
+              </div>
+              <span className={`text-xs font-bold ${getMetricColor(agentHealthInfo.jobSuccessRatePercent)}`}>
+                {agentHealthInfo.jobSuccessRatePercent}%
+              </span>
+            </div>
+            <Progress value={agentHealthInfo.jobSuccessRatePercent} className="h-1.5" indicatorClassName={getProgressColor(agentHealthInfo.jobSuccessRatePercent)} />
+          </div>
         </div>
       </CardContent>
       <CardFooter className="pt-0 flex justify-between">
