@@ -348,3 +348,199 @@ export const STATS_OVERVIEW_QUERY = `
     }
   }
 `;
+
+// Consultas para conexiones SFTP
+export const SFTP_LINKS_QUERY = `
+  query GetSFTPLinks {
+    merlin_agent_SFTPLink {
+      id
+      name
+      host
+      port
+      username
+      created_at
+      updated_at
+    }
+  }
+`;
+
+export const SFTP_LINK_DETAIL_QUERY = `
+  query GetSFTPLinkDetail($id: uuid!) {
+    merlin_agent_SFTPLink_by_pk(id: $id) {
+      id
+      name
+      host
+      port
+      username
+      created_at
+      updated_at
+      merlin_agent_SFTPDownloader {
+        id
+        name
+        output
+        return_output
+      }
+      merlin_agent_SFTPUploader {
+        id
+        name
+        input
+        return_output
+      }
+    }
+  }
+`;
+
+export const SFTP_LINK_USAGE_QUERY = `
+  query GetSFTPLinkUsage($id: uuid!) {
+    downloaders: merlin_agent_SFTPDownloader(where: {sftp_link_id: {_eq: $id}}) {
+      id
+      name
+      merlin_agent_PipelineUnit {
+        id
+        pipeline {
+          id
+          name
+          agent_passport {
+            id
+            name
+          }
+        }
+      }
+    }
+    uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}) {
+      id
+      name
+      merlin_agent_PipelineUnit {
+        id
+        pipeline {
+          id
+          name
+          agent_passport {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Consultas para conexiones SQL
+export const SQL_CONNECTIONS_QUERY = `
+  query GetSQLConnections {
+    merlin_agent_SQLConn {
+      id
+      name
+      driver
+      connection_string
+      created_at
+      updated_at
+    }
+  }
+`;
+
+export const SQL_CONNECTION_DETAIL_QUERY = `
+  query GetSQLConnectionDetail($id: uuid!) {
+    merlin_agent_SQLConn_by_pk(id: $id) {
+      id
+      name
+      driver
+      connection_string
+      created_at
+      updated_at
+      merlin_agent_Query {
+        id
+        name
+        query_string
+        path
+        enabled
+        chunks
+        date_format
+        separator
+        target_encoding
+      }
+    }
+  }
+`;
+
+export const SQL_CONN_USAGE_QUERY = `
+  query GetSQLConnUsage($id: uuid!) {
+    queries: merlin_agent_Query(where: {sqlconn_id: {_eq: $id}}) {
+      id
+      name
+      query_queue {
+        id
+        name
+        merlin_agent_PipelineUnit {
+          id
+          pipeline {
+            id
+            name
+            agent_passport {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Consultas para Commands
+export const COMMANDS_LIST_QUERY = `
+  query GetCommandsList {
+    merlin_agent_Command {
+      id
+      name
+      target
+      working_directory
+      args
+      created_at
+      updated_at
+      description
+      instant
+      labels
+    }
+  }
+`;
+
+export const COMMAND_DETAIL_QUERY = `
+  query GetCommandDetail($id: uuid!) {
+    merlin_agent_Command_by_pk(id: $id) {
+      id
+      name
+      target
+      working_directory
+      args
+      created_at
+      updated_at
+      description
+      instant
+      raw_script
+      return_output
+      return_output_type
+      labels
+    }
+  }
+`;
+
+export const COMMAND_USAGE_QUERY = `
+  query GetCommandUsage($id: uuid!) {
+    command: merlin_agent_Command_by_pk(id: $id) {
+      id
+      name
+      merlin_agent_PipelineUnit {
+        id
+        pipeline {
+          id
+          name
+          agent_passport {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
