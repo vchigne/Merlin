@@ -33,8 +33,17 @@ export function useAgentStatus(): AgentStatusResult {
 
   // Process agents to add status information
   const processedAgents = data?.map((agent: any) => {
-    // Usamos el nuevo algoritmo avanzado para determinar el estado
-    const healthInfo = determineAgentStatus(agent);
+    // Fix any data inconsistency before processing
+    const normalizedAgent = {
+      ...agent,
+      // Ensure AgentPassportPing exists (single, not plural)
+      AgentPassportPing: agent.AgentPassportPing || [],
+      // Ensure PipelineJobQueues exists (plural, not singular)
+      PipelineJobQueues: agent.PipelineJobQueues || []
+    };
+    
+    // Use the advanced algorithm to determine status
+    const healthInfo = determineAgentStatus(normalizedAgent);
     
     return {
       ...agent,
