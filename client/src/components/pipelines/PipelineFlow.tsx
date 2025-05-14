@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { convertToFlowCoordinates } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   GitBranch, 
   Database, 
@@ -23,12 +22,7 @@ import {
   FileOutput, 
   Code, 
   Terminal, 
-  AlertCircle,
-  Clock,
-  RotateCw,
-  X,
-  Info,
-  Settings
+  AlertCircle
 } from "lucide-react";
 
 interface PipelineFlowProps {
@@ -161,11 +155,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                     {node.data.label}
                   </div>
                 </div>
-                {node.data.description && (
-                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300 truncate max-w-full">
-                    {node.data.description}
-                  </div>
-                )}
                 <div className="flex mt-2">
                   <Badge variant="outline" className={`text-xs ${
                     status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
@@ -176,6 +165,11 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </Badge>
                 </div>
+                {node.data.description && (
+                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300 truncate max-w-full">
+                    {node.data.description}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -195,12 +189,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
             const sourceY = sourceNode.position.y + 24;
             const targetX = targetNode.position.x + 24;
             const targetY = targetNode.position.y + 24;
-            
-            // Calculate distance and angle
-            const dx = targetX - sourceX;
-            const dy = targetY - sourceY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
             
             // Determine active state for styling
             const isActive = sourceStatus === 'completed' && 
@@ -242,96 +230,89 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         </div>
       </CardContent>
       
-      {/* Diálogo con detalles de la unidad */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              {selectedUnit && (
-                <>
-                  {getUnitIcon(determineUnitType(selectedUnit))}
-                  <span>Detalles de la Unidad</span>
-                </>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              Información detallada sobre esta unidad del pipeline
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedUnit && (
-            <>
-              <div className="grid gap-4 py-2">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">
-                      {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
-                    </CardTitle>
-                    <CardDescription>
-                      {getUnitTypeDescription(selectedUnit)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{selectedUnit.id}</p>
-                    </div>
-                    
-                    {selectedUnit.pipeline_unit_id && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{selectedUnit.pipeline_unit_id}</p>
-                      </div>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {selectedUnit.abort_on_timeout && (
-                        <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-                          Abortar en Timeout
-                        </Badge>
-                      )}
-                      {selectedUnit.continue_on_error && (
-                        <Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-                          Continuar en Error
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      {selectedUnit.timeout_milliseconds && (
-                        <div>
-                          <h4 className="text-xs font-medium mb-1">Timeout</h4>
-                          <p className="text-sm">{Math.round(selectedUnit.timeout_milliseconds / 1000)} seg</p>
-                        </div>
-                      )}
-                      
-                      {selectedUnit.retry_count > 0 && (
-                        <div>
-                          <h4 className="text-xs font-medium mb-1">Reintentos</h4>
-                          <p className="text-sm">{selectedUnit.retry_count} veces</p>
-                        </div>
-                      )}
-                      
-                      {selectedUnit.retry_after_milliseconds > 0 && (
-                        <div>
-                          <h4 className="text-xs font-medium mb-1">Espera entre reintentos</h4>
-                          <p className="text-sm">{Math.round(selectedUnit.retry_after_milliseconds / 1000)} seg</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+      {/* Modal de detalles */}
+      {isDialogOpen && selectedUnit && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                {getUnitIcon(determineUnitType(selectedUnit))}
+                <span>Detalles de la Unidad</span>
+              </DialogTitle>
+              <DialogDescription>
+                Información detallada sobre esta unidad del pipeline
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-2">
+              <div>
+                <h3 className="text-lg font-medium mb-1">
+                  {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {getUnitTypeDescription(selectedUnit)}
+                </p>
               </div>
               
-              <DialogFooter>
-                <Button onClick={handleCloseDialog}>Cerrar</Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+              <Separator />
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
+                <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
+              </div>
+              
+              {selectedUnit.pipeline_unit_id && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
+                </div>
+              )}
+              
+              <div className="flex flex-wrap gap-2">
+                {selectedUnit.abort_on_timeout && (
+                  <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                    Abortar en Timeout
+                  </Badge>
+                )}
+                {selectedUnit.continue_on_error && (
+                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                    Continuar en Error
+                  </Badge>
+                )}
+              </div>
+              
+              <Separator />
+              
+              <div className="grid grid-cols-2 gap-4">
+                {selectedUnit.timeout_milliseconds > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium mb-1">Timeout</h4>
+                    <p className="text-sm">{Math.round(selectedUnit.timeout_milliseconds / 1000)} seg</p>
+                  </div>
+                )}
+                
+                {selectedUnit.retry_count > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium mb-1">Reintentos</h4>
+                    <p className="text-sm">{selectedUnit.retry_count} veces</p>
+                  </div>
+                )}
+                
+                {selectedUnit.retry_after_milliseconds > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium mb-1">Espera entre reintentos</h4>
+                    <p className="text-sm">{Math.round(selectedUnit.retry_after_milliseconds / 1000)} seg</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button onClick={handleCloseDialog}>Cerrar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }
