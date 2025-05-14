@@ -389,7 +389,7 @@ export const SFTP_LINK_USAGE_QUERY = `
     uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
-      input
+      output
       return_output
     }
   }

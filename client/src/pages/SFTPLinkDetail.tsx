@@ -31,6 +31,10 @@ export default function SFTPLinkDetailPage() {
   const { data: sftpLink, isLoading, error } = useSFTPLinkDetail(id);
   const { data: usageData, isLoading: isLoadingUsage } = useSFTPLinkUsage(id);
   
+  // Agregamos logs para debugging
+  console.log("SFTP Link Detail data:", sftpLink);
+  console.log("SFTP Link Usage data:", usageData);
+  
   useDocumentTitle(sftpLink ? `SFTP Link: ${sftpLink.name}` : "SFTP Link Details");
   
   if (isLoading) {
@@ -251,8 +255,8 @@ export default function SFTPLinkDetailPage() {
                             <CardTitle className="text-lg">
                               {uploader.name || "Uploader sin nombre"}
                             </CardTitle>
-                            {uploader.input && (
-                              <Badge variant="outline">{uploader.input}</Badge>
+                            {uploader.output && (
+                              <Badge variant="outline">{uploader.output}</Badge>
                             )}
                           </div>
                           <CardDescription>
