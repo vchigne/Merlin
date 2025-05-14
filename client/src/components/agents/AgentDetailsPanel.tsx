@@ -64,14 +64,26 @@ export default function AgentDetailsPanel({
   // Get the last ping from either direct agentPings prop or from agent.AgentPassportPing
   const lastPing = agentPings?.[0] || (Array.isArray(agent?.AgentPassportPing) ? agent?.AgentPassportPing?.[0] : agent?.AgentPassportPing);
   
-  // Determine agent status based on health flag and last ping time
-  const status = determineAgentStatus(
-    agent?.is_healthy || false, 
-    lastPing?.last_ping_at
-  );
+  // Determine agent status based on agent data
+  console.log('AgentDetailsPanel - agent data:', {
+    is_healthy: agent?.is_healthy,
+    AgentPassportPing: lastPing,
+    PipelineJobQueues: agent?.PipelineJobQueues
+  });
+  
+  // Crear objeto con formato adecuado para determineAgentStatus
+  const agentData = {
+    is_healthy: agent?.is_healthy,
+    AgentPassportPing: lastPing ? [lastPing] : [],
+    PipelineJobQueues: agent?.PipelineJobQueues || []
+  };
+  
+  const agentHealthInfo = determineAgentStatus(agentData);
+  console.log('AgentDetailsPanel - health info:', agentHealthInfo);
+  const status = agentHealthInfo.status;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (statusValue: string) => {
+    switch (statusValue) {
       case 'healthy': return 'bg-green-500';
       case 'warning': return 'bg-amber-500';
       case 'error': return 'bg-red-500';
@@ -117,7 +129,7 @@ export default function AgentDetailsPanel({
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${getStatusColor(status)}`}></div>
+              <div className={`w-3 h-3 rounded-full ${getStatusColor(agentHealthInfo.status)}`}></div>
               <span>{agent.name || `Agent ${agent.id.substring(0, 8)}`}</span>
             </CardTitle>
             <CardDescription className="mt-1.5">
@@ -172,11 +184,11 @@ export default function AgentDetailsPanel({
               <div className="flex justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400">Status</span>
                 <Badge variant="outline" className={`
-                  ${status === 'healthy' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800' : 
-                    status === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 
+                  ${agentHealthInfo.status === 'healthy' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800' : 
+                    agentHealthInfo.status === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 
                     'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800'}`
                 }>
-                  {typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : status || 'Unknown'}
+                  {typeof agentHealthInfo.status === 'string' ? agentHealthInfo.status.charAt(0).toUpperCase() + agentHealthInfo.status.slice(1) : 'Unknown'}
                 </Badge>
               </div>
             </div>
