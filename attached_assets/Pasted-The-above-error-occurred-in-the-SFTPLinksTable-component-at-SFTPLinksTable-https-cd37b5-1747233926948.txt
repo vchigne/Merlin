@@ -1,0 +1,42 @@
+The above error occurred in the <SFTPLinksTable> component:
+
+    at SFTPLinksTable (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/connections/SFTPLinksTable.tsx:42:49)
+    at div
+    at _c9 (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=4fcb9ff3:42:13
+    at Presence (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YE5GEEUL.js?v=4fcb9ff3:24:11)
+    at https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=4fcb9ff3:175:13
+    at _c5 (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=4fcb9ff3:42:13
+    at Provider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4fcb9ff3:38:15)
+    at https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=4fcb9ff3:53:7
+    at div
+    at div
+    at main
+    at div
+    at div
+    at Layout (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/Layout.tsx?t=1747233752324:24:34)
+    at ConnectionsPage (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/pages/Connections.tsx?t=1747233752324:29:3)
+    at Route (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4fcb9ff3:323:16)
+    at Switch (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4fcb9ff3:379:17)
+    at div
+    at main
+    at div
+    at div
+    at Layout (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/Layout.tsx?t=1747233752324:24:34)
+    at Router (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/App.tsx?t=1747233752324&v=iLbU7u4oOW42BffIOSXun:43:3)
+    at Provider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4fcb9ff3:38:15)
+    at TooltipProvider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4fcb9ff3:62:5)
+    at MerlinProvider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/context/MerlinContext.tsx:30:34)
+    at NotificationProvider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/context/NotificationContext.tsx:27:40)
+    at ThemeProvider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/src/components/ThemeProvider.tsx:25:3)
+    at QueryClientProvider (https://cd37b54c-7ecd-46d4-9efd-1fa3339891af-00-6uykz8u65qkg.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4fcb9ff3:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Too many re-renders. React limits the number of renders to prevent an infinite loop.

@@ -1,20 +1,17 @@
 import { useEffect } from 'react';
 
 /**
- * Hook para actualizar el título del documento
- * @param title El título que se establecerá para el documento
+ * Hook para actualizar el título del documento.
+ * @param title - El título a establecer
+ * @param includeAppName - Si se debe incluir el nombre de la aplicación (por defecto: true)
  */
-export function useDocumentTitle(title: string) {
+export function useDocumentTitle(title: string, includeAppName = true) {
   useEffect(() => {
-    // Guardar el título original para restaurarlo cuando el componente se desmonte
-    const originalTitle = document.title;
+    const appName = 'Merlin Dashboard';
+    document.title = includeAppName ? `${title} | ${appName}` : title;
     
-    // Establecer el nuevo título
-    document.title = title;
-    
-    // Restaurar el título original cuando el componente se desmonte
     return () => {
-      document.title = originalTitle;
+      document.title = appName;
     };
-  }, [title]);
+  }, [title, includeAppName]);
 }

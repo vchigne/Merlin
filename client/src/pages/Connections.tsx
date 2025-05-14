@@ -1,66 +1,44 @@
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDocumentTitle } from '@/hooks/use-document-title';
-import SFTPLinksTable from '@/components/connections/SFTPLinksTable';
-import SQLConnectionsTable from '@/components/connections/SQLConnectionsTable';
-import CommandsTable from '@/components/connections/CommandsTable';
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import Layout from "@/components/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+import SFTPLinksTable from "@/components/connections/SFTPLinksTable";
+import SQLConnectionsTable from "@/components/connections/SQLConnectionsTable";
+import CommandsTable from "@/components/connections/CommandsTable";
 
 export default function ConnectionsPage() {
-  useDocumentTitle('Conexiones - Merlin Dashboard');
-  const [activeTab, setActiveTab] = useState('sftp');
+  useDocumentTitle("Connections");
+  const [activeTab, setActiveTab] = useState("sftp");
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Conexiones</h1>
+      <div className="p-6">
+        <div className="flex flex-col space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold tracking-tight">Connections</h1>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="sftp">SFTP Links</TabsTrigger>
+              <TabsTrigger value="sql">SQL Connections</TabsTrigger>
+              <TabsTrigger value="commands">Commands</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="sftp" className="space-y-4">
+              <SFTPLinksTable />
+            </TabsContent>
+            
+            <TabsContent value="sql" className="space-y-4">
+              <SQLConnectionsTable />
+            </TabsContent>
+            
+            <TabsContent value="commands" className="space-y-4">
+              <CommandsTable />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <Tabs defaultValue="sftp" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="sftp">SFTP Links</TabsTrigger>
-            <TabsTrigger value="sql">SQL Connections</TabsTrigger>
-            <TabsTrigger value="commands">Commands</TabsTrigger>
-          </TabsList>
-
-          <Separator className="mb-8" />
-          
-          <TabsContent value="sftp" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Conexiones SFTP</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SFTPLinksTable />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sql" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Conexiones SQL</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SQLConnectionsTable />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="commands" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Comandos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CommandsTable />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </Layout>
   );
