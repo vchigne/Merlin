@@ -37,6 +37,60 @@ export default function PipelineVisualizer() {
     return 'pending';
   };
   
+  // Función para ordenar y crear conexiones automáticas entre unidades
+  const processUnits = (units: any[]) => {
+    if (!units || units.length === 0) return { nodes: [], connections: [] };
+    
+    // Ordenar unidades por tipo y luego por ID
+    const sortedUnits = [...units].sort((a, b) => {
+      const typeA = getUnitType(a);
+      const typeB = getUnitType(b);
+      
+      if (typeA !== typeB) {
+        return typeA.localeCompare(typeB);
+      }
+      
+      return a.id.localeCompare(b.id);
+    });
+    
+    // Crear nodos con posiciones adecuadas
+    const nodes = sortedUnits.map((unit, index) => {
+      // Determinar la posición usando un layout automático si es necesario
+      let x, y;
+      
+      if (!unit.posx && !unit.posy) {
+        // Disposición automática para el dashboard (horizontal)
+        x = (index % 4) * 180 + 10;
+        y = Math.floor(index / 4) * 100 + 10;
+      } else {
+        // Usar coordenadas existentes
+        x = unit.posx * 180 + 10;
+        y = unit.posy * 100 + 10;
+      }
+      
+      return {
+        ...unit,
+        posX: x,
+        posY: y,
+        index
+      };
+    });
+    
+    // Crear conexiones automáticas entre nodos consecutivos
+    const connections = [];
+    if (nodes.length > 1) {
+      for (let i = 0; i < nodes.length - 1; i++) {
+        connections.push({
+          id: `conn-${nodes[i].id}-${nodes[i + 1].id}`,
+          source: nodes[i],
+          target: nodes[i + 1]
+        });
+      }
+    }
+    
+    return { nodes, connections };
+  };
+  
   // Consulta para obtener la lista de pipelines
   const { data: pipelinesData, isLoading: isPipelinesLoading } = useQuery({
     queryKey: ['/api/pipelines'],
@@ -246,36 +300,124 @@ export default function PipelineVisualizer() {
             </div>
           ) : (
             <div className="relative w-full min-w-[800px] h-full">
-              {/* Representación simplificada del flujo del pipeline */}
-              {pipelineUnits.map((unit: any, index: number) => {
-                const unitType = getUnitType(unit);
-                const status = getUnitStatus(unit, index);
-                const xPos = unit.posx ? unit.posx * 180 + 10 : index * 180 + 10;
-                const yPos = unit.posy ? unit.posy * 100 + 10 : Math.floor(index / 4) * 100 + 10;
+              {/* Procesamos las unidades para posicionarlas y crear las conexiones */}
+              {(() => {
+                const { nodes, connections } = processUnits(pipelineUnits);
                 
                 return (
-                  <div 
-                    key={unit.id}
-                    className={`absolute w-36 sm:w-40 h-16 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-2 sm:p-3 shadow-sm ${status === 'pending' ? 'opacity-50' : ''} cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors`}
-                    style={{ top: `${yPos}px`, left: `${xPos}px` }}
-                    onClick={() => fetchUnitDetails(unit)}
-                    title="Click para ver detalles"
-                  >
-                    <div className="text-xs sm:text-sm font-medium dark:text-white truncate">
-                      {unitType}
-                    </div>
-                    <div className="flex mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                        status === 'running' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
-                        'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
-                      }`}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </span>
-                    </div>
-                  </div>
+                  <>
+                    {/* Dibujamos primero las conexiones (flechas) */}
+                    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                      {connections.map((conn) => {
+                        const source = conn.source;
+                        const target = conn.target;
+                        
+                        // Coordenadas del centro de los nodos
+                        const sourceX = source.posX + 80; // Ancho aproximado del nodo / 2
+                        const sourceY = source.posY + 32; // Alto aproximado del nodo / 2
+                        const targetX = target.posX + 20; // Pequeño offset para que la flecha apunte al borde
+                        const targetY = target.posY + 32; // Alto aproximado del nodo / 2
+                        
+                        // Ruta de la curva Bezier
+                        const dx = targetX - sourceX;
+                        const path = `M ${sourceX},${sourceY} C ${sourceX + dx/2},${sourceY} ${targetX - dx/2},${targetY} ${targetX},${targetY}`;
+                        
+                        // Estado de la conexión basado en el estado de los nodos
+                        const sourceStatus = getUnitStatus(source, source.index);
+                        const targetStatus = getUnitStatus(target, target.index);
+                        
+                        // La conexión está activa si ambos nodos están activos (no pendientes)
+                        const isActive = sourceStatus !== 'pending';
+                        const isCompleted = sourceStatus === 'completed';
+                        
+                        return (
+                          <g key={conn.id}>
+                            {/* Curva principal */}
+                            <path 
+                              d={path} 
+                              fill="none" 
+                              strokeWidth={2} 
+                              stroke={isCompleted ? '#10b981' : (isActive ? '#60a5fa' : '#9ca3af')}
+                              strokeDasharray={isActive ? 'none' : '5,5'} 
+                              markerEnd={`url(#arrow-${isCompleted ? 'completed' : (isActive ? 'active' : 'inactive')})`} 
+                            />
+                          </g>
+                        );
+                      })}
+                      
+                      {/* Definición de los marcadores de flecha */}
+                      <defs>
+                        <marker 
+                          id="arrow-active" 
+                          viewBox="0 0 10 10" 
+                          refX="5" 
+                          refY="5"
+                          markerWidth="4" 
+                          markerHeight="4" 
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
+                        </marker>
+                        <marker 
+                          id="arrow-completed" 
+                          viewBox="0 0 10 10" 
+                          refX="5" 
+                          refY="5"
+                          markerWidth="4" 
+                          markerHeight="4" 
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                        </marker>
+                        <marker 
+                          id="arrow-inactive" 
+                          viewBox="0 0 10 10" 
+                          refX="5" 
+                          refY="5"
+                          markerWidth="4" 
+                          markerHeight="4" 
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af" />
+                        </marker>
+                      </defs>
+                    </svg>
+                    
+                    {/* Dibujamos los nodos (unidades) */}
+                    {nodes.map((unit) => {
+                      const unitType = getUnitType(unit);
+                      const status = getUnitStatus(unit, unit.index);
+                      
+                      return (
+                        <div 
+                          key={unit.id}
+                          className={`absolute w-36 sm:w-40 h-16 bg-slate-100 dark:bg-slate-700 border-2 ${
+                            status === 'completed' ? 'border-green-500 dark:border-green-400' :
+                            status === 'running' ? 'border-amber-500 dark:border-amber-400' :
+                            'border-slate-300 dark:border-slate-600'
+                          } rounded-lg p-2 sm:p-3 shadow-sm ${status === 'pending' ? 'opacity-60' : ''} cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors`}
+                          style={{ top: `${unit.posY}px`, left: `${unit.posX}px` }}
+                          onClick={() => fetchUnitDetails(unit)}
+                          title="Click para ver detalles"
+                        >
+                          <div className="text-xs sm:text-sm font-medium dark:text-white truncate">
+                            {unitType}
+                          </div>
+                          <div className="flex mt-1">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                              status === 'running' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
+                              'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                            }`}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
                 );
-              })}
+              })()}
             </div>
           )}
         </div>
