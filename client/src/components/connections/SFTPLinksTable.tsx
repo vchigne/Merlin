@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useLocation } from "wouter";
 import { 
   Table, 
@@ -19,9 +20,9 @@ export default function SFTPLinksTable() {
   const { data: sftpLinks, isLoading, error } = useSFTPLinks();
   const [, setLocation] = useLocation();
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = useCallback((id: string) => {
     setLocation(`/connections/sftp/${id}`);
-  };
+  }, [setLocation]);
 
   if (isLoading) {
     return (
@@ -69,7 +70,13 @@ export default function SFTPLinksTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sftpLinks.map((link) => (
+              {sftpLinks.map((link: { 
+                id: string; 
+                name: string; 
+                host: string; 
+                port: number; 
+                updated_at?: string 
+              }) => (
                 <TableRow key={link.id}>
                   <TableCell className="font-medium">{link.name}</TableCell>
                   <TableCell>{link.host}</TableCell>

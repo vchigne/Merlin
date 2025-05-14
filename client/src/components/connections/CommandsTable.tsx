@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useLocation } from "wouter";
 import { 
   Table, 
@@ -19,9 +20,9 @@ export default function CommandsTable() {
   const { data: commands, isLoading, error } = useCommands();
   const [, setLocation] = useLocation();
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = useCallback((id: string) => {
     setLocation(`/connections/command/${id}`);
-  };
+  }, [setLocation]);
 
   if (isLoading) {
     return (

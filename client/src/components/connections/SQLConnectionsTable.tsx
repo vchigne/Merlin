@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useLocation } from "wouter";
 import { 
   Table, 
@@ -19,9 +20,9 @@ export default function SQLConnectionsTable() {
   const { data: sqlConnections, isLoading, error } = useSQLConnections();
   const [, setLocation] = useLocation();
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = useCallback((id: string) => {
     setLocation(`/connections/sql/${id}`);
-  };
+  }, [setLocation]);
 
   if (isLoading) {
     return (
@@ -68,7 +69,12 @@ export default function SQLConnectionsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sqlConnections.map((conn) => (
+              {sqlConnections.map((conn: {
+                id: string;
+                name: string;
+                driver: string;
+                updated_at?: string;
+              }) => (
                 <TableRow key={conn.id}>
                   <TableCell className="font-medium">{conn.name}</TableCell>
                   <TableCell>{conn.driver}</TableCell>

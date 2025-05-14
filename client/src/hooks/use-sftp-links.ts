@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
 import { SFTP_LINKS_QUERY, SFTP_LINK_DETAIL_QUERY, SFTP_LINK_USAGE_QUERY } from '@shared/queries';
-import { SFTPLink, SFTPDownloader, SFTPUploader } from '@shared/types';
+import { SFTPLink } from '@shared/types';
 
-// Hook para obtener la lista de conexiones SFTP
+// Hook para obtener la lista de enlaces SFTP
 export function useSFTPLinks() {
   return useQuery({
     queryKey: ['/api/graphql/sftp-links'],
@@ -16,12 +15,15 @@ export function useSFTPLinks() {
       });
       
       const result = await response.json();
-      return result.data.merlin_agent_SFTPLink as SFTPLink[];
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      return result.data?.merlin_agent_SFTPLink || [];
     },
   });
 }
 
-// Hook para obtener detalles de una conexión SFTP específica
+// Hook para obtener detalles de un enlace SFTP específico
 export function useSFTPLinkDetail(id: string) {
   return useQuery({
     queryKey: ['/api/graphql/sftp-link', id],
@@ -37,50 +39,29 @@ export function useSFTPLinkDetail(id: string) {
       });
       
       const result = await response.json();
-      return result.data.merlin_agent_SFTPLink_by_pk;
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      return result.data?.merlin_agent_SFTPLink_by_pk;
     },
     enabled: !!id,
   });
 }
 
 interface SFTPLinkUsage {
-  downloaders: {
+  downloaders: Array<{
     id: string;
     name: string;
-    output?: string;
-    return_output?: boolean;
-    merlin_agent_PipelineUnit: Array<{
-      id: string;
-      pipeline: {
-        id: string;
-        name: string;
-        agent_passport: {
-          id: string;
-          name: string;
-        }
-      }
-    }>
-  }[];
-  uploaders: {
+    output: string;
+  }>;
+  uploaders: Array<{
     id: string;
     name: string;
-    input?: string;
-    return_output?: boolean;
-    merlin_agent_PipelineUnit: Array<{
-      id: string;
-      pipeline: {
-        id: string;
-        name: string;
-        agent_passport: {
-          id: string;
-          name: string;
-        }
-      }
-    }>
-  }[];
+    input: string;
+  }>;
 }
 
-// Hook para obtener el uso de una conexión SFTP específica
+// Hook para obtener el uso de un enlace SFTP específico
 export function useSFTPLinkUsage(id: string) {
   return useQuery<SFTPLinkUsage>({
     queryKey: ['/api/graphql/sftp-link-usage', id],
@@ -96,7 +77,14 @@ export function useSFTPLinkUsage(id: string) {
       });
       
       const result = await response.json();
-      return result.data;
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      return {
+        downloaders: result.data?.merlin_agent_SFTPDownloader || [],
+        uploaders: result.data?.merlin_agent_SFTPUploader || []
+      };
     },
     enabled: !!id,
   });
