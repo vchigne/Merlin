@@ -512,26 +512,21 @@ export const COMMAND_DETAIL_QUERY = `
 
 export const COMMAND_USAGE_QUERY = `
   query GetCommandUsage($id: uuid!) {
-    command: merlin_agent_Command_by_pk(id: $id) {
+    merlin_agent_PipelineUnit(where: {command_id: {_eq: $id}}) {
       id
-      name
-      dq_process_id
-      merlin_agent_PipelineUnit {
+      comment
+      pipeline_id
+      posx
+      posy
+      created_at
+      updated_at
+      pipeline {
         id
-        comment
-        pipeline_id
-        posx
-        posy
-        created_at
-        updated_at
-        pipeline {
+        name
+        description
+        agent_passport {
           id
           name
-          description
-          agent_passport {
-            id
-            name
-          }
         }
       }
     }
