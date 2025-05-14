@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { STATS_OVERVIEW_QUERY } from "@shared/queries";
 import StatCard from "@/components/dashboard/StatCard";
-import AgentHealthGrid from "@/components/dashboard/AgentHealthGrid";
 import AgentStatusCards from "@/components/dashboard/AgentStatusCards";
 import RecentErrorsPanel from "@/components/dashboard/RecentErrorsPanel";
 import PipelineVisualizer from "@/components/dashboard/PipelineVisualizer";
@@ -119,12 +118,6 @@ export default function Dashboard() {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4 dark:text-white">Estado de Agentes</h2>
         <AgentStatusCards />
-      </div>
-      
-      {/* Agent Health Grid - Renamed */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-4 dark:text-white">Agentes Recientes</h2>
-        <AgentHealthGrid />
       </div>
       
       {/* Errors Panel */}
