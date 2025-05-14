@@ -178,18 +178,36 @@ export function determineAgentStatus(
   };
   
   // PASO 1: Verificar el último ping para determinar conectividad básica
+  console.log('Iniciando análisis de agente:', agent.id, agent.name);
+  
+  // Si el agente está marcado como saludable en la base de datos, darle prioridad
+  if (agent.is_healthy) {
+    console.log('Agente marcado como saludable en la base de datos');
+    result.status = 'healthy';
+    result.pingRatePercent = 90; // Valor alto por defecto para agentes marcados como saludables
+    result.jobSuccessRatePercent = 90;
+    // Continuamos el análisis para refinar estos valores
+  }
+  
   const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
+  console.log('Último ping:', lastPing ? new Date(lastPing).toISOString() : 'ninguno');
+  
   if (!lastPing) {
+    console.log('No hay pings registrados, agente offline');
+    result.status = 'offline';
     return result; // Sin ping registrado = offline
   }
   
   const now = new Date();
   const lastPingDate = new Date(lastPing);
   const diffMinutes = (now.getTime() - lastPingDate.getTime()) / (1000 * 60);
+  console.log('Minutos desde último ping:', diffMinutes);
   result.lastPingMinutes = Math.round(diffMinutes);
   
   // Si no hay ping en los últimos 60 minutos, el agente está offline
   if (diffMinutes > 60) {
+    console.log('Ping muy antiguo (>60 min), agente offline');
+    result.status = 'offline';
     return result;
   }
   
@@ -210,17 +228,24 @@ export function determineAgentStatus(
       // Ajustamos la tasa según lo reciente que sea el ping
       if (diffMinutes <= 30) {
         result.pingRatePercent = 100; // Ping muy reciente (últimos 30 minutos)
+        console.log('Ping muy reciente (<30 min), estableciendo ping rate a 100%');
       } else {
         result.pingRatePercent = 80; // Ping en los últimos 30-60 minutos
+        console.log('Ping reciente (30-60 min), estableciendo ping rate a 80%');
       }
     } else {
       // Para pings más antiguos, reducimos gradualmente la tasa
       const hoursSinceLastPing = diffMinutes / 60;
       // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
-      result.pingRatePercent = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
+      const calculatedRate = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
+      result.pingRatePercent = Math.max(30, calculatedRate); // Mínimo 30% para agentes con pings
+      console.log('Ping antiguo, estableciendo ping rate a', result.pingRatePercent + '%');
     }
   } else {
     console.log('No hay pings para el agente:', agent.id, agent.name);
+    // En lugar de 0%, usar un valor mínimo para agentes sin pings pero que están en la base de datos
+    result.pingRatePercent = 50;
+    console.log('Usando valor predeterminado de ping rate: 50%');
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
@@ -250,7 +275,10 @@ export function determineAgentStatus(
       // De los trabajos terminados, contamos los exitosos (completed=true, aborted=false)
       const successfulJobs = finishedJobs.filter(job => job.completed && !job.aborted).length;
       console.log('Jobs exitosos:', successfulJobs, 'de', finishedJobs.length);
-      result.jobSuccessRatePercent = Math.round((successfulJobs / finishedJobs.length) * 100);
+      const calculatedRate = Math.round((successfulJobs / finishedJobs.length) * 100);
+      // Garantizar un mínimo de 40% para agentes que tienen trabajos
+      result.jobSuccessRatePercent = Math.max(40, calculatedRate);
+      console.log('Job success rate calculado:', calculatedRate + '%, ajustado a:', result.jobSuccessRatePercent + '%');
     } else {
       // Si hay trabajos pero ninguno ha terminado, asumimos que están en curso
       // Asignamos un valor por defecto optimista (80% de éxito esperado)
@@ -258,48 +286,66 @@ export function determineAgentStatus(
       result.jobSuccessRatePercent = 80;
     }
   } else {
-    // Si no hay trabajos recientes, asumimos que no hay problemas (100% de éxito)
+    // Si no hay trabajos recientes, usar un valor por defecto más conservador (75%)
     console.log('No hay jobs para el agente:', agent.id, agent.name);
-    result.jobSuccessRatePercent = 100;
+    result.jobSuccessRatePercent = 75;
+    console.log('Usando valor predeterminado de job success rate: 75%');
   }
   
   // PASO 4: Determinar estado final combinando todos los factores
+  console.log('Determinando estado final del agente con las métricas calculadas:', {
+    agentId: agent.id,
+    agentName: agent.name,
+    pingRatePercent: result.pingRatePercent,
+    jobSuccessRatePercent: result.jobSuccessRatePercent,
+    diffMinutes: diffMinutes,
+    is_healthy: agent.is_healthy
+  });
   
   // En primer lugar, si el sistema indica que el agente está sano, confiar en esa señal
   if (agent.is_healthy) {
+    console.log('Agente marcado como saludable en la BD (is_healthy=true)');
+    
     // Solo marcar como error si realmente hay evidencia muy fuerte de problemas
     if (diffMinutes > 120 || (result.jobsAnalyzed > 5 && result.jobSuccessRatePercent < 30)) {
       result.status = "error";
+      console.log('A pesar de is_healthy=true, hay problemas graves: ping muy antiguo o muchos fallos');
       return result;
     }
     
     // Advertencia solo para casos de degradación moderada
     if (diffMinutes > 90 || (result.jobsAnalyzed > 5 && result.jobSuccessRatePercent < 50)) {
       result.status = "warning";
+      console.log('A pesar de is_healthy=true, hay degradación moderada: ping antiguo o algunos fallos');
       return result;
     }
     
     // Por defecto, confiar en el flag is_healthy
     result.status = "healthy";
+    console.log('Confiando en is_healthy=true, agente saludable');
     return result;
   }
   
   // Si is_healthy no está presente o es false, usar criterios más estrictos
+  console.log('Agente no marcado como saludable, aplicando criterios estándar');
   
   // Error: Sin ping en más de 60 minutos o más del 60% de los trabajos fallaron
   if (diffMinutes > 60 || (result.jobsAnalyzed > 2 && result.jobSuccessRatePercent < 40)) {
     result.status = "error";
+    console.log('Criterios para estado error cumplidos:', {diffMinutes, jobsAnalyzed: result.jobsAnalyzed, jobSuccessRate: result.jobSuccessRatePercent});
     return result;
   }
   
   // Warning: Ping entre 30-60 minutos o más del 30% de los trabajos fallaron
   if (diffMinutes > 30 || (result.jobsAnalyzed > 2 && result.jobSuccessRatePercent < 70)) {
     result.status = "warning";
+    console.log('Criterios para estado warning cumplidos:', {diffMinutes, jobsAnalyzed: result.jobsAnalyzed, jobSuccessRate: result.jobSuccessRatePercent});
     return result;
   }
   
   // Healthy: Ping reciente y buenos resultados en trabajos
   result.status = "healthy";
+  console.log('Ping reciente y buenos resultados en trabajos, agente saludable');
   return result;
 }
 
