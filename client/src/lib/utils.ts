@@ -189,6 +189,16 @@ export function determineAgentStatus(
     // No asignamos estado aquí, lo determinaremos basado en datos reales
   }
   
+  // PASO 1: Verificar el estado explícito del agente (si existe)
+  // Si está explícitamente marcado en la base de datos, respetamos ese valor
+  if (agent.is_healthy === true) {
+    console.log('Agente explícitamente marcado como healthy en la BD');
+    result.status = 'healthy';
+  } else if (agent.is_healthy === false) {
+    console.log('Agente explícitamente marcado como unhealthy en la BD');
+    result.status = 'error';
+  }
+  
   // El ping viene como un objeto, no como array
   let lastPing = null;
   if (agent.AgentPassportPing) {
@@ -200,7 +210,7 @@ export function determineAgentStatus(
   
   if (!lastPing) {
     console.log('No hay pings registrados, agente offline');
-    result.status = 'offline';
+    result.status = 'offline'; // Esto sobrescribe cualquier valor anterior de status
     result.pingRatePercent = 0;
     result.jobSuccessRatePercent = 0;
     return result; // Sin ping registrado = offline
@@ -211,13 +221,6 @@ export function determineAgentStatus(
   const diffMinutes = (now.getTime() - lastPingDate.getTime()) / (1000 * 60);
   console.log('Minutos desde último ping:', diffMinutes);
   result.lastPingMinutes = Math.round(diffMinutes);
-  
-  // Si no hay ping en los últimos 60 minutos, el agente está offline
-  if (diffMinutes > 60) {
-    console.log('Ping muy antiguo (>60 min), agente offline');
-    result.status = 'offline';
-    return result;
-  }
   
   // PASO 2: Calcular tasa de pings recibidos basada en data real
   console.log('Calculando ping rate:', {
@@ -312,31 +315,27 @@ export function determineAgentStatus(
     return result;
   }
 
-  // Si el último ping es de hace más de 5 horas, consideramos el agente como offline
+  // Para agentes que tienen pings, utilizamos los nuevos criterios basados en tiempo
   // Esto es independiente de cualquier otra métrica
-  if (diffMinutes > 300) {
-    console.log('Último ping hace más de 5 horas, marcando agente como offline');
-    result.status = 'offline';
-    return result;
-  }
-  
-  // Para agentes que no tienen datos de jobs, evaluamos solo ping rate
-  if (result.jobsAnalyzed === 0) {
-    console.log('No hay datos de jobs, evaluando estado basado solo en ping rate');
-    
-    // Criterios para agentes sin datos de jobs:
-    if (diffMinutes > 60) {
-      result.status = "error";
-      console.log('Ping demasiado antiguo (>60 min), estado: error');
-    } else if (diffMinutes > 30) {
-      result.status = "warning"; 
-      console.log('Ping algo antiguo (30-60 min), estado: warning');
+  if (agent.is_healthy !== true && agent.is_healthy !== false) { // Solo si no hay is_healthy explícito en la BD
+    if (diffMinutes < 5) {
+      // Ping muy reciente (menos de 5 minutos): consideramos el agente como saludable
+      console.log('Ping muy reciente (<5 min), agente ACTIVO');
+      result.status = 'healthy';
+    } else if (diffMinutes < 480) { // 8 horas = 480 minutos
+      // Ping en las últimas 8 horas: estado de advertencia
+      console.log('Ping en las últimas 8 horas (5min-8h), estado: warning');
+      result.status = 'warning';
     } else {
-      result.status = "healthy";
-      console.log('Ping reciente (<30 min), estado: healthy');
+      // Ping demasiado antiguo: estado de error
+      console.log('Ping demasiado antiguo (>8h), estado: error');
+      result.status = 'error';
     }
     return result;
   }
+  
+  // Si hemos llegado aquí, hay una indicación explícita de is_healthy en la base de datos
+  // que prevalece sobre nuestra evaluación automática, o el agente no tiene pings
   
   // Si llegamos aquí, tenemos datos tanto de ping como de jobs
   console.log('Evaluando estado basado en ping y datos de jobs');

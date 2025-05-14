@@ -180,40 +180,34 @@ export default function AgentCard({ agent }: AgentCardProps) {
         
         {/* KPIs */}
         <div className="grid grid-cols-2 gap-2 mt-3">
-          {/* Ping Rate */}
+          {/* Último Ping */}
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center">
                 <Signal className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Último ping</span>
               </div>
-              <span className={`text-xs font-bold ${agentHealthInfo.pingRatePercent > 0 ? getMetricColor(agentHealthInfo.pingRatePercent) : "text-slate-500"}`}>
+            </div>
+            <div className="text-center">
+              <span className={`text-lg font-bold ${agentHealthInfo.pingRatePercent > 0 ? getMetricColor(agentHealthInfo.pingRatePercent) : "text-slate-500"}`}>
                 {getPingTimingText(agentHealthInfo.lastPingMinutes)}
               </span>
             </div>
-            <Progress 
-              value={agentHealthInfo.pingRatePercent > 0 ? agentHealthInfo.pingRatePercent : 0}
-              className="h-1.5" 
-              indicatorClassName={agentHealthInfo.pingRatePercent > 0 ? getProgressColor(agentHealthInfo.pingRatePercent) : "bg-slate-300 dark:bg-slate-700"} 
-            />
           </div>
           
           {/* Job Success */}
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center">
                 <Activity className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Job Success</span>
               </div>
-              <span className={`text-xs font-bold ${agentHealthInfo.jobSuccessRatePercent > 0 ? getMetricColor(agentHealthInfo.jobSuccessRatePercent) : "text-slate-500"}`}>
+            </div>
+            <div className="text-center">
+              <span className={`text-lg font-bold ${agentHealthInfo.jobSuccessRatePercent > 0 ? getMetricColor(agentHealthInfo.jobSuccessRatePercent) : "text-slate-500"}`}>
                 {agentHealthInfo.jobSuccessRatePercent > 0 ? `${agentHealthInfo.jobSuccessRatePercent}%` : "No data"}
               </span>
             </div>
-            <Progress 
-              value={agentHealthInfo.jobSuccessRatePercent > 0 ? agentHealthInfo.jobSuccessRatePercent : 0}
-              className="h-1.5" 
-              indicatorClassName={agentHealthInfo.jobSuccessRatePercent > 0 ? getProgressColor(agentHealthInfo.jobSuccessRatePercent) : "bg-slate-300 dark:bg-slate-700"} 
-            />
           </div>
         </div>
       </CardContent>
