@@ -5,7 +5,7 @@ import { STATS_OVERVIEW_QUERY } from "@shared/queries";
 import StatCard from "@/components/dashboard/StatCard";
 import AgentStatusCards from "@/components/dashboard/AgentStatusCards";
 import RecentErrorsPanel from "@/components/dashboard/RecentErrorsPanel";
-import PipelineVisualizer from "@/components/dashboard/PipelineVisualizer";
+import PipelineVisualizerNew from "@/components/dashboard/PipelineVisualizerNew";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import JobsTable from "@/components/dashboard/JobsTable";
 import { 
@@ -130,7 +130,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2">
           <h2 className="text-xl font-bold mb-4 dark:text-white">Visualización de Pipeline</h2>
-          <PipelineVisualizer />
+          <PipelineVisualizerNew />
         </div>
         <div>
           <h2 className="text-xl font-bold mb-4 dark:text-white">Actividad Reciente</h2>
