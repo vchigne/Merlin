@@ -32,15 +32,16 @@ export function useAgentStatus(): AgentStatusResult {
   });
 
   // Debug: Log raw agent data
-  console.log('Raw agent data from API:', data);
+  console.log('Datos de agente en bruto (primero 2 registros):', data?.slice(0, 2));
   
   // Process agents to add status information
   const processedAgents = data?.map((agent: any) => {
     // Fix any data inconsistency before processing
+    // Importante: AgentPassportPing es un OBJETO, no un array
     const normalizedAgent = {
       ...agent,
-      // Ensure AgentPassportPing exists (single, not plural)
-      AgentPassportPing: agent.AgentPassportPing || [],
+      // Ensure AgentPassportPing is in an array format for processing
+      AgentPassportPing: agent.AgentPassportPing ? [agent.AgentPassportPing] : [],
       // Ensure PipelineJobQueues exists (plural, not singular)
       PipelineJobQueues: agent.PipelineJobQueues || []
     };
@@ -48,13 +49,13 @@ export function useAgentStatus(): AgentStatusResult {
     console.log('Processing agent:', {
       id: agent.id,
       name: agent.name,
-      hasPings: agent.AgentPassportPing?.length > 0,
-      totalPings: agent.AgentPassportPing?.length,
+      hasPings: agent.AgentPassportPing !== null && agent.AgentPassportPing !== undefined,
+      lastPingAt: agent.AgentPassportPing?.last_ping_at,
       hasJobs: agent.PipelineJobQueues?.length > 0,
       totalJobs: agent.PipelineJobQueues?.length
     });
     
-    // Use the advanced algorithm to determine status
+    // Use the algorithm to determine status, now with correct data structure
     const healthInfo = determineAgentStatus(normalizedAgent);
     console.log('Agent health info result:', {
       id: agent.id,
