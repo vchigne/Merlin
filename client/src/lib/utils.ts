@@ -214,19 +214,40 @@ export function determineAgentStatus(
   
   // PASO 4: Determinar estado final combinando todos los factores
   
-  // Error: Más del 50% de los trabajos fallaron o más del 50% de los pings esperados no fueron recibidos
-  if (result.jobSuccessRatePercent < 50 || result.pingRatePercent < 50) {
+  // En primer lugar, si el sistema indica que el agente está sano, confiar en esa señal
+  if (agent.is_healthy) {
+    // Solo marcar como error si realmente hay evidencia muy fuerte de problemas
+    if (diffMinutes > 120 || (result.jobsAnalyzed > 5 && result.jobSuccessRatePercent < 30)) {
+      result.status = "error";
+      return result;
+    }
+    
+    // Advertencia solo para casos de degradación moderada
+    if (diffMinutes > 90 || (result.jobsAnalyzed > 5 && result.jobSuccessRatePercent < 50)) {
+      result.status = "warning";
+      return result;
+    }
+    
+    // Por defecto, confiar en el flag is_healthy
+    result.status = "healthy";
+    return result;
+  }
+  
+  // Si is_healthy no está presente o es false, usar criterios más estrictos
+  
+  // Error: Sin ping en más de 60 minutos o más del 60% de los trabajos fallaron
+  if (diffMinutes > 60 || (result.jobsAnalyzed > 2 && result.jobSuccessRatePercent < 40)) {
     result.status = "error";
     return result;
   }
   
-  // Warning: Ping entre 30-60 minutos, tasa de éxito de trabajos entre 50-80%, o tasa de fallos de ping entre 50-80%
-  if (diffMinutes > 30 || result.jobSuccessRatePercent < 80 || result.pingRatePercent < 80) {
+  // Warning: Ping entre 30-60 minutos o más del 30% de los trabajos fallaron
+  if (diffMinutes > 30 || (result.jobsAnalyzed > 2 && result.jobSuccessRatePercent < 70)) {
     result.status = "warning";
     return result;
   }
   
-  // Healthy: Ping en los últimos 30 minutos, más del 80% de trabajos exitosos, y menos del 20% de fallos de ping
+  // Healthy: Ping reciente y buenos resultados en trabajos
   result.status = "healthy";
   return result;
 }
