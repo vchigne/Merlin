@@ -30,7 +30,7 @@ export default function SQLConnectionsTable() {
   const { data: sqlConnections, isLoading, error } = useSQLConnections();
   const [, setLocation] = useLocation();
   const [nameFilter, setNameFilter] = useState("");
-  const [driverFilter, setDriverFilter] = useState("");
+  const [driverFilter, setDriverFilter] = useState("all");
 
   const handleViewDetails = useCallback((id: string) => {
     setLocation(`/connections/sql/${id}`);
@@ -38,7 +38,7 @@ export default function SQLConnectionsTable() {
 
   const handleClearFilters = useCallback(() => {
     setNameFilter("");
-    setDriverFilter("");
+    setDriverFilter("all");
   }, []);
 
   // Extraer todos los drivers únicos para el select
@@ -49,7 +49,7 @@ export default function SQLConnectionsTable() {
   // Filtrar las conexiones SQL según los criterios
   const filteredConnections = sqlConnections?.filter((conn: SQLConn) => {
     const nameMatch = conn.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const driverMatch = !driverFilter || conn.driver === driverFilter;
+    const driverMatch = driverFilter === "all" || conn.driver === driverFilter;
     return nameMatch && driverMatch;
   });
 
@@ -121,7 +121,7 @@ export default function SQLConnectionsTable() {
                 <SelectValue placeholder="All drivers" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All drivers</SelectItem>
+                <SelectItem value="all">All drivers</SelectItem>
                 {uniqueDrivers.map((driver: string) => (
                   <SelectItem key={driver} value={driver}>{driver}</SelectItem>
                 ))}

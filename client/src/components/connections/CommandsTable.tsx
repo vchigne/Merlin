@@ -30,8 +30,8 @@ export default function CommandsTable() {
   const { data: commands, isLoading, error } = useCommands();
   const [, setLocation] = useLocation();
   const [nameFilter, setNameFilter] = useState("");
-  const [targetFilter, setTargetFilter] = useState("");
-  const [instantFilter, setInstantFilter] = useState<string>("");
+  const [targetFilter, setTargetFilter] = useState("all");
+  const [instantFilter, setInstantFilter] = useState<string>("all");
 
   const handleViewDetails = useCallback((id: string) => {
     setLocation(`/connections/command/${id}`);
@@ -39,8 +39,8 @@ export default function CommandsTable() {
 
   const handleClearFilters = useCallback(() => {
     setNameFilter("");
-    setTargetFilter("");
-    setInstantFilter("");
+    setTargetFilter("all");
+    setInstantFilter("all");
   }, []);
 
   // Extraer todos los targets únicos para el select
@@ -52,8 +52,8 @@ export default function CommandsTable() {
   // Filtrar los comandos según los criterios
   const filteredCommands = commands?.filter((command: Command) => {
     const nameMatch = command.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const targetMatch = !targetFilter || command.target.includes(targetFilter);
-    const instantMatch = instantFilter === "" || 
+    const targetMatch = targetFilter === "all" || command.target.includes(targetFilter);
+    const instantMatch = instantFilter === "all" || 
                          (instantFilter === "true" && command.instant) || 
                          (instantFilter === "false" && !command.instant);
     return nameMatch && targetMatch && instantMatch;
@@ -127,7 +127,7 @@ export default function CommandsTable() {
                 <SelectValue placeholder="All targets" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All targets</SelectItem>
+                <SelectItem value="all">All targets</SelectItem>
                 {uniqueTargets.map((target: string) => (
                   <SelectItem key={target} value={target}>{target}</SelectItem>
                 ))}
@@ -144,7 +144,7 @@ export default function CommandsTable() {
                 <SelectValue placeholder="All commands" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All commands</SelectItem>
+                <SelectItem value="all">All commands</SelectItem>
                 <SelectItem value="true">Instant only</SelectItem>
                 <SelectItem value="false">Not instant</SelectItem>
               </SelectContent>
