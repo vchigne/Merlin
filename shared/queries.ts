@@ -385,7 +385,7 @@ export const SFTP_LINK_USAGE_QUERY = `
       name
       output
       return_output
-      PipelineUnits {
+      merlin_agent_PipelineUnit {
         id
         pipeline {
           id
@@ -402,7 +402,7 @@ export const SFTP_LINK_USAGE_QUERY = `
       name
       input
       return_output
-      PipelineUnits {
+      merlin_agent_PipelineUnit {
         id
         pipeline {
           id
