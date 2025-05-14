@@ -374,18 +374,6 @@ export const SFTP_LINK_DETAIL_QUERY = `
       user
       created_at
       updated_at
-      SFTPDownloaders {
-        id
-        name
-        output
-        return_output
-      }
-      SFTPUploaders {
-        id
-        name
-        input
-        return_output
-      }
     }
   }
 `;
