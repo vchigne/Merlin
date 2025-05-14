@@ -84,7 +84,7 @@ interface SQLConnUsage {
 }
 
 // Hook para obtener el uso de una conexión SQL específica
-export function useSQLConnUsage(id: string) {
+export function useSQLConnectionUsage(id: string) {
   return useQuery<SQLConnUsage>({
     queryKey: ['/api/graphql/sql-connection-usage', id],
     queryFn: async () => {

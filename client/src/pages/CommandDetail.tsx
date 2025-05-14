@@ -147,7 +147,7 @@ export default function CommandDetailPage() {
                     <div>
                       <p className="font-medium">Labels</p>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {command.labels.map((label, index) => (
+                        {command.labels.map((label: string, index: number) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {label}
                           </Badge>
@@ -239,20 +239,22 @@ export default function CommandDetailPage() {
           <CardContent>
             {isLoadingUsage ? (
               <Skeleton className="h-40 w-full" />
-            ) : usageData?.pipelines?.length ? (
+            ) : usageData?.command?.merlin_agent_PipelineUnit?.length ? (
               <div className="space-y-4">
-                {usageData.pipelines.map(pipeline => (
-                  <Card key={pipeline.id}>
+                {usageData.command.merlin_agent_PipelineUnit.map((unit: any) => (
+                  <Card key={unit.pipeline.id}>
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">{pipeline.name}</CardTitle>
+                        <CardTitle className="text-lg">{unit.pipeline.name}</CardTitle>
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/pipelines/${pipeline.id}`}>
+                          <Link href={`/pipelines/${unit.pipeline.id}`}>
                             View Pipeline
                           </Link>
                         </Button>
                       </div>
-                      <CardDescription>{pipeline.description || 'No description'}</CardDescription>
+                      <CardDescription>
+                        Agent: {unit.pipeline.agent_passport?.name || 'Unknown'}
+                      </CardDescription>
                     </CardHeader>
                   </Card>
                 ))}

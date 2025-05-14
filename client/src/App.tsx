@@ -52,6 +52,8 @@ function Router() {
         <Route path="/explorer" component={Explorer} />
         <Route path="/connections" component={Connections} />
         <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
+        <Route path="/connections/sql/:id" component={SQLConnectionDetail} />
+        <Route path="/connections/command/:id" component={CommandDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -195,12 +195,12 @@ export default function SQLConnectionDetailPage() {
                   <Skeleton className="h-40 w-full" />
                 ) : usageData?.queries?.length ? (
                   <div className="space-y-4">
-                    {usageData.queries.map(query => (
+                    {usageData.queries.map((query: any) => (
                       <Card key={query.id}>
                         <CardHeader className="py-4">
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-lg">{query.name}</CardTitle>
-                            <Badge variant={query.enabled ? "success" : "secondary"}>
+                            <Badge variant={query.enabled ? "secondary" : "outline"}>
                               {query.enabled ? "Enabled" : "Disabled"}
                             </Badge>
                           </div>
