@@ -129,6 +129,10 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
                 <Search className="w-5 h-5 mr-3" />
                 {!collapsed && <span>GraphQL Explorer</span>}
             </Link>
+            <Link href="/connections" className={cn("sidebar-item", location.startsWith("/connections") && "active")}>
+                <Network className="w-5 h-5 mr-3" />
+                {!collapsed && <span>Connections</span>}
+            </Link>
           </nav>
           
           {!collapsed && (
