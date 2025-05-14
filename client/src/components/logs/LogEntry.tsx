@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatFriendlyDate } from "@/lib/utils";
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -136,10 +136,13 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 mt-2">
+            <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 mt-2 group">
               <span className="flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
-                {formatDate(log.date || log.created_at)}
+                {formatFriendlyDate(log.date || log.created_at)}
+                <span className="tooltip-date hidden group-hover:inline ml-1 text-xs text-slate-400">
+                  {formatDate(log.date || log.created_at, "yyyy-MM-dd HH:mm:ss")}
+                </span>
               </span>
               
               {executionTime && (

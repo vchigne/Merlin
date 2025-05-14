@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
-import { formatRelativeTime, truncateText } from "@/lib/utils";
+import { formatFriendlyDate, formatDate, truncateText } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -184,7 +184,12 @@ export default function RecentErrorsPanel() {
                         </Link>
                       </span>
                       
-                      <span>{formatRelativeTime(log.created_at)}</span>
+                      <span className="group">
+                        <span>{formatFriendlyDate(log.created_at)}</span>
+                        <span className="tooltip-date hidden group-hover:block absolute bg-slate-800 text-white px-2 py-1 rounded text-xs -mt-8 ml-2">
+                          {formatDate(log.created_at, "yyyy-MM-dd HH:mm:ss")}
+                        </span>
+                      </span>
                     </div>
                     
                     {log.exception && (

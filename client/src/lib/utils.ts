@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
+import { es } from "date-fns/locale";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -27,6 +28,54 @@ export function formatRelativeTime(dateString: string): string {
   } catch (error) {
     console.error("Error formatting relative time:", error);
     return "unknown time ago";
+  }
+}
+
+// Format date in a friendly human-readable format
+export function formatFriendlyDate(dateString: string, includeTime = true): string {
+  if (!dateString) return "N/A";
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    // For very recent timestamps (less than 1 minute), show "Justo ahora"
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) {
+      return "Justo ahora";
+    }
+    
+    // For times less than 24 hours ago, show relative time
+    const diffInHours = Math.floor(diffInSeconds / 3600);
+    if (diffInHours < 24) {
+      return formatDistanceToNow(date, { addSuffix: true, locale: es });
+    }
+    
+    // For today, show "Hoy a las HH:MM"
+    if (isToday(date)) {
+      return `Hoy a las ${format(date, "HH:mm")}`;
+    }
+    
+    // For yesterday, show "Ayer a las HH:MM"
+    if (isYesterday(date)) {
+      return `Ayer a las ${format(date, "HH:mm")}`;
+    }
+    
+    // For this week, show day of week
+    if (isThisWeek(date)) {
+      return format(date, includeTime ? "EEEE 'a las' HH:mm" : "EEEE", { locale: es });
+    }
+    
+    // For this year, show day and month
+    if (date.getFullYear() === now.getFullYear()) {
+      return format(date, includeTime ? "d 'de' MMMM 'a las' HH:mm" : "d 'de' MMMM", { locale: es });
+    }
+    
+    // For other dates, include the year
+    return format(date, includeTime ? "d 'de' MMMM yyyy 'a las' HH:mm" : "d 'de' MMMM yyyy", { locale: es });
+  } catch (error) {
+    console.error("Error formatting friendly date:", error);
+    return dateString;
   }
 }
 

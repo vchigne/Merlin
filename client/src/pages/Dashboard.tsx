@@ -127,6 +127,12 @@ export default function Dashboard() {
         <AgentHealthGrid />
       </div>
       
+      {/* Errors Panel */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4 dark:text-white">Errores Recientes</h2>
+        <RecentErrorsPanel />
+      </div>
+      
       {/* Pipeline Visualization and Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2">
