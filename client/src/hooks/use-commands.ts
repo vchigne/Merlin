@@ -97,10 +97,10 @@ interface CommandDetailResponse {
   dq_process_id: string;
   DQProcess?: {
     id: string;
-    name: string;
-    description: string;
-    created_at: string;
-    updated_at: string;
+    action: string;
+    area: string;
+    procedure: string;
+    responsible: string;
   };
 }
 

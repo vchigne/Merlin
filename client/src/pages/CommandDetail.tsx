@@ -150,13 +150,20 @@ export default function CommandDetailPage() {
                         {command.DQProcess ? (
                           <div>
                             <Badge variant="secondary" className="mb-1">
-                              {command.DQProcess.name || 'Unnamed Process'}
+                              {command.DQProcess.area || 'No Area'} / {command.DQProcess.action || 'No Action'}
                             </Badge>
-                            {command.DQProcess.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {command.DQProcess.description}
-                              </p>
-                            )}
+                            <div className="mt-1 space-y-1">
+                              {command.DQProcess.procedure && (
+                                <p className="text-sm text-muted-foreground">
+                                  <span className="font-medium">Procedure:</span> {command.DQProcess.procedure}
+                                </p>
+                              )}
+                              {command.DQProcess.responsible && (
+                                <p className="text-sm text-muted-foreground">
+                                  <span className="font-medium">Responsible:</span> {command.DQProcess.responsible}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <Badge variant="outline">ID: {command.dq_process_id}</Badge>

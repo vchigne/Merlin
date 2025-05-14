@@ -508,10 +508,10 @@ export const COMMAND_DETAIL_QUERY = `
       dq_process_id
       DQProcess {
         id
-        name
-        description
-        created_at
-        updated_at
+        action
+        area
+        procedure
+        responsible
       }
     }
   }
