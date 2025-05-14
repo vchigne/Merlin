@@ -184,22 +184,24 @@ export function determineAgentStatus(
     return result;
   }
   
-  // PASO 2: Calcular tasa de pings recibidos (últimos 10 pings)
-  // Considerando intervalos de 30 minutos entre pings
+  // PASO 2: Calcular tasa de pings recibidos
   const pings = agent.AgentPassportPing || [];
   if (pings.length > 0) {
-    // Estimamos cuántos pings deberíamos haber recibido en las últimas 5 horas
-    // (10 pings con intervalo de 30 minutos = 5 horas)
-    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
-    
-    // Contamos cuántos pings hemos recibido en ese período
-    // Nota: Si hay menos de 10 pings disponibles, eso también indica una tasa más baja
-    const receivedPings = pings.filter(ping => 
-      new Date(ping.last_ping_at) >= fiveHoursAgo
-    ).length;
-    
-    // Calculamos qué porcentaje representa de los 10 esperados
-    result.pingRatePercent = Math.min(100, Math.round((receivedPings / 10) * 100));
+    // Si hemos recibido al menos un ping en la última hora, asumimos un buen ratio de ping
+    if (diffMinutes <= 60) {
+      // Si solo tenemos un ping, pero fue en la última hora, asumimos un buen estado
+      // Ajustamos la tasa según lo reciente que sea el ping
+      if (diffMinutes <= 30) {
+        result.pingRatePercent = 100; // Ping muy reciente (últimos 30 minutos)
+      } else {
+        result.pingRatePercent = 80; // Ping en los últimos 30-60 minutos
+      }
+    } else {
+      // Para pings más antiguos, reducimos gradualmente la tasa
+      const hoursSinceLastPing = diffMinutes / 60;
+      // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
+      result.pingRatePercent = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
+    }
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
@@ -207,9 +209,21 @@ export function determineAgentStatus(
   if (jobs.length > 0) {
     result.jobsAnalyzed = jobs.length;
     
-    // Contamos trabajos exitosos (completed=true, aborted=false)
-    const successfulJobs = jobs.filter(job => job.completed && !job.aborted).length;
-    result.jobSuccessRatePercent = Math.round((successfulJobs / jobs.length) * 100);
+    // Contamos solo trabajos que han terminado (completed=true o aborted=true)
+    const finishedJobs = jobs.filter(job => job.completed || job.aborted);
+    
+    if (finishedJobs.length > 0) {
+      // De los trabajos terminados, contamos los exitosos (completed=true, aborted=false)
+      const successfulJobs = finishedJobs.filter(job => job.completed && !job.aborted).length;
+      result.jobSuccessRatePercent = Math.round((successfulJobs / finishedJobs.length) * 100);
+    } else {
+      // Si hay trabajos pero ninguno ha terminado, asumimos que están en curso
+      // Asignamos un valor por defecto optimista (80% de éxito esperado)
+      result.jobSuccessRatePercent = 80;
+    }
+  } else {
+    // Si no hay trabajos recientes, asumimos que no hay problemas (100% de éxito)
+    result.jobSuccessRatePercent = 100;
   }
   
   // PASO 4: Determinar estado final combinando todos los factores
