@@ -203,14 +203,61 @@ export default function SQLConnectionDetailPage() {
                         <CardHeader className="py-4">
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-lg">{query.name || "Sin nombre"}</CardTitle>
-                            <Badge variant={query.enabled ? "secondary" : "outline"}>
-                              {query.enabled ? "Enabled" : "Disabled"}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {query.query_queue_id && query.QueryQueue && (
+                                <Badge variant="secondary" className="mr-1">
+                                  Queue: {query.QueryQueue.name}
+                                </Badge>
+                              )}
+                              <Badge variant={query.enabled ? "secondary" : "outline"}>
+                                {query.enabled ? "Enabled" : "Disabled"}
+                              </Badge>
+                            </div>
                           </div>
                           <CardDescription className="line-clamp-2">
                             {query.query_string || 'No query string'}
                           </CardDescription>
                         </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                            {query.path && (
+                              <div>
+                                <p className="font-medium">Path</p>
+                                <p>{query.path}</p>
+                              </div>
+                            )}
+                            {query.order !== undefined && (
+                              <div>
+                                <p className="font-medium">Order</p>
+                                <p>{query.order}</p>
+                              </div>
+                            )}
+                            {query.date_format && (
+                              <div>
+                                <p className="font-medium">Date Format</p>
+                                <p>{query.date_format}</p>
+                              </div>
+                            )}
+                            {query.chunks && (
+                              <div>
+                                <p className="font-medium">Chunks</p>
+                                <p>{query.chunks}</p>
+                              </div>
+                            )}
+                            {query.timeout && (
+                              <div>
+                                <p className="font-medium">Timeout</p>
+                                <p>{query.timeout} ms</p>
+                              </div>
+                            )}
+                            {query.query_queue_id && query.QueryQueue && query.QueryQueue.description && (
+                              <div className="col-span-full">
+                                <p className="font-medium">Queue Description</p>
+                                <p>{query.QueryQueue.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
                       </Card>
                     ))}
                   </div>

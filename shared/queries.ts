@@ -432,6 +432,14 @@ export const SQL_CONNECTION_DETAIL_QUERY = `
       timeout
       return_output
       order
+      query_queue_id
+      QueryQueue {
+        id
+        name
+        description
+        created_at
+        updated_at
+      }
     }
   }
 `;
