@@ -136,12 +136,23 @@ export function convertToFlowCoordinates(
     const x = (unit.posx || 0) * baseScaleX + baseOffsetX;
     const y = (unit.posy || 0) * baseScaleY + baseOffsetY;
     
+    // Genera una mejor etiqueta para el nodo
+    const unitType = getUnitType(unit);
+    const typeLabel = getTypeReadableLabel(unitType);
+    
+    // Si hay un comentario, úsalo como etiqueta principal
+    // De lo contrario, usa un tipo más descriptivo + ID corto
+    const nodeLabel = unit.comment 
+      ? unit.comment 
+      : `${typeLabel} ${unit.id.substring(0, 6)}`;
+    
     nodes.push({
       id: unit.id,
       type: 'pipelineNode',
       data: {
-        label: unit.comment || `Unit ${unit.id.substring(0, 8)}`,
-        type: getUnitType(unit),
+        label: nodeLabel,
+        description: getUnitDescription(unit, unitType),
+        type: unitType,
         unit: unit,
       },
       position: { x, y },
@@ -159,6 +170,42 @@ export function convertToFlowCoordinates(
   });
   
   return { nodes, edges };
+}
+
+// Obtener etiqueta legible del tipo de unidad
+function getTypeReadableLabel(type: string): string {
+  switch (type) {
+    case 'command': return 'Comando';
+    case 'query': return 'Consulta SQL';
+    case 'sftp_download': return 'Descarga SFTP';
+    case 'sftp_upload': return 'Subida SFTP';
+    case 'zip': return 'Compresión';
+    case 'unzip': return 'Descompresión';
+    case 'pipeline': return 'Pipeline';
+    default: return 'Unidad';
+  }
+}
+
+// Obtener descripción más detallada de la unidad
+function getUnitDescription(unit: any, type: string): string {
+  switch (type) {
+    case 'command':
+      return unit.command_id ? `Ejecuta comando en el sistema` : '';
+    case 'query':
+      return unit.query_queue_id ? `Ejecuta consulta en base de datos` : '';
+    case 'sftp_download':
+      return unit.sftp_downloader_id ? `Descarga archivos desde servidor remoto` : '';
+    case 'sftp_upload':
+      return unit.sftp_uploader_id ? `Sube archivos a servidor remoto` : '';
+    case 'zip':
+      return unit.zip_id ? `Comprime archivos en archivo ZIP` : '';
+    case 'unzip':
+      return unit.unzip_id ? `Extrae archivos de archivo ZIP` : '';
+    case 'pipeline':
+      return unit.call_pipeline ? `Llama a otro pipeline` : '';
+    default:
+      return '';
+  }
 }
 
 // Get unit type based on which ID fields are filled

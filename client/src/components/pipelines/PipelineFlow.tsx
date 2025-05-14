@@ -125,9 +125,14 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 <div className="flex items-center space-x-2">
                   {getUnitIcon(unitType)}
                   <div className="text-sm font-medium dark:text-white truncate">
-                    {node.data.label || unitType.charAt(0).toUpperCase() + unitType.slice(1)}
+                    {node.data.label}
                   </div>
                 </div>
+                {node.data.description && (
+                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    {node.data.description}
+                  </div>
+                )}
                 <div className="flex mt-2">
                   <Badge variant="outline" className={`text-xs ${
                     status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
