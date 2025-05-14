@@ -54,6 +54,12 @@ export default function PipelineSearch({
             if (word.startsWith(query)) return 80;
           }
           
+          // Buscar coincidencias con siglas entre corchetes como [MDLZ]
+          const bracketPattern = new RegExp(`\\[${query.toUpperCase()}\\]`, 'i');
+          if (text.match(bracketPattern)) {
+            return 100; // Máxima prioridad para coincidencias exactas entre corchetes
+          }
+          
           // Buscar coincidencias especiales para siglas como MDLZ
           if (searchQuery.toUpperCase() === searchQuery) {
             // Verificamos si la búsqueda es una sigla
@@ -62,6 +68,19 @@ export default function PipelineSearch({
             for (const word of uppercaseWords) {
               if (word.toLowerCase().includes(query)) {
                 return 70;
+              }
+            }
+            
+            // Buscar la sigla entre corchetes [MDLZ] con variantes
+            const bracketVariants = [
+              `[${searchQuery}]`, 
+              `[${searchQuery.toUpperCase()}]`, 
+              `[${searchQuery.toLowerCase()}]`
+            ];
+            
+            for (const variant of bracketVariants) {
+              if (text.includes(variant)) {
+                return 100; // Máxima prioridad
               }
             }
             
@@ -165,7 +184,12 @@ export default function PipelineSearch({
                   <div className="flex-1">
                     <p className="text-sm font-medium flex items-center">
                       {pipeline.name}
-                      {pipeline.score >= 100 && (
+                      {pipeline.score >= 100 && pipeline.name.includes(`[${searchQuery.toUpperCase()}]`) && (
+                        <span className="ml-2 text-xs px-1 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-sm">
+                          [Código]
+                        </span>
+                      )}
+                      {pipeline.score >= 100 && !pipeline.name.includes(`[${searchQuery.toUpperCase()}]`) && (
                         <span className="ml-2 text-xs px-1 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-sm">
                           Exacta
                         </span>
