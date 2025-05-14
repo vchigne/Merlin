@@ -468,6 +468,9 @@ export const SQL_CONN_USAGE_QUERY = `
     queries: merlin_agent_Query(where: {sqlconn_id: {_eq: $id}}, limit: 50) {
       id
       name
+      query_string
+      enabled
+      path
       query_queue {
         id
         name
