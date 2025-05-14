@@ -1,19 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY, COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AlertCircle, Check, ChevronsUpDown, Search } from "lucide-react";
 
 export default function PipelineVisualizer() {
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [unitDetails, setUnitDetails] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
   
   // Función para determinar el tipo de unidad
   const getUnitType = (unit: any) => {
@@ -108,7 +114,21 @@ export default function PipelineVisualizer() {
     if (pipelinesData && pipelinesData.length > 0 && !selectedPipeline) {
       setSelectedPipeline(pipelinesData[0].id);
     }
-  }, [pipelinesData, selectedPipeline]);
+    
+    // Actualizar la lista filtrada cuando cambia la búsqueda o los datos
+    if (pipelinesData) {
+      if (searchQuery.trim() === '') {
+        setFilteredPipelines(pipelinesData);
+      } else {
+        const query = searchQuery.toLowerCase();
+        const filtered = pipelinesData.filter(pipeline => 
+          pipeline.name.toLowerCase().includes(query) || 
+          (pipeline.description && pipeline.description.toLowerCase().includes(query))
+        );
+        setFilteredPipelines(filtered);
+      }
+    }
+  }, [pipelinesData, selectedPipeline, searchQuery]);
   
   // Consulta para obtener las unidades del pipeline seleccionado
   const { data: pipelineUnits, isLoading: isUnitsLoading } = useQuery({
@@ -274,18 +294,62 @@ export default function PipelineVisualizer() {
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
           <CardTitle>Visualización del Pipeline</CardTitle>
-          <Select value={selectedPipeline || undefined} onValueChange={handlePipelineChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Seleccionar pipeline" />
-            </SelectTrigger>
-            <SelectContent>
-              {pipelinesData.map((pipeline: any) => (
-                <SelectItem key={pipeline.id} value={pipeline.id}>
-                  {pipeline.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                role="combobox" 
+                aria-expanded={searchOpen}
+                className="w-[250px] justify-between"
+              >
+                {selectedPipeline && pipelinesData ? 
+                  pipelinesData.find(p => p.id === selectedPipeline)?.name || "Seleccionar pipeline" 
+                  : "Seleccionar pipeline"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[250px] p-0">
+              <Command>
+                <CommandInput 
+                  placeholder="Buscar pipeline..." 
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                  className="h-9"
+                />
+                <CommandList>
+                  <CommandEmpty>No se encontraron pipelines</CommandEmpty>
+                  <CommandGroup>
+                    <ScrollArea className="h-[300px]">
+                      {filteredPipelines.map((pipeline) => (
+                        <CommandItem
+                          key={pipeline.id}
+                          value={pipeline.id}
+                          onSelect={(currentValue) => {
+                            handlePipelineChange(currentValue);
+                            setSearchOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedPipeline === pipeline.id ? "opacity-100" : "opacity-0"
+                            }`}
+                          />
+                          <div>
+                            <p className="text-sm font-medium">{pipeline.name}</p>
+                            {pipeline.description && (
+                              <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {pipeline.description}
+                              </p>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </ScrollArea>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
