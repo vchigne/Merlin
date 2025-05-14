@@ -131,10 +131,31 @@ export function convertToFlowCoordinates(
     return { nodes, edges };
   }
   
+  // Crear un mapa para detectar y resolver colisiones de posición
+  const positionMap: Record<string, number> = {};
+  
   // Create nodes
   pipelineUnits.forEach((unit) => {
-    const x = (unit.posx || 0) * baseScaleX + baseOffsetX;
-    const y = (unit.posy || 0) * baseScaleY + baseOffsetY;
+    // Obtener posición base
+    let x = (unit.posx || 0) * baseScaleX + baseOffsetX;
+    let y = (unit.posy || 0) * baseScaleY + baseOffsetY;
+    
+    // Crear una clave para la posición
+    const posKey = `${x},${y}`;
+    
+    // Si ya hay un nodo en esta posición, desplazarlo
+    if (positionMap[posKey]) {
+      // Incrementar el contador
+      positionMap[posKey]++;
+      
+      // Desplazar este nodo en diagonal según el contador
+      const offset = positionMap[posKey] * 80;
+      x += offset;
+      y += offset;
+    } else {
+      // Registrar esta posición
+      positionMap[posKey] = 1;
+    }
     
     // Genera una mejor etiqueta para el nodo
     const unitType = getUnitType(unit);
