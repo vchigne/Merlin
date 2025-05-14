@@ -141,6 +141,31 @@ export default function CommandDetailPage() {
                   </div>
                 </div>
 
+                {command.dq_process_id && (
+                  <div className="flex items-start">
+                    <Terminal className="h-5 w-5 mr-2 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">DQProcess</p>
+                      <div className="mt-1">
+                        {command.dq_process ? (
+                          <div>
+                            <Badge variant="secondary" className="mb-1">
+                              {command.dq_process.name}
+                            </Badge>
+                            {command.dq_process.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {command.dq_process.description}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline">ID: {command.dq_process_id}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {command.labels && command.labels.length > 0 && (
                   <div className="flex items-start">
                     <Tag className="h-5 w-5 mr-2 text-muted-foreground" />
@@ -229,6 +254,58 @@ export default function CommandDetailPage() {
           </CardContent>
         </Card>
 
+        {command.dq_process_id && command.dq_process && (
+          <Card>
+            <CardHeader>
+              <CardTitle>DQProcess Association</CardTitle>
+              <CardDescription>
+                This command is linked to a DQProcess
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div>
+                    <p className="font-medium">Process Name</p>
+                    <Badge variant="secondary" className="mt-1">
+                      {command.dq_process.name}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {command.dq_process.description && (
+                  <div>
+                    <p className="font-medium">Description</p>
+                    <p className="text-sm text-muted-foreground">
+                      {command.dq_process.description}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {command.dq_process.created_at && (
+                    <div>
+                      <p className="font-medium">Created</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(command.dq_process.created_at), "PPP")}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {command.dq_process.updated_at && (
+                    <div>
+                      <p className="font-medium">Updated</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(command.dq_process.updated_at), "PPP")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Usage in Pipelines</CardTitle>
@@ -242,7 +319,7 @@ export default function CommandDetailPage() {
             ) : usageData?.command?.merlin_agent_PipelineUnit?.length ? (
               <div className="space-y-4">
                 {usageData.command.merlin_agent_PipelineUnit.map((unit: any) => (
-                  <Card key={unit.pipeline.id}>
+                  <Card key={unit.id}>
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-lg">{unit.pipeline.name}</CardTitle>
@@ -254,8 +331,33 @@ export default function CommandDetailPage() {
                       </div>
                       <CardDescription>
                         Agent: {unit.pipeline.agent_passport?.name || 'Unknown'}
+                        {unit.pipeline.description && (
+                          <p className="mt-1">{unit.pipeline.description}</p>
+                        )}
                       </CardDescription>
                     </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                        {unit.comment && (
+                          <div className="col-span-full">
+                            <p className="font-medium text-muted-foreground">Comment</p>
+                            <p>{unit.comment}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-muted-foreground">Position</p>
+                          <p>x: {unit.posx || '0'}, y: {unit.posy || '0'}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-muted-foreground">Created</p>
+                          <p>{unit.created_at ? format(new Date(unit.created_at), "PPP") : "Unknown"}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-muted-foreground">Updated</p>
+                          <p>{unit.updated_at ? format(new Date(unit.updated_at), "PPP") : "Unknown"}</p>
+                        </div>
+                      </div>
+                    </CardContent>
                   </Card>
                 ))}
               </div>

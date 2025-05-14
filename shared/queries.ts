@@ -505,6 +505,14 @@ export const COMMAND_DETAIL_QUERY = `
       return_output
       return_output_type
       labels
+      dq_process_id
+      dq_process {
+        id
+        name
+        description
+        created_at
+        updated_at
+      }
     }
   }
 `;
@@ -514,11 +522,24 @@ export const COMMAND_USAGE_QUERY = `
     command: merlin_agent_Command_by_pk(id: $id) {
       id
       name
+      dq_process_id
+      dq_process {
+        id
+        name
+        description
+      }
       merlin_agent_PipelineUnit {
         id
+        comment
+        pipeline_id
+        posx
+        posy
+        created_at
+        updated_at
         pipeline {
           id
           name
+          description
           agent_passport {
             id
             name
