@@ -351,8 +351,8 @@ export const STATS_OVERVIEW_QUERY = `
 
 // Consultas para conexiones SFTP
 export const SFTP_LINKS_QUERY = `
-  query GetSFTPLinks {
-    merlin_agent_SFTPLink {
+  query GetSFTPLinks($limit: Int!) {
+    merlin_agent_SFTPLink(limit: $limit) {
       id
       name
       host
@@ -427,8 +427,8 @@ export const SFTP_LINK_USAGE_QUERY = `
 
 // Consultas para conexiones SQL
 export const SQL_CONNECTIONS_QUERY = `
-  query GetSQLConnections {
-    merlin_agent_SQLConn {
+  query GetSQLConnections($limit: Int!) {
+    merlin_agent_SQLConn(limit: $limit) {
       id
       name
       driver
@@ -489,8 +489,8 @@ export const SQL_CONN_USAGE_QUERY = `
 
 // Consultas para Commands
 export const COMMANDS_LIST_QUERY = `
-  query GetCommandsList {
-    merlin_agent_Command {
+  query GetCommandsList($limit: Int!) {
+    merlin_agent_Command(limit: $limit) {
       id
       name
       target

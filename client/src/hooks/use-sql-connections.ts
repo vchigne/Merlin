@@ -7,15 +7,34 @@ export function useSQLConnections() {
   return useQuery({
     queryKey: ['/api/graphql/sql-connections'],
     queryFn: async () => {
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: SQL_CONNECTIONS_QUERY }),
-        credentials: 'include',
-      });
-      
-      const result = await response.json();
-      return result.data.merlin_agent_SQLConn as SQLConn[];
+      try {
+        const response = await fetch('/api/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            query: SQL_CONNECTIONS_QUERY, 
+            variables: { limit: 100 } 
+          }),
+          credentials: 'include',
+        });
+        
+        const result = await response.json();
+        if (result.errors) {
+          console.error("GraphQL error:", result.errors);
+          throw new Error(result.errors[0].message);
+        }
+        
+        // Verificamos que la respuesta tenga la estructura esperada
+        if (!result.data || !result.data.merlin_agent_SQLConn) {
+          console.error("Unexpected API response format:", result);
+          throw new Error("Unexpected API response format");
+        }
+        
+        return result.data.merlin_agent_SQLConn as SQLConn[];
+      } catch (error) {
+        console.error("Error fetching SQL connections:", error);
+        throw error;
+      }
     },
   });
 }
