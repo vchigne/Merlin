@@ -24,6 +24,19 @@ export default function PipelineSearch({
   const [showDebug, setShowDebug] = useState(false);
   const [debugResults, setDebugResults] = useState<string[]>([]);
   const [filteredResults, setFilteredResults] = useState<any[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Función para manejar la apertura del menú desplegable
+  const handleFocus = () => {
+    setOpen(true);
+  };
+
+  // Función para manejar el cambio en el input
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setOpen(true);
+  };
 
   // Función principal de búsqueda que se llama en varios lugares
   const performSearch = (query: string) => {
@@ -63,6 +76,18 @@ export default function PipelineSearch({
     setSearchQuery("MDLZ");
     performSearch("MDLZ");
     setShowDebug(true);
+    setOpen(true);
+    
+    // Focus en el input después de la búsqueda
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+  
+  // Seleccionar un pipeline
+  const selectPipeline = (pipeline: any) => {
+    onSelectPipeline(pipeline.id);
+    setOpen(false);
   };
   
   // Actualizar resultados cuando cambia la búsqueda o los pipelines
@@ -86,10 +111,12 @@ export default function PipelineSearch({
         <div className="flex-grow relative">
           <div className="relative">
             <Input
+              ref={searchInputRef}
               className="w-full pr-10"
               placeholder="Buscar pipeline..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleInputChange}
+              onFocus={handleFocus}
             />
             <div className="absolute right-3 top-2">
               <Search className="h-4 w-4 text-slate-400" />
@@ -98,17 +125,14 @@ export default function PipelineSearch({
           
           {/* Dropdown con resultados */}
           {open && searchQuery.trim() !== "" && filteredPipelines.length > 0 && (
-            <Card className="absolute left-0 top-full mt-1 w-full z-50">
+            <div className="absolute left-0 top-full mt-1 w-full z-50 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 shadow-lg">
               <ScrollArea className="h-[250px]">
                 {filteredPipelines.map((pipeline) => (
                   <div
                     key={pipeline.id}
                     className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer
                       ${selectedPipelineId === pipeline.id ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-                    onClick={() => {
-                      onSelectPipeline(pipeline.id);
-                      setOpen(false);
-                    }}
+                    onClick={() => selectPipeline(pipeline)}
                   >
                     <div className="flex items-center">
                       {selectedPipelineId === pipeline.id && (
@@ -126,14 +150,14 @@ export default function PipelineSearch({
                   </div>
                 ))}
               </ScrollArea>
-            </Card>
+            </div>
           )}
           
           {/* Mensaje de "No se encontraron pipelines" */}
           {open && searchQuery.trim() !== "" && filteredPipelines.length === 0 && (
-            <Card className="absolute left-0 top-full mt-1 p-4 w-full z-50 text-center">
+            <div className="absolute left-0 top-full mt-1 p-4 w-full z-50 text-center border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 shadow-lg">
               No se encontraron pipelines
-            </Card>
+            </div>
           )}
         </div>
         
