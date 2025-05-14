@@ -70,7 +70,13 @@ export default function CommandsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {commands.map((command) => (
+              {commands.map((command: {
+                id: string;
+                name: string;
+                target: string;
+                instant: boolean;
+                updated_at?: string;
+              }) => (
                 <TableRow key={command.id}>
                   <TableCell className="font-medium">{command.name}</TableCell>
                   <TableCell>{command.target}</TableCell>
