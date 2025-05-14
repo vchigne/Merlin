@@ -52,7 +52,10 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
 
   useEffect(() => {
     if (pipelineUnits && pipelineUnits.length > 0) {
-      setFlowElements(convertToFlowCoordinates(pipelineUnits));
+      console.log('Pipeline Units:', pipelineUnits);
+      const result = convertToFlowCoordinates(pipelineUnits);
+      console.log('Flow Elements:', result);
+      setFlowElements(result);
     }
   }, [pipelineUnits]);
 
