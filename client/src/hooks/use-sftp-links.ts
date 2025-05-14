@@ -70,7 +70,7 @@ interface SFTPLinkUsage {
     name: string;
     output: string;
     return_output: boolean;
-    PipelineUnits?: Array<{
+    merlin_agent_PipelineUnit?: Array<{
       id: string;
       pipeline?: {
         id: string;
@@ -87,7 +87,7 @@ interface SFTPLinkUsage {
     name: string;
     input: string;
     return_output: boolean;
-    PipelineUnits?: Array<{
+    merlin_agent_PipelineUnit?: Array<{
       id: string;
       pipeline?: {
         id: string;

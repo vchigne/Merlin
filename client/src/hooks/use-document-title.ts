@@ -1,20 +1,21 @@
 import { useEffect } from 'react';
 
 /**
- * Hook para establecer el título del documento
- * @param title El título que se quiere establecer para la página
+ * Hook para actualizar el título del documento
+ * @param title Título a establecer
+ * @param suffix Sufijo opcional (ej. '| Merlin')
  */
-export function useDocumentTitle(title: string) {
+export function useDocumentTitle(title: string, suffix: string = '| Merlin') {
   useEffect(() => {
-    // Guardar el título original para restaurarlo cuando el componente se desmonte
+    // Guarda el título original para restaurarlo
     const originalTitle = document.title;
     
-    // Establecer el nuevo título
-    document.title = `${title} | Merlin Observer`;
+    // Actualiza el título
+    document.title = `${title} ${suffix}`;
     
-    // Restaurar el título original cuando el componente se desmonte
+    // Restaura el título original cuando el componente se desmonte
     return () => {
       document.title = originalTitle;
     };
-  }, [title]);
+  }, [title, suffix]);
 }
