@@ -51,8 +51,18 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const hostname = agent.AgentPassportPing?.[0]?.hostname;
   const ips = agent.AgentPassportPing?.[0]?.ips;
   
+  // Debug: Ver los datos del agente en la consola
+  console.log('AgentCard - agent data:', {
+    id: agent.id,
+    name: agent.name,
+    is_healthy: agent.is_healthy,
+    AgentPassportPing: agent.AgentPassportPing,
+    PipelineJobQueues: agent.PipelineJobQueues
+  });
+  
   // Utilizamos el nuevo algoritmo avanzado para determinar el estado
   const agentHealthInfo = determineAgentStatus(agent);
+  console.log('AgentCard - health info:', agentHealthInfo);
   const status = agentHealthInfo.status;
   
   const getStatusIcon = () => {

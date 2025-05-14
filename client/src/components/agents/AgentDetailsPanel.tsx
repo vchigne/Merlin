@@ -176,7 +176,7 @@ export default function AgentDetailsPanel({
                     status === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 
                     'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800'}`
                 }>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : status || 'Unknown'}
                 </Badge>
               </div>
             </div>
