@@ -51,11 +51,15 @@ export default function CommandsTable() {
 
   // Filtrar los comandos según los criterios
   const filteredCommands = commands?.filter((command: Command) => {
-    const nameMatch = command.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const targetMatch = targetFilter === "all" || command.target.includes(targetFilter);
+    // Verificar que los campos existan antes de usarlos
+    const commandName = command.name || '';
+    const commandTarget = command.target || '';
+    
+    const nameMatch = commandName.toLowerCase().includes(nameFilter.toLowerCase());
+    const targetMatch = targetFilter === "all" || commandTarget.includes(targetFilter);
     const instantMatch = instantFilter === "all" || 
-                         (instantFilter === "true" && command.instant) || 
-                         (instantFilter === "false" && !command.instant);
+                         (instantFilter === "true" && command.instant === true) || 
+                         (instantFilter === "false" && (command.instant === false || command.instant === undefined));
     return nameMatch && targetMatch && instantMatch;
   });
 

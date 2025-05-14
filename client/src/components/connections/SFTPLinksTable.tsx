@@ -36,8 +36,12 @@ export default function SFTPLinksTable() {
 
   // Filtrar los enlaces SFTP según los criterios
   const filteredLinks = sftpLinks?.filter((link: SFTPLink) => {
-    const nameMatch = link.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const serverMatch = link.server.toLowerCase().includes(serverFilter.toLowerCase());
+    // Verificar que los campos existan antes de usarlos
+    const linkName = link.name || '';
+    const linkServer = link.server || '';
+    
+    const nameMatch = linkName.toLowerCase().includes(nameFilter.toLowerCase());
+    const serverMatch = linkServer.toLowerCase().includes(serverFilter.toLowerCase());
     return nameMatch && serverMatch;
   });
 

@@ -48,8 +48,12 @@ export default function SQLConnectionsTable() {
 
   // Filtrar las conexiones SQL según los criterios
   const filteredConnections = sqlConnections?.filter((conn: SQLConn) => {
-    const nameMatch = conn.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const driverMatch = driverFilter === "all" || conn.driver === driverFilter;
+    // Verificar que los campos existan antes de usarlos
+    const connName = conn.name || '';
+    const connDriver = conn.driver || '';
+    
+    const nameMatch = connName.toLowerCase().includes(nameFilter.toLowerCase());
+    const driverMatch = driverFilter === "all" || connDriver === driverFilter;
     return nameMatch && driverMatch;
   });
 
