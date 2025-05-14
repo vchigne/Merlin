@@ -169,11 +169,15 @@ export default function AgentCard({ agent }: AgentCardProps) {
                 <Signal className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Ping Rate</span>
               </div>
-              <span className={`text-xs font-bold ${getMetricColor(agentHealthInfo.pingRatePercent)}`}>
-                {agentHealthInfo.pingRatePercent}%
+              <span className={`text-xs font-bold ${agentHealthInfo.pingRatePercent > 0 ? getMetricColor(agentHealthInfo.pingRatePercent) : "text-slate-500"}`}>
+                {agentHealthInfo.pingRatePercent > 0 ? `${agentHealthInfo.pingRatePercent}%` : "No data"}
               </span>
             </div>
-            <Progress value={agentHealthInfo.pingRatePercent} className="h-1.5" indicatorClassName={getProgressColor(agentHealthInfo.pingRatePercent)} />
+            <Progress 
+              value={agentHealthInfo.pingRatePercent > 0 ? agentHealthInfo.pingRatePercent : 0}
+              className="h-1.5" 
+              indicatorClassName={agentHealthInfo.pingRatePercent > 0 ? getProgressColor(agentHealthInfo.pingRatePercent) : "bg-slate-300 dark:bg-slate-700"} 
+            />
           </div>
           
           {/* Job Success */}
@@ -183,11 +187,15 @@ export default function AgentCard({ agent }: AgentCardProps) {
                 <Activity className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Job Success</span>
               </div>
-              <span className={`text-xs font-bold ${getMetricColor(agentHealthInfo.jobSuccessRatePercent)}`}>
-                {agentHealthInfo.jobSuccessRatePercent}%
+              <span className={`text-xs font-bold ${agentHealthInfo.jobSuccessRatePercent > 0 ? getMetricColor(agentHealthInfo.jobSuccessRatePercent) : "text-slate-500"}`}>
+                {agentHealthInfo.jobSuccessRatePercent > 0 ? `${agentHealthInfo.jobSuccessRatePercent}%` : "No data"}
               </span>
             </div>
-            <Progress value={agentHealthInfo.jobSuccessRatePercent} className="h-1.5" indicatorClassName={getProgressColor(agentHealthInfo.jobSuccessRatePercent)} />
+            <Progress 
+              value={agentHealthInfo.jobSuccessRatePercent > 0 ? agentHealthInfo.jobSuccessRatePercent : 0}
+              className="h-1.5" 
+              indicatorClassName={agentHealthInfo.jobSuccessRatePercent > 0 ? getProgressColor(agentHealthInfo.jobSuccessRatePercent) : "bg-slate-300 dark:bg-slate-700"} 
+            />
           </div>
         </div>
       </CardContent>
