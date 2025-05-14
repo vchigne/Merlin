@@ -506,7 +506,7 @@ export const COMMAND_DETAIL_QUERY = `
       return_output_type
       labels
       dq_process_id
-      dq_process {
+      DQProcess {
         id
         name
         description
@@ -523,7 +523,7 @@ export const COMMAND_USAGE_QUERY = `
       id
       name
       dq_process_id
-      dq_process {
+      DQProcess {
         id
         name
         description

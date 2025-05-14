@@ -147,14 +147,14 @@ export default function CommandDetailPage() {
                     <div>
                       <p className="font-medium">DQProcess</p>
                       <div className="mt-1">
-                        {command.dq_process ? (
+                        {command.DQProcess ? (
                           <div>
                             <Badge variant="secondary" className="mb-1">
-                              {command.dq_process.name}
+                              {command.DQProcess.name}
                             </Badge>
-                            {command.dq_process.description && (
+                            {command.DQProcess.description && (
                               <p className="text-sm text-muted-foreground mt-1">
-                                {command.dq_process.description}
+                                {command.DQProcess.description}
                               </p>
                             )}
                           </div>
@@ -254,7 +254,7 @@ export default function CommandDetailPage() {
           </CardContent>
         </Card>
 
-        {command.dq_process_id && command.dq_process && (
+        {command.dq_process_id && command.DQProcess && (
           <Card>
             <CardHeader>
               <CardTitle>DQProcess Association</CardTitle>
@@ -268,35 +268,35 @@ export default function CommandDetailPage() {
                   <div>
                     <p className="font-medium">Process Name</p>
                     <Badge variant="secondary" className="mt-1">
-                      {command.dq_process.name}
+                      {command.DQProcess.name}
                     </Badge>
                   </div>
                 </div>
                 
-                {command.dq_process.description && (
+                {command.DQProcess.description && (
                   <div>
                     <p className="font-medium">Description</p>
                     <p className="text-sm text-muted-foreground">
-                      {command.dq_process.description}
+                      {command.DQProcess.description}
                     </p>
                   </div>
                 )}
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {command.dq_process.created_at && (
+                  {command.DQProcess.created_at && (
                     <div>
                       <p className="font-medium">Created</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(command.dq_process.created_at), "PPP")}
+                        {format(new Date(command.DQProcess.created_at), "PPP")}
                       </p>
                     </div>
                   )}
                   
-                  {command.dq_process.updated_at && (
+                  {command.DQProcess.updated_at && (
                     <div>
                       <p className="font-medium">Updated</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(command.dq_process.updated_at), "PPP")}
+                        {format(new Date(command.DQProcess.updated_at), "PPP")}
                       </p>
                     </div>
                   )}
