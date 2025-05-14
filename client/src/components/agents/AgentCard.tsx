@@ -103,6 +103,24 @@ export default function AgentCard({ agent }: AgentCardProps) {
     return "bg-red-500";
   };
   
+  const getPingTimingText = (minutes: number) => {
+    if (minutes < 0) return "No data";
+    
+    if (minutes < 5) {
+      return "< 5 min"; // Tiempo excelente
+    } else if (minutes < 60) {
+      return `${Math.round(minutes)} min`; // En minutos
+    } else {
+      const hours = minutes / 60;
+      if (hours < 24) {
+        return `${Math.round(hours * 10) / 10} h`; // En horas, con un decimal
+      } else {
+        const days = hours / 24;
+        return `${Math.round(days * 10) / 10} d`; // En días, con un decimal
+      }
+    }
+  };
+  
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-2">
@@ -167,10 +185,10 @@ export default function AgentCard({ agent }: AgentCardProps) {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center">
                 <Signal className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-400" />
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Ping Rate</span>
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Último ping</span>
               </div>
               <span className={`text-xs font-bold ${agentHealthInfo.pingRatePercent > 0 ? getMetricColor(agentHealthInfo.pingRatePercent) : "text-slate-500"}`}>
-                {agentHealthInfo.pingRatePercent > 0 ? `${agentHealthInfo.pingRatePercent}%` : "No data"}
+                {getPingTimingText(agentHealthInfo.lastPingMinutes)}
               </span>
             </div>
             <Progress 

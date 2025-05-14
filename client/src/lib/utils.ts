@@ -228,23 +228,29 @@ export function determineAgentStatus(
     diffMinutes: diffMinutes
   });
   
-  // Tenemos un ping válido, calculamos el ping rate basado en lo reciente que sea
-  if (diffMinutes <= 60) {
-    // Ping en la última hora: muy buena conectividad
-    if (diffMinutes <= 30) {
-      result.pingRatePercent = 100; // Ping muy reciente (últimos 30 minutos)
-      console.log('Ping muy reciente (<30 min), estableciendo ping rate a 100%');
-    } else {
-      result.pingRatePercent = 80; // Ping en los últimos 30-60 minutos
-      console.log('Ping reciente (30-60 min), estableciendo ping rate a 80%');
-    }
+  // Tenemos un ping válido, calculamos la frescura del ping basado en minutos desde el último
+  const hoursSinceLastPing = diffMinutes / 60;
+  
+  if (diffMinutes < 5) {
+    // Muy reciente (menos de 5 minutos)
+    result.pingRatePercent = 100;
+    console.log('Ping muy reciente (<5 min), estableciendo frescura a 100%');
+  } else if (hoursSinceLastPing < 8) {
+    // Reciente pero no tanto (entre 5 minutos y 8 horas)
+    // Calculamos un valor entre 50 y 90 dependiendo de cuánto tiempo ha pasado
+    const hoursRange = 8; // 8 horas es el rango máximo para amarillo
+    const maxPercentForRange = 90; // Máximo porcentaje para este rango
+    const minPercentForRange = 50; // Mínimo porcentaje para este rango
+    const percentRange = maxPercentForRange - minPercentForRange;
+    
+    // Fórmula: valor = max - (tiempoActual/tiempoMaximo) * rango
+    const calculatedRate = Math.round(maxPercentForRange - (hoursSinceLastPing / hoursRange) * percentRange);
+    result.pingRatePercent = calculatedRate;
+    console.log('Ping reciente (5min-8h), estableciendo frescura a ' + calculatedRate + '%');
   } else {
-    // Para pings más antiguos, reducimos gradualmente la tasa
-    const hoursSinceLastPing = diffMinutes / 60;
-    // Tasa decrece linealmente desde 75% (1 hora) a 0% (5 horas+)
-    const calculatedRate = Math.max(0, Math.round(75 - (hoursSinceLastPing - 1) * 20));
-    result.pingRatePercent = calculatedRate; // Valor real, puede ser 0% si hace mucho tiempo
-    console.log('Ping antiguo, estableciendo ping rate a', result.pingRatePercent + '%');
+    // Ping muy antiguo (más de 8 horas)
+    result.pingRatePercent = 20; // Valor bajo pero visible en la UI
+    console.log('Ping muy antiguo (>8h), estableciendo frescura a 20%');
   }
   
   // PASO 3: Calcular tasa de éxito de trabajos
