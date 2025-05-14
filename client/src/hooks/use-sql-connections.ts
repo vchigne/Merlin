@@ -62,25 +62,28 @@ export function useSQLConnectionDetail(id: string) {
 }
 
 interface SQLConnUsage {
-  queries: {
+  queries: Array<{
     id: string;
     name: string;
-    query_queue: {
+    query_string?: string;
+    enabled?: boolean;
+    path?: string;
+    query_queue?: {
       id: string;
       name: string;
-      merlin_agent_PipelineUnit: Array<{
+      PipelineUnits?: Array<{
         id: string;
-        pipeline: {
+        pipeline?: {
           id: string;
           name: string;
-          agent_passport: {
+          agent_passport?: {
             id: string;
             name: string;
-          }
-        }
-      }>
-    }
-  }[];
+          };
+        };
+      }>;
+    };
+  }>;
 }
 
 // Hook para obtener el uso de una conexión SQL específica

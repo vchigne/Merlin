@@ -1,40 +1,20 @@
 import { useEffect } from 'react';
 
 /**
- * Hook to set the document title with optional prefix and suffix
- * @param title The main title to set
- * @param options Optional configuration
+ * Hook para establecer el título del documento
+ * @param title El título que se quiere establecer para la página
  */
-export function useDocumentTitle(
-  title: string,
-  options: { 
-    prefix?: string;
-    suffix?: string;
-    appName?: string;
-  } = {}
-) {
-  const {
-    prefix = '',
-    suffix = '',
-    appName = 'Merlin Observer'
-  } = options;
-
+export function useDocumentTitle(title: string) {
   useEffect(() => {
-    // Create the full title with prefix and suffix if provided
-    const fullTitle = [
-      prefix,
-      title,
-      suffix,
-      title ? `| ${appName}` : appName
-    ].filter(Boolean).join(' ');
-
-    // Set the document title
-    document.title = fullTitle;
-
-    // Restore the previous title when component unmounts
+    // Guardar el título original para restaurarlo cuando el componente se desmonte
+    const originalTitle = document.title;
+    
+    // Establecer el nuevo título
+    document.title = `${title} | Merlin Observer`;
+    
+    // Restaurar el título original cuando el componente se desmonte
     return () => {
-      // We don't restore to any specific title since other components
-      // might have changed it before this one unmounts
+      document.title = originalTitle;
     };
-  }, [title, prefix, suffix, appName]);
+  }, [title]);
 }

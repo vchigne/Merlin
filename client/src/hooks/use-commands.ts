@@ -62,20 +62,20 @@ export function useCommandDetail(id: string) {
 }
 
 interface CommandUsage {
-  command: {
+  command?: {
     id: string;
     name: string;
-    merlin_agent_PipelineUnit: Array<{
+    merlin_agent_PipelineUnit?: Array<{
       id: string;
-      pipeline: {
+      pipeline?: {
         id: string;
         name: string;
-        agent_passport: {
+        agent_passport?: {
           id: string;
           name: string;
-        }
-      }
-    }>
+        };
+      };
+    }>;
   };
 }
 
