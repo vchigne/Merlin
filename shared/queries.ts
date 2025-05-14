@@ -369,18 +369,18 @@ export const SFTP_LINK_DETAIL_QUERY = `
     merlin_agent_SFTPLink_by_pk(id: $id) {
       id
       name
-      host
+      server
       port
-      username
+      user
       created_at
       updated_at
-      merlin_agent_SFTPDownloader {
+      SFTPDownloaders {
         id
         name
         output
         return_output
       }
-      merlin_agent_SFTPUploader {
+      SFTPUploaders {
         id
         name
         input
@@ -392,10 +392,10 @@ export const SFTP_LINK_DETAIL_QUERY = `
 
 export const SFTP_LINK_USAGE_QUERY = `
   query GetSFTPLinkUsage($id: uuid!) {
-    downloaders: merlin_agent_SFTPDownloader(where: {sftp_link_id: {_eq: $id}}) {
+    downloaders: merlin_agent_SFTPDownloader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
-      merlin_agent_PipelineUnit {
+      PipelineUnits {
         id
         pipeline {
           id
@@ -407,10 +407,10 @@ export const SFTP_LINK_USAGE_QUERY = `
         }
       }
     }
-    uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}) {
+    uploaders: merlin_agent_SFTPUploader(where: {sftp_link_id: {_eq: $id}}, limit: 50) {
       id
       name
-      merlin_agent_PipelineUnit {
+      PipelineUnits {
         id
         pipeline {
           id
@@ -465,13 +465,13 @@ export const SQL_CONNECTION_DETAIL_QUERY = `
 
 export const SQL_CONN_USAGE_QUERY = `
   query GetSQLConnUsage($id: uuid!) {
-    queries: merlin_agent_Query(where: {sqlconn_id: {_eq: $id}}) {
+    queries: merlin_agent_Query(where: {sqlconn_id: {_eq: $id}}, limit: 50) {
       id
       name
       query_queue {
         id
         name
-        merlin_agent_PipelineUnit {
+        PipelineUnits {
           id
           pipeline {
             id

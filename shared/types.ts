@@ -257,9 +257,9 @@ export interface SQLConn {
 export interface SFTPLink {
   id: string;
   name: string;
-  host: string;
+  server: string;
   port: number;
-  username: string;
+  user: string;
   password: string;
   created_at: string;
   updated_at: string;
