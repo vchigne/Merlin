@@ -41,7 +41,7 @@ export function useCommands() {
 
 // Hook para obtener detalles de un comando específico
 export function useCommandDetail(id: string) {
-  return useQuery({
+  return useQuery<CommandDetailResponse>({
     queryKey: ['/api/graphql/command', id],
     queryFn: async () => {
       const response = await fetch('/api/graphql', {
@@ -77,6 +77,30 @@ interface PipelineUnit {
       id: string;
       name: string;
     };
+  };
+}
+
+interface CommandDetailResponse {
+  id: string;
+  name: string;
+  target: string;
+  working_directory: string;
+  args: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  instant: boolean;
+  raw_script: string;
+  return_output: boolean;
+  return_output_type: string;
+  labels: string[];
+  dq_process_id: string;
+  dq_process?: {
+    id: string;
+    name: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
   };
 }
 

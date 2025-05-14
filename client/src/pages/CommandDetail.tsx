@@ -147,7 +147,20 @@ export default function CommandDetailPage() {
                     <div>
                       <p className="font-medium">DQProcess</p>
                       <div className="mt-1">
-                        <Badge variant="outline">ID: {command.dq_process_id}</Badge>
+                        {command.dq_process ? (
+                          <div>
+                            <Badge variant="secondary" className="mb-1">
+                              {command.dq_process.name || 'Unnamed Process'}
+                            </Badge>
+                            {command.dq_process.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {command.dq_process.description}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline">ID: {command.dq_process_id}</Badge>
+                        )}
                       </div>
                     </div>
                   </div>

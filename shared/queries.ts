@@ -506,6 +506,13 @@ export const COMMAND_DETAIL_QUERY = `
       return_output_type
       labels
       dq_process_id
+      dq_process {
+        id
+        name
+        description
+        created_at
+        updated_at
+      }
     }
   }
 `;
