@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { convertToFlowCoordinates } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { executeQuery } from "@/lib/hasura-client";
+import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,19 +37,124 @@ interface PipelineFlowProps {
 export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }: PipelineFlowProps) {
   const [flowElements, setFlowElements] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
+  const [unitDetails, setUnitDetails] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
   
   // Cierra el diálogo
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     // Limpiar el estado después de cerrar para evitar que los datos antiguos aparezcan brevemente
-    setTimeout(() => setSelectedUnit(null), 200);
+    setTimeout(() => {
+      setSelectedUnit(null);
+      setUnitDetails(null);
+    }, 200);
+  };
+  
+  // Función para obtener los detalles de una unidad específica
+  const fetchUnitDetails = async (unitData: any) => {
+    setSelectedUnit(unitData);
+    setIsDialogOpen(true);
+    setIsLoading2(true);
+    
+    try {
+      let query = '';
+      let variables = {};
+      
+      // Determinar qué tipo de unidad es y obtener los detalles correspondientes
+      if (unitData.command_id) {
+        query = COMMAND_QUERY;
+        variables = { id: unitData.command_id };
+      } else if (unitData.query_queue_id) {
+        // Para las colas de consulta, obtenemos primero la metadata de la cola
+        query = QUERY_QUEUE_QUERY;
+        variables = { id: unitData.query_queue_id };
+      } else if (unitData.sftp_downloader_id) {
+        query = SFTP_DOWNLOADER_QUERY;
+        variables = { id: unitData.sftp_downloader_id };
+      } else if (unitData.sftp_uploader_id) {
+        query = SFTP_UPLOADER_QUERY;
+        variables = { id: unitData.sftp_uploader_id };
+      } else if (unitData.zip_id) {
+        query = ZIP_QUERY;
+        variables = { id: unitData.zip_id };
+      } else if (unitData.unzip_id) {
+        query = UNZIP_QUERY;
+        variables = { id: unitData.unzip_id };
+      } else if (unitData.call_pipeline) {
+        // En caso de llamada a otro pipeline
+        const result = await executeQuery(PIPELINE_QUERY, { id: unitData.call_pipeline });
+        if (result.data && !result.errors) {
+          setUnitDetails({
+            type: 'pipeline',
+            name: result.data.merlin_agent_Pipeline[0]?.name || 'Pipeline',
+            description: result.data.merlin_agent_Pipeline[0]?.description || 'Llamada a otro pipeline',
+            details: result.data.merlin_agent_Pipeline[0]
+          });
+        }
+        setIsLoading2(false);
+        return;
+      }
+      
+      if (query) {
+        const result = await executeQuery(query, variables);
+        if (result.data && !result.errors) {
+          // Determinar el tipo para mostrar en la interfaz
+          const type = determineUnitType(unitData);
+          
+          // Obtener los datos relevantes según el tipo
+          let data;
+          if (unitData.command_id) {
+            data = result.data.merlin_agent_Command[0];
+          } else if (unitData.query_queue_id) {
+            data = result.data.merlin_agent_QueryQueue[0];
+            
+            if (data) {
+              // Para las consultas SQL, obtenemos detalles adicionales
+              try {
+                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unitData.query_queue_id });
+                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
+                  // Agregamos las consultas al objeto de datos
+                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                }
+              } catch (error) {
+                console.error("Error fetching SQL queries:", error);
+              }
+            }
+          } else if (unitData.sftp_downloader_id) {
+            data = result.data.merlin_agent_SFTPDownloader[0];
+          } else if (unitData.sftp_uploader_id) {
+            data = result.data.merlin_agent_SFTPUploader[0];
+          } else if (unitData.zip_id) {
+            data = result.data.merlin_agent_Zip[0];
+          } else if (unitData.unzip_id) {
+            data = result.data.merlin_agent_UnZip[0];
+          }
+          
+          setUnitDetails({
+            type,
+            name: data?.name || getUnitTypeDescription(unitData),
+            description: data?.description || '',
+            details: data
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching unit details:", error);
+      setUnitDetails({
+        type: determineUnitType(unitData),
+        name: 'Error',
+        description: 'No se pudieron cargar los detalles',
+        details: null
+      });
+    } finally {
+      setIsLoading2(false);
+    }
   };
   
   // Abre el diálogo con los detalles de la unidad seleccionada
   const handleUnitClick = (unitData: any) => {
-    setSelectedUnit(unitData);
-    setIsDialogOpen(true);
+    fetchUnitDetails(unitData);
   };
 
   useEffect(() => {
@@ -260,79 +367,342 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
       {/* Modal de detalles */}
       {isDialogOpen && selectedUnit && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
                 {getUnitIcon(determineUnitType(selectedUnit))}
-                <span>Detalles de la Unidad</span>
+                <span>{unitDetails?.name || "Detalles de la Unidad"}</span>
               </DialogTitle>
               <DialogDescription>
-                Información detallada sobre esta unidad del pipeline
+                {unitDetails?.description || "Información detallada sobre esta unidad del pipeline"}
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid gap-4 py-2">
-              <div>
-                <h3 className="text-lg font-medium mb-1">
-                  {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {getUnitTypeDescription(selectedUnit)}
-                </p>
+            {isLoading2 ? (
+              <div className="py-8 flex justify-center">
+                <Skeleton className="h-32 w-full" />
               </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
-              </div>
-              
-              {selectedUnit.pipeline_unit_id && (
+            ) : (
+              <div className="grid gap-4 py-2">
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
+                  <h3 className="text-lg font-medium mb-1">
+                    {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {getUnitTypeDescription(selectedUnit)}
+                  </p>
                 </div>
-              )}
-              
-              <div className="flex flex-wrap gap-2">
-                {selectedUnit.abort_on_timeout && (
-                  <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-                    Abortar en Timeout
-                  </Badge>
-                )}
-                {selectedUnit.continue_on_error && (
-                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-                    Continuar en Error
-                  </Badge>
-                )}
-              </div>
-              
-              <Separator />
-              
-              <div className="grid grid-cols-2 gap-4">
-                {selectedUnit.timeout_milliseconds > 0 && (
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
+                </div>
+                
+                {selectedUnit.pipeline_unit_id && (
                   <div>
-                    <h4 className="text-xs font-medium mb-1">Timeout</h4>
-                    <p className="text-sm">{Math.round(selectedUnit.timeout_milliseconds / 1000)} seg</p>
+                    <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
                   </div>
                 )}
                 
-                {selectedUnit.retry_count > 0 && (
-                  <div>
-                    <h4 className="text-xs font-medium mb-1">Reintentos</h4>
-                    <p className="text-sm">{selectedUnit.retry_count} veces</p>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {selectedUnit.abort_on_timeout && (
+                    <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                      Abortar en Timeout
+                    </Badge>
+                  )}
+                  {selectedUnit.continue_on_error && (
+                    <Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                      Continuar en Error
+                    </Badge>
+                  )}
+                </div>
                 
-                {selectedUnit.retry_after_milliseconds > 0 && (
-                  <div>
-                    <h4 className="text-xs font-medium mb-1">Espera entre reintentos</h4>
-                    <p className="text-sm">{Math.round(selectedUnit.retry_after_milliseconds / 1000)} seg</p>
-                  </div>
+                <Separator />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedUnit.timeout_milliseconds > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium mb-1">Timeout</h4>
+                      <p className="text-sm">{Math.round(selectedUnit.timeout_milliseconds / 1000)} seg</p>
+                    </div>
+                  )}
+                  
+                  {selectedUnit.retry_count > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium mb-1">Reintentos</h4>
+                      <p className="text-sm">{selectedUnit.retry_count} veces</p>
+                    </div>
+                  )}
+                  
+                  {selectedUnit.retry_after_milliseconds > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium mb-1">Espera entre reintentos</h4>
+                      <p className="text-sm">{Math.round(selectedUnit.retry_after_milliseconds / 1000)} seg</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Detalles específicos por tipo de unidad */}
+                {unitDetails?.details && (
+                  <>
+                    <Separator />
+                    <Card className="overflow-hidden">
+                      <CardHeader className="bg-slate-50 dark:bg-slate-800 p-4">
+                        <CardTitle className="text-base">Detalles de la tarea</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 space-y-3 max-h-[300px] overflow-y-auto">
+                        {/* Detalles específicos para Comandos */}
+                        {determineUnitType(selectedUnit) === 'command' && (
+                          <>
+                            {unitDetails.details.target && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Objetivo:</p>
+                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.target}</p>
+                              </div>
+                            )}
+                            
+                            {unitDetails.details.args && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Comando:</p>
+                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{unitDetails.details.args}</p>
+                              </div>
+                            )}
+                            
+                            {unitDetails.details.raw_script && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Script:</p>
+                                <div className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono whitespace-pre overflow-auto max-h-32">
+                                  {unitDetails.details.raw_script}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">Instantáneo:</span> {unitDetails.details.instant ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                              </div>
+                              {unitDetails.details.working_directory && (
+                                <div className="col-span-2">
+                                  <span className="font-medium">Directorio de trabajo:</span> {unitDetails.details.working_directory}
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para SQL Queries */}
+                        {determineUnitType(selectedUnit) === 'query' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">ID de la cola de consultas:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.id}</p>
+                            </div>
+                            
+                            {/* Consultas relacionadas */}
+                            {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 ? (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Consultas ({unitDetails.details.Queries.length}):</p>
+                                <div className="space-y-3">
+                                  {unitDetails.details.Queries.map((query: any, index: number) => (
+                                    <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <p className="text-sm font-medium">Consulta {index + 1}: {query.name}</p>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                          {query.sqlconn_id ? 'SQL Connection' : 'Query'}
+                                        </span>
+                                      </div>
+                                      
+                                      {/* SQL query string */}
+                                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono mb-2 overflow-auto max-h-32 whitespace-pre">
+                                        {query.query_string}
+                                      </div>
+                                      
+                                      {/* Advertencia de seguridad */}
+                                      <div className="text-xs text-amber-600 dark:text-amber-400 mt-1 mb-2 flex items-center">
+                                        <AlertCircle className="h-4 w-4 mr-1" />
+                                        Modo solo lectura - No se ejecutará ni modificará esta consulta
+                                      </div>
+                                      
+                                      {/* Query metadata */}
+                                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                                        {query.path && (
+                                          <div className="col-span-2">
+                                            <span className="font-medium">Path de salida:</span> {query.path}
+                                          </div>
+                                        )}
+                                        <div>
+                                          <span className="font-medium">Print headers:</span> {query.print_headers ? 'Sí' : 'No'}
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Habilitado:</span> {query.enabled ? 'Sí' : 'No'}
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Retornar salida:</span> {query.return_output ? 'Sí' : 'No'}
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Orden:</span> {query.order}
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Timeout:</span> {query.timeout ? `${query.timeout}ms` : 'N/A'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-slate-600 dark:text-slate-400">
+                                No hay consultas definidas en esta cola.
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para SFTP Downloader */}
+                        {determineUnitType(selectedUnit) === 'sftp_download' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">Output:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">SFTP Link ID:</span> {unitDetails.details.sftp_link_id}
+                              </div>
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para SFTP Uploader */}
+                        {determineUnitType(selectedUnit) === 'sftp_upload' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">Input:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.input}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">SFTP Link ID:</span> {unitDetails.details.sftp_link_id}
+                              </div>
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para Zip Files */}
+                        {determineUnitType(selectedUnit) === 'zip' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">Output:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para Unzip Files */}
+                        {determineUnitType(selectedUnit) === 'unzip' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">Input:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.input}</p>
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm font-medium mb-1">Output:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Detalles específicos para Call Pipeline */}
+                        {determineUnitType(selectedUnit) === 'pipeline' && (
+                          <>
+                            <div>
+                              <p className="text-sm font-medium mb-1">Pipeline llamado:</p>
+                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.name || unitDetails.details.id}</p>
+                            </div>
+                            
+                            {unitDetails.details.description && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Descripción:</p>
+                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.description}</p>
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <span className="font-medium">Abortar en error:</span> {unitDetails.details.abort_on_error ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Descartable:</span> {unitDetails.details.disposable ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
                 )}
               </div>
-            </div>
+            )}
             
             <DialogFooter>
               <Button onClick={handleCloseDialog}>Cerrar</Button>
