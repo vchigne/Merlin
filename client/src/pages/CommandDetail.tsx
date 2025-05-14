@@ -147,20 +147,7 @@ export default function CommandDetailPage() {
                     <div>
                       <p className="font-medium">DQProcess</p>
                       <div className="mt-1">
-                        {command.DQProcess ? (
-                          <div>
-                            <Badge variant="secondary" className="mb-1">
-                              {command.DQProcess.name}
-                            </Badge>
-                            {command.DQProcess.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {command.DQProcess.description}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline">ID: {command.dq_process_id}</Badge>
-                        )}
+                        <Badge variant="outline">ID: {command.dq_process_id}</Badge>
                       </div>
                     </div>
                   </div>
@@ -253,58 +240,6 @@ export default function CommandDetailPage() {
             )}
           </CardContent>
         </Card>
-
-        {command.dq_process_id && command.DQProcess && (
-          <Card>
-            <CardHeader>
-              <CardTitle>DQProcess Association</CardTitle>
-              <CardDescription>
-                This command is linked to a DQProcess
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div>
-                    <p className="font-medium">Process Name</p>
-                    <Badge variant="secondary" className="mt-1">
-                      {command.DQProcess.name}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {command.DQProcess.description && (
-                  <div>
-                    <p className="font-medium">Description</p>
-                    <p className="text-sm text-muted-foreground">
-                      {command.DQProcess.description}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {command.DQProcess.created_at && (
-                    <div>
-                      <p className="font-medium">Created</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(command.DQProcess.created_at), "PPP")}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {command.DQProcess.updated_at && (
-                    <div>
-                      <p className="font-medium">Updated</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(command.DQProcess.updated_at), "PPP")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader>

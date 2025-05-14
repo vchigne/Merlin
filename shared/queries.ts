@@ -506,13 +506,6 @@ export const COMMAND_DETAIL_QUERY = `
       return_output_type
       labels
       dq_process_id
-      DQProcess {
-        id
-        name
-        description
-        created_at
-        updated_at
-      }
     }
   }
 `;
@@ -523,11 +516,6 @@ export const COMMAND_USAGE_QUERY = `
       id
       name
       dq_process_id
-      DQProcess {
-        id
-        name
-        description
-      }
       merlin_agent_PipelineUnit {
         id
         comment
