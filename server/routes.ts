@@ -46,6 +46,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Special endpoint for agent health status analysis
+  app.get('/api/agent-health-analysis', async (req, res) => {
+    try {
+      // Query para contar agentes por estado de salud
+      const healthyQuery = `
+        query GetAgentHealthStatusCounts {
+          healthy: merlin_agent_AgentPassport_aggregate(where: {is_healthy: {_eq: true}}) {
+            aggregate { count }
+          }
+          unhealthy: merlin_agent_AgentPassport_aggregate(where: {is_healthy: {_eq: false}}) {
+            aggregate { count }
+          }
+          total: merlin_agent_AgentPassport_aggregate {
+            aggregate { count }
+          }
+          # También obtenemos todos los agentes para análisis detallado
+          agents: merlin_agent_AgentPassport {
+            id
+            name
+            is_healthy
+            AgentPassportPing(limit: 1, order_by: {last_ping_at: desc}) {
+              last_ping_at
+            }
+          }
+        }
+      `;
+      
+      const result = await hasuraClient.query(healthyQuery);
+      
+      if (result.errors) {
+        return res.status(500).json({
+          error: "Failed to fetch agent health data",
+          details: result.errors[0].message
+        });
+      }
+      
+      // Procesar los datos para obtener estadísticas detalladas
+      const agents = result.data.agents || [];
+      const now = new Date();
+      
+      // Categorizar agentes según el criterio de la función determineAgentStatus
+      const detailedStatus = {
+        healthy: 0,
+        warning: 0,
+        error: 0,
+        offline: 0
+      };
+      
+      agents.forEach((agent: any) => {
+        if (!agent.is_healthy) {
+          detailedStatus.error++;
+          return;
+        }
+        
+        const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
+        if (!lastPing) {
+          detailedStatus.offline++;
+          return;
+        }
+        
+        const pingDate = new Date(lastPing);
+        const diffMinutes = (now.getTime() - pingDate.getTime()) / (1000 * 60);
+        
+        if (diffMinutes > 10) {
+          detailedStatus.offline++;
+        } else if (diffMinutes > 5) {
+          detailedStatus.warning++;
+        } else {
+          detailedStatus.healthy++;
+        }
+      });
+      
+      res.json({
+        counts: {
+          healthy: result.data.healthy.aggregate.count,
+          unhealthy: result.data.unhealthy.aggregate.count,
+          total: result.data.total.aggregate.count
+        },
+        detailedStatus,
+        timestamp: now.toISOString()
+      });
+    } catch (error) {
+      console.error('Error analyzing agent health:', error);
+      res.status(500).json({
+        error: "Failed to analyze agent health status",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Get dashboard preferences
   app.get('/api/preferences', async (req, res) => {
     try {
