@@ -119,8 +119,8 @@ export function stripHtml(html: string): string {
 // Convert pipeline coordinates to flow coordinates
 export function convertToFlowCoordinates(
   pipelineUnits: any[],
-  baseScaleX = 180,
-  baseScaleY = 100,
+  baseScaleX = 300,
+  baseScaleY = 200,
   baseOffsetX = 50,
   baseOffsetY = 50
 ): { nodes: any[]; edges: any[] } {
@@ -131,30 +131,41 @@ export function convertToFlowCoordinates(
     return { nodes, edges };
   }
   
-  // Crear un mapa para detectar y resolver colisiones de posición
-  const positionMap: Record<string, number> = {};
+  // Ordenar las unidades para darles una posición consistente
+  // Primero por tipo (para agrupar tipos similares) y luego por ID
+  const sortedUnits = [...pipelineUnits].sort((a, b) => {
+    const typeA = getUnitType(a);
+    const typeB = getUnitType(b);
+    
+    if (typeA !== typeB) {
+      return typeA.localeCompare(typeB);
+    }
+    
+    return a.id.localeCompare(b.id);
+  });
   
-  // Create nodes
-  pipelineUnits.forEach((unit) => {
-    // Obtener posición base
-    let x = (unit.posx || 0) * baseScaleX + baseOffsetX;
-    let y = (unit.posy || 0) * baseScaleY + baseOffsetY;
+  // Asignar posiciones en una disposición de árbol simple
+  // Si no hay información de posición en los datos
+  const lacksPosInfo = sortedUnits.every(unit => 
+    (unit.posx === 0 || unit.posx === null || unit.posx === undefined) && 
+    (unit.posy === 0 || unit.posy === null || unit.posy === undefined)
+  );
+  
+  // Crear nodos con posiciones calculadas
+  sortedUnits.forEach((unit, index) => {
+    // Determinar la posición usando un layout automático si es necesario
+    let x, y;
     
-    // Crear una clave para la posición
-    const posKey = `${x},${y}`;
-    
-    // Si ya hay un nodo en esta posición, desplazarlo
-    if (positionMap[posKey]) {
-      // Incrementar el contador
-      positionMap[posKey]++;
-      
-      // Desplazar este nodo en diagonal según el contador
-      const offset = positionMap[posKey] * 80;
-      x += offset;
-      y += offset;
+    if (lacksPosInfo) {
+      // Disposición automática: zigzag vertical
+      const col = Math.floor(index / 3);
+      const row = index % 3;
+      x = col * baseScaleX + baseOffsetX;
+      y = row * baseScaleY + baseOffsetY;
     } else {
-      // Registrar esta posición
-      positionMap[posKey] = 1;
+      // Usar las coordenadas existentes (si están disponibles)
+      x = (unit.posx || 0) * baseScaleX + baseOffsetX;
+      y = (unit.posy || 0) * baseScaleY + baseOffsetY;
     }
     
     // Genera una mejor etiqueta para el nodo
@@ -178,17 +189,35 @@ export function convertToFlowCoordinates(
       },
       position: { x, y },
     });
-    
-    // Create edge if this unit has a parent
-    if (unit.pipeline_unit_id) {
+  });
+  
+  // Si no tenemos información de conexión explícita (pipeline_unit_id)
+  // creamos conexiones secuenciales según el orden de los nodos
+  const noConnectionInfo = sortedUnits.every(unit => !unit.pipeline_unit_id);
+  
+  if (noConnectionInfo && nodes.length > 1) {
+    // Crear conexiones secuenciales entre todos los nodos
+    for (let i = 0; i < nodes.length - 1; i++) {
       edges.push({
-        id: `e-${unit.pipeline_unit_id}-${unit.id}`,
-        source: unit.pipeline_unit_id,
-        target: unit.id,
+        id: `e-${nodes[i].id}-${nodes[i + 1].id}`,
+        source: nodes[i].id,
+        target: nodes[i + 1].id,
         animated: false,
       });
     }
-  });
+  } else {
+    // Usar la información de conexión real si está disponible
+    sortedUnits.forEach((unit) => {
+      if (unit.pipeline_unit_id) {
+        edges.push({
+          id: `e-${unit.pipeline_unit_id}-${unit.id}`,
+          source: unit.pipeline_unit_id,
+          target: unit.id,
+          animated: false,
+        });
+      }
+    });
+  }
   
   return { nodes, edges };
 }

@@ -144,16 +144,28 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
           <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
             <svg width="100%" height="100%" className="absolute top-0 left-0">
               <defs>
+                {/* Un marcador único para cada estilo de conexión */}
                 <marker
-                  id="arrow"
+                  id="arrow-default"
                   viewBox="0 0 10 10"
                   refX="5"
                   refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto-start-reverse"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto"
                 >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
+                  <path d="M 0 0 L 10 5 L 0 10 z" className="fill-slate-500 dark:fill-slate-400" />
+                </marker>
+                <marker
+                  id="arrow-active"
+                  viewBox="0 0 10 10"
+                  refX="5"
+                  refY="5"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" className="fill-blue-500 dark:fill-blue-400" />
                 </marker>
               </defs>
               
@@ -164,23 +176,39 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 
                 if (!sourceNode || !targetNode) return null;
                 
-                // Puntos de inicio y fin
-                const startX = sourceNode.position.x + 104;  // Centro del nodo
-                const startY = sourceNode.position.y + 60;   // Parte inferior
-                const endX = targetNode.position.x + 104;    // Centro del nodo
-                const endY = targetNode.position.y + 10;     // Parte superior
+                const sourceStatus = getUnitStatus(sourceNode.id);
+                const targetStatus = getUnitStatus(targetNode.id);
                 
-                // Línea recta con flecha
+                // Determinar si la conexión está activa
+                const isActive = sourceStatus === 'completed' && 
+                                (targetStatus === 'running' || targetStatus === 'completed');
+                
+                // Calcular puntos de inicio y fin para las conexiones
+                const startX = sourceNode.position.x + 104;  // Centro del nodo
+                const startY = sourceNode.position.y + 80;   // Parte inferior
+                const endX = targetNode.position.x + 104;    // Centro del nodo
+                const endY = targetNode.position.y;          // Parte superior
+                
+                // Control points for curved path
+                const midY = (startY + endY) / 2;
+                const curveFactor = 50;
+                
+                const controlPoint1X = startX;
+                const controlPoint1Y = startY + curveFactor;
+                const controlPoint2X = endX;
+                const controlPoint2Y = endY - curveFactor;
+                
+                const path = `M ${startX},${startY} C ${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${endX},${endY}`;
+                
                 return (
-                  <line
+                  <path
                     key={edge.id}
-                    x1={startX}
-                    y1={startY}
-                    x2={endX}
-                    y2={endY}
-                    stroke="#475569"
+                    d={path}
+                    fill="none"
+                    className={`${isActive ? 'stroke-blue-500 dark:stroke-blue-400' : 'stroke-slate-500 dark:stroke-slate-400'}`}
                     strokeWidth="2"
-                    markerEnd="url(#arrow)"
+                    strokeDasharray={targetStatus === 'pending' ? "5 5" : ""}
+                    markerEnd={`url(#arrow-${isActive ? 'active' : 'default'})`}
                   />
                 );
               })}
