@@ -16,6 +16,8 @@ import Logs from "@/pages/Logs";
 import Explorer from "@/pages/Explorer";
 import AgentDetails from "@/pages/AgentDetails";
 import PipelineDetails from "@/pages/PipelineDetails";
+import Connections from "@/pages/Connections";
+import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
 import NotFound from "@/pages/not-found";
 import { initializeSocket } from "./lib/socket";
 
@@ -46,6 +48,8 @@ function Router() {
         <Route path="/jobs/:id" component={PipelineDetails} />
         <Route path="/logs" component={Logs} />
         <Route path="/explorer" component={Explorer} />
+        <Route path="/connections" component={Connections} />
+        <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

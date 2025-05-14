@@ -1,15 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/hasura-client';
 import { SQL_CONNECTIONS_QUERY, SQL_CONNECTION_DETAIL_QUERY, SQL_CONN_USAGE_QUERY } from '@shared/queries';
 import { SQLConn } from '@shared/types';
 
 // Hook para obtener la lista de conexiones SQL
 export function useSQLConnections() {
   return useQuery({
-    queryKey: ['sql-connections'],
+    queryKey: ['/api/graphql/sql-connections'],
     queryFn: async () => {
-      const response = await apiRequest(SQL_CONNECTIONS_QUERY);
-      return response.data.merlin_agent_SQLConn as SQLConn[];
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: SQL_CONNECTIONS_QUERY }),
+        credentials: 'include',
+      });
+      
+      const result = await response.json();
+      return result.data.merlin_agent_SQLConn as SQLConn[];
     },
   });
 }
@@ -17,10 +23,20 @@ export function useSQLConnections() {
 // Hook para obtener detalles de una conexión SQL específica
 export function useSQLConnectionDetail(id: string) {
   return useQuery({
-    queryKey: ['sql-connection', id],
+    queryKey: ['/api/graphql/sql-connection', id],
     queryFn: async () => {
-      const response = await apiRequest(SQL_CONNECTION_DETAIL_QUERY, { id });
-      return response.data.merlin_agent_SQLConn_by_pk;
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          query: SQL_CONNECTION_DETAIL_QUERY,
+          variables: { id }
+        }),
+        credentials: 'include',
+      });
+      
+      const result = await response.json();
+      return result.data.merlin_agent_SQLConn_by_pk;
     },
     enabled: !!id,
   });
@@ -51,10 +67,20 @@ interface SQLConnUsage {
 // Hook para obtener el uso de una conexión SQL específica
 export function useSQLConnUsage(id: string) {
   return useQuery<SQLConnUsage>({
-    queryKey: ['sql-connection-usage', id],
+    queryKey: ['/api/graphql/sql-connection-usage', id],
     queryFn: async () => {
-      const response = await apiRequest(SQL_CONN_USAGE_QUERY, { id });
-      return response.data;
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          query: SQL_CONN_USAGE_QUERY,
+          variables: { id }
+        }),
+        credentials: 'include',
+      });
+      
+      const result = await response.json();
+      return result.data;
     },
     enabled: !!id,
   });

@@ -1,9 +1,9 @@
-import { apiRequest } from "./queryClient";
+import { apiRequest as fetchApiRequest } from "./queryClient";
 
 // Function to execute GraphQL queries
 export async function executeQuery(query: string, variables = {}) {
   try {
-    const response = await apiRequest('POST', '/api/graphql', {
+    const response = await fetchApiRequest('POST', '/api/graphql', {
       query,
       variables,
     });
@@ -13,6 +13,11 @@ export async function executeQuery(query: string, variables = {}) {
     console.error('GraphQL query error:', error);
     throw error;
   }
+}
+
+// Re-export apiRequest for use in other modules
+export async function apiRequest(query: string, variables = {}) {
+  return await executeQuery(query, variables);
 }
 
 // Ensure query is read-only
