@@ -45,10 +45,10 @@ export default function AgentStatusCards() {
     statusCounts.total = data.length;
     
     data.forEach((agent: any) => {
-      const lastPing = agent.AgentPassportPing?.[0]?.last_ping_at;
-      const status = determineAgentStatus(agent.is_healthy, lastPing);
+      // Usamos el nuevo algoritmo avanzado para determinar el estado
+      const healthInfo = determineAgentStatus(agent);
       
-      switch (status) {
+      switch (healthInfo.status) {
         case 'healthy':
           statusCounts.healthy++;
           break;
