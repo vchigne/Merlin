@@ -4,6 +4,8 @@ import { executeQuery } from "@/lib/hasura-client";
 import { STATS_OVERVIEW_QUERY } from "@shared/queries";
 import StatCard from "@/components/dashboard/StatCard";
 import AgentHealthGrid from "@/components/dashboard/AgentHealthGrid";
+import AgentStatusCards from "@/components/dashboard/AgentStatusCards";
+import RecentErrorsPanel from "@/components/dashboard/RecentErrorsPanel";
 import PipelineVisualizer from "@/components/dashboard/PipelineVisualizer";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import JobsTable from "@/components/dashboard/JobsTable";
@@ -113,19 +115,35 @@ export default function Dashboard() {
         />
       </div>
       
-      {/* Agent Health Grid */}
-      <AgentHealthGrid />
+      {/* Agent Status Cards */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4 dark:text-white">Estado de Agentes</h2>
+        <AgentStatusCards />
+      </div>
+      
+      {/* Agent Health Grid - Renamed */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4 dark:text-white">Agentes Recientes</h2>
+        <AgentHealthGrid />
+      </div>
       
       {/* Pipeline Visualization and Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2">
+          <h2 className="text-xl font-bold mb-4 dark:text-white">Visualización de Pipeline</h2>
           <PipelineVisualizer />
         </div>
-        <ActivityFeed />
+        <div>
+          <h2 className="text-xl font-bold mb-4 dark:text-white">Actividad Reciente</h2>
+          <ActivityFeed />
+        </div>
       </div>
       
       {/* Recent Jobs */}
-      <JobsTable />
+      <div>
+        <h2 className="text-xl font-bold mb-4 dark:text-white">Trabajos Recientes</h2>
+        <JobsTable />
+      </div>
     </div>
   );
 }
