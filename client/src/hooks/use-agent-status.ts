@@ -36,13 +36,11 @@ export function useAgentStatus(): AgentStatusResult {
   
   // Process agents to add status information
   const processedAgents = data?.map((agent: any) => {
-    // Fix any data inconsistency before processing
-    // Importante: AgentPassportPing es un OBJETO, no un array
+    // No need to convert AgentPassportPing to array anymore, keep the original structure
+    // Our function now handles both formats correctly
     const normalizedAgent = {
       ...agent,
-      // Ensure AgentPassportPing is in an array format for processing
-      AgentPassportPing: agent.AgentPassportPing ? [agent.AgentPassportPing] : [],
-      // Ensure PipelineJobQueues exists (plural, not singular)
+      // Just ensure PipelineJobQueues exists (plural, not singular)
       PipelineJobQueues: agent.PipelineJobQueues || []
     };
     
