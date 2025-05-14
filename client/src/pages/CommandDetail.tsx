@@ -251,22 +251,22 @@ export default function CommandDetailPage() {
           <CardContent>
             {isLoadingUsage ? (
               <Skeleton className="h-40 w-full" />
-            ) : usageData?.command?.merlin_agent_PipelineUnit?.length ? (
+            ) : usageData?.merlin_agent_PipelineUnit?.length ? (
               <div className="space-y-4">
-                {usageData.command.merlin_agent_PipelineUnit.map((unit: any) => (
+                {usageData.merlin_agent_PipelineUnit.map((unit: any) => (
                   <Card key={unit.id}>
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">{unit.pipeline.name}</CardTitle>
+                        <CardTitle className="text-lg">{unit.pipeline?.name || 'Unnamed Pipeline'}</CardTitle>
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/pipelines/${unit.pipeline.id}`}>
+                          <Link href={`/pipelines/${unit.pipeline_id}`}>
                             View Pipeline
                           </Link>
                         </Button>
                       </div>
                       <CardDescription>
-                        Agent: {unit.pipeline.agent_passport?.name || 'Unknown'}
-                        {unit.pipeline.description && (
+                        Agent: {unit.pipeline?.agent_passport?.name || 'Unknown'}
+                        {unit.pipeline?.description && (
                           <p className="mt-1">{unit.pipeline.description}</p>
                         )}
                       </CardDescription>

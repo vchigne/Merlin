@@ -61,27 +61,28 @@ export function useCommandDetail(id: string) {
   });
 }
 
-interface CommandUsage {
-  command?: {
+interface PipelineUnit {
+  id: string;
+  comment?: string;
+  pipeline_id: string;
+  posx?: number;
+  posy?: number;
+  created_at?: string;
+  updated_at?: string;
+  pipeline?: {
     id: string;
     name: string;
-    merlin_agent_PipelineUnit?: Array<{
+    description?: string;
+    agent_passport?: {
       id: string;
-      pipeline?: {
-        id: string;
-        name: string;
-        agent_passport?: {
-          id: string;
-          name: string;
-        };
-      };
-    }>;
+      name: string;
+    };
   };
 }
 
 // Hook para obtener el uso de un comando específico
 export function useCommandUsage(id: string) {
-  return useQuery<CommandUsage>({
+  return useQuery<{ merlin_agent_PipelineUnit: PipelineUnit[] }>({
     queryKey: ['/api/graphql/command-usage', id],
     queryFn: async () => {
       const response = await fetch('/api/graphql', {
