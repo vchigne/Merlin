@@ -22,7 +22,7 @@ export default function PipelineSearch({
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
 
-  // Filtrar pipelines basados en la búsqueda con prioridad a coincidencias al inicio de palabras
+  // Filtrar pipelines basados en la búsqueda fulltext simple
   useEffect(() => {
     if (pipelines) {
       if (searchQuery.trim() === "") {
@@ -30,110 +30,15 @@ export default function PipelineSearch({
       } else {
         const query = searchQuery.toLowerCase();
         
-        // Función que puntúa la relevancia de la coincidencia
-        const scoreMatch = (text: string, query: string): number => {
-          if (!text) return 0;
-          const lowerText = text.toLowerCase();
-          
-          // Mayor puntuación si coincide desde el inicio
-          if (lowerText.startsWith(query)) return 100;
-          
-          // Buscar coincidencias con siglas/acrónimos
-          // Si el query es en mayúsculas, consideramos que es una sigla/acrónimo
-          if (searchQuery === searchQuery.toUpperCase() && searchQuery.length > 1) {
-            // Extraer todas las letras mayúsculas para formar una posible sigla
-            const upperCaseLetters = text.split('').filter(char => char === char.toUpperCase() && char.match(/[A-Z]/));
-            const possibleAcronym = upperCaseLetters.join('').toLowerCase();
-            
-            if (possibleAcronym.includes(query)) return 90;
-          }
-          
-          // Buscar coincidencias al inicio de las palabras
-          const words = lowerText.split(/\s+/);
-          for (const word of words) {
-            if (word.startsWith(query)) return 80;
-          }
-          
-          // Buscar coincidencias con siglas entre corchetes como [MDLZ]
-          const bracketPattern = new RegExp(`\\[${query.toUpperCase()}\\]`, 'i');
-          if (text.match(bracketPattern)) {
-            return 100; // Máxima prioridad para coincidencias exactas entre corchetes
-          }
-          
-          // Buscar coincidencias especiales para siglas como MDLZ
-          if (searchQuery.toUpperCase() === searchQuery) {
-            // Verificamos si la búsqueda es una sigla
-            // Comprobamos si hay coincidencia con alguna palabra que está en mayúsculas
-            const uppercaseWords = text.match(/[A-Z]{2,}/g) || [];
-            for (const word of uppercaseWords) {
-              if (word.toLowerCase().includes(query)) {
-                return 70;
-              }
-            }
-            
-            // Buscar la sigla entre corchetes [MDLZ] con variantes
-            const bracketVariants = [
-              `[${searchQuery}]`, 
-              `[${searchQuery.toUpperCase()}]`, 
-              `[${searchQuery.toLowerCase()}]`
-            ];
-            
-            for (const variant of bracketVariants) {
-              if (text.includes(variant)) {
-                return 100; // Máxima prioridad
-              }
-            }
-            
-            // Casos especiales - coincidencias directas por acronimos conocidos
-            const specialAcronyms: Record<string, string[]> = {
-              'MDLZ': ['mondelez', 'mondelēz'],
-              'MCD': ['mcdonalds'],
-              'KO': ['coca', 'cola', 'cocacola'],
-              'PG': ['procter', 'gamble', 'procterandgamble']
-            };
-            
-            if (specialAcronyms[searchQuery.toUpperCase()]) {
-              for (const keyword of specialAcronyms[searchQuery.toUpperCase()]) {
-                if (lowerText.includes(keyword)) {
-                  return 95; // Alta prioridad para estos casos especiales
-                }
-              }
-            }
-          }
-          
-          // Buscar coincidencias en cualquier parte, pero con menor prioridad
-          if (lowerText.includes(query)) return 50;
-          
-          return 0;
-        };
+        // Filtrar pipelines que contienen la consulta en su nombre
+        const filtered = pipelines.filter(pipeline => 
+          pipeline.name.toLowerCase().includes(query)
+        );
         
-        // Filtrar y ordenar por puntuación
-        const filtered = pipelines
-          .map(pipeline => {
-            // Para debugging
-            console.log(`Pipeline: ${pipeline.name}, Query: ${query}`);
-            
-            const nameScore = scoreMatch(pipeline.name, query);
-            const descScore = pipeline.description ? scoreMatch(pipeline.description, query) : 0;
-            
-            // Para debugging
-            if (nameScore > 0 || descScore > 0) {
-              console.log(`Match! Name score: ${nameScore}, Desc score: ${descScore}`);
-            }
-            
-            return {
-              ...pipeline,
-              score: Math.max(nameScore, descScore)
-            };
-          })
-          .filter(p => p.score > 0)
-          .sort((a, b) => b.score - a.score);
-        
-        console.log(`Found ${filtered.length} matches for query: ${query}`);
         setFilteredPipelines(filtered);
       }
     }
-  }, [pipelines, searchQuery, searchQuery]);
+  }, [pipelines, searchQuery]);
 
   // Obtener el nombre del pipeline seleccionado
   const getSelectedPipelineName = () => {
@@ -182,39 +87,7 @@ export default function PipelineSearch({
                     }`}
                   />
                   <div className="flex-1">
-                    <p className="text-sm font-medium flex items-center">
-                      {pipeline.name}
-                      {pipeline.score >= 100 && pipeline.name.includes(`[${searchQuery.toUpperCase()}]`) && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-sm">
-                          [Código]
-                        </span>
-                      )}
-                      {pipeline.score >= 100 && !pipeline.name.includes(`[${searchQuery.toUpperCase()}]`) && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-sm">
-                          Exacta
-                        </span>
-                      )}
-                      {pipeline.score >= 95 && pipeline.score < 100 && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-sm">
-                          Empresa
-                        </span>
-                      )}
-                      {pipeline.score >= 90 && pipeline.score < 95 && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-sm">
-                          Acrónimo
-                        </span>
-                      )}
-                      {pipeline.score >= 80 && pipeline.score < 90 && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-sm">
-                          Inicio
-                        </span>
-                      )}
-                      {pipeline.score >= 70 && pipeline.score < 80 && (
-                        <span className="ml-2 text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 rounded-sm">
-                          Sigla
-                        </span>
-                      )}
-                    </p>
+                    <p className="text-sm font-medium">{pipeline.name}</p>
                     {pipeline.description && (
                       <p className="text-xs text-muted-foreground truncate max-w-[200px]">
                         {pipeline.description}
