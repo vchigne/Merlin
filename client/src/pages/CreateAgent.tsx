@@ -22,7 +22,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 // Define schema for form validation
 const agentFormSchema = z.object({
-  name: z.string().min(1, "Agent name is required"),
+  name: z.string().min(1, "Se requiere un nombre para el agente"),
   description: z.string().optional(),
   agent_version_id: z.string().default("latest.win.x64"),
   auto_clean_update: z.boolean().default(true),
@@ -59,7 +59,7 @@ export default function CreateAgent() {
   // Auto-generate description if empty
   const getDescription = () => {
     if (watchDescription) return watchDescription;
-    if (watchName) return `Merlin Agent for ${watchName}`;
+    if (watchName) return `Agente Merlin para ${watchName}`;
     return "";
   };
 
@@ -122,13 +122,13 @@ export default function CreateAgent() {
       setCreatedAgentId(data.id);
       setIsSuccess(true);
       toast({
-        title: "Agent created successfully",
-        description: `Agent "${data.name}" has been created and is ready to connect.`,
+        title: "Agente creado exitosamente",
+        description: `El agente "${data.name}" ha sido creado y está listo para conectarse.`,
       });
     },
     onError: (error) => {
       toast({
-        title: "Error creating agent",
+        title: "Error al crear el agente",
         description: error.message,
         variant: "destructive",
       });
@@ -161,8 +161,8 @@ export default function CreateAgent() {
     if (createdAgentId) {
       navigator.clipboard.writeText(createdAgentId);
       toast({
-        title: "Passport ID copied",
-        description: "The passport ID has been copied to your clipboard.",
+        title: "ID de pasaporte copiado",
+        description: "El ID de pasaporte ha sido copiado al portapapeles.",
       });
     }
   };
@@ -178,9 +178,9 @@ export default function CreateAgent() {
             onClick={() => navigate("/agents")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Agents
+            Volver a Agentes
           </Button>
-          <h1 className="text-2xl font-bold dark:text-white">Agent Created Successfully</h1>
+          <h1 className="text-2xl font-bold dark:text-white">Agente Creado Exitosamente</h1>
         </div>
 
         <Card className="border-green-300 dark:border-green-800 animate-fadeIn">
@@ -189,14 +189,14 @@ export default function CreateAgent() {
               <div>
                 <CardTitle className="flex items-center space-x-2">
                   <Server className="h-5 w-5 text-green-500" />
-                  <span>Agent Created</span>
+                  <span>Agente Creado</span>
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Your new agent is ready to be configured
+                  Tu nuevo agente está listo para ser configurado
                 </CardDescription>
               </div>
               <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">
-                Ready to Connect
+                Listo para Conectar
               </Badge>
             </div>
           </CardHeader>
