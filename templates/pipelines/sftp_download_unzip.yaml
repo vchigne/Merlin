@@ -1,0 +1,52 @@
+id: template_sftp_download_unzip
+name: "Descarga SFTP y Descompresión"
+description: "Plantilla para descargar un archivo desde un servidor SFTP y descomprimirlo"
+type: file_transfer
+tags:
+  - sftp-download
+  - unzip
+  - file-processing
+  - sequential
+created_at: "2025-05-15T12:00:00Z"
+updated_at: "2025-05-15T12:00:00Z"
+units:
+  - id: unit_sftp_download
+    type: sftp_download
+    comment: "Descarga el archivo ZIP desde el servidor SFTP"
+    position:
+      x: 100
+      y: 200
+    sftp_download:
+      name: "Descargar archivo ZIP"
+      output: "${LOCAL_DOWNLOAD_PATH}"
+      return_output: true
+      sftp_link_id: "${SFTP_LINK_ID}"
+    retry:
+      count: 3
+      after_milliseconds: 5000
+    timeout:
+      milliseconds: 60000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_unzip
+    
+  - id: unit_unzip
+    type: unzip
+    comment: "Descomprime el archivo descargado"
+    position:
+      x: 300
+      y: 200
+    unzip:
+      name: "Descomprimir archivo"
+      input: "${LOCAL_DOWNLOAD_PATH}"
+      output: "${LOCAL_EXTRACT_PATH}"
+      return_output: true
+    retry:
+      count: 2
+      after_milliseconds: 3000
+    timeout:
+      milliseconds: 30000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false

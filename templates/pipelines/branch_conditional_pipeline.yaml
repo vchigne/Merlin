@@ -1,0 +1,142 @@
+id: template_branch_conditional_pipeline
+name: "Pipeline Condicional Ramificado"
+description: "Plantilla para ejecutar diferentes ramas dependiendo de condiciones"
+type: mixed
+tags:
+  - branched
+  - conditional
+  - command
+  - decision-making
+created_at: "2025-05-15T12:00:00Z"
+updated_at: "2025-05-15T12:00:00Z"
+units:
+  - id: unit_check_condition
+    type: command
+    comment: "Verifica una condición para determinar la ruta de ejecución"
+    position:
+      x: 350
+      y: 100
+    command:
+      name: "Verificar condición"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c if exist ${CHECK_FILE} (echo FILE_EXISTS > ${RESULT_FILE}) else (echo FILE_NOT_EXISTS > ${RESULT_FILE})"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 10000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_evaluate_path
+    
+  - id: unit_evaluate_path
+    type: command
+    comment: "Evalúa el resultado y determina qué rama seguir"
+    position:
+      x: 350
+      y: 250
+    command:
+      name: "Evaluar camino"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c findstr /i \"FILE_EXISTS\" ${RESULT_FILE} > nul && (echo PATH_A > ${PATH_FILE}) || (echo PATH_B > ${PATH_FILE})"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 10000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_branch_decision
+    
+  - id: unit_branch_decision
+    type: command
+    comment: "Decide qué rama ejecutar basado en la evaluación previa"
+    position:
+      x: 350
+      y: 400
+    command:
+      name: "Decisión de rama"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c findstr /i \"PATH_A\" ${PATH_FILE} > nul && (exit 0) || (exit 1)"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 10000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: true
+    next_unit_id: unit_path_a
+    
+  - id: unit_path_a
+    type: command
+    comment: "Ejecuta el camino A (si el archivo existe)"
+    position:
+      x: 150
+      y: 550
+    command:
+      name: "Ejecutar camino A"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c echo Ejecutando camino A - El archivo existe > ${LOG_FILE}_A"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 30000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_completion
+    
+  - id: unit_path_b
+    type: command
+    comment: "Ejecuta el camino B (si el archivo no existe)"
+    position:
+      x: 550
+      y: 550
+    command:
+      name: "Ejecutar camino B"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c echo Ejecutando camino B - El archivo no existe > ${LOG_FILE}_B"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 30000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_completion
+    
+  - id: unit_completion
+    type: command
+    comment: "Finalización común para ambas rutas"
+    position:
+      x: 350
+      y: 700
+    command:
+      name: "Finalización"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c echo Proceso completado > ${LOG_FILE}_COMPLETE"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 10000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: true

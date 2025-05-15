@@ -1,0 +1,120 @@
+id: template_multi_database_etl
+name: "ETL Multi-Base de Datos"
+description: "Plantilla para extracción, transformación y carga entre diferentes bases de datos"
+type: sql_extraction
+tags:
+  - sql
+  - etl
+  - data-integration
+  - multi-database
+created_at: "2025-05-15T12:00:00Z"
+updated_at: "2025-05-15T12:00:00Z"
+units:
+  - id: unit_extract_source_db
+    type: query_queue
+    comment: "Extrae datos de la base de datos fuente"
+    position:
+      x: 100
+      y: 200
+    query_queue:
+      name: "Extracción de datos fuente"
+      description: "Extrae datos actualizados desde la fuente"
+      queries:
+        - name: "Consulta de extracción"
+          query_string: "SELECT * FROM source_table WHERE updated_at > '${LAST_UPDATE_DATE}'"
+          path: "${TEMP_EXTRACT_FILE}"
+          sqlconn_id: "${SOURCE_DB_CONNECTION_ID}"
+          return_output: true
+          date_format: "YYYY-MM-DD HH:mm:ss"
+          separator: ","
+          timeout: 120000
+    retry:
+      count: 2
+      after_milliseconds: 10000
+    timeout:
+      milliseconds: 180000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_transform_data
+    
+  - id: unit_transform_data
+    type: command
+    comment: "Transforma los datos extraídos"
+    position:
+      x: 350
+      y: 200
+    command:
+      name: "Transformación de datos"
+      target: "python"
+      working_directory: "${SCRIPTS_DIR}"
+      args: "transform.py --input=${TEMP_EXTRACT_FILE} --output=${TEMP_TRANSFORM_FILE}"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 5000
+    timeout:
+      milliseconds: 120000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_load_target_db
+    
+  - id: unit_load_target_db
+    type: query_queue
+    comment: "Carga los datos transformados en la base de datos destino"
+    position:
+      x: 600
+      y: 200
+    query_queue:
+      name: "Carga en base de datos destino"
+      description: "Inserta datos transformados en la base destino"
+      queries:
+        - name: "Truncar tabla temporal"
+          query_string: "TRUNCATE TABLE temp_staging_table"
+          sqlconn_id: "${TARGET_DB_CONNECTION_ID}"
+          return_output: false
+          timeout: 30000
+        - name: "Cargar datos transformados"
+          query_string: "LOAD DATA LOCAL INFILE '${TEMP_TRANSFORM_FILE}' INTO TABLE temp_staging_table FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 LINES"
+          sqlconn_id: "${TARGET_DB_CONNECTION_ID}"
+          return_output: true
+          timeout: 180000
+        - name: "Actualizar tabla final"
+          query_string: "INSERT INTO target_table SELECT * FROM temp_staging_table ON DUPLICATE KEY UPDATE field1=VALUES(field1), field2=VALUES(field2)"
+          sqlconn_id: "${TARGET_DB_CONNECTION_ID}"
+          return_output: true
+          timeout: 180000
+    retry:
+      count: 2
+      after_milliseconds: 15000
+    timeout:
+      milliseconds: 300000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_update_log
+    
+  - id: unit_update_log
+    type: query_queue
+    comment: "Actualiza el registro de la última sincronización"
+    position:
+      x: 850
+      y: 200
+    query_queue:
+      name: "Actualizar log de sincronización"
+      description: "Registra la fecha y hora de la última sincronización exitosa"
+      queries:
+        - name: "Actualizar registro de sincronización"
+          query_string: "INSERT INTO etl_sync_log (sync_date, sync_status) VALUES (NOW(), 'SUCCESS')"
+          sqlconn_id: "${TARGET_DB_CONNECTION_ID}"
+          return_output: false
+          timeout: 30000
+    retry:
+      count: 2
+      after_milliseconds: 5000
+    timeout:
+      milliseconds: 60000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: true

@@ -1,0 +1,76 @@
+id: template_command_script_execution
+name: "Ejecución de scripts y comandos"
+description: "Plantilla para ejecutar una secuencia de comandos y scripts"
+type: command_execution
+tags:
+  - command
+  - script
+  - automation
+  - sequential
+created_at: "2025-05-15T12:00:00Z"
+updated_at: "2025-05-15T12:00:00Z"
+units:
+  - id: unit_prepare_environment
+    type: command
+    comment: "Prepara el entorno para la ejecución"
+    position:
+      x: 100
+      y: 100
+    command:
+      name: "Preparar entorno"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c mkdir output_folder"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 10000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: true
+    next_unit_id: unit_execute_script
+    
+  - id: unit_execute_script
+    type: command
+    comment: "Ejecuta el script principal"
+    position:
+      x: 100
+      y: 250
+    command:
+      name: "Ejecutar script principal"
+      target: "python"
+      working_directory: "${WORKING_DIR}"
+      args: "process_data.py --input=${INPUT_FILE} --output=${OUTPUT_FILE}"
+      return_output: true
+    retry:
+      count: 2
+      after_milliseconds: 5000
+    timeout:
+      milliseconds: 300000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_notify_completion
+    
+  - id: unit_notify_completion
+    type: command
+    comment: "Notifica la finalización del proceso"
+    position:
+      x: 100
+      y: 400
+    command:
+      name: "Notificar completado"
+      target: "cmd.exe"
+      working_directory: "${WORKING_DIR}"
+      args: "/c echo Proceso completado > ${LOG_FILE}"
+      return_output: true
+    retry:
+      count: 1
+      after_milliseconds: 1000
+    timeout:
+      milliseconds: 5000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: true

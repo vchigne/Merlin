@@ -1,0 +1,59 @@
+id: template_sql_export_sftp
+name: "Extracción SQL y envío SFTP"
+description: "Plantilla para extraer datos desde SQL, guardarlos en un archivo y subirlos a un servidor SFTP"
+type: sql_extraction
+tags:
+  - sql
+  - sftp-upload
+  - data-export
+  - sequential
+created_at: "2025-05-15T12:00:00Z"
+updated_at: "2025-05-15T12:00:00Z"
+units:
+  - id: unit_sql_query
+    type: query_queue
+    comment: "Ejecuta consulta SQL y guarda los resultados en un archivo CSV"
+    position:
+      x: 100
+      y: 200
+    query_queue:
+      name: "Extraer datos SQL"
+      description: "Extrae datos de clientes y ventas"
+      queries:
+        - name: "Consulta de datos"
+          query_string: "SELECT * FROM table_name WHERE created_at > '${DATE_FROM}'"
+          path: "${LOCAL_CSV_PATH}"
+          sqlconn_id: "${SQL_CONNECTION_ID}"
+          return_output: true
+          date_format: "YYYY-MM-DD"
+          separator: ","
+          timeout: 60000
+    retry:
+      count: 2
+      after_milliseconds: 10000
+    timeout:
+      milliseconds: 120000
+      abort_on_timeout: true
+    error_handling:
+      continue_on_error: false
+    next_unit_id: unit_sftp_upload
+    
+  - id: unit_sftp_upload
+    type: sftp_upload
+    comment: "Sube el archivo CSV al servidor SFTP"
+    position:
+      x: 300
+      y: 200
+    sftp_upload:
+      name: "Subir archivo CSV"
+      input: "${LOCAL_CSV_PATH}"
+      return_output: true
+      sftp_link_id: "${SFTP_LINK_ID}"
+    retry:
+      count: 3
+      after_milliseconds: 5000
+    timeout:
+      milliseconds: 60000
+      abort_on_timeout: false
+    error_handling:
+      continue_on_error: false
