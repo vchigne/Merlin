@@ -462,7 +462,7 @@ export default function CreateAgent() {
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Which version of the agent to install.
+                      Qué versión del agente instalar.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -473,9 +473,9 @@ export default function CreateAgent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Advanced Configuration</CardTitle>
+              <CardTitle>Configuración Avanzada</CardTitle>
               <CardDescription>
-                Additional settings for the agent (optional)
+                Configuraciones adicionales para el agente (opcional)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -524,30 +524,30 @@ export default function CreateAgent() {
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-base font-medium">Production Mode</h4>
+                    <h4 className="text-base font-medium">Modo Producción</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Agent will run in production mode
+                      El agente se ejecutará en modo producción
                     </p>
                   </div>
-                  <Badge>Enabled by Default</Badge>
+                  <Badge>Habilitado por Defecto</Badge>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  This setting determines whether the agent runs in production mode. Testing mode can be enabled by administrators only.
+                  Esta configuración determina si el agente se ejecuta en modo producción. El modo de prueba solo puede ser habilitado por administradores.
                 </p>
               </div>
 
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-base font-medium">Agent Monitoring</h4>
+                    <h4 className="text-base font-medium">Monitoreo del Agente</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Enable activity monitoring for this agent
+                      Habilitar monitoreo de actividad para este agente
                     </p>
                   </div>
-                  <Badge>Enabled by Default</Badge>
+                  <Badge>Habilitado por Defecto</Badge>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Monitoring allows the system to track agent health and performance. This setting is enabled by default.
+                  El monitoreo permite al sistema hacer seguimiento de la salud y rendimiento del agente. Esta configuración está habilitada por defecto.
                 </p>
               </div>
             </CardContent>
@@ -556,7 +556,7 @@ export default function CreateAgent() {
                 variant="outline" 
                 onClick={() => navigate("/agents")}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button 
                 type="submit" 
@@ -565,7 +565,7 @@ export default function CreateAgent() {
                 {createAgentMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Agent
+                Crear Agente
               </Button>
             </CardFooter>
           </Card>
