@@ -1,0 +1,247 @@
+name: "SQL, procesamiento y subida SFTP"
+description: "Ejecuta consultas SQL, procesa archivos con comandos, comprime y sube vía SFTP (Patrón MDLZ-JOMER)"
+version: 1.0
+category: "data-processing"
+tags:
+  - "sql"
+  - "command"
+  - "zip"
+  - "sftp"
+  - "processing"
+
+metadata:
+  icon: "Database"
+  color: "#E91E63"
+  complexity: "high"
+
+variables:
+  - name: "cleanCommandName"
+    label: "Nombre comando limpieza"
+    description: "Nombre descriptivo para el comando que limpia archivos"
+    type: "string"
+    default: "Limpiar archivos"
+    required: true
+
+  - name: "cleanCommandTarget"
+    label: "Ejecutable de limpieza"
+    description: "Ejecutable para limpiar archivos (normalmente cmd.exe)"
+    type: "string"
+    default: "cmd.exe"
+    required: true
+
+  - name: "cleanCommandWorkingDir"
+    label: "Directorio de limpieza"
+    description: "Directorio donde se ejecutará el comando de limpieza"
+    type: "string"
+    default: "D:/merlin-agent/output"
+    required: true
+
+  - name: "cleanCommandArgs"
+    label: "Argumentos de limpieza"
+    description: "Argumentos para el comando de limpieza (ej. /C del *.txt /Q)"
+    type: "string"
+    default: "/C del *.txt /Q"
+    required: true
+
+  - name: "processingCommandName"
+    label: "Nombre comando procesamiento"
+    description: "Nombre descriptivo para el comando que procesa/renombra archivos"
+    type: "string"
+    default: "Procesar archivos"
+    required: true
+
+  - name: "processingCommandTarget"
+    label: "Ejecutable de procesamiento"
+    description: "Ejecutable para procesar archivos (normalmente cmd.exe)"
+    type: "string"
+    default: "cmd.exe"
+    required: true
+
+  - name: "processingCommandWorkingDir"
+    label: "Directorio de procesamiento"
+    description: "Directorio donde se ejecutará el comando de procesamiento"
+    type: "string"
+    default: "D:/merlin-agent/output"
+    required: true
+
+  - name: "processingCommandScript"
+    label: "Script de procesamiento"
+    description: "Código de script que procesa/renombra los archivos (batch/shell)"
+    type: "text"
+    default: |
+      @echo off
+      set fecha= %date%
+      set anio=%fecha:~-4,4%
+      set mes=%fecha:~-7,2%
+      set aux=%mes:~-2,1%
+      set dia=%fecha:~-10,2%
+      set dia=%dia: =0%
+      
+      set ruta=D:\\merlin-agent\\output
+      set cod_corto=000
+      
+      if %aux%==0 set mes=%mes:~-1,1%
+      if %mes%==10 set mes=0
+      if %mes%==11 set mes=A
+      if %mes%==12 set mes=B
+      
+      ren %ruta%\\archivo1.txt XX%cod_corto%%dia%%mes%.txt
+      ren %ruta%\\archivo2.txt YY%cod_corto%%dia%%mes%.txt
+      
+      echo %ruta%\\XX%cod_corto%%dia%%mes%.txt
+      echo %ruta%\\YY%cod_corto%%dia%%mes%.txt
+    required: true
+
+  - name: "queryQueueName"
+    label: "Nombre cola de consultas"
+    description: "Nombre para la cola de consultas SQL"
+    type: "string"
+    default: "Cola de consultas SQL"
+    required: true
+
+  - name: "sqlConnectionId"
+    label: "Conexión SQL"
+    description: "ID de la conexión SQL a utilizar"
+    type: "sqlconn"
+    required: true
+
+  - name: "zipOutputPath"
+    label: "Ruta del archivo ZIP"
+    description: "Ruta donde se guardará el archivo comprimido"
+    type: "string"
+    default: "D:/merlin-agent/output/output.zip"
+    required: true
+
+  - name: "sftpLinkId"
+    label: "Conexión SFTP"
+    description: "ID de la conexión SFTP a utilizar"
+    type: "sftplink"
+    required: true
+
+  - name: "sftpRemotePath"
+    label: "Ruta remota SFTP"
+    description: "Ruta en el servidor SFTP donde se subirá el archivo"
+    type: "string"
+    default: "/home/usuario/output.zip"
+    required: true
+
+  - name: "timeoutMilliseconds"
+    label: "Tiempo de espera (ms)"
+    description: "Tiempo máximo de ejecución en milisegundos"
+    type: "number"
+    default: 3600000
+    required: false
+
+  - name: "retryCount"
+    label: "Número de reintentos"
+    description: "Cantidad de veces que se reintentará en caso de error"
+    type: "number"
+    default: 0
+    required: false
+
+  - name: "retryAfterMilliseconds"
+    label: "Espera entre reintentos (ms)"
+    description: "Tiempo de espera entre reintentos en milisegundos"
+    type: "number"
+    default: 10000
+    required: false
+
+pipeline:
+  name: "{{pipelineName}}"
+  description: "{{pipelineDescription}}"
+  agent_passport_id: "{{agentId}}"
+  abort_on_error: true
+
+units:
+  - id: "clean_command_unit"
+    type: "command"
+    name: "{{cleanCommandName}}"
+    properties:
+      target: "{{cleanCommandTarget}}"
+      working_directory: "{{cleanCommandWorkingDir}}"
+      args: "{{cleanCommandArgs}}"
+      return_output: false
+      return_output_type: "PATHS"
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "sql_query_unit"
+    type: "query_queue"
+    name: "{{queryQueueName}}"
+    depends_on: "clean_command_unit"
+    properties:
+      queries:
+        - name: "Consulta SQL 1"
+          query_string: "SELECT * FROM tabla WHERE condicion = 'valor'"
+          path: "{{cleanCommandWorkingDir}}/archivo1.txt"
+          print_headers: true
+          enabled: true
+          sqlconn_id: "{{sqlConnectionId}}"
+          return_output: true
+          date_format: "yyyy-MM-dd"
+          separator: "|"
+        - name: "Consulta SQL 2"
+          query_string: "SELECT * FROM tabla2 WHERE condicion = 'valor'"
+          path: "{{cleanCommandWorkingDir}}/archivo2.txt"
+          print_headers: true
+          enabled: true
+          sqlconn_id: "{{sqlConnectionId}}"
+          return_output: true
+          date_format: "yyyy-MM-dd"
+          separator: "|"
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "process_command_unit"
+    type: "command"
+    name: "{{processingCommandName}}"
+    depends_on: "sql_query_unit"
+    properties:
+      target: "{{processingCommandTarget}}"
+      working_directory: "{{processingCommandWorkingDir}}"
+      raw_script: "{{processingCommandScript}}"
+      return_output: true
+      return_output_type: "PATHS"
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "zip_unit"
+    type: "zip"
+    name: "Comprimir archivos"
+    depends_on: "process_command_unit"
+    properties:
+      output: "{{zipOutputPath}}"
+      return_output: true
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "sftp_upload_unit"
+    type: "sftp_uploader"
+    name: "Subir archivo a SFTP"
+    depends_on: "zip_unit"
+    properties:
+      sftp_link_id: "{{sftpLinkId}}"
+      output: "{{sftpRemotePath}}"
+      return_output: true
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
