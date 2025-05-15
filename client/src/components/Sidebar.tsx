@@ -118,11 +118,11 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             <Link href="/agents/create" className={cn("sidebar-item", 
               location === "/agents/create" && "active",
               "text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20")}>
-                <div className="flex items-center">
-                  <ServerCog className="w-5 h-5" />
-                  <Plus className="w-3 h-3 -ml-1 -mt-3" />
+                <div className="w-5 h-5 mr-3 relative">
+                  <Bot className="w-5 h-5" />
+                  <Plus className="w-3 h-3 absolute -right-1 -top-1 bg-primary-50 dark:bg-gray-800 rounded-full" />
                 </div>
-                {!collapsed && <span className="ml-2">New Agent</span>}
+                {!collapsed && <span>New Agent</span>}
             </Link>
             <Link href="/pipelines" className={cn("sidebar-item", location.startsWith("/pipelines") && "active")}>
                 <GitBranch className="w-5 h-5 mr-3" />

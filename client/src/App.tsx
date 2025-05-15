@@ -15,6 +15,7 @@ import Jobs from "@/pages/Jobs";
 import Logs from "@/pages/Logs";
 import Explorer from "@/pages/Explorer";
 import AgentDetails from "@/pages/AgentDetails";
+import CreateAgent from "@/pages/CreateAgent";
 import PipelineDetails from "@/pages/PipelineDetails";
 import Connections from "@/pages/Connections";
 import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/agents" component={Agents} />
+        <Route path="/agents/create" component={CreateAgent} />
         <Route path="/agents/:id" component={AgentDetails} />
         <Route path="/pipelines" component={Pipelines} />
         <Route path="/pipelines/:id" component={PipelineDetails} />
