@@ -77,18 +77,19 @@ export class PipelineTemplateManager {
           );
         }
         
-        if (filter.tag) {
+        if (filter.tag && filter.tag.length > 0) {
+          const tagToFilter = filter.tag;
           filteredTemplates = filteredTemplates.filter(t => 
-            t.tags.includes(filter.tag)
+            t.tags && Array.isArray(t.tags) && t.tags.some(tag => tag === tagToFilter)
           );
         }
         
-        if (filter.search) {
+        if (filter.search && filter.search.length > 0) {
           const search = filter.search.toLowerCase();
           filteredTemplates = filteredTemplates.filter(t => 
-            t.name.toLowerCase().includes(search) || 
-            t.description.toLowerCase().includes(search) ||
-            t.tags.some(tag => tag.toLowerCase().includes(search))
+            (t.name && t.name.toLowerCase().includes(search)) || 
+            (t.description && t.description.toLowerCase().includes(search)) ||
+            (t.tags && Array.isArray(t.tags) && t.tags.some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(search)))
           );
         }
       }

@@ -1,0 +1,126 @@
+name: "Comando, compresión y subida SFTP"
+description: "Ejecuta un comando, comprime la salida y lo sube vía SFTP (Patrón MAPELLI-WANKA)"
+version: 1.0
+category: "file-transfer"
+tags:
+  - "command"
+  - "zip"
+  - "sftp"
+  - "upload"
+
+metadata:
+  icon: "Upload"
+  color: "#4CAF50"
+  complexity: "medium"
+
+variables:
+  - name: "commandName"
+    label: "Nombre del comando"
+    description: "Nombre descriptivo para el comando a ejecutar"
+    type: "string"
+    default: "Generar archivos"
+    required: true
+
+  - name: "commandTarget"
+    label: "Ejecutable o script"
+    description: "Ruta al ejecutable o script a ejecutar (ej. C:/Apps/script.bat)"
+    type: "string"
+    required: true
+
+  - name: "workingDirectory"
+    label: "Directorio de trabajo"
+    description: "Directorio donde se ejecutará el comando"
+    type: "string"
+    required: true
+
+  - name: "zipOutputPath"
+    label: "Ruta del archivo ZIP"
+    description: "Ruta donde se guardará el archivo comprimido (ej. D:/merlin-agent/output/result.zip)"
+    type: "string"
+    default: "D:/merlin-agent/output/output.zip"
+    required: true
+
+  - name: "sftpLinkId"
+    label: "Conexión SFTP"
+    description: "ID de la conexión SFTP a utilizar"
+    type: "sftplink"
+    required: true
+
+  - name: "sftpRemotePath"
+    label: "Ruta remota SFTP"
+    description: "Ruta en el servidor SFTP donde se subirá el archivo (ej. /Data/output.zip)"
+    type: "string"
+    default: "/Data/output.zip"
+    required: true
+
+  - name: "timeoutMilliseconds"
+    label: "Tiempo de espera (ms)"
+    description: "Tiempo máximo de ejecución en milisegundos"
+    type: "number"
+    default: 3600000
+    required: false
+
+  - name: "retryCount"
+    label: "Número de reintentos"
+    description: "Cantidad de veces que se reintentará en caso de error"
+    type: "number"
+    default: 0
+    required: false
+
+  - name: "retryAfterMilliseconds"
+    label: "Espera entre reintentos (ms)"
+    description: "Tiempo de espera entre reintentos en milisegundos"
+    type: "number"
+    default: 10000
+    required: false
+
+pipeline:
+  name: "{{pipelineName}}"
+  description: "{{pipelineDescription}}"
+  agent_passport_id: "{{agentId}}"
+  abort_on_error: true
+
+units:
+  - id: "command_unit"
+    type: "command"
+    name: "{{commandName}}"
+    properties:
+      target: "{{commandTarget}}"
+      working_directory: "{{workingDirectory}}"
+      return_output: true
+      return_output_type: "PATHS"
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "zip_unit"
+    type: "zip"
+    name: "Comprimir archivos"
+    depends_on: "command_unit"
+    properties:
+      output: "{{zipOutputPath}}"
+      return_output: true
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
+
+  - id: "sftp_upload_unit"
+    type: "sftp_uploader"
+    name: "Subir archivo a SFTP"
+    depends_on: "zip_unit"
+    properties:
+      sftp_link_id: "{{sftpLinkId}}"
+      output: "{{sftpRemotePath}}"
+      return_output: true
+    options:
+      timeout_milliseconds: "{{timeoutMilliseconds}}"
+      retry_count: "{{retryCount}}"
+      retry_after_milliseconds: "{{retryAfterMilliseconds}}"
+      abort_on_timeout: true
+      continue_on_error: true
