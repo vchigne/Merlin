@@ -204,7 +204,7 @@ export default function CreateAgent() {
           <CardContent className="pt-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="col-span-2 space-y-2">
-                <h3 className="text-md font-semibold">Passport ID</h3>
+                <h3 className="text-md font-semibold">ID de Pasaporte</h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 font-mono text-sm flex-1 break-all">
                     {createdAgentId}
@@ -216,11 +216,11 @@ export default function CreateAgent() {
                     className="flex items-center"
                   >
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy ID
+                    Copiar ID
                   </Button>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  This ID uniquely identifies your agent and is required for connection.
+                  Este ID identifica de manera única a tu agente y es requerido para la conexión.
                 </p>
               </div>
               
@@ -233,7 +233,7 @@ export default function CreateAgent() {
                   level={"M"}
                   includeMargin={false}
                 />
-                <span className="text-sm text-slate-500 dark:text-slate-400">Scan QR code for passport ID</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">Escanea el código QR para el ID de pasaporte</span>
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -283,7 +283,7 @@ export default function CreateAgent() {
                   className="flex items-center"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download QR
+                  Descargar QR
                 </Button>
               </div>
             </div>
@@ -291,16 +291,16 @@ export default function CreateAgent() {
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="text-md font-semibold">Installation Instructions</h3>
+              <h3 className="text-md font-semibold">Instrucciones de Instalación</h3>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
                   <div className="bg-primary-100 dark:bg-primary-900/20 rounded-full h-6 w-6 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold text-sm mt-0.5">
                     1
                   </div>
                   <div>
-                    <h4 className="font-medium">Download Configuration File</h4>
+                    <h4 className="font-medium">Descargar Archivo de Configuración</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      Click the button below to download the environment file for your agent.
+                      Haz clic en el botón de abajo para descargar el archivo de entorno para tu agente.
                     </p>
                     <Button 
                       variant="outline" 
@@ -309,7 +309,7 @@ export default function CreateAgent() {
                       className="mt-2 flex items-center"
                     >
                       <Download className="mr-2 h-4 w-4" />
-                      Download Merlin.env
+                      Descargar Merlin.env
                     </Button>
                   </div>
                 </div>
@@ -319,9 +319,9 @@ export default function CreateAgent() {
                     2
                   </div>
                   <div>
-                    <h4 className="font-medium">Install Merlin Client</h4>
+                    <h4 className="font-medium">Instalar Cliente Merlin</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      Install the Merlin Client application on the target machine.
+                      Instala la aplicación Cliente Merlin en la máquina destino.
                     </p>
                   </div>
                 </div>
@@ -331,9 +331,9 @@ export default function CreateAgent() {
                     3
                   </div>
                   <div>
-                    <h4 className="font-medium">Configure the Agent</h4>
+                    <h4 className="font-medium">Configurar el Agente</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      During installation, provide the downloaded environment file or enter the passport ID manually.
+                      Durante la instalación, proporciona el archivo de entorno descargado o ingresa el ID de pasaporte manualmente.
                     </p>
                   </div>
                 </div>
