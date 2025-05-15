@@ -16,16 +16,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { query, variables } = req.body;
       
-      // Security check: ensure this is a read-only query
+      // Security check: ensure this is a read-only query or an allowed mutation
       const isReadOnly = isReadOnlyQuery(query);
-      if (!isReadOnly) {
+      const isAllowedMutation = isAgentCreationMutation(query);
+      
+      if (!isReadOnly && !isAllowedMutation) {
         console.log('Forbidden non-read-only query detected:', query.slice(0, 100) + '...');
         return res.status(403).json({
-          error: "Forbidden: Only read-only queries are allowed"
+          error: "Forbidden: Only read-only queries or agent creation are allowed"
         });
       }
       
-      const result = await hasuraClient.query(query, variables);
+      // Define estructura general para cualquier respuesta de Hasura
+      interface HasuraGraphQLResponse {
+        data?: any;
+        errors?: Array<{ message: string }>;
+      }
+      
+      const result = await hasuraClient.query(query, variables) as HasuraGraphQLResponse;
       res.json(result);
     } catch (error) {
       console.error('GraphQL query error:', error);
@@ -42,7 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: 'online',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
-      readonly: true
+      readonly: true,
+      createAgentsAllowed: true
     });
   });
   
@@ -69,7 +78,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       `;
       
-      const result = await hasuraClient.query(healthyQuery);
+      // Define la estructura del resultado esperado
+      interface HasuraResponse {
+        data?: {
+          healthy?: { aggregate?: { count?: number } },
+          unhealthy?: { aggregate?: { count?: number } },
+          total?: { aggregate?: { count?: number } },
+          agents?: Array<{ id: string, name: string, is_healthy: boolean }>
+        },
+        errors?: Array<{ message: string }>
+      }
+      
+      const result = await hasuraClient.query(healthyQuery) as HasuraResponse;
       
       if (result.errors) {
         return res.status(500).json({
@@ -185,6 +205,42 @@ function isReadOnlyQuery(query: string): boolean {
   } catch (error) {
     console.error("Error in isReadOnlyQuery:", error);
     // If there's an error in the validation, be safe and reject the query
+    return false;
+  }
+}
+
+// Function to check if a mutation is specifically for agent creation
+function isAgentCreationMutation(query: string): boolean {
+  try {
+    // Remove comments and normalize whitespace
+    const queryWithoutComments = query.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    const normalizedQuery = queryWithoutComments.replace(/\s+/g, ' ').trim();
+    
+    // If it's not a mutation, it's not an agent creation
+    if (!normalizedQuery.toLowerCase().startsWith('mutation')) {
+      return false;
+    }
+    
+    // Check for specific patterns that indicate agent creation
+    const agentCreationPatterns = [
+      // Pattern for the specific CreateAgent mutation
+      /mutation\s+CreateAgent/i,
+      
+      // Pattern for inserting into AgentPassport table
+      /insert_merlin_agent_AgentPassport/i
+    ];
+    
+    for (const pattern of agentCreationPatterns) {
+      if (pattern.test(normalizedQuery)) {
+        console.log('Allowed agent creation mutation detected');
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error in isAgentCreationMutation:", error);
+    // If there's an error in the validation, be safe and don't allow the mutation
     return false;
   }
 }
