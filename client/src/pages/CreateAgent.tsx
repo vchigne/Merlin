@@ -442,16 +442,16 @@ export default function CreateAgent() {
                 name="agent_version_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Agent Version</FormLabel>
+                    <FormLabel>Versión del Agente</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select agent version" />
+                          <SelectValue placeholder="Selecciona la versión del agente" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {isLoadingVersions ? (
-                          <SelectItem value="latest.win.x64">Loading versions...</SelectItem>
+                          <SelectItem value="latest.win.x64">Cargando versiones...</SelectItem>
                         ) : (
                           versionData?.map((version: any) => (
                             <SelectItem key={version.version} value={version.version}>
