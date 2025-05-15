@@ -343,17 +343,18 @@ export default function CreateAgent() {
                     4
                   </div>
                   <div>
-                    <h4 className="font-medium">Verify Connection</h4>
+                    <h4 className="font-medium">Verificar Conexión</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      Return to the Agents dashboard to verify that your agent is online and connected.
+                      Regresa al panel de Agentes para verificar que tu agente esté en línea y conectado.
                     </p>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => navigate(`/agents/${createdAgentId}`)}
-                      className="mt-2"
+                      className="mt-2 flex items-center"
                     >
-                      View Agent
+                      <Server className="mr-2 h-4 w-4" />
+                      Ver Agente
                     </Button>
                   </div>
                 </div>
@@ -363,7 +364,7 @@ export default function CreateAgent() {
 
           <CardFooter className="flex justify-end space-x-2 border-t border-slate-200 dark:border-slate-700 pt-4">
             <Button variant="secondary" onClick={() => navigate("/agents")}>
-              Close
+              Cerrar
             </Button>
           </CardFooter>
         </Card>
@@ -381,9 +382,9 @@ export default function CreateAgent() {
           onClick={() => navigate("/agents")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Agents
+          Volver a Agentes
         </Button>
-        <h1 className="text-2xl font-bold dark:text-white">Create New Agent</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Crear Nuevo Agente</h1>
       </div>
 
       <Form {...form}>
@@ -392,10 +393,10 @@ export default function CreateAgent() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Server className="mr-2 h-5 w-5 text-primary-500" />
-                Agent Information
+                Información del Agente
               </CardTitle>
               <CardDescription>
-                Basic information about the agent you are creating
+                Información básica sobre el agente que estás creando
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -404,12 +405,12 @@ export default function CreateAgent() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Agent Name</FormLabel>
+                    <FormLabel>Nombre del Agente</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter agent name" {...field} />
+                      <Input placeholder="Ingresa el nombre del agente" {...field} />
                     </FormControl>
                     <FormDescription>
-                      A descriptive name to identify this agent.
+                      Un nombre descriptivo para identificar este agente.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -421,15 +422,15 @@ export default function CreateAgent() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Descripción</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder={watchName ? `Merlin Agent for ${watchName}` : "Enter description"} 
+                        placeholder={watchName ? `Agente Merlin para ${watchName}` : "Ingresa una descripción"} 
                         {...field} 
                       />
                     </FormControl>
                     <FormDescription>
-                      Optional description of the agent's purpose. If left empty, a description will be auto-generated.
+                      Descripción opcional del propósito del agente. Si se deja vacío, se generará automáticamente una descripción.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
