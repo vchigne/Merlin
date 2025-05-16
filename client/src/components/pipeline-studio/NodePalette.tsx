@@ -1,44 +1,16 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import DraggablePanel from '@/components/ui/draggable-panel';
 import {
   Command,
-  Database, 
+  Database,
   Download,
   Upload,
   Archive,
-  File,
-  Plus,
-  SquareStack
+  File as FileIcon,
+  ExternalLink
 } from 'lucide-react';
-
-// Definición de los tipos de nodos disponibles
-const NODE_TYPES = [
-  {
-    category: 'Comandos',
-    items: [
-      { type: 'commandNode', label: 'Comando', icon: <Command className="h-4 w-4 text-amber-500" /> },
-      { type: 'callPipelineNode', label: 'Llamar Pipeline', icon: <SquareStack className="h-4 w-4 text-cyan-500" /> }
-    ]
-  },
-  {
-    category: 'Datos',
-    items: [
-      { type: 'queryNode', label: 'Consulta SQL', icon: <Database className="h-4 w-4 text-blue-500" /> }
-    ]
-  },
-  {
-    category: 'Archivos',
-    items: [
-      { type: 'sftpDownloaderNode', label: 'Descargar SFTP', icon: <Download className="h-4 w-4 text-green-500" /> },
-      { type: 'sftpUploaderNode', label: 'Subir SFTP', icon: <Upload className="h-4 w-4 text-red-500" /> },
-      { type: 'zipNode', label: 'Comprimir', icon: <Archive className="h-4 w-4 text-purple-500" /> },
-      { type: 'unzipNode', label: 'Descomprimir', icon: <File className="h-4 w-4 text-indigo-500" /> }
-    ]
-  }
-];
+import DraggablePanel from '@/components/ui/draggable-panel';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface NodePaletteProps {
   onAddNode: (type: string) => void;
@@ -46,51 +18,94 @@ interface NodePaletteProps {
   readOnly?: boolean;
 }
 
-const NodePalette: React.FC<NodePaletteProps> = ({
-  onAddNode,
+const NodePalette: React.FC<NodePaletteProps> = ({ 
+  onAddNode, 
   initialPosition = { x: 20, y: 70 },
-  readOnly = false
+  readOnly = false 
 }) => {
+  if (readOnly) return null;
+
   return (
     <DraggablePanel
-      title="Paleta de Nodos"
-      icon={<Plus className="h-4 w-4 text-green-600" />}
+      title="Añadir Nodos"
+      icon={<Command className="h-4 w-4" />}
       initialPosition={initialPosition}
       id="node-palette"
-      minWidth={250}
+      minWidth={220}
+      maxWidth={250}
       className="bg-card/95 backdrop-blur-md"
     >
-      <ScrollArea className="h-[calc(100vh-250px)] pr-3">
-        <div className="space-y-4">
-          {NODE_TYPES.map((category, categoryIndex) => (
-            <div key={category.category} className="space-y-2">
-              <h3 className="text-xs font-medium text-muted-foreground mb-1">
-                {category.category}
-              </h3>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {category.items.map((item) => (
-                  <Button
-                    key={item.type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => !readOnly && onAddNode(item.type)}
-                    disabled={readOnly}
-                    className="justify-start h-auto py-1.5 px-3"
-                  >
-                    <div className="flex items-center space-x-2 text-left">
-                      {item.icon}
-                      <span className="text-xs font-medium">{item.label}</span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-              
-              {categoryIndex < NODE_TYPES.length - 1 && (
-                <Separator className="my-2" />
-              )}
-            </div>
-          ))}
+      <ScrollArea className="h-[400px] pr-2">
+        <div className="space-y-2">
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('commandNode')}
+          >
+            <Command className="mr-2 h-4 w-4 text-amber-500" />
+            Comando
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('queryNode')}
+          >
+            <Database className="mr-2 h-4 w-4 text-blue-500" />
+            Consulta SQL
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('sftpDownloaderNode')}
+          >
+            <Download className="mr-2 h-4 w-4 text-green-500" />
+            SFTP Descarga
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('sftpUploaderNode')}
+          >
+            <Upload className="mr-2 h-4 w-4 text-red-500" />
+            SFTP Subida
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('zipNode')}
+          >
+            <Archive className="mr-2 h-4 w-4 text-purple-500" />
+            Comprimir
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('unzipNode')}
+          >
+            <FileIcon className="mr-2 h-4 w-4 text-indigo-500" />
+            Descomprimir
+          </Button>
+          
+          <Button
+            className="w-full justify-start text-left text-sm"
+            size="sm"
+            variant="outline"
+            onClick={() => onAddNode('callPipelineNode')}
+          >
+            <ExternalLink className="mr-2 h-4 w-4 text-cyan-500" />
+            Llamar Pipeline
+          </Button>
         </div>
       </ScrollArea>
     </DraggablePanel>
