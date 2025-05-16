@@ -5,7 +5,7 @@ const HASURA_ENDPOINT = 'https://graph.dq.strategio.cloud/v1/graphql';
 const HASURA_ADMIN_SECRET = process.env.HASURA_ADMIN_SECRET || '';
 
 // Function to execute GraphQL queries
-async function query(queryString: string, variables = {}) {
+async function query(queryString: string, variables = {}): Promise<{ data?: any; errors?: Array<{ message: string }> }> {
   try {
     console.log('Executing Hasura query:', queryString.slice(0, 100) + '...');
     const response = await fetch(HASURA_ENDPOINT, {

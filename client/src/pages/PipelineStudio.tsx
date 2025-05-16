@@ -98,8 +98,8 @@ export default function PipelineStudio() {
   const generateFlowFromPipeline = (pipeline: any) => {
     // Implementación de la lógica para convertir estructura de pipeline a nodos y conexiones
     // para el editor visual
-    const nodes = [];
-    const edges = [];
+    const nodes: Array<any> = [];
+    const edges: Array<{id: string, source: string, target: string, animated: boolean}> = [];
     
     // Crear nodo inicial
     nodes.push({
@@ -296,7 +296,7 @@ export default function PipelineStudio() {
   };
   
   // Función para ordenar las unidades según las conexiones
-  const orderUnitsByConnections = (units: any[], edges: any[]) => {
+  const orderUnitsByConnections = (units: any[], edges: Array<{source: string, target: string}>) => {
     // Ordenar las unidades según las conexiones entre ellas
     const orderedUnits: any[] = [];
     const unitMap = new Map();
@@ -551,7 +551,7 @@ export default function PipelineStudio() {
         </div>
         
         {unsavedChanges && (
-          <Alert variant="warning" className="mb-4">
+          <Alert className="mb-4 border-amber-500 bg-amber-50 text-amber-800">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Hay cambios sin guardar</AlertTitle>
             <AlertDescription>
@@ -623,7 +623,7 @@ export default function PipelineStudio() {
                         <TabsContent value="yaml" className="min-h-[600px]">
                           <PipelineYamlEditor
                             pipelineData={pipelineData}
-                            onChange={(updatedPipeline) => {
+                            onChange={(updatedPipeline: any) => {
                               setPipelineData(updatedPipeline);
                               const flowData = generateFlowFromPipeline(updatedPipeline);
                               setPipelineFlowData(flowData);

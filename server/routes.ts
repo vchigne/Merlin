@@ -83,6 +83,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get agents for pipeline studio
+  app.get('/api/agents', async (req, res) => {
+    try {
+      const result = await hasuraClient.query(`
+        query GetAgents {
+          merlin_agent_AgentPassport {
+            id
+            name
+            is_healthy
+          }
+        }
+      `);
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      res.json(result.data.merlin_agent_AgentPassport);
+    } catch (error) {
+      console.error("Error fetching agents:", error);
+      res.status(500).json({
+        error: "Failed to fetch agents",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get a specific pipeline by ID
+  app.get('/api/pipelines/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await hasuraClient.query(`
+        query GetPipeline($id: uuid!) {
+          pipeline: merlin_agent_Pipeline_by_pk(id: $id) {
+            id
+            name
+            description
+            abort_on_error
+            agent_passport_id
+            disposable
+            created_at
+            updated_at
+          }
+        }
+      `, { id });
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      if (!result.data.pipeline) {
+        return res.status(404).json({
+          error: "Pipeline not found"
+        });
+      }
+      
+      // Get pipeline units
+      const unitsResult = await hasuraClient.query(`
+        query GetPipelineUnits($pipelineId: uuid!) {
+          units: merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
+            id
+            comment
+            command_id
+            query_queue_id
+            sftp_downloader_id
+            sftp_uploader_id
+            zip_id
+            unzip_id
+            call_pipeline
+            continue_on_error
+            retry_count
+            retry_after_milliseconds
+            timeout_milliseconds
+            abort_on_timeout
+            posx
+            posy
+            created_at
+            updated_at
+          }
+        }
+      `, { pipelineId: id });
+      
+      if (unitsResult.errors) {
+        throw new Error(unitsResult.errors[0].message);
+      }
+      
+      // Combine pipeline and its units
+      const pipelineWithUnits = {
+        ...result.data.pipeline,
+        units: unitsResult.data.units
+      };
+      
+      res.json(pipelineWithUnits);
+    } catch (error) {
+      console.error("Error fetching pipeline:", error);
+      res.status(500).json({
+        error: "Failed to fetch pipeline",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Get server status
   app.get('/api/status', (req, res) => {
     res.json({
