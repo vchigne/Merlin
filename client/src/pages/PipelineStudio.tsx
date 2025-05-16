@@ -28,6 +28,7 @@ import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
 import PipelineVisualEditor from "@/components/pipeline-studio/PipelineVisualEditor";
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
+import PipelineNodeProperties from "@/components/pipeline-studio/PipelineNodeProperties";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
 import { AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight, FolderOpen, Search, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,9 @@ export default function PipelineStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [agentOptions, setAgentOptions] = useState<any[]>([]);
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [sftpConnections, setSftpConnections] = useState<any[]>([]);
+  const [sqlConnections, setSqlConnections] = useState<any[]>([]);
   
   // Estados para el diálogo de selección de pipelines
   const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
@@ -71,6 +75,10 @@ export default function PipelineStudio() {
 
     // Cargar lista de agentes disponibles
     fetchAgents();
+    
+    // Cargar conexiones SFTP y SQL para los paneles de propiedades
+    fetchSFTPConnections();
+    fetchSQLConnections();
   }, []);
 
   // Función para cargar datos de un pipeline existente
@@ -115,6 +123,44 @@ export default function PipelineStudio() {
       })));
     } catch (error) {
       console.error('Error al cargar agentes:', error);
+    }
+  };
+  
+  // Función para cargar las conexiones SFTP
+  const fetchSFTPConnections = async () => {
+    try {
+      const response = await fetch('/api/sftp-links');
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar las conexiones SFTP');
+      }
+      const data = await response.json();
+      setSftpConnections(data);
+    } catch (error) {
+      console.error('Error al cargar conexiones SFTP:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar las conexiones SFTP."
+      });
+    }
+  };
+  
+  // Función para cargar las conexiones SQL
+  const fetchSQLConnections = async () => {
+    try {
+      const response = await fetch('/api/sql-connections');
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar las conexiones SQL');
+      }
+      const data = await response.json();
+      setSqlConnections(data);
+    } catch (error) {
+      console.error('Error al cargar conexiones SQL:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar las conexiones SQL."
+      });
     }
   };
   
