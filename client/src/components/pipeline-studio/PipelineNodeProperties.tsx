@@ -957,37 +957,70 @@ export default function PipelineNodeProperties({
     }
   };
 
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+  
+  // Renderizar el tipo de nodo de forma más amigable
+  const getNodeTypeLabel = () => {
+    switch (nodeType) {
+      case 'commandNode': return 'Comando';
+      case 'queryNode': return 'Consulta SQL';
+      case 'sftpDownloaderNode': return 'SFTP Descarga';
+      case 'sftpUploaderNode': return 'SFTP Subida';
+      case 'zipNode': return 'Comprimir';
+      case 'unzipNode': return 'Descomprimir';
+      case 'callPipelineNode': return 'Llamar Pipeline';
+      case 'pipelineStart': return 'Inicio Pipeline';
+      default: return nodeType;
+    }
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="py-2 flex flex-row items-center justify-between">
         <div className="flex items-center">
           {getNodeIcon()}
           <div>
-            <CardTitle>Propiedades del Nodo</CardTitle>
-            <CardDescription>Configura las propiedades específicas</CardDescription>
+            <CardTitle className="text-base">Propiedades del Nodo</CardTitle>
+            {!isExpanded && (
+              <CardDescription className="text-xs">
+                {nodeLabel || "Sin nombre"} - {getNodeTypeLabel()}
+              </CardDescription>
+            )}
           </div>
         </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleExpanded}
+          className="h-7 w-7 p-0"
+        >
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
       </CardHeader>
-      <CardContent>
+      
+      {isExpanded && <CardContent className="pt-0">
         {!node ? (
-          <div className="py-8 text-center">
-            <Info className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <p>Selecciona un nodo en el editor para configurar sus propiedades.</p>
+          <div className="py-4 text-center">
+            <Info className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+            <p className="text-sm">Selecciona un nodo en el editor para configurar sus propiedades.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="node-label">Nombre del nodo</Label>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="node-label" className="text-xs">Nombre del nodo</Label>
               <Input
                 id="node-label"
                 placeholder="Nombre descriptivo"
                 value={nodeLabel}
                 onChange={handleLabelChange}
                 disabled={readOnly}
+                className="text-sm h-8"
               />
             </div>
             
-            <Separator className="my-4" />
+            <Separator className="my-2" />
             
             <Tabs defaultValue="properties" className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
