@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info, Check, X, AlertTriangle } from "lucide-react";
+import { Info, Check, X, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 interface PipelinePropertiesPanelProps {
   pipelineData: any;
@@ -32,6 +32,7 @@ export default function PipelinePropertiesPanel({
   const [description, setDescription] = useState("");
   const [agentId, setAgentId] = useState("");
   const [abortOnError, setAbortOnError] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // Sincronizar estados con los datos del pipeline
   useEffect(() => {
@@ -70,115 +71,137 @@ export default function PipelinePropertiesPanel({
     onChange({ ...pipelineData, abort_on_error: checked });
   };
 
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Propiedades del Pipeline</CardTitle>
-        <CardDescription>Configura las propiedades básicas</CardDescription>
+      <CardHeader className="py-2 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-base">Propiedades del Pipeline</CardTitle>
+          {!isExpanded && (
+            <CardDescription className="text-xs">
+              {name ? name : "Sin nombre"} - {agentId ? "Agente seleccionado" : "Sin agente"}
+            </CardDescription>
+          )}
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleExpanded}
+          className="h-7 w-7 p-0"
+        >
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="pipeline-name">Nombre</Label>
-          <Input
-            id="pipeline-name"
-            placeholder="Nombre del pipeline"
-            value={name}
-            onChange={handleNameChange}
-            disabled={readOnly}
-            className={!name ? "border-red-300" : ""}
-          />
-          {!name && (
-            <p className="text-xs text-red-500">El nombre es obligatorio</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="pipeline-description">Descripción</Label>
-          <Textarea
-            id="pipeline-description"
-            placeholder="Descripción del pipeline"
-            value={description}
-            onChange={handleDescriptionChange}
-            disabled={readOnly}
-            rows={3}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="pipeline-agent">Agente</Label>
-          <Select
-            value={agentId}
-            onValueChange={handleAgentChange}
-            disabled={readOnly}
-          >
-            <SelectTrigger
-              id="pipeline-agent"
-              className={!agentId ? "border-red-300" : ""}
-            >
-              <SelectValue placeholder="Selecciona un agente" />
-            </SelectTrigger>
-            <SelectContent>
-              {agentOptions.map((agent) => (
-                <SelectItem 
-                  key={agent.value} 
-                  value={agent.value}
-                  className="flex items-center"
-                >
-                  <div className="flex items-center w-full">
-                    <span className="flex-grow">{agent.label}</span>
-                    {agent.is_healthy ? (
-                      <Check className="h-4 w-4 text-green-500 ml-2" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4 text-amber-500 ml-2" />
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!agentId && (
-            <p className="text-xs text-red-500">
-              Debes seleccionar un agente
-            </p>
-          )}
-        </div>
-
-        <Separator className="my-4" />
-
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="abort-on-error">Abortar en error</Label>
-            <p className="text-sm text-muted-foreground">
-              Detener el pipeline si ocurre un error
-            </p>
+      
+      {isExpanded && (
+        <CardContent className="pt-0 space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="pipeline-name" className="text-xs">Nombre</Label>
+            <Input
+              id="pipeline-name"
+              placeholder="Nombre del pipeline"
+              value={name}
+              onChange={handleNameChange}
+              disabled={readOnly}
+              className={`text-sm h-8 ${!name ? "border-red-300" : ""}`}
+            />
+            {!name && (
+              <p className="text-xs text-red-500">El nombre es obligatorio</p>
+            )}
           </div>
-          <Switch
-            id="abort-on-error"
-            checked={abortOnError}
-            onCheckedChange={handleAbortOnErrorChange}
-            disabled={readOnly}
-          />
-        </div>
 
-        <div className="rounded-md bg-blue-50 p-4 mt-6">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Info className="h-5 w-5 text-blue-400" />
+          <div className="space-y-1">
+            <Label htmlFor="pipeline-description" className="text-xs">Descripción</Label>
+            <Textarea
+              id="pipeline-description"
+              placeholder="Descripción del pipeline"
+              value={description}
+              onChange={handleDescriptionChange}
+              disabled={readOnly}
+              className="text-sm min-h-[60px]"
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="pipeline-agent" className="text-xs">Agente</Label>
+            <Select
+              value={agentId}
+              onValueChange={handleAgentChange}
+              disabled={readOnly}
+            >
+              <SelectTrigger
+                id="pipeline-agent"
+                className={`text-sm h-8 ${!agentId ? "border-red-300" : ""}`}
+              >
+                <SelectValue placeholder="Selecciona un agente" />
+              </SelectTrigger>
+              <SelectContent>
+                {agentOptions.map((agent) => (
+                  <SelectItem 
+                    key={agent.value} 
+                    value={agent.value}
+                    className="flex items-center text-sm"
+                  >
+                    <div className="flex items-center w-full">
+                      <span className="flex-grow">{agent.label}</span>
+                      {agent.is_healthy ? (
+                        <Check className="h-3 w-3 text-green-500 ml-2" />
+                      ) : (
+                        <AlertTriangle className="h-3 w-3 text-amber-500 ml-2" />
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!agentId && (
+              <p className="text-xs text-red-500">
+                Debes seleccionar un agente
+              </p>
+            )}
+          </div>
+
+          <Separator className="my-2" />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="abort-on-error" className="text-xs">Abortar en error</Label>
+              <p className="text-xs text-muted-foreground">
+                Detener el pipeline si ocurre un error
+              </p>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Información
-              </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  Asegúrate de seleccionar un agente que esté en línea (marcado con ✓) 
-                  para poder ejecutar el pipeline.
-                </p>
+            <Switch
+              id="abort-on-error"
+              checked={abortOnError}
+              onCheckedChange={handleAbortOnErrorChange}
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="rounded-md bg-blue-50 p-2 mt-2">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Info className="h-4 w-4 text-blue-400" />
+              </div>
+              <div className="ml-2">
+                <h3 className="text-xs font-medium text-blue-800">
+                  Información
+                </h3>
+                <div className="mt-1 text-xs text-blue-700">
+                  <p>
+                    Asegúrate de seleccionar un agente que esté en línea (marcado con ✓) 
+                    para poder ejecutar el pipeline.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }

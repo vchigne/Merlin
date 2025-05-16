@@ -242,6 +242,17 @@ export default function PipelineVisualEditor({
           )}
         </div>
         
+        <div className="mt-1 text-xs text-slate-500">
+          {node.type === 'commandNode' && 'Comando'}
+          {node.type === 'queryNode' && 'Consulta SQL'}
+          {node.type === 'sftpDownloaderNode' && 'SFTP Descarga'}
+          {node.type === 'sftpUploaderNode' && 'SFTP Subida'}
+          {node.type === 'zipNode' && 'Comprimir'}
+          {node.type === 'unzipNode' && 'Descomprimir'}
+          {node.type === 'callPipelineNode' && 'Llamar Pipeline'}
+          {node.type === 'pipelineStart' && 'Inicio Pipeline'}
+        </div>
+        
         {node.data.description && (
           <div className="mt-1 text-xs text-slate-500">
             {node.data.description}

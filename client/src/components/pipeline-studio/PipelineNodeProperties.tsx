@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, AlertTriangle, Settings2, Database, Upload, Download, File, FileArchive, ExternalLink } from "lucide-react";
+import { 
+  Info, AlertTriangle, Settings2, Database, Upload, Download, 
+  File, FileArchive, ExternalLink, ChevronDown, ChevronUp 
+} from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface PipelineNodePropertiesProps {
@@ -37,6 +40,7 @@ export default function PipelineNodeProperties({
 }: PipelineNodePropertiesProps) {
   const [nodeLabel, setNodeLabel] = useState("");
   const [nodeType, setNodeType] = useState("");
+  const [isExpanded, setIsExpanded] = useState(true);
   
   // Propiedades comunes a todos los tipos de nodos
   const [properties, setProperties] = useState<any>({});
