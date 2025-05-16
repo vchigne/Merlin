@@ -1,0 +1,678 @@
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2 } from "lucide-react";
+
+// Componente mejorado para el editor visual de flujos de pipeline
+// Con canvas infinito y soporte completo para dispositivos móviles
+
+interface PipelineEditorProps {
+  flowData: {
+    nodes: any[];
+    edges: any[];
+  };
+  onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
+  readOnly?: boolean;
+}
+
+export default function PipelineEditor({
+  flowData,
+  onChange,
+  readOnly = false,
+}: PipelineEditorProps) {
+  // Estados para el editor
+  const [nodes, setNodes] = useState<any[]>([]);
+  const [edges, setEdges] = useState<any[]>([]);
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
+  const [connectingNode, setConnectingNode] = useState<string | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null);
+  const [minimizedNodes, setMinimizedNodes] = useState<Set<string>>(new Set());
+  
+  // Referencias
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Sincronizar estados con los datos de flujo
+  useEffect(() => {
+    if (flowData) {
+      setNodes(flowData.nodes || []);
+      setEdges(flowData.edges || []);
+    }
+  }, [flowData]);
+  
+  // Notificar cambios al componente padre
+  const notifyChange = useCallback(() => {
+    onChange({ nodes, edges }, selectedNode);
+  }, [nodes, edges, selectedNode, onChange]);
+
+  // Manejar el zoom
+  const handleZoom = (delta: number) => {
+    const newZoom = Math.max(0.1, Math.min(2, zoom + delta));
+    setZoom(newZoom);
+  };
+
+  // Manejar clics en nodos
+  const handleNodeClick = (nodeId: string) => {
+    setSelectedNode(nodeId === selectedNode ? null : nodeId);
+  };
+  
+  // Manejar eliminación de nodos
+  const handleDeleteNode = (nodeId: string) => {
+    if (readOnly) return;
+    
+    // Eliminar nodo
+    const updatedNodes = nodes.filter(node => node.id !== nodeId);
+    setNodes(updatedNodes);
+    
+    // Eliminar conexiones relacionadas
+    const updatedEdges = edges.filter(
+      edge => edge.source !== nodeId && edge.target !== nodeId
+    );
+    setEdges(updatedEdges);
+    
+    // Deseleccionar si era el nodo seleccionado
+    if (selectedNode === nodeId) {
+      setSelectedNode(null);
+    }
+    
+    // Notificar cambios
+    onChange({ nodes: updatedNodes, edges: updatedEdges }, null);
+  };
+  
+  // Manejar minimización de nodos
+  const toggleMinimizeNode = (nodeId: string) => {
+    setMinimizedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  };
+  
+  // Manejar el inicio del arrastre del canvas (Mouse)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 1 && e.button !== 0) return; // Solo botón central o izquierdo
+    if (e.button === 0 && !e.altKey) return; // Botón izquierdo solo con Alt
+    if (connectingNode) return; // No arrastrar si estamos conectando nodos
+    
+    setDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  // Manejar el inicio del arrastre del canvas (Touch)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (connectingNode) return; // No arrastrar si estamos conectando nodos
+    if (e.touches.length === 2) { // Requiere dos dedos para mover el canvas
+      setDragging(true);
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        setDragStart({ x: touch.clientX, y: touch.clientY });
+      }
+    }
+  };
+  
+  // Manejar el movimiento durante el arrastre del canvas (Mouse)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Actualizar la posición del mouse para la conexión de nodos
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMousePosition({
+        x: e.clientX - rect.left + position.x,
+        y: e.clientY - rect.top + position.y
+      });
+    }
+    
+    // Manejar el arrastre del nodo si hay uno seleccionado
+    if (draggingNode) {
+      handleNodeDrag(e);
+      return;
+    }
+    
+    // Manejar el arrastre del canvas
+    if (!dragging) return;
+    
+    const dx = (e.clientX - dragStart.x) * 0.5;
+    const dy = (e.clientY - dragStart.y) * 0.5;
+    
+    setPosition({
+      x: position.x + dx,
+      y: position.y + dy,
+    });
+    
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+  
+  // Manejar el movimiento durante el arrastre del canvas (Touch)
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Actualizar la posición del mouse para la conexión de nodos
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect && e.touches.length > 0) {
+      const touch = e.touches[0];
+      setMousePosition({
+        x: touch.clientX - rect.left + position.x,
+        y: touch.clientY - rect.top + position.y
+      });
+    }
+    
+    // Si estamos conectando, no hacer nada
+    if (connectingNode) return;
+    
+    // Manejar el arrastre del nodo si hay uno seleccionado
+    if (draggingNode && e.touches.length === 1) {
+      const touch = e.touches[0];
+      handleNodeDrag({
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      } as any);
+      return;
+    }
+    
+    // Manejar el arrastre del canvas
+    if (!dragging || e.touches.length !== 2) return;
+    
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      const dx = (touch.clientX - dragStart.x) * 0.5;
+      const dy = (touch.clientY - dragStart.y) * 0.5;
+      
+      setPosition({
+        x: position.x + dx,
+        y: position.y + dy
+      });
+      
+      setDragStart({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  // Manejar el fin del arrastre (Mouse y Touch)
+  const handleMouseUp = () => {
+    if (draggingNode) {
+      // Notificar el cambio de posición del nodo
+      notifyChange();
+      setDraggingNode(null);
+    }
+    setDragging(false);
+  };
+  
+  const handleTouchEnd = () => {
+    if (draggingNode) {
+      // Notificar el cambio de posición del nodo
+      notifyChange();
+      setDraggingNode(null);
+    }
+    setDragging(false);
+  };
+  
+  // Manejar el arrastre de nodos individuales (Mouse)
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    setDraggingNode(nodeId);
+    setNodeDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+  
+  // Manejar el arrastre de nodos individuales (Touch)
+  const handleNodeTouchStart = (e: React.TouchEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    
+    if (e.touches.length === 1) {
+      setDraggingNode(nodeId);
+      const touch = e.touches[0];
+      setNodeDragStart({
+        x: touch.clientX,
+        y: touch.clientY
+      });
+    }
+  };
+  
+  // Manejar el movimiento de nodos durante el arrastre (común para Mouse y Touch)
+  const handleNodeDrag = (e: React.MouseEvent | { clientX: number; clientY: number }) => {
+    if (!draggingNode || readOnly) return;
+    
+    const dx = (e.clientX - nodeDragStart.x) / zoom;
+    const dy = (e.clientY - nodeDragStart.y) / zoom;
+    
+    // Actualizar la posición del nodo
+    const updatedNodes = nodes.map(node => {
+      if (node.id === draggingNode) {
+        return {
+          ...node,
+          position: {
+            x: node.position.x + dx,
+            y: node.position.y + dy
+          }
+        };
+      }
+      return node;
+    });
+    
+    setNodes(updatedNodes);
+    setNodeDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+  
+  // Iniciar conexión entre nodos
+  const handleStartConnecting = (e: React.MouseEvent | React.TouchEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    setConnectingNode(nodeId);
+  };
+  
+  // Finalizar conexión entre nodos
+  const handleEndConnecting = (targetNodeId: string) => {
+    if (!connectingNode || readOnly || connectingNode === targetNodeId) return;
+    
+    // Evitar conexiones duplicadas
+    const isDuplicate = edges.some(
+      edge => edge.source === connectingNode && edge.target === targetNodeId
+    );
+    
+    if (!isDuplicate) {
+      // Crear nueva conexión
+      const newEdge = {
+        id: `e-${connectingNode}-${targetNodeId}`,
+        source: connectingNode,
+        target: targetNodeId,
+        animated: true,
+        style: { strokeWidth: 2 }
+      };
+      
+      const updatedEdges = [...edges, newEdge];
+      setEdges(updatedEdges);
+      onChange({ nodes, edges: updatedEdges }, selectedNode);
+    }
+    
+    setConnectingNode(null);
+  };
+  
+  // Cancelar conexión
+  const handleCancelConnecting = () => {
+    setConnectingNode(null);
+  };
+
+  // Renderizar líneas entre nodos conectados
+  const renderEdges = () => {
+    return edges.map(edge => {
+      const sourceNode = nodes.find(node => node.id === edge.source);
+      const targetNode = nodes.find(node => node.id === edge.target);
+      
+      if (!sourceNode || !targetNode) return null;
+      
+      // Calculamos posiciones basadas en minimización
+      const isSourceMinimized = minimizedNodes.has(sourceNode.id);
+      const isTargetMinimized = minimizedNodes.has(targetNode.id);
+      
+      // Calcular posiciones de inicio y fin
+      const startX = sourceNode.position.x + (isSourceMinimized ? 50 : 100);
+      const startY = sourceNode.position.y + (isSourceMinimized ? 25 : 25);
+      const endX = targetNode.position.x + (isTargetMinimized ? 50 : 100);
+      const endY = targetNode.position.y + (isTargetMinimized ? 25 : 25);
+      
+      // Añadir un ligero curvado a la línea
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2 - 30;
+      
+      const pathD = `M${startX},${startY} Q${midX},${midY} ${endX},${endY}`;
+      
+      return (
+        <path 
+          key={edge.id}
+          d={pathD}
+          stroke={edge.animated ? "#3b82f6" : "#64748b"}
+          strokeWidth={edge.style?.strokeWidth || 2}
+          fill="none"
+          strokeDasharray={edge.animated ? "5,5" : "none"}
+          className={edge.animated ? "animate-pulse" : ""}
+        />
+      );
+    });
+  };
+  
+  // Renderizar la línea temporal cuando se está conectando nodos
+  const renderConnectionLine = () => {
+    if (!connectingNode || !mousePosition) return null;
+    
+    const sourceNode = nodes.find(node => node.id === connectingNode);
+    if (!sourceNode) return null;
+    
+    const isSourceMinimized = minimizedNodes.has(sourceNode.id);
+    
+    // Calcular posición de inicio
+    const startX = sourceNode.position.x + (isSourceMinimized ? 50 : 100);
+    const startY = sourceNode.position.y + (isSourceMinimized ? 25 : 25);
+    
+    // Obtener posición actual del cursor
+    const endX = mousePosition.x / zoom - position.x;
+    const endY = mousePosition.y / zoom - position.y;
+    
+    return (
+      <path 
+        d={`M${startX},${startY} L${endX},${endY}`}
+        stroke="#3b82f6"
+        strokeWidth={2}
+        fill="none"
+        strokeDasharray="5,5"
+        className="animate-pulse"
+      />
+    );
+  };
+
+  // Determinar el ícono según el tipo de nodo
+  const getNodeIcon = (nodeType: string) => {
+    switch (nodeType) {
+      case 'command':
+        return <Wrench className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />;
+      case 'sql':
+        return <Database className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />;
+      case 'sftp':
+        return <ArrowRight className="h-4 w-4 mr-2 text-purple-500 dark:text-purple-400" />;
+      case 'zip':
+      case 'unzip':
+        return <Settings2 className="h-4 w-4 mr-2 text-yellow-500 dark:text-yellow-400" />;
+      case 'pipeline':
+        return <Settings2 className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />;
+      default:
+        return <Info className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />;
+    }
+  };
+
+  // Renderizar un nodo
+  const renderNode = (node: any) => {
+    const isSelected = node.id === selectedNode;
+    const isPipelineStart = node.id === 'start';
+    const isMinimized = minimizedNodes.has(node.id);
+    
+    let nodeColor = 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
+    let textColor = 'text-slate-900 dark:text-slate-100';
+    
+    // Determinar el color del nodo según su tipo
+    switch (node.type) {
+      case 'command':
+        nodeColor = 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700';
+        break;
+      case 'sql':
+        nodeColor = 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700';
+        break;
+      case 'sftp':
+        nodeColor = 'bg-purple-50 dark:bg-purple-950 border-purple-300 dark:border-purple-700';
+        break;
+      case 'zip':
+      case 'unzip':
+        nodeColor = 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700';
+        break;
+      case 'pipeline':
+        nodeColor = 'bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700';
+        break;
+      default:
+        // Mantener el estilo por defecto
+        break;
+    }
+    
+    // Si es nodo seleccionado, agregar estilo adicional
+    if (isSelected) {
+      nodeColor += ' ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400';
+    }
+    
+    // Si es nodo inicial, agregar estilo distintivo
+    if (isPipelineStart) {
+      nodeColor = 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600';
+      textColor = 'text-gray-700 dark:text-gray-300';
+    }
+    
+    // Obtener el ícono según el tipo de nodo
+    const iconComponent = getNodeIcon(node.type);
+    
+    // Estilo y tamaño basado en si está minimizado
+    const nodeStyle = {
+      left: `${node.position.x}px`,
+      top: `${node.position.y}px`,
+      width: isMinimized ? 'auto' : '200px',
+      zIndex: isSelected ? 10 : 1
+    };
+    
+    return (
+      <div
+        key={node.id}
+        className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
+        style={nodeStyle}
+        onClick={() => {
+          if (connectingNode && connectingNode !== node.id) {
+            handleEndConnecting(node.id);
+          } else {
+            handleNodeClick(node.id);
+          }
+        }}
+        onMouseDown={(e) => {
+          if (!connectingNode) {
+            handleNodeMouseDown(e, node.id);
+          }
+        }}
+        onTouchStart={(e) => {
+          if (!connectingNode) {
+            handleNodeTouchStart(e, node.id);
+          }
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            {iconComponent}
+            {isMinimized ? (
+              // Versión minimizada con tooltip
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`font-medium ${textColor} truncate max-w-[50px]`}>
+                      {node.data.label.substring(0, 4)}...
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{node.data.label}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              // Versión completa
+              <span className={`font-medium ${textColor}`}>{node.data.label}</span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {!readOnly && (
+              <button
+                className="text-slate-500 hover:text-slate-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMinimizeNode(node.id);
+                }}
+                title={isMinimized ? "Expandir" : "Minimizar"}
+              >
+                {isMinimized ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+              </button>
+            )}
+            
+            {!readOnly && !isPipelineStart && (
+              <button
+                className="text-blue-500 hover:text-blue-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartConnecting(e, node.id);
+                }}
+                title="Conectar nodo"
+              >
+                <Link2 className="h-4 w-4" />
+              </button>
+            )}
+            
+            {isSelected && !readOnly && !isPipelineStart && (
+              <button
+                className="text-red-500 hover:text-red-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteNode(node.id);
+                }}
+                title="Eliminar nodo"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="relative w-full h-[calc(100vh-150px)] min-h-[600px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
+      ref={canvasRef}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      {/* Grid de fondo para el canvas infinito */}
+      <div 
+        className="absolute top-0 left-0 w-[5000px] h-[5000px]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+          transformOrigin: '0 0',
+        }}
+      />
+      
+      {/* SVG para renderizar las conexiones y líneas */}
+      <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <g 
+          transform={`scale(${zoom}) translate(${position.x}, ${position.y})`}
+          style={{ transformOrigin: '0 0' }}
+        >
+          {renderEdges()}
+          {renderConnectionLine()}
+        </g>
+      </svg>
+      
+      {/* Herramientas para conectar nodos */}
+      {connectingNode && (
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-2">
+          <div className="flex flex-row items-center gap-2">
+            <span className="text-sm font-medium">Conectando nodo...</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleCancelConnecting} 
+              className="h-6 w-6 p-0"
+            >
+              <XCircle className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Controles de zoom y herramientas */}
+      <div className="absolute bottom-4 left-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
+        <div className="flex flex-row gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleZoom(0.1)}
+                  className="h-8 w-8 p-0"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Acercar</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleZoom(-0.1)}
+                  className="h-8 w-8 p-0"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Alejar</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setZoom(1);
+                    setPosition({ x: 0, y: 0 });
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reiniciar vista</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      
+      {/* Canvas para el editor de flujo */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute w-full h-full"
+          style={{
+            transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+            transformOrigin: '0 0',
+          }}
+        >
+          {/* Renderizar los nodos con pointer-events para que sean interactivos */}
+          <div className="pointer-events-auto">
+            {nodes.map(renderNode)}
+          </div>
+        </div>
+      </div>
+      
+      {/* Mensaje de ayuda */}
+      {nodes.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {readOnly ? (
+            <div className="text-center bg-slate-200/50 dark:bg-slate-800/50 p-4 rounded-lg max-w-md">
+              <Info className="h-10 w-10 mx-auto mb-2 text-blue-500 dark:text-blue-400" />
+              <p className="text-slate-700 dark:text-slate-300 font-medium">Este pipeline no tiene nodos configurados.</p>
+            </div>
+          ) : (
+            <div className="text-center bg-slate-200/50 dark:bg-slate-800/50 p-4 rounded-lg max-w-md">
+              <Info className="h-10 w-10 mx-auto mb-2 text-blue-500 dark:text-blue-400" />
+              <p className="text-slate-700 dark:text-slate-300 font-medium">Usa los controles de la izquierda para añadir nodos al pipeline.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

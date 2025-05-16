@@ -570,7 +570,7 @@ export default function PipelineVisualEditor({
 
   return (
     <div
-      className="relative w-full h-[calc(100vh-250px)] min-h-[400px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
+      className="relative w-full h-[calc(100vh-150px)] min-h-[600px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={(e) => {
@@ -583,6 +583,16 @@ export default function PipelineVisualEditor({
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
     >
+      {/* Grid de fondo para el canvas infinito */}
+      <div 
+        className="absolute top-0 left-0 w-[5000px] h-[5000px]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+          transformOrigin: '0 0',
+        }}
+      />
       {/* Controles de zoom y herramientas */}
       <div className="absolute bottom-4 left-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
         <div className="flex flex-row gap-1">
