@@ -72,8 +72,9 @@ export default function PipelineStudio() {
   // Estados para controlar la visibilidad y posición de paneles flotantes
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
   const [showNodePalette, setShowNodePalette] = useState(true);
-  const [nodesPanelPosition, setNodesPanelPosition] = useState({ x: 20, y: 20 });
-  const [propertiesPanelPosition, setPropertiesPanelPosition] = useState({ x: 20, y: 20 });
+  const [nodesPanelPosition, setNodesPanelPosition] = useState({ x: 20, y: 80 });
+  // Posicionar el panel de propiedades en la derecha
+  const [propertiesPanelPosition, setPropertiesPanelPosition] = useState({ x: window.innerWidth - 360, y: 20 });
   const [isDraggingNodes, setIsDraggingNodes] = useState(false);
   const [isDraggingProperties, setIsDraggingProperties] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -1167,7 +1168,7 @@ export default function PipelineStudio() {
                           <div 
                             className="absolute z-10 shadow-lg"
                             style={{
-                              right: `${propertiesPanelPosition.x}px`,
+                              left: `${propertiesPanelPosition.x}px`,
                               top: `${propertiesPanelPosition.y}px`,
                               cursor: isDraggingProperties ? 'grabbing' : 'grab'
                             }}

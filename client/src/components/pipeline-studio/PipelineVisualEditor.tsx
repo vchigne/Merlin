@@ -311,8 +311,8 @@ export default function PipelineVisualEditor({
       onMouseLeave={handleMouseUp}
     >
       {/* Controles de zoom y herramientas */}
-      <div className="absolute top-2 right-2 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
-        <div className="flex flex-col gap-1">
+      <div className="absolute bottom-4 left-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
+        <div className="flex flex-row gap-1">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -320,6 +320,7 @@ export default function PipelineVisualEditor({
                   variant="ghost"
                   size="icon"
                   onClick={() => handleZoom(0.1)}
+                  className="h-8 w-8 p-0"
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
@@ -335,6 +336,7 @@ export default function PipelineVisualEditor({
                   variant="ghost"
                   size="icon"
                   onClick={() => handleZoom(-0.1)}
+                  className="h-8 w-8 p-0"
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
@@ -353,6 +355,7 @@ export default function PipelineVisualEditor({
                     setZoom(1);
                     setPosition({ x: 0, y: 0 });
                   }}
+                  className="h-8 w-8 p-0"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
