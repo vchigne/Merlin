@@ -110,6 +110,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all pipelines
+  app.get('/api/pipelines', async (req, res) => {
+    try {
+      const result = await hasuraClient.query(`
+        query GetAllPipelines {
+          pipelines: merlin_agent_Pipeline {
+            id
+            name
+            description
+            abort_on_error
+            agent_passport_id
+            disposable
+            created_at
+            updated_at
+          }
+        }
+      `);
+      
+      if (result.errors) {
+        console.error('Error fetching pipelines:', result.errors);
+        return res.status(500).json({ error: 'Failed to fetch pipelines' });
+      }
+      
+      res.json(result.data.pipelines);
+    } catch (error) {
+      console.error('Error in /api/pipelines:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Get a specific pipeline by ID
   app.get('/api/pipelines/:id', async (req, res) => {
     try {
