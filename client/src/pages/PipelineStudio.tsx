@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -602,69 +603,72 @@ export default function PipelineStudio() {
               </div>
               
               <div className="border rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Descripción</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
+                {/* Agregamos ScrollArea para permitir el desplazamiento vertical */}
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                          <span className="mt-2 block text-sm text-slate-500">Cargando pipelines...</span>
-                        </TableCell>
+                        <TableHead className="sticky top-0 bg-white dark:bg-slate-900">Nombre</TableHead>
+                        <TableHead className="sticky top-0 bg-white dark:bg-slate-900">Descripción</TableHead>
+                        <TableHead className="sticky top-0 bg-white dark:bg-slate-900">Acciones</TableHead>
                       </TableRow>
-                    ) : filteredPipelines.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-slate-500">
-                          {searchTerm ? 'No se encontraron pipelines con ese criterio' : 'No hay pipelines disponibles'}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredPipelines.map((pipeline) => (
-                        <TableRow key={pipeline.id}>
-                          <TableCell className="font-medium">{pipeline.name}</TableCell>
-                          <TableCell className="text-sm text-slate-500">
-                            {pipeline.description || <span className="italic text-slate-400">Sin descripción</span>}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => {
-                                  fetchPipelineData(pipeline.id);
-                                  setIsLoadDialogOpen(false);
-                                }}
-                              >
-                                <Edit className="mr-1 h-3 w-3" />
-                                Editar
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => {
-                                  fetchPipelineData(pipeline.id);
-                                  setTimeout(() => {
-                                    handleDuplicatePipeline();
-                                  }, 500);
-                                  setIsLoadDialogOpen(false);
-                                }}
-                              >
-                                <Copy className="mr-1 h-3 w-3" />
-                                Duplicar
-                              </Button>
-                            </div>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                            <span className="mt-2 block text-sm text-slate-500">Cargando pipelines...</span>
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : filteredPipelines.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8 text-slate-500">
+                            {searchTerm ? 'No se encontraron pipelines con ese criterio' : 'No hay pipelines disponibles'}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredPipelines.map((pipeline) => (
+                          <TableRow key={pipeline.id}>
+                            <TableCell className="font-medium">{pipeline.name}</TableCell>
+                            <TableCell className="text-sm text-slate-500">
+                              {pipeline.description || <span className="italic text-slate-400">Sin descripción</span>}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    fetchPipelineData(pipeline.id);
+                                    setIsLoadDialogOpen(false);
+                                  }}
+                                >
+                                  <Edit className="mr-1 h-3 w-3" />
+                                  Editar
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    fetchPipelineData(pipeline.id);
+                                    setTimeout(() => {
+                                      handleDuplicatePipeline();
+                                    }, 500);
+                                    setIsLoadDialogOpen(false);
+                                  }}
+                                >
+                                  <Copy className="mr-1 h-3 w-3" />
+                                  Duplicar
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               </div>
             </div>
           </DialogContent>
