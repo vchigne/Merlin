@@ -162,6 +162,12 @@ export default function PipelineStudio() {
   // Función para cargar la lista de pipelines disponibles
   const loadPipelines = async () => {
     try {
+      // Primero obtenemos la lista de agentes para poder mapear los IDs a nombres
+      const agentsResponse = await fetch('/api/agents');
+      if (!agentsResponse.ok) throw new Error('Error al cargar agentes');
+      const agents = await agentsResponse.json();
+      
+      // Ahora obtenemos los pipelines
       const response = await fetch('/api/graphql', {
         method: 'POST',
         headers: {
@@ -175,9 +181,6 @@ export default function PipelineStudio() {
                 name
                 description
                 agent_passport_id
-                agent_passport {
-                  name
-                }
                 updated_at
               }
             }
@@ -193,14 +196,19 @@ export default function PipelineStudio() {
         throw new Error(result.errors[0].message);
       }
       
-      const pipelinesList = result.data.merlin_agent_Pipeline.map((pipeline: any) => ({
-        id: pipeline.id,
-        name: pipeline.name,
-        description: pipeline.description,
-        agent_id: pipeline.agent_passport_id,
-        agent_name: pipeline.agent_passport?.name || "Sin agente",
-        updated_at: pipeline.updated_at
-      }));
+      const pipelinesList = result.data.merlin_agent_Pipeline.map((pipeline: any) => {
+        // Buscar el nombre del agente correspondiente al ID
+        const agent = agents.find((a: any) => a.id === pipeline.agent_passport_id);
+        
+        return {
+          id: pipeline.id,
+          name: pipeline.name,
+          description: pipeline.description,
+          agent_id: pipeline.agent_passport_id,
+          agent_name: agent ? agent.name : "Sin agente",
+          updated_at: pipeline.updated_at
+        };
+      });
       
       // Ordenar por último actualizado
       pipelinesList.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
