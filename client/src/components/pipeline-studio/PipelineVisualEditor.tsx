@@ -363,76 +363,7 @@ export default function PipelineVisualEditor({
         </div>
       </div>
       
-      {/* Panel de nodos disponibles */}
-      {!readOnly && (
-        <div className="absolute top-2 left-2 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-2">
-          <div className="text-sm font-medium mb-2 text-slate-900 dark:text-slate-100">Añadir nodos</div>
-          <div className="flex flex-col gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('command')}
-            >
-              <Wrench className="h-4 w-4 mr-2" />
-              Comando
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('query')}
-            >
-              <Database className="h-4 w-4 mr-2" />
-              Consulta SQL
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('sftpDownloader')}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              SFTP Descarga
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('sftpUploader')}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              SFTP Subida
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('zip')}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Comprimir
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('unzip')}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Descomprimir
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addNode('callPipeline')}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Llamar Pipeline
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* El panel de nodos disponibles ahora está en PipelineStudio.tsx como panel flotante */}
       
       {/* Canvas para el editor de flujo */}
       <div className="absolute inset-0">

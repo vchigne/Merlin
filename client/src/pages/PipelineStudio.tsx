@@ -69,9 +69,15 @@ export default function PipelineStudio() {
   const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Estados para controlar la visibilidad de paneles laterales
+  // Estados para controlar la visibilidad y posición de paneles flotantes
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
   const [showNodePalette, setShowNodePalette] = useState(true);
+  const [nodesPanelPosition, setNodesPanelPosition] = useState({ x: 20, y: 20 });
+  const [propertiesPanelPosition, setPropertiesPanelPosition] = useState({ x: 20, y: 20 });
+  const [isDraggingNodes, setIsDraggingNodes] = useState(false);
+  const [isDraggingProperties, setIsDraggingProperties] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [showZoomControls, setShowZoomControls] = useState(true);
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
@@ -1019,9 +1025,36 @@ export default function PipelineStudio() {
                           </div>
                           
                           {/* Panel flotante izquierdo - Agregar Nodos */}
-                          <div className="absolute top-4 left-4 z-10 shadow-lg">
+                          <div 
+                            className="absolute z-10 shadow-lg"
+                            style={{
+                              left: `${nodesPanelPosition.x}px`,
+                              top: `${nodesPanelPosition.y}px`,
+                              cursor: isDraggingNodes ? 'grabbing' : 'grab'
+                            }}
+                            onMouseDown={(e) => {
+                              if (e.target === e.currentTarget || 
+                                  (e.target as HTMLElement).classList.contains('drag-handle')) {
+                                setIsDraggingNodes(true);
+                                setDragStart({
+                                  x: e.clientX - nodesPanelPosition.x,
+                                  y: e.clientY - nodesPanelPosition.y
+                                });
+                              }
+                            }}
+                            onMouseMove={(e) => {
+                              if (isDraggingNodes) {
+                                setNodesPanelPosition({
+                                  x: e.clientX - dragStart.x,
+                                  y: e.clientY - dragStart.y
+                                });
+                              }
+                            }}
+                            onMouseUp={() => setIsDraggingNodes(false)}
+                            onMouseLeave={() => setIsDraggingNodes(false)}
+                          >
                             <Card 
-                              className={`transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700`}
+                              className={`transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700 rounded-md`}
                               style={{ 
                                 width: showNodePalette ? '220px' : '40px',
                                 height: showNodePalette ? 'auto' : '40px'
@@ -1029,7 +1062,7 @@ export default function PipelineStudio() {
                             >
                               {showNodePalette ? (
                                 <>
-                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
+                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between drag-handle cursor-grab">
                                     <CardTitle className="text-base">Añadir Nodos</CardTitle>
                                     <Button 
                                       variant="ghost" 
@@ -1131,9 +1164,36 @@ export default function PipelineStudio() {
                           </div>
                           
                           {/* Panel flotante derecho - Propiedades */}
-                          <div className="absolute top-4 right-4 z-10 shadow-lg">
+                          <div 
+                            className="absolute z-10 shadow-lg"
+                            style={{
+                              right: `${propertiesPanelPosition.x}px`,
+                              top: `${propertiesPanelPosition.y}px`,
+                              cursor: isDraggingProperties ? 'grabbing' : 'grab'
+                            }}
+                            onMouseDown={(e) => {
+                              if (e.target === e.currentTarget || 
+                                  (e.target as HTMLElement).classList.contains('drag-handle')) {
+                                setIsDraggingProperties(true);
+                                setDragStart({
+                                  x: e.clientX - propertiesPanelPosition.x,
+                                  y: e.clientY - propertiesPanelPosition.y
+                                });
+                              }
+                            }}
+                            onMouseMove={(e) => {
+                              if (isDraggingProperties) {
+                                setPropertiesPanelPosition({
+                                  x: e.clientX - dragStart.x,
+                                  y: e.clientY - dragStart.y
+                                });
+                              }
+                            }}
+                            onMouseUp={() => setIsDraggingProperties(false)}
+                            onMouseLeave={() => setIsDraggingProperties(false)}
+                          >
                             <Card
-                              className="transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700"
+                              className="transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700 rounded-md"
                               style={{ 
                                 width: showPropertiesPanel ? '320px' : '40px',
                                 height: showPropertiesPanel ? 'auto' : '40px',
@@ -1142,7 +1202,7 @@ export default function PipelineStudio() {
                             >
                               {showPropertiesPanel ? (
                                 <>
-                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
+                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between drag-handle cursor-grab">
                                     <CardTitle className="text-base">Propiedades</CardTitle>
                                     <Button 
                                       variant="ghost" 
