@@ -214,6 +214,9 @@ export default function PipelineStudio() {
       pipelinesList.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
       
       setPipelines(pipelinesList);
+      
+      // Log para depuración
+      console.log("Pipelines cargados:", pipelinesList);
     } catch (error) {
       console.error("Error cargando pipelines:", error);
       toast({
@@ -1334,57 +1337,77 @@ export default function PipelineStudio() {
                 {/* Dialog para cargar pipeline existente */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Forzar la carga de pipelines al abrir el diálogo
+                        loadPipelines();
+                      }}
+                    >
                       <Search className="mr-2 h-4 w-4" />
                       Cargar Pipeline Existente
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-[90vw] md:max-w-[600px]">
                     <DialogHeader>
                       <DialogTitle>Cargar Pipeline Existente</DialogTitle>
                       <DialogDescription>
-                        Selecciona un pipeline existente para editarlo
+                        Selecciona un pipeline existente para editarlo o duplicarlo
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[400px] overflow-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Agente</TableHead>
-                            <TableHead>Acciones</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {pipelines.map((pipeline) => (
-                            <TableRow key={pipeline.id}>
-                              <TableCell className="font-medium">{pipeline.name}</TableCell>
-                              <TableCell>{pipeline.agent_name || "—"}</TableCell>
-                              <TableCell>
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
-                                  >
-                                    <Edit className="mr-1 h-4 w-4" />
-                                    Editar
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleDuplicatePipeline(pipeline.id)}
-                                  >
-                                    <Copy className="mr-1 h-4 w-4" />
-                                    Duplicar
-                                  </Button>
-                                </div>
-                              </TableCell>
+                    
+                    {pipelines.length === 0 ? (
+                      <div className="py-6 text-center">
+                        <div className="mb-2">No se encontraron pipelines</div>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => loadPipelines()}
+                        >
+                          Reintentar
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="max-h-[400px] overflow-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Nombre</TableHead>
+                              <TableHead>Agente</TableHead>
+                              <TableHead>Acciones</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                          </TableHeader>
+                          <TableBody>
+                            {pipelines.map((pipeline) => (
+                              <TableRow key={pipeline.id}>
+                                <TableCell className="font-medium">{pipeline.name}</TableCell>
+                                <TableCell>{pipeline.agent_name || "—"}</TableCell>
+                                <TableCell>
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost"
+                                      onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
+                                    >
+                                      <Edit className="mr-1 h-4 w-4" />
+                                      Editar
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost"
+                                      onClick={() => handleDuplicatePipeline(pipeline.id)}
+                                    >
+                                      <Copy className="mr-1 h-4 w-4" />
+                                      Duplicar
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
                   </DialogContent>
                 </Dialog>
                 
