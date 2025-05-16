@@ -19,6 +19,7 @@ interface NodePosition {
 interface PipelineLayout {
   pipelineId: string;
   positions: NodePosition[];
+  minimizedNodes?: string[];
   updatedAt: string;
 }
 
@@ -109,15 +110,41 @@ export class PipelineLayoutManager {
   /**
    * Guardar posiciones de nodos para un pipeline específico
    */
-  public saveLayout(pipelineId: string, positions: NodePosition[]): void {
+  public saveLayout(pipelineId: string, positions: NodePosition[], minimizedNodes?: string[]): void {
     const layout: PipelineLayout = {
       pipelineId,
       positions,
+      minimizedNodes,
       updatedAt: new Date().toISOString()
     };
     
     this.layouts.set(pipelineId, layout);
     this.saveLayouts();
+  }
+  
+  /**
+   * Guardar solo los nodos minimizados
+   */
+  public saveMinimizedNodes(pipelineId: string, nodeIds: string[]): void {
+    const existingLayout = this.layouts.get(pipelineId);
+    
+    const layout: PipelineLayout = {
+      pipelineId,
+      positions: existingLayout?.positions || [],
+      minimizedNodes: nodeIds,
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.layouts.set(pipelineId, layout);
+    this.saveLayouts();
+  }
+  
+  /**
+   * Obtener los IDs de nodos minimizados para un pipeline específico
+   */
+  public getMinimizedNodes(pipelineId: string): string[] | null {
+    const layout = this.layouts.get(pipelineId);
+    return layout?.minimizedNodes || null;
   }
   
   /**

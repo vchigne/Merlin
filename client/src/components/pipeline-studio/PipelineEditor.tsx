@@ -42,18 +42,54 @@ export default function PipelineEditor({
   // Referencias
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Sincronizar estados con los datos de flujo
+  // Sincronizar estados con los datos de flujo y cargar layout guardado si existe
   useEffect(() => {
     if (flowData) {
-      setNodes(flowData.nodes || []);
+      let updatedNodes = flowData.nodes || [];
+      
+      // Si hay un ID de pipeline, intentar cargar posiciones guardadas
+      if (pipelineId) {
+        try {
+          // Aplicar layout guardado si existe
+          const nodesWithLayout = pipelineLayoutManager.applyLayoutToNodes(pipelineId, updatedNodes);
+          updatedNodes = nodesWithLayout || updatedNodes;
+          
+          // Cargar nodos minimizados
+          const minimizedNodeIds = pipelineLayoutManager.getMinimizedNodes(pipelineId);
+          if (minimizedNodeIds && minimizedNodeIds.length > 0) {
+            setMinimizedNodes(new Set(minimizedNodeIds));
+          }
+        } catch (error) {
+          console.error('Error al cargar layout guardado:', error);
+        }
+      }
+      
+      setNodes(updatedNodes);
       setEdges(flowData.edges || []);
     }
-  }, [flowData]);
+  }, [flowData, pipelineId]);
   
-  // Notificar cambios al componente padre
+  // Notificar cambios al componente padre y guardar layout
   const notifyChange = useCallback(() => {
+    // Notificar cambios al componente padre
     onChange({ nodes, edges }, selectedNode);
-  }, [nodes, edges, selectedNode, onChange]);
+    
+    // Si hay un ID de pipeline, guardar layout actual
+    if (pipelineId) {
+      try {
+        // Extraer posiciones para guardar
+        const positions = pipelineLayoutManager.extractPositionsFromNodes(nodes);
+        
+        // Convertir Set a Array para guardar nodos minimizados
+        const minimizedNodesArray = Array.from(minimizedNodes);
+        
+        // Guardar layout
+        pipelineLayoutManager.saveLayout(pipelineId, positions, minimizedNodesArray);
+      } catch (error) {
+        console.error('Error al guardar layout:', error);
+      }
+    }
+  }, [nodes, edges, selectedNode, onChange, pipelineId, minimizedNodes]);
 
   // Manejar el zoom
   const handleZoom = (delta: number) => {
@@ -98,8 +134,82 @@ export default function PipelineEditor({
       } else {
         newSet.add(nodeId);
       }
+      
+      // Si hay un ID de pipeline, guardar estado minimizado
+      if (pipelineId) {
+        try {
+          const minimizedNodesArray = Array.from(newSet);
+          pipelineLayoutManager.saveMinimizedNodes(pipelineId, minimizedNodesArray);
+        } catch (error) {
+          console.error('Error al guardar nodos minimizados:', error);
+        }
+      }
+      
       return newSet;
     });
+  };
+  
+  // Exportar layout como YAML
+  const handleExportLayout = () => {
+    if (!pipelineId) {
+      toast({
+        title: "Error",
+        description: "No se puede exportar el layout sin un ID de pipeline",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Extraer posiciones actuales
+      const positions = pipelineLayoutManager.extractPositionsFromNodes(nodes);
+      
+      // Convertir Set a Array
+      const minimizedNodesArray = Array.from(minimizedNodes);
+      
+      // Guardar antes de exportar
+      pipelineLayoutManager.saveLayout(pipelineId, positions, minimizedNodesArray);
+      
+      // Obtener YAML
+      const yamlContent = pipelineLayoutManager.exportLayoutYAML(pipelineId);
+      
+      if (!yamlContent) {
+        toast({
+          title: "Error",
+          description: "No se pudo generar el archivo YAML",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Crear blob y enlace de descarga
+      const blob = new Blob([yamlContent], { type: 'application/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pipeline-layout-${pipelineId}.yaml`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpiar
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+      
+      toast({
+        title: "Éxito",
+        description: "Layout exportado correctamente",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error al exportar layout:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo exportar el layout",
+        variant: "destructive"
+      });
+    }
   };
   
   // Manejar el inicio del arrastre del canvas (Mouse)
