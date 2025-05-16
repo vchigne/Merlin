@@ -72,6 +72,7 @@ export default function PipelineStudio() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [pipelines, setPipelines] = useState<any[]>([]);
+  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>(pipelineId ? 'edit' : 'create');
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [yamlMode, setYamlMode] = useState<boolean>(false);
@@ -214,6 +215,7 @@ export default function PipelineStudio() {
       pipelinesList.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
       
       setPipelines(pipelinesList);
+      setFilteredPipelines(pipelinesList); // También establecemos la lista filtrada inicialmente
       
       // Log para depuración
       console.log("Pipelines cargados:", pipelinesList);
@@ -1357,6 +1359,32 @@ export default function PipelineStudio() {
                       </DialogDescription>
                     </DialogHeader>
                     
+                    {/* Buscador de pipelines */}
+                    <div className="py-2">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Buscar pipeline por nombre o agente..."
+                          className="pl-8"
+                          onChange={(e) => {
+                            const searchTerm = e.target.value.toLowerCase();
+                            // Si el campo está vacío, mostrar todos los pipelines
+                            if (!searchTerm) {
+                              setFilteredPipelines(pipelines);
+                              return;
+                            }
+                            
+                            // Filtrar pipelines por nombre o agente
+                            const filtered = pipelines.filter(p => 
+                              p.name.toLowerCase().includes(searchTerm) || 
+                              (p.agent_name && p.agent_name.toLowerCase().includes(searchTerm))
+                            );
+                            setFilteredPipelines(filtered);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
                     {pipelines.length === 0 ? (
                       <div className="py-6 text-center">
                         <div className="mb-2">No se encontraron pipelines</div>
@@ -1366,6 +1394,10 @@ export default function PipelineStudio() {
                         >
                           Reintentar
                         </Button>
+                      </div>
+                    ) : filteredPipelines.length === 0 ? (
+                      <div className="py-6 text-center">
+                        <div className="mb-2">No se encontraron pipelines que coincidan con la búsqueda</div>
                       </div>
                     ) : (
                       <div className="max-h-[400px] overflow-auto">
@@ -1378,7 +1410,7 @@ export default function PipelineStudio() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {pipelines.map((pipeline) => (
+                            {filteredPipelines.map((pipeline) => (
                               <TableRow key={pipeline.id}>
                                 <TableCell className="font-medium">{pipeline.name}</TableCell>
                                 <TableCell>{pipeline.agent_name || "—"}</TableCell>
