@@ -293,7 +293,7 @@ export default function PipelineVisualEditor({
 
   return (
     <div
-      className="relative w-full h-[600px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
+      className="relative w-full h-[500px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

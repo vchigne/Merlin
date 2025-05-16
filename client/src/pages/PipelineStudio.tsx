@@ -809,146 +809,148 @@ export default function PipelineStudio() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-6">
-                <div className="col-span-3">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle>{pipelineData.name || 'Nuevo Pipeline'}</CardTitle>
-                      <CardDescription>
-                        {pipelineData.description || 'Sin descripción'}
-                      </CardDescription>
-                    </CardHeader>
-                    <Separator />
-                    <CardContent className="pt-6">
-                      <Tabs 
-                        value={selectedTab} 
-                        onValueChange={setSelectedTab}
-                        className="w-full"
-                      >
-                        <TabsList className="mb-4">
-                          <TabsTrigger value="visual">
-                            <ArrowLeftRight className="mr-2 h-4 w-4" />
-                            Editor Visual
-                          </TabsTrigger>
-                          <TabsTrigger value="yaml">
-                            <TerminalSquare className="mr-2 h-4 w-4" />
-                            Editor YAML
-                          </TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="visual" className="min-h-[600px]">
-                          {pipelineFlowData && (
-                            <PipelineVisualEditor 
-                              flowData={pipelineFlowData}
-                              onChange={handleVisualEditorChange}
-                              readOnly={editorMode === 'view'}
-                            />
-                          )}
-                        </TabsContent>
-                        
-                        <TabsContent value="yaml" className="min-h-[600px]">
-                          <PipelineYamlEditor
-                            pipelineData={pipelineData}
-                            onChange={(updatedPipeline: any) => {
-                              setPipelineData(updatedPipeline);
-                              const flowData = generateFlowFromPipeline(updatedPipeline);
-                              setPipelineFlowData(flowData);
-                              setUnsavedChanges(true);
-                            }}
-                            readOnly={editorMode === 'view'}
-                          />
-                        </TabsContent>
-                      </Tabs>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="col-span-1">
-                  <PipelinePropertiesPanel
-                    pipelineData={pipelineData}
-                    agentOptions={agentOptions}
-                    onChange={handlePipelinePropertiesChange}
-                    readOnly={editorMode === 'view'}
-                  />
-                  
-                  {selectedNode && selectedTab === 'visual' && (
-                    <div className="mt-4">
-                      <PipelineNodeProperties
-                        node={selectedNode}
-                        onChange={(updatedNode) => {
-                          // Actualizar el nodo en el flujo
-                          const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
-                            if (node.id === selectedNode.id) {
-                              return updatedNode;
-                            }
-                            return node;
-                          });
+              <div className="flex flex-col space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle>{pipelineData.name || 'Nuevo Pipeline'}</CardTitle>
+                    <CardDescription>
+                      {pipelineData.description || 'Sin descripción'}
+                    </CardDescription>
+                  </CardHeader>
+                  <Separator />
+                  <CardContent className="pt-6">
+                    <Tabs 
+                      value={selectedTab} 
+                      onValueChange={setSelectedTab}
+                      className="w-full"
+                    >
+                      <TabsList className="mb-4">
+                        <TabsTrigger value="visual">
+                          <ArrowLeftRight className="mr-2 h-4 w-4" />
+                          Editor Visual
+                        </TabsTrigger>
+                        <TabsTrigger value="yaml">
+                          <TerminalSquare className="mr-2 h-4 w-4" />
+                          Editor YAML
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="visual">
+                        <div className="grid grid-cols-5 gap-4">
+                          <div className="col-span-3">
+                            {pipelineFlowData && (
+                              <PipelineVisualEditor 
+                                flowData={pipelineFlowData}
+                                onChange={handleVisualEditorChange}
+                                readOnly={editorMode === 'view'}
+                              />
+                            )}
+                          </div>
                           
-                          const updatedFlow = {
-                            ...pipelineFlowData,
-                            nodes: updatedNodes
-                          };
-                          
-                          setPipelineFlowData(updatedFlow);
-                          handleVisualEditorChange(updatedFlow, selectedNode.id);
-                        }}
-                        sftpConnections={sftpConnections}
-                        sqlConnections={sqlConnections}
-                        pipelines={availablePipelines}
-                        readOnly={editorMode === 'view'}
-                      />
-                    </div>
-                  )}
-                  
-                  {selectedTemplate && (
-                    <Card className="mt-4">
-                      <CardHeader>
-                        <CardTitle>Plantilla Seleccionada</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="mb-2">
-                          <span className="font-semibold">{selectedTemplate.name}</span>
+                          <div className="col-span-2">
+                            <div className="flex flex-col space-y-4">
+                              <PipelinePropertiesPanel
+                                pipelineData={pipelineData}
+                                agentOptions={agentOptions}
+                                onChange={handlePipelinePropertiesChange}
+                                readOnly={editorMode === 'view'}
+                              />
+                              
+                              {selectedNode && (
+                                <PipelineNodeProperties
+                                  node={selectedNode}
+                                  onChange={(updatedNode) => {
+                                    // Actualizar el nodo en el flujo
+                                    const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
+                                      if (node.id === selectedNode.id) {
+                                        return updatedNode;
+                                      }
+                                      return node;
+                                    });
+                                    
+                                    const updatedFlow = {
+                                      ...pipelineFlowData,
+                                      nodes: updatedNodes
+                                    };
+                                    
+                                    setPipelineFlowData(updatedFlow);
+                                    handleVisualEditorChange(updatedFlow, selectedNode.id);
+                                  }}
+                                  sftpConnections={sftpConnections}
+                                  sqlConnections={sqlConnections}
+                                  pipelines={availablePipelines}
+                                  readOnly={editorMode === 'view'}
+                                />
+                              )}
+                              
+                              {selectedTemplate && (
+                                <Card>
+                                  <CardHeader className="py-3">
+                                    <CardTitle className="text-base">Plantilla Seleccionada</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="py-2">
+                                    <div className="mb-2">
+                                      <span className="font-semibold">{selectedTemplate.name}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-600">
+                                      {selectedTemplate.description}
+                                    </p>
+                                  </CardContent>
+                                  <CardFooter className="py-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setSelectedTemplate(null)}
+                                    >
+                                      Cambiar Plantilla
+                                    </Button>
+                                  </CardFooter>
+                                </Card>
+                              )}
+                              
+                              {!selectedNode && (
+                                <Card>
+                                  <CardHeader className="py-3">
+                                    <CardTitle className="text-base">Ayuda</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="py-2">
+                                    <div className="text-xs text-slate-600 space-y-2">
+                                      <p>
+                                        <Info className="inline-block h-3 w-3 mr-1" />
+                                        Utiliza el editor visual para crear y conectar los nodos del pipeline.
+                                      </p>
+                                      <p>
+                                        <Info className="inline-block h-3 w-3 mr-1" />
+                                        Selecciona un nodo para ver y editar sus propiedades.
+                                      </p>
+                                      <p>
+                                        <Info className="inline-block h-3 w-3 mr-1" />
+                                        No olvides guardar tus cambios para que se apliquen.
+                                      </p>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-slate-600">
-                          {selectedTemplate.description}
-                        </p>
-                      </CardContent>
-                      <CardFooter>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedTemplate(null)}
-                        >
-                          Cambiar Plantilla
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  )}
-                  
-                  {(!selectedNode || selectedTab !== 'visual') && (
-                    <Card className="mt-4">
-                      <CardHeader>
-                        <CardTitle>Ayuda</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-sm text-slate-600 space-y-2">
-                          <p>
-                            <Info className="inline-block h-4 w-4 mr-1" />
-                            Utiliza el editor visual para crear y conectar los nodos del pipeline.
-                          </p>
-                          <p>
-                            <Info className="inline-block h-4 w-4 mr-1" />
-                            Puedes cambiar entre el editor visual y el editor YAML en cualquier momento.
-                          </p>
-                          <p>
-                            <Info className="inline-block h-4 w-4 mr-1" />
-                            No olvides guardar tus cambios para que se apliquen.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="yaml" className="min-h-[500px]">
+                        <PipelineYamlEditor
+                          pipelineData={pipelineData}
+                          onChange={(updatedPipeline: any) => {
+                            setPipelineData(updatedPipeline);
+                            const flowData = generateFlowFromPipeline(updatedPipeline);
+                            setPipelineFlowData(flowData);
+                            setUnsavedChanges(true);
+                          }}
+                          readOnly={editorMode === 'view'}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </>
