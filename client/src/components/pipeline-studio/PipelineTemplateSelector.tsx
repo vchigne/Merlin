@@ -93,9 +93,9 @@ export default function PipelineTemplateSelector({ onSelect }: PipelineTemplateP
       (template.description && template.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (template.tags && template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())));
     
-    const matchesCategory = !categoryFilter || template.category === categoryFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === "all" || template.category === categoryFilter;
     
-    const matchesTag = !tagFilter || (template.tags && template.tags.includes(tagFilter));
+    const matchesTag = !tagFilter || tagFilter === "all" || (template.tags && template.tags.includes(tagFilter));
     
     return matchesSearch && matchesCategory && matchesTag;
   });
@@ -277,7 +277,7 @@ export default function PipelineTemplateSelector({ onSelect }: PipelineTemplateP
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category} value={category}>
                   {category === 'data-processing' && 'Procesamiento de Datos'}
@@ -299,7 +299,7 @@ export default function PipelineTemplateSelector({ onSelect }: PipelineTemplateP
               <SelectValue placeholder="Etiquetas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las etiquetas</SelectItem>
+              <SelectItem value="all">Todas las etiquetas</SelectItem>
               {tags.map(tag => (
                 <SelectItem key={tag} value={tag}>{tag}</SelectItem>
               ))}
