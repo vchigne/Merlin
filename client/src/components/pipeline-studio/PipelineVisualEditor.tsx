@@ -168,6 +168,16 @@ export default function PipelineVisualEditor({
   
   // Manejar el movimiento durante el arrastre del canvas (Touch)
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Actualizar la posición del mouse para la conexión de nodos
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect && e.touches.length > 0) {
+      const touch = e.touches[0];
+      setMousePosition({
+        x: touch.clientX - rect.left + position.x,
+        y: touch.clientY - rect.top + position.y
+      });
+    }
+    
     // Si estamos conectando, no hacer nada
     if (connectingNode) return;
     
@@ -631,15 +641,170 @@ export default function PipelineVisualEditor({
       
       {/* El panel de nodos disponibles ahora está en PipelineStudio.tsx como panel flotante */}
       
+      {/* SVG para renderizar las conexiones y líneas */}
+      <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <g 
+          transform={`scale(${zoom}) translate(${position.x}, ${position.y})`}
+          style={{ transformOrigin: '0 0' }}
+        >
+          {renderEdges()}
+          {renderConnectionLine()}
+        </g>
+      </svg>
+      
+      {/* Herramientas para conectar nodos */}
+      {connectingNode && (
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-2">
+          <div className="flex flex-row items-center gap-2">
+            <span className="text-sm font-medium">Conectando nodo...</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleCancelConnecting} 
+              className="h-6 w-6 p-0"
+            >
+              <XCircle className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
       {/* Canvas para el editor de flujo */}
       <div className="absolute inset-0">
-        {/* Renderizar las conexiones */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-          {edges.map(renderEdge)}
-        </svg>
-        
         {/* Renderizar los nodos */}
-        {nodes.map(renderNode)}
+        {nodes.map(node => {
+          const isSelected = node.id === selectedNode;
+          const isPipelineStart = node.id === 'start';
+          const isConnecting = connectingNode !== null;
+          
+          let nodeColor = 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
+          let textColor = 'text-slate-900 dark:text-slate-100';
+          
+          // Determinar el color del nodo según su tipo
+          switch (node.type) {
+            case 'command':
+              nodeColor = 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700';
+              break;
+            case 'sql':
+              nodeColor = 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700';
+              break;
+            case 'sftp':
+              nodeColor = 'bg-purple-50 dark:bg-purple-950 border-purple-300 dark:border-purple-700';
+              break;
+            case 'zip':
+            case 'unzip':
+              nodeColor = 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700';
+              break;
+            case 'pipeline':
+              nodeColor = 'bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700';
+              break;
+            default:
+              // Mantener el estilo por defecto
+              break;
+          }
+          
+          // Si es nodo seleccionado, agregar estilo adicional
+          if (isSelected) {
+            nodeColor += ' ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400';
+          }
+          
+          // Si es nodo inicial, agregar estilo distintivo
+          if (isPipelineStart) {
+            nodeColor = 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600';
+            textColor = 'text-gray-700 dark:text-gray-300';
+          }
+          
+          // Determinar el ícono según el tipo de nodo
+          let iconComponent;
+          switch (node.type) {
+            case 'command':
+              iconComponent = <Wrench className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />;
+              break;
+            case 'sql':
+              iconComponent = <Database className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />;
+              break;
+            case 'sftp':
+              iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-purple-500 dark:text-purple-400" />;
+              break;
+            case 'zip':
+            case 'unzip':
+              iconComponent = <Settings2 className="h-4 w-4 mr-2 text-yellow-500 dark:text-yellow-400" />;
+              break;
+            case 'pipeline':
+              iconComponent = <Settings2 className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />;
+              break;
+            default:
+              iconComponent = <Info className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />;
+              break;
+          }
+          
+          const nodeStyle = {
+            left: `${node.position.x}px`,
+            top: `${node.position.y}px`,
+            minWidth: '200px',
+            zIndex: isSelected ? 10 : 1
+          };
+          
+          return (
+            <div
+              key={node.id}
+              className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
+              style={nodeStyle}
+              onClick={() => {
+                if (isConnecting && connectingNode !== node.id) {
+                  handleEndConnecting(node.id);
+                } else {
+                  handleNodeClick(node.id);
+                }
+              }}
+              onMouseDown={(e) => {
+                if (!isConnecting) {
+                  handleNodeMouseDown(e, node.id);
+                }
+              }}
+              onTouchStart={(e) => {
+                if (!isConnecting) {
+                  handleNodeTouchStart(e, node.id);
+                }
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {iconComponent}
+                  <span className={`font-medium ${textColor}`}>{node.data.label}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {!readOnly && !isPipelineStart && (
+                    <button
+                      className="text-blue-500 hover:text-blue-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartConnecting(e, node.id);
+                      }}
+                      title="Conectar nodo"
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </button>
+                  )}
+                  
+                  {isSelected && !readOnly && !isPipelineStart && (
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNode(node.id);
+                      }}
+                      title="Eliminar nodo"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       
       {/* Mensaje de ayuda */}
