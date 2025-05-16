@@ -56,6 +56,7 @@ export default function PipelineStudio() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [sftpConnections, setSftpConnections] = useState<any[]>([]);
   const [sqlConnections, setSqlConnections] = useState<any[]>([]);
+  const [availablePipelines, setAvailablePipelines] = useState<any[]>([]);
   
   // Estados para el diálogo de selección de pipelines
   const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
@@ -175,6 +176,7 @@ export default function PipelineStudio() {
       const data = await response.json();
       setAllPipelines(data);
       setFilteredPipelines(data);
+      setAvailablePipelines(data);
       setIsLoading(false);
     } catch (error) {
       console.error('Error al cargar pipelines:', error);
@@ -303,11 +305,20 @@ export default function PipelineStudio() {
   };
   
   // Función para actualizar los datos del pipeline desde el editor visual
-  const handleVisualEditorChange = (updatedFlow: any) => {
+  const handleVisualEditorChange = (updatedFlow: any, selected: any = null) => {
     // Convertir los datos del editor visual a la estructura del pipeline
     const updatedPipeline = convertFlowToPipeline(updatedFlow);
     setPipelineData(updatedPipeline);
     setUnsavedChanges(true);
+    
+    // Actualizar el nodo seleccionado
+    if (selected !== undefined) {
+      // Si se seleccionó un nodo, buscarlo en los nodos del flujo
+      const selectedNodeData = selected ? 
+        updatedFlow.nodes.find((node: any) => node.id === selected) : 
+        null;
+      setSelectedNode(selectedNodeData);
+    }
   };
   
   // Función para convertir datos del flujo visual a estructura de pipeline
@@ -860,6 +871,35 @@ export default function PipelineStudio() {
                     readOnly={editorMode === 'view'}
                   />
                   
+                  {selectedNode && selectedTab === 'visual' && (
+                    <div className="mt-4">
+                      <PipelineNodeProperties
+                        node={selectedNode}
+                        onChange={(updatedNode) => {
+                          // Actualizar el nodo en el flujo
+                          const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
+                            if (node.id === selectedNode.id) {
+                              return updatedNode;
+                            }
+                            return node;
+                          });
+                          
+                          const updatedFlow = {
+                            ...pipelineFlowData,
+                            nodes: updatedNodes
+                          };
+                          
+                          setPipelineFlowData(updatedFlow);
+                          handleVisualEditorChange(updatedFlow, selectedNode.id);
+                        }}
+                        sftpConnections={sftpConnections}
+                        sqlConnections={sqlConnections}
+                        pipelines={availablePipelines}
+                        readOnly={editorMode === 'view'}
+                      />
+                    </div>
+                  )}
+                  
                   {selectedTemplate && (
                     <Card className="mt-4">
                       <CardHeader>
@@ -885,27 +925,29 @@ export default function PipelineStudio() {
                     </Card>
                   )}
                   
-                  <Card className="mt-4">
-                    <CardHeader>
-                      <CardTitle>Ayuda</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-slate-600 space-y-2">
-                        <p>
-                          <Info className="inline-block h-4 w-4 mr-1" />
-                          Utiliza el editor visual para crear y conectar los nodos del pipeline.
-                        </p>
-                        <p>
-                          <Info className="inline-block h-4 w-4 mr-1" />
-                          Puedes cambiar entre el editor visual y el editor YAML en cualquier momento.
-                        </p>
-                        <p>
-                          <Info className="inline-block h-4 w-4 mr-1" />
-                          No olvides guardar tus cambios para que se apliquen.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {(!selectedNode || selectedTab !== 'visual') && (
+                    <Card className="mt-4">
+                      <CardHeader>
+                        <CardTitle>Ayuda</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-sm text-slate-600 space-y-2">
+                          <p>
+                            <Info className="inline-block h-4 w-4 mr-1" />
+                            Utiliza el editor visual para crear y conectar los nodos del pipeline.
+                          </p>
+                          <p>
+                            <Info className="inline-block h-4 w-4 mr-1" />
+                            Puedes cambiar entre el editor visual y el editor YAML en cualquier momento.
+                          </p>
+                          <p>
+                            <Info className="inline-block h-4 w-4 mr-1" />
+                            No olvides guardar tus cambios para que se apliquen.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             )}

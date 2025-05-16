@@ -12,7 +12,7 @@ interface PipelineVisualEditorProps {
     nodes: any[];
     edges: any[];
   };
-  onChange: (updatedFlow: any) => void;
+  onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
   readOnly?: boolean;
 }
 
@@ -38,20 +38,24 @@ export default function PipelineVisualEditor({
   }, [flowData]);
 
   // Notificar cambios en el flujo
-  const notifyChange = useCallback(() => {
+  const notifyChange = useCallback((selectedId: string | null = null) => {
     if (readOnly) return;
     
     onChange({
       nodes,
       edges,
-    });
-  }, [nodes, edges, onChange, readOnly]);
+    }, selectedId !== undefined ? selectedId : selectedNode);
+  }, [nodes, edges, onChange, readOnly, selectedNode]);
 
   // Manejar la selección de un nodo
   const handleNodeClick = (nodeId: string) => {
     if (readOnly) return;
     
-    setSelectedNode(nodeId === selectedNode ? null : nodeId);
+    const newSelectedNode = nodeId === selectedNode ? null : nodeId;
+    setSelectedNode(newSelectedNode);
+    
+    // Notificar el cambio de selección
+    notifyChange(newSelectedNode);
   };
 
   // Manejar la eliminación de un nodo
