@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import Layout from "../components/Layout";
+// No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
 import PipelineVisualEditor from "@/components/pipeline-studio/PipelineVisualEditor";
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
@@ -511,7 +511,6 @@ export default function PipelineStudio() {
   
   // Renderizar la interfaz de usuario
   return (
-    <Layout>
       <div className="container mx-auto py-4">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -697,6 +696,5 @@ export default function PipelineStudio() {
           </>
         )}
       </div>
-    </Layout>
   );
 }
