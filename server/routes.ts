@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupSocketServer } from "./api";
 import { hasuraClient } from "./hasura-client";
+import { PipelineTemplateManager } from "../client/src/lib/pipeline-template-manager";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -39,6 +40,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('GraphQL query error:', error);
       res.status(500).json({
         error: "Failed to execute GraphQL query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get pipeline templates
+  app.get('/api/pipeline-templates', (req, res) => {
+    try {
+      const templateManager = PipelineTemplateManager.getInstance();
+      const templates = templateManager.getTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching pipeline templates:", error);
+      res.status(500).json({
+        error: "Failed to fetch pipeline templates",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get a specific pipeline template by ID
+  app.get('/api/pipeline-templates/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const templateManager = PipelineTemplateManager.getInstance();
+      const template = templateManager.getTemplateById(id);
+      
+      if (!template) {
+        return res.status(404).json({
+          error: "Template not found"
+        });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching pipeline template:", error);
+      res.status(500).json({
+        error: "Failed to fetch pipeline template",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

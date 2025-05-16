@@ -14,7 +14,9 @@ import {
   Database,
   Network,
   ServerCog,
-  Plus
+  Plus,
+  Workflow,
+  PenTool
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -127,6 +129,10 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             <Link href="/pipelines" className={cn("sidebar-item", location.startsWith("/pipelines") && "active")}>
                 <GitBranch className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Pipelines</span>}
+            </Link>
+            <Link href="/pipeline-studio" className={cn("sidebar-item", location.startsWith("/pipeline-studio") && "active")}>
+                <PenTool className="w-5 h-5 mr-3" />
+                {!collapsed && <span>Pipeline Studio</span>}
             </Link>
             <Link href="/jobs" className={cn("sidebar-item", location.startsWith("/jobs") && "active")}>
                 <ListChecks className="w-5 h-5 mr-3" />

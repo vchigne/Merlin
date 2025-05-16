@@ -17,6 +17,7 @@ import Explorer from "@/pages/Explorer";
 import AgentDetails from "@/pages/AgentDetails";
 import CreateAgent from "@/pages/CreateAgent";
 import PipelineDetails from "@/pages/PipelineDetails";
+import PipelineStudio from "@/pages/PipelineStudio";
 import Connections from "@/pages/Connections";
 import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
 import SQLConnectionDetail from "@/pages/SQLConnectionDetail";
@@ -48,6 +49,8 @@ function Router() {
         <Route path="/agents/:id" component={AgentDetails} />
         <Route path="/pipelines" component={Pipelines} />
         <Route path="/pipelines/:id" component={PipelineDetails} />
+        <Route path="/pipeline-studio" component={PipelineStudio} />
+        <Route path="/pipeline-studio/:id" component={PipelineStudio} />
         <Route path="/jobs" component={Jobs} />
         <Route path="/jobs/:id" component={PipelineDetails} />
         <Route path="/logs" component={Logs} />
