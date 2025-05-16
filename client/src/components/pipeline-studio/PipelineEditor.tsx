@@ -49,12 +49,12 @@ export default function PipelineEditor({
     let x = 150;
     let y = 150;
     
-    // Espaciado entre nodos - significativamente aumentado para evitar solapamiento
-    const spacingX = 600;
-    const spacingY = 300;
+    // Espaciado entre nodos - aumentado drásticamente para evitar solapamiento
+    const spacingX = 800;
+    const spacingY = 400;
     
-    // Máximo de nodos por fila - reducido para mejor visualización
-    const maxNodesPerRow = 2;
+    // Máximo de nodos por fila - limitado a uno por fila para mayor claridad
+    const maxNodesPerRow = 1;
     
     return nodes.map((node, index) => {
       // Si el nodo ya tiene una posición definida pero está superpuesto con otro nodo,
@@ -746,22 +746,10 @@ export default function PipelineEditor({
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               {iconComponent}
-              {isMinimized ? (
-                // Versión minimizada con tooltip pero mostrando parte del nombre
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className={`font-medium ${textColor} truncate max-w-[120px]`}>
-                        {node.data.label}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>{node.data.label}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                // Versión completa
-                <span className={`font-medium ${textColor} truncate max-w-[150px]`}>{node.data.label}</span>
-              )}
+              {/* Siempre mostrar el nombre del nodo, incluso cuando está minimizado */}
+              <span className={`font-medium ${textColor} truncate max-w-[170px]`}>
+                {node.data.label}
+              </span>
             </div>
             
             <div className="flex items-center gap-2">
@@ -893,7 +881,7 @@ export default function PipelineEditor({
 
   return (
     <div
-      className="relative w-full h-full border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
+      className="relative w-[100vw] h-full border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -903,10 +891,13 @@ export default function PipelineEditor({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      style={{
+        maxWidth: '100%'
+      }}
     >
       {/* Grid de fondo para el canvas infinito - ocupa todo el espacio disponible */}
       <div 
-        className="absolute top-0 left-0 right-0 bottom-0 w-[20000px] h-[20000px]"
+        className="absolute top-0 left-0 right-0 bottom-0 w-[50000px] h-[50000px]"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
           backgroundSize: '20px 20px',

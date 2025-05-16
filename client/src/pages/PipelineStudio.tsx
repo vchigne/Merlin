@@ -1013,7 +1013,7 @@ export default function PipelineStudio() {
                       </TabsList>
                       
                       <TabsContent value="visual" className="h-[calc(100vh-200px)]">
-                        <div className="relative w-full h-full">
+                        <div className="relative w-[100vw] h-full">
                           {/* Canvas principal a pantalla completa */}
                           <div className="w-full h-full">
                             {pipelineFlowData && (
