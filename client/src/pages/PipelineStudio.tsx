@@ -30,6 +30,9 @@ import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTempl
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
 import PipelineNodeProperties from "@/components/pipeline-studio/PipelineNodeProperties";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
+import NodePalette from "@/components/pipeline-studio/NodePalette";
+import DraggablePipelineProperties from "@/components/pipeline-studio/DraggablePipelineProperties";
+import DraggableNodeProperties from "@/components/pipeline-studio/DraggableNodeProperties";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
