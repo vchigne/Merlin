@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2, Download, Upload, Save } from "lucide-react";
+import { pipelineLayoutManager } from "@/lib/pipeline-layout-manager";
+import { useToast } from "@/hooks/use-toast";
 
 // Componente mejorado para el editor visual de flujos de pipeline
 // Con canvas infinito y soporte completo para dispositivos móviles
@@ -13,13 +15,16 @@ interface PipelineEditorProps {
   };
   onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
   readOnly?: boolean;
+  pipelineId?: string; // ID del pipeline para guardar su layout
 }
 
 export default function PipelineEditor({
   flowData,
   onChange,
   readOnly = false,
+  pipelineId,
 }: PipelineEditorProps) {
+  const { toast } = useToast();
   // Estados para el editor
   const [nodes, setNodes] = useState<any[]>([]);
   const [edges, setEdges] = useState<any[]>([]);
@@ -393,44 +398,68 @@ export default function PipelineEditor({
   // Renderizar un nodo
   const renderNode = (node: any) => {
     const isSelected = node.id === selectedNode;
-    const isPipelineStart = node.id === 'start';
+    const isPipelineStart = node.id === 'start' || node.id === 'pipeline-start';
     const isMinimized = minimizedNodes.has(node.id);
     
     let nodeColor = 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
+    let headerColor = 'bg-slate-100 dark:bg-slate-700';
     let textColor = 'text-slate-900 dark:text-slate-100';
+    let typeLabel = 'Nodo';
     
-    // Determinar el color del nodo según su tipo
+    // Determinar el color del nodo y la etiqueta según su tipo
     switch (node.type) {
       case 'command':
+      case 'commandNode':
         nodeColor = 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700';
+        headerColor = 'bg-blue-100 dark:bg-blue-900';
+        typeLabel = 'Comando';
         break;
       case 'sql':
+      case 'sqlNode':
         nodeColor = 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700';
+        headerColor = 'bg-green-100 dark:bg-green-900';
+        typeLabel = 'SQL';
         break;
       case 'sftp':
+      case 'sftpNode':
+      case 'sftpDownloaderNode':
+      case 'sftpUploaderNode':
         nodeColor = 'bg-purple-50 dark:bg-purple-950 border-purple-300 dark:border-purple-700';
+        headerColor = 'bg-purple-100 dark:bg-purple-900';
+        typeLabel = node.type.includes('Downloader') ? 'SFTP ↓' : 'SFTP ↑';
         break;
       case 'zip':
-      case 'unzip':
+      case 'zipNode':
         nodeColor = 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700';
+        headerColor = 'bg-yellow-100 dark:bg-yellow-900';
+        typeLabel = 'ZIP';
+        break;
+      case 'unzip':
+      case 'unzipNode':
+        nodeColor = 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700';
+        headerColor = 'bg-yellow-100 dark:bg-yellow-900';
+        typeLabel = 'UNZIP';
         break;
       case 'pipeline':
+      case 'callPipelineNode':
         nodeColor = 'bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700';
+        headerColor = 'bg-red-100 dark:bg-red-900';
+        typeLabel = 'PIPELINE';
         break;
       default:
         // Mantener el estilo por defecto
+        if (isPipelineStart) {
+          nodeColor = 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600';
+          headerColor = 'bg-gray-200 dark:bg-gray-800';
+          textColor = 'text-gray-700 dark:text-gray-300';
+          typeLabel = 'INICIO';
+        }
         break;
     }
     
     // Si es nodo seleccionado, agregar estilo adicional
     if (isSelected) {
       nodeColor += ' ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400';
-    }
-    
-    // Si es nodo inicial, agregar estilo distintivo
-    if (isPipelineStart) {
-      nodeColor = 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600';
-      textColor = 'text-gray-700 dark:text-gray-300';
     }
     
     // Obtener el ícono según el tipo de nodo
@@ -440,14 +469,14 @@ export default function PipelineEditor({
     const nodeStyle = {
       left: `${node.position.x}px`,
       top: `${node.position.y}px`,
-      width: isMinimized ? 'auto' : '200px',
+      width: isMinimized ? 'auto' : '220px',
       zIndex: isSelected ? 10 : 1
     };
     
     return (
       <div
         key={node.id}
-        className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
+        className={`absolute rounded-md border ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm overflow-hidden`}
         style={nodeStyle}
         onClick={() => {
           if (connectingNode && connectingNode !== node.id) {
@@ -467,67 +496,90 @@ export default function PipelineEditor({
           }
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            {iconComponent}
-            {isMinimized ? (
-              // Versión minimizada con tooltip
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className={`font-medium ${textColor} truncate max-w-[50px]`}>
-                      {node.data.label.substring(0, 4)}...
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{node.data.label}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              // Versión completa
-              <span className={`font-medium ${textColor}`}>{node.data.label}</span>
-            )}
+        {/* Encabezado del nodo con tipo */}
+        <div className={`text-xs font-bold px-2 py-1 ${headerColor} uppercase flex justify-between items-center`}>
+          <span>{typeLabel}</span>
+          {!readOnly && (
+            <button
+              className="text-slate-500 hover:text-slate-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMinimizeNode(node.id);
+              }}
+              title={isMinimized ? "Expandir" : "Minimizar"}
+            >
+              {isMinimized ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+            </button>
+          )}
+        </div>
+        
+        {/* Contenido del nodo */}
+        <div className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {iconComponent}
+              {isMinimized ? (
+                // Versión minimizada con tooltip
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`font-medium ${textColor} truncate max-w-[80px]`}>
+                        {node.data.label}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>{node.data.label}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                // Versión completa
+                <span className={`font-medium ${textColor} truncate max-w-[120px]`}>{node.data.label}</span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {!readOnly && !isPipelineStart && (
+                <button
+                  className="text-blue-500 hover:text-blue-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartConnecting(e, node.id);
+                  }}
+                  title="Conectar nodo"
+                >
+                  <Link2 className="h-4 w-4" />
+                </button>
+              )}
+              
+              {isSelected && !readOnly && !isPipelineStart && (
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteNode(node.id);
+                  }}
+                  title="Eliminar nodo"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {!readOnly && (
-              <button
-                className="text-slate-500 hover:text-slate-700"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleMinimizeNode(node.id);
-                }}
-                title={isMinimized ? "Expandir" : "Minimizar"}
-              >
-                {isMinimized ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-              </button>
-            )}
-            
-            {!readOnly && !isPipelineStart && (
-              <button
-                className="text-blue-500 hover:text-blue-700"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStartConnecting(e, node.id);
-                }}
-                title="Conectar nodo"
-              >
-                <Link2 className="h-4 w-4" />
-              </button>
-            )}
-            
-            {isSelected && !readOnly && !isPipelineStart && (
-              <button
-                className="text-red-500 hover:text-red-700"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteNode(node.id);
-                }}
-                title="Eliminar nodo"
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          {/* Indicador de conexiones */}
+          {!isMinimized && edges.some(edge => edge.source === node.id || edge.target === node.id) && (
+            <div className="mt-2 text-xs text-slate-500">
+              {edges.filter(edge => edge.source === node.id).length > 0 && (
+                <span className="mr-2">
+                  Salidas: {edges.filter(edge => edge.source === node.id).length}
+                </span>
+              )}
+              {edges.filter(edge => edge.target === node.id).length > 0 && (
+                <span>
+                  Entradas: {edges.filter(edge => edge.target === node.id).length}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
