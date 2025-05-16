@@ -497,6 +497,167 @@ export default function PipelineStudio() {
     return orderedUnits.reverse();
   };
   
+  // Función para añadir un nuevo nodo al flujo
+  const handleAddNode = (nodeType: string) => {
+    if (!pipelineFlowData) return;
+    
+    // Generar un ID único para el nodo
+    const nodeId = `${nodeType.replace('Node', '')}_${Date.now()}`;
+    
+    // Calcular la posición para el nuevo nodo
+    const lastNodeIndex = pipelineFlowData.nodes.length - 1;
+    const lastY = lastNodeIndex >= 0 ? pipelineFlowData.nodes[lastNodeIndex].position.y + 100 : 150;
+    
+    // Posición para el nuevo nodo
+    const position = { x: 250, y: lastY };
+    
+    // Crear nodo según el tipo
+    let newNode: any = {
+      id: nodeId,
+      type: nodeType,
+      position,
+      data: {
+        label: getNodeLabel(nodeType),
+        properties: getNodeDefaultProperties(nodeType),
+        options: {}
+      }
+    };
+    
+    // Añadir el nuevo nodo al flujo
+    const updatedNodes = [...pipelineFlowData.nodes, newNode];
+    
+    // Crear una conexión desde el último nodo si existe
+    let updatedEdges = [...pipelineFlowData.edges];
+    if (lastNodeIndex >= 0) {
+      // Si hay nodos, conectar con el último o con el inicio
+      const sourceId = pipelineFlowData.nodes.length > 1 ? 
+        pipelineFlowData.nodes[lastNodeIndex].id : 
+        'pipeline-start';
+      
+      const newEdge = {
+        id: `e-${sourceId}-${nodeId}`,
+        source: sourceId,
+        target: nodeId,
+        animated: false
+      };
+      
+      updatedEdges.push(newEdge);
+    } else if (pipelineFlowData.nodes.length === 1 && pipelineFlowData.nodes[0].id === 'pipeline-start') {
+      // Si solo existe el nodo inicial, conectar desde él
+      const newEdge = {
+        id: `e-pipeline-start-${nodeId}`,
+        source: 'pipeline-start',
+        target: nodeId,
+        animated: false
+      };
+      
+      updatedEdges.push(newEdge);
+    }
+    
+    const updatedFlow = {
+      ...pipelineFlowData,
+      nodes: updatedNodes,
+      edges: updatedEdges
+    };
+    
+    // Actualizar el estado
+    setPipelineFlowData(updatedFlow);
+    
+    // Seleccionar el nuevo nodo para editar sus propiedades
+    setSelectedNode(newNode);
+    setUnsavedChanges(true);
+    
+    // Asegurar que el panel de propiedades esté visible
+    setShowPropertiesPanel(true);
+    
+    // Notificar el cambio
+    handleVisualEditorChange(updatedFlow, nodeId);
+  };
+  
+  // Función para obtener la etiqueta del nodo según su tipo
+  const getNodeLabel = (nodeType: string): string => {
+    switch (nodeType) {
+      case 'commandNode':
+        return 'Comando';
+      case 'queryNode':
+        return 'Consulta SQL';
+      case 'sftpDownloaderNode':
+        return 'SFTP Descarga';
+      case 'sftpUploaderNode':
+        return 'SFTP Subida';
+      case 'zipNode':
+        return 'Comprimir';
+      case 'unzipNode':
+        return 'Descomprimir';
+      case 'callPipelineNode':
+        return 'Llamar Pipeline';
+      default:
+        return 'Nodo';
+    }
+  };
+  
+  // Función para obtener las propiedades por defecto según el tipo de nodo
+  const getNodeDefaultProperties = (nodeType: string): any => {
+    switch (nodeType) {
+      case 'commandNode':
+        return {
+          command_id: '',
+          target: '',
+          working_directory: '',
+          args: '',
+          raw_script: '',
+          instant: false,
+          return_output: false,
+          return_output_type: 'text'
+        };
+      case 'queryNode':
+        return {
+          query_queue_id: '',
+          sqlconn_id: '',
+          query_string: '',
+          path: '',
+          print_headers: true,
+          enabled: true,
+          return_output: false
+        };
+      case 'sftpDownloaderNode':
+        return {
+          sftp_downloader_id: '',
+          sftp_link_id: '',
+          output: '',
+          return_output: false
+        };
+      case 'sftpUploaderNode':
+        return {
+          sftp_uploader_id: '',
+          sftp_link_id: '',
+          input: '',
+          return_output: false
+        };
+      case 'zipNode':
+        return {
+          zip_id: '',
+          output: '',
+          return_output: false
+        };
+      case 'unzipNode':
+        return {
+          unzip_id: '',
+          input: '',
+          output: '',
+          return_output: false
+        };
+      case 'callPipelineNode':
+        return {
+          call_pipeline: '',
+          pipeline_id: '',
+          continue_on_error: false
+        };
+      default:
+        return {};
+    }
+  };
+  
   // Función para guardar el pipeline
   const handleSavePipeline = async () => {
     try {
