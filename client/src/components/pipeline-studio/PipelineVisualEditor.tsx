@@ -165,36 +165,36 @@ export default function PipelineVisualEditor({
     const isSelected = node.id === selectedNode;
     const isPipelineStart = node.id === 'pipeline-start';
     
-    let nodeColor = 'bg-slate-100 border-slate-300';
-    let iconComponent = <Settings2 className="h-4 w-4 mr-2" />;
+    let nodeColor = 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white';
+    let iconComponent = <Settings2 className="h-4 w-4 mr-2 text-slate-500 dark:text-slate-400" />;
     
     // Asignar color e ícono según el tipo de nodo
     switch (node.type) {
       case 'pipelineStart':
-        nodeColor = 'bg-blue-50 border-blue-300';
-        iconComponent = <Settings2 className="h-4 w-4 mr-2 text-blue-500" />;
+        nodeColor = 'bg-blue-100 dark:bg-blue-950 border-blue-400 dark:border-blue-800 text-blue-900 dark:text-blue-100';
+        iconComponent = <Settings2 className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />;
         break;
       case 'commandNode':
-        nodeColor = 'bg-amber-50 border-amber-300';
-        iconComponent = <Wrench className="h-4 w-4 mr-2 text-amber-500" />;
+        nodeColor = 'bg-amber-100 dark:bg-amber-950 border-amber-400 dark:border-amber-800 text-amber-900 dark:text-amber-100';
+        iconComponent = <Wrench className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />;
         break;
       case 'queryNode':
-        nodeColor = 'bg-green-50 border-green-300';
-        iconComponent = <Database className="h-4 w-4 mr-2 text-green-500" />;
+        nodeColor = 'bg-green-100 dark:bg-green-950 border-green-400 dark:border-green-800 text-green-900 dark:text-green-100';
+        iconComponent = <Database className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />;
         break;
       case 'sftpDownloaderNode':
       case 'sftpUploaderNode':
-        nodeColor = 'bg-purple-50 border-purple-300';
-        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-purple-500" />;
+        nodeColor = 'bg-purple-100 dark:bg-purple-950 border-purple-400 dark:border-purple-800 text-purple-900 dark:text-purple-100';
+        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />;
         break;
       case 'zipNode':
       case 'unzipNode':
-        nodeColor = 'bg-red-50 border-red-300';
-        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-red-500" />;
+        nodeColor = 'bg-red-100 dark:bg-red-950 border-red-400 dark:border-red-800 text-red-900 dark:text-red-100';
+        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />;
         break;
       case 'callPipelineNode':
-        nodeColor = 'bg-emerald-50 border-emerald-300';
-        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-emerald-500" />;
+        nodeColor = 'bg-emerald-100 dark:bg-emerald-950 border-emerald-400 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100';
+        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />;
         break;
     }
     
@@ -270,10 +270,10 @@ export default function PipelineVisualEditor({
     // Generar el path
     const path = `M ${startX} ${startY} C ${controlPointX1} ${controlPointY1}, ${controlPointX2} ${controlPointY2}, ${endX} ${endY}`;
     
-    // Estilo para la línea
+    // Estilo para la línea con mejor contraste para ambos temas
     const edgeStyle = {
-      stroke: edge.animated ? '#3b82f6' : '#94a3b8',
-      strokeWidth: 2,
+      stroke: edge.animated ? '#2563eb' : '#64748b', // Azul más oscuro y gris más visible
+      strokeWidth: 2.5, // Ligeramente más grueso para mejor visibilidad
       fill: 'none',
       strokeDasharray: edge.animated ? '5,5' : 'none'
     };
@@ -289,14 +289,14 @@ export default function PipelineVisualEditor({
 
   return (
     <div
-      className="relative w-full h-[600px] border rounded-md bg-slate-50 overflow-hidden"
+      className="relative w-full h-[600px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
       {/* Controles de zoom y herramientas */}
-      <div className="absolute top-2 right-2 z-50 bg-white rounded-md shadow-sm border p-1">
+      <div className="absolute top-2 right-2 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
         <div className="flex flex-col gap-1">
           <TooltipProvider>
             <Tooltip>
@@ -350,8 +350,8 @@ export default function PipelineVisualEditor({
       
       {/* Panel de nodos disponibles */}
       {!readOnly && (
-        <div className="absolute top-2 left-2 z-50 bg-white rounded-md shadow-sm border p-2">
-          <div className="text-sm font-medium mb-2">Añadir nodos</div>
+        <div className="absolute top-2 left-2 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-2">
+          <div className="text-sm font-medium mb-2 text-slate-900 dark:text-slate-100">Añadir nodos</div>
           <div className="flex flex-col gap-1">
             <Button
               variant="outline"
@@ -432,11 +432,17 @@ export default function PipelineVisualEditor({
       
       {/* Mensaje de ayuda */}
       {nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+        <div className="absolute inset-0 flex items-center justify-center">
           {readOnly ? (
-            <p>Este pipeline no tiene nodos configurados.</p>
+            <div className="text-center bg-slate-200/50 dark:bg-slate-800/50 p-4 rounded-lg max-w-md">
+              <Info className="h-10 w-10 mx-auto mb-2 text-blue-500 dark:text-blue-400" />
+              <p className="text-slate-700 dark:text-slate-300 font-medium">Este pipeline no tiene nodos configurados.</p>
+            </div>
           ) : (
-            <p>Usa los controles de la izquierda para añadir nodos al pipeline.</p>
+            <div className="text-center bg-slate-200/50 dark:bg-slate-800/50 p-4 rounded-lg max-w-md">
+              <Info className="h-10 w-10 mx-auto mb-2 text-blue-500 dark:text-blue-400" />
+              <p className="text-slate-700 dark:text-slate-300 font-medium">Usa los controles de la izquierda para añadir nodos al pipeline.</p>
+            </div>
           )}
         </div>
       )}
