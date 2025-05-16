@@ -33,7 +33,8 @@ import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor"
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
-  Download, Upload, FileArchive, File as FileIcon, ExternalLink
+  Download, Upload, FileArchive, File as FileIcon, ExternalLink, X, LayoutPanelLeft,
+  LayoutPanelTop, Maximize2, Minimize2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -843,8 +844,8 @@ export default function PipelineStudio() {
                         </TabsTrigger>
                       </TabsList>
                       
-                      <TabsContent value="visual">
-                        <div className="relative w-full">
+                      <TabsContent value="visual" className="h-[600px]">
+                        <div className="relative w-full h-full">
                           {/* Canvas principal a pantalla completa */}
                           <div className="w-full h-full">
                             {pipelineFlowData && (
@@ -857,17 +858,17 @@ export default function PipelineStudio() {
                           </div>
                           
                           {/* Panel flotante izquierdo - Agregar Nodos */}
-                          <div className="absolute top-2 left-2 z-10 shadow-lg">
+                          <div className="absolute top-4 left-4 z-10 shadow-lg">
                             <Card 
-                              className={`transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card`}
+                              className={`transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700`}
                               style={{ 
                                 width: showNodePalette ? '220px' : '40px',
                                 height: showNodePalette ? 'auto' : '40px'
                               }}
                             >
-                              <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
-                                {showNodePalette ? (
-                                  <>
+                              {showNodePalette ? (
+                                <>
+                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
                                     <CardTitle className="text-base">Añadir Nodos</CardTitle>
                                     <Button 
                                       variant="ghost" 
@@ -875,227 +876,223 @@ export default function PipelineStudio() {
                                       onClick={() => setShowNodePalette(false)}
                                       className="h-7 w-7 p-0"
                                     >
-                                      <ChevronLeft className="h-4 w-4" />
+                                      <X className="h-4 w-4" />
                                     </Button>
-                                  </>
-                                ) : (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => setShowNodePalette(true)}
-                                    className="h-7 w-7 p-0 mx-auto"
-                                  >
-                                    <PlusCircle className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </CardHeader>
-                              
-                              {showNodePalette && (
-                                <CardContent className="pt-0 pb-2 px-3">
-                                  <ScrollArea className="h-[400px] pr-3">
-                                    <div className="space-y-2">
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('commandNode')}
-                                      >
-                                        <Settings2 className="mr-2 h-4 w-4" />
-                                        Comando
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('queryNode')}
-                                      >
-                                        <Database className="mr-2 h-4 w-4" />
-                                        Consulta SQL
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('sftpDownloaderNode')}
-                                      >
-                                        <Download className="mr-2 h-4 w-4" />
-                                        SFTP Descarga
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('sftpUploaderNode')}
-                                      >
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        SFTP Subida
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('zipNode')}
-                                      >
-                                        <FileArchive className="mr-2 h-4 w-4" />
-                                        Comprimir
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('unzipNode')}
-                                      >
-                                        <FileIcon className="mr-2 h-4 w-4" />
-                                        Descomprimir
-                                      </Button>
-                                      
-                                      <Button
-                                        className="w-full justify-start text-left text-sm"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleAddNode('callPipelineNode')}
-                                      >
-                                        <ExternalLink className="mr-2 h-4 w-4" />
-                                        Llamar Pipeline
-                                      </Button>
-                                    </div>
-                                  </ScrollArea>
-                                </CardContent>
+                                  </CardHeader>
+                                  
+                                  <CardContent className="pt-0 pb-2 px-3">
+                                    <ScrollArea className="h-[400px] pr-3">
+                                      <div className="space-y-2">
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('commandNode')}
+                                        >
+                                          <Settings2 className="mr-2 h-4 w-4" />
+                                          Comando
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('queryNode')}
+                                        >
+                                          <Database className="mr-2 h-4 w-4" />
+                                          Consulta SQL
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('sftpDownloaderNode')}
+                                        >
+                                          <Download className="mr-2 h-4 w-4" />
+                                          SFTP Descarga
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('sftpUploaderNode')}
+                                        >
+                                          <Upload className="mr-2 h-4 w-4" />
+                                          SFTP Subida
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('zipNode')}
+                                        >
+                                          <FileArchive className="mr-2 h-4 w-4" />
+                                          Comprimir
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('unzipNode')}
+                                        >
+                                          <FileIcon className="mr-2 h-4 w-4" />
+                                          Descomprimir
+                                        </Button>
+                                        
+                                        <Button
+                                          className="w-full justify-start text-left text-sm"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleAddNode('callPipelineNode')}
+                                        >
+                                          <ExternalLink className="mr-2 h-4 w-4" />
+                                          Llamar Pipeline
+                                        </Button>
+                                      </div>
+                                    </ScrollArea>
+                                  </CardContent>
+                                </>
+                              ) : (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setShowNodePalette(true)}
+                                  className="h-10 w-10 p-0"
+                                >
+                                  <LayoutPanelLeft className="h-5 w-5" />
+                                </Button>
                               )}
                             </Card>
                           </div>
                           
                           {/* Panel flotante derecho - Propiedades */}
-                          <div className="absolute top-2 right-2 z-10 shadow-lg">
-                            <div 
-                              className={`transition-all duration-300 ease-in-out`}
+                          <div className="absolute top-4 right-4 z-10 shadow-lg">
+                            <Card
+                              className="transition-all duration-300 ease-in-out bg-opacity-90 backdrop-blur-sm bg-card border-slate-200 dark:border-slate-700"
                               style={{ 
-                                width: showPropertiesPanel ? '300px' : '40px', 
+                                width: showPropertiesPanel ? '320px' : '40px',
+                                height: showPropertiesPanel ? 'auto' : '40px',
                                 overflow: 'hidden'
                               }}
                             >
                               {showPropertiesPanel ? (
-                                <div className="flex flex-col space-y-4">
-                                  <Card className="bg-opacity-90 backdrop-blur-sm bg-card">
-                                    <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
-                                      <CardTitle className="text-base">Propiedades</CardTitle>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        onClick={() => setShowPropertiesPanel(false)}
-                                        className="h-7 w-7 p-0"
-                                      >
-                                        <ChevronRight className="h-4 w-4" />
-                                      </Button>
-                                    </CardHeader>
-                                    <CardContent className="p-3">
-                                      <ScrollArea className="h-[500px] pr-3">
-                                        <div className="space-y-4">
-                                          <PipelinePropertiesPanel
-                                            pipelineData={pipelineData}
-                                            agentOptions={agentOptions}
-                                            onChange={handlePipelinePropertiesChange}
+                                <>
+                                  <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
+                                    <CardTitle className="text-base">Propiedades</CardTitle>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => setShowPropertiesPanel(false)}
+                                      className="h-7 w-7 p-0"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </CardHeader>
+                                  
+                                  <CardContent className="p-3">
+                                    <ScrollArea className="h-[500px] pr-3">
+                                      <div className="space-y-4">
+                                        <PipelinePropertiesPanel
+                                          pipelineData={pipelineData}
+                                          agentOptions={agentOptions}
+                                          onChange={handlePipelinePropertiesChange}
+                                          readOnly={editorMode === 'view'}
+                                        />
+                                        
+                                        {selectedNode && (
+                                          <PipelineNodeProperties
+                                            node={selectedNode}
+                                            onChange={(updatedNode) => {
+                                              // Actualizar el nodo en el flujo
+                                              const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
+                                                if (node.id === selectedNode.id) {
+                                                  return updatedNode;
+                                                }
+                                                return node;
+                                              });
+                                              
+                                              const updatedFlow = {
+                                                ...pipelineFlowData,
+                                                nodes: updatedNodes
+                                              };
+                                              
+                                              setPipelineFlowData(updatedFlow);
+                                              handleVisualEditorChange(updatedFlow, selectedNode.id);
+                                            }}
+                                            sftpConnections={sftpConnections}
+                                            sqlConnections={sqlConnections}
+                                            pipelines={availablePipelines}
                                             readOnly={editorMode === 'view'}
                                           />
-                                          
-                                          {selectedNode && (
-                                            <PipelineNodeProperties
-                                              node={selectedNode}
-                                              onChange={(updatedNode) => {
-                                                // Actualizar el nodo en el flujo
-                                                const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
-                                                  if (node.id === selectedNode.id) {
-                                                    return updatedNode;
-                                                  }
-                                                  return node;
-                                                });
-                                                
-                                                const updatedFlow = {
-                                                  ...pipelineFlowData,
-                                                  nodes: updatedNodes
-                                                };
-                                                
-                                                setPipelineFlowData(updatedFlow);
-                                                handleVisualEditorChange(updatedFlow, selectedNode.id);
-                                              }}
-                                              sftpConnections={sftpConnections}
-                                              sqlConnections={sqlConnections}
-                                              pipelines={availablePipelines}
-                                              readOnly={editorMode === 'view'}
-                                            />
-                                          )}
-                                          
-                                          {selectedTemplate && (
-                                            <Card>
-                                              <CardHeader className="py-3">
-                                                <CardTitle className="text-base">Plantilla Seleccionada</CardTitle>
-                                              </CardHeader>
-                                              <CardContent className="py-2">
-                                                <div className="mb-2">
-                                                  <span className="font-semibold">{selectedTemplate.name}</span>
-                                                </div>
-                                                <p className="text-xs text-slate-600">
-                                                  {selectedTemplate.description}
+                                        )}
+                                        
+                                        {selectedTemplate && (
+                                          <Card>
+                                            <CardHeader className="py-3">
+                                              <CardTitle className="text-base">Plantilla Seleccionada</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="py-2">
+                                              <div className="mb-2">
+                                                <span className="font-semibold">{selectedTemplate.name}</span>
+                                              </div>
+                                              <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {selectedTemplate.description}
+                                              </p>
+                                            </CardContent>
+                                            <CardFooter className="py-2">
+                                              <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                onClick={() => setSelectedTemplate(null)}
+                                              >
+                                                Cambiar Plantilla
+                                              </Button>
+                                            </CardFooter>
+                                          </Card>
+                                        )}
+                                        
+                                        {!selectedNode && !selectedTemplate && (
+                                          <Card>
+                                            <CardHeader className="py-3">
+                                              <CardTitle className="text-base">Ayuda</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="py-2">
+                                              <div className="text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                                                <p>
+                                                  <Info className="inline-block h-3 w-3 mr-1" />
+                                                  Utiliza el panel izquierdo para añadir nodos al pipeline.
                                                 </p>
-                                              </CardContent>
-                                              <CardFooter className="py-2">
-                                                <Button 
-                                                  variant="outline" 
-                                                  size="sm"
-                                                  onClick={() => setSelectedTemplate(null)}
-                                                >
-                                                  Cambiar Plantilla
-                                                </Button>
-                                              </CardFooter>
-                                            </Card>
-                                          )}
-                                          
-                                          {!selectedNode && (
-                                            <Card>
-                                              <CardHeader className="py-3">
-                                                <CardTitle className="text-base">Ayuda</CardTitle>
-                                              </CardHeader>
-                                              <CardContent className="py-2">
-                                                <div className="text-xs text-slate-600 space-y-2">
-                                                  <p>
-                                                    <Info className="inline-block h-3 w-3 mr-1" />
-                                                    Utiliza el editor visual para crear y conectar los nodos del pipeline.
-                                                  </p>
-                                                  <p>
-                                                    <Info className="inline-block h-3 w-3 mr-1" />
-                                                    Selecciona un nodo para ver y editar sus propiedades.
-                                                  </p>
-                                                  <p>
-                                                    <Info className="inline-block h-3 w-3 mr-1" />
-                                                    No olvides guardar tus cambios para que se apliquen.
-                                                  </p>
-                                                </div>
-                                              </CardContent>
-                                            </Card>
-                                          )}
-                                        </div>
-                                      </ScrollArea>
-                                    </CardContent>
-                                  </Card>
-                                </div>
+                                                <p>
+                                                  <Info className="inline-block h-3 w-3 mr-1" />
+                                                  Selecciona un nodo para ver y editar sus propiedades.
+                                                </p>
+                                                <p>
+                                                  <Info className="inline-block h-3 w-3 mr-1" />
+                                                  No olvides guardar tus cambios para que se apliquen.
+                                                </p>
+                                              </div>
+                                            </CardContent>
+                                          </Card>
+                                        )}
+                                      </div>
+                                    </ScrollArea>
+                                  </CardContent>
+                                </>
                               ) : (
-                                <Card className="bg-opacity-90 backdrop-blur-sm bg-card" style={{ height: '40px' }}>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => setShowPropertiesPanel(true)}
-                                    className="h-full w-full p-0"
-                                  >
-                                    <Settings2 className="h-4 w-4" />
-                                  </Button>
-                                </Card>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setShowPropertiesPanel(true)}
+                                  className="h-10 w-10 p-0"
+                                >
+                                  <LayoutPanelTop className="h-5 w-5" />
+                                </Button>
                               )}
-                            </div>
+                            </Card>
                           </div>
                         </div>
                       </TabsContent>
