@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info } from "lucide-react";
+import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2 } from "lucide-react";
 
-// Componentes ficticios para el editor visual de flujos
-// En una implementación real deberías usar una librería como react-flow o similar
+// Componentes para el editor visual de flujos
+// Implementación mejorada con soporte para móviles y conectar nodos
 
 interface PipelineVisualEditorProps {
   flowData: {
@@ -30,6 +30,10 @@ export default function PipelineVisualEditor({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
   const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
+  const [connectingNode, setConnectingNode] = useState<string | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Sincronizar estados con los datos de flujo
   useEffect(() => {
@@ -38,6 +42,27 @@ export default function PipelineVisualEditor({
       setEdges(flowData.edges || []);
     }
   }, [flowData]);
+  
+  // Efecto para ajustar el tamaño del canvas al tamaño de la ventana
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (canvasRef.current) {
+        const { width, height } = canvasRef.current.getBoundingClientRect();
+        setCanvasSize({ width, height });
+      }
+    };
+    
+    // Actualizar tamaño inicial
+    updateCanvasSize();
+    
+    // Añadir listener para redimensionar cuando cambie el tamaño de la ventana
+    window.addEventListener('resize', updateCanvasSize);
+    
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, []);
 
   // Notificar cambios en el flujo
   const notifyChange = useCallback((selectedId: string | null = null) => {
@@ -88,17 +113,46 @@ export default function PipelineVisualEditor({
     setZoom(newZoom);
   };
 
-  // Manejar el inicio del arrastre (pan)
+  // Manejar el inicio del arrastre del canvas (Mouse)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 1 && e.button !== 0) return; // Solo botón central o izquierdo
     if (e.button === 0 && !e.altKey) return; // Botón izquierdo solo con Alt
+    if (connectingNode) return; // No arrastrar si estamos conectando nodos
     
     setDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
-  // Manejar el movimiento durante el arrastre
+  // Manejar el inicio del arrastre del canvas (Touch)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (connectingNode) return; // No arrastrar si estamos conectando nodos
+    if (e.touches.length === 2) { // Requiere dos dedos para mover el canvas
+      setDragging(true);
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        setDragStart({ x: touch.clientX, y: touch.clientY });
+      }
+    }
+  };
+  
+  // Manejar el movimiento durante el arrastre del canvas (Mouse)
   const handleMouseMove = (e: React.MouseEvent) => {
+    // Actualizar la posición del mouse para la conexión de nodos
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMousePosition({
+        x: e.clientX - rect.left + position.x,
+        y: e.clientY - rect.top + position.y
+      });
+    }
+    
+    // Manejar el arrastre del nodo si hay uno seleccionado
+    if (draggingNode) {
+      handleNodeDrag(e);
+      return;
+    }
+    
+    // Manejar el arrastre del canvas
     if (!dragging) return;
     
     const dx = (e.clientX - dragStart.x) * 0.5;
@@ -111,8 +165,40 @@ export default function PipelineVisualEditor({
     
     setDragStart({ x: e.clientX, y: e.clientY });
   };
+  
+  // Manejar el movimiento durante el arrastre del canvas (Touch)
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Si estamos conectando, no hacer nada
+    if (connectingNode) return;
+    
+    // Manejar el arrastre del nodo si hay uno seleccionado
+    if (draggingNode && e.touches.length === 1) {
+      const touch = e.touches[0];
+      handleNodeDrag({
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      } as any);
+      return;
+    }
+    
+    // Manejar el arrastre del canvas
+    if (!dragging || e.touches.length !== 2) return;
+    
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      const dx = (touch.clientX - dragStart.x) * 0.5;
+      const dy = (touch.clientY - dragStart.y) * 0.5;
+      
+      setPosition({
+        x: position.x + dx,
+        y: position.y + dy
+      });
+      
+      setDragStart({ x: touch.clientX, y: touch.clientY });
+    }
+  };
 
-  // Manejar el fin del arrastre
+  // Manejar el fin del arrastre (Mouse y Touch)
   const handleMouseUp = () => {
     if (draggingNode) {
       // Notificar el cambio de posición del nodo
@@ -122,7 +208,16 @@ export default function PipelineVisualEditor({
     setDragging(false);
   };
   
-  // Funciones para manejar el arrastre de nodos individuales
+  const handleTouchEnd = () => {
+    if (draggingNode) {
+      // Notificar el cambio de posición del nodo
+      notifyChange();
+      setDraggingNode(null);
+    }
+    setDragging(false);
+  };
+  
+  // Manejar el arrastre de nodos individuales (Mouse)
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     if (readOnly) return;
     e.stopPropagation();
@@ -133,7 +228,23 @@ export default function PipelineVisualEditor({
     });
   };
   
-  const handleNodeDrag = (e: React.MouseEvent) => {
+  // Manejar el arrastre de nodos individuales (Touch)
+  const handleNodeTouchStart = (e: React.TouchEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    
+    if (e.touches.length === 1) {
+      setDraggingNode(nodeId);
+      const touch = e.touches[0];
+      setNodeDragStart({
+        x: touch.clientX,
+        y: touch.clientY
+      });
+    }
+  };
+  
+  // Manejar el movimiento de nodos durante el arrastre (común para Mouse y Touch)
+  const handleNodeDrag = (e: React.MouseEvent | { clientX: number; clientY: number }) => {
     if (!draggingNode || readOnly) return;
     
     const dx = (e.clientX - nodeDragStart.x) / zoom;
@@ -158,6 +269,44 @@ export default function PipelineVisualEditor({
       x: e.clientX,
       y: e.clientY
     });
+  };
+  
+  // Iniciar conexión entre nodos
+  const handleStartConnecting = (e: React.MouseEvent | React.TouchEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    setConnectingNode(nodeId);
+  };
+  
+  // Finalizar conexión entre nodos
+  const handleEndConnecting = (targetNodeId: string) => {
+    if (!connectingNode || readOnly || connectingNode === targetNodeId) return;
+    
+    // Evitar conexiones duplicadas
+    const isDuplicate = edges.some(
+      edge => edge.source === connectingNode && edge.target === targetNodeId
+    );
+    
+    if (!isDuplicate) {
+      // Crear nueva conexión
+      const newEdge = {
+        id: `e-${connectingNode}-${targetNodeId}`,
+        source: connectingNode,
+        target: targetNodeId,
+        animated: true,
+        style: { strokeWidth: 2 }
+      };
+      
+      setEdges([...edges, newEdge]);
+      notifyChange();
+    }
+    
+    setConnectingNode(null);
+  };
+  
+  // Cancelar conexión
+  const handleCancelConnecting = () => {
+    setConnectingNode(null);
   };
 
   // Función para añadir un nuevo nodo
@@ -348,16 +497,81 @@ export default function PipelineVisualEditor({
     );
   };
 
+  // Renderizar líneas entre nodos conectados
+  const renderEdges = () => {
+    return edges.map(edge => {
+      const sourceNode = nodes.find(node => node.id === edge.source);
+      const targetNode = nodes.find(node => node.id === edge.target);
+      
+      if (!sourceNode || !targetNode) return null;
+      
+      // Calcular posiciones de inicio y fin
+      const startX = sourceNode.position.x + 100; // Ancho aproximado del nodo / 2
+      const startY = sourceNode.position.y + 25; // Alto aproximado del nodo / 2
+      const endX = targetNode.position.x + 100;
+      const endY = targetNode.position.y + 25;
+      
+      // Añadir un ligero curvado a la línea
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2 - 30;
+      
+      const pathD = `M${startX},${startY} Q${midX},${midY} ${endX},${endY}`;
+      
+      return (
+        <path 
+          key={edge.id}
+          d={pathD}
+          stroke={edge.animated ? "#3b82f6" : "#888"}
+          strokeWidth={edge.style?.strokeWidth || 2}
+          fill="none"
+          strokeDasharray={edge.animated ? "5,5" : "none"}
+          className={edge.animated ? "animate-pulse" : ""}
+        />
+      );
+    });
+  };
+  
+  // Renderizar la línea temporal cuando se está conectando nodos
+  const renderConnectionLine = () => {
+    if (!connectingNode) return null;
+    
+    const sourceNode = nodes.find(node => node.id === connectingNode);
+    if (!sourceNode) return null;
+    
+    // Calcular posición de inicio
+    const startX = sourceNode.position.x + 100; // Ancho aproximado del nodo / 2
+    const startY = sourceNode.position.y + 25; // Alto aproximado del nodo / 2
+    
+    // Obtener posición actual del cursor
+    const endX = (mousePosition?.x || startX + 100) - position.x;
+    const endY = (mousePosition?.y || startY + 50) - position.y;
+    
+    return (
+      <path 
+        d={`M${startX},${startY} L${endX},${endY}`}
+        stroke="#3b82f6"
+        strokeWidth={2}
+        fill="none"
+        strokeDasharray="5,5"
+        className="animate-pulse"
+      />
+    );
+  };
+
   return (
     <div
-      className="relative w-full h-[500px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
+      className="relative w-full h-[calc(100vh-250px)] min-h-[400px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
+      ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={(e) => {
         handleMouseMove(e);
-        handleNodeDrag(e);
       }}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       {/* Controles de zoom y herramientas */}
       <div className="absolute bottom-4 left-4 z-50 bg-white dark:bg-slate-800 rounded-md shadow-md border border-slate-200 dark:border-slate-700 p-1">
