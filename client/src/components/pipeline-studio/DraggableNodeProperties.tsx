@@ -298,7 +298,6 @@ const DraggableNodeProperties: React.FC<NodePropertiesProps> = ({
   };
   
   const nodeIcon = NODE_TYPE_ICONS[node.type] || NODE_TYPE_ICONS.default;
-  const nodeColor = NODE_TYPE_COLORS[node.type] || 'text-gray-500';
   
   return (
     <DraggablePanel
