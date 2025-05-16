@@ -45,35 +45,48 @@ export default function PipelineEditor({
   // Aplicar espaciado automático a los nodos si no tienen posiciones definidas
   const applyAutoLayout = (nodes: any[]): any[] => {
     // Solo espaciar nodos si no hay posiciones guardadas
-    // Coordenadas iniciales
-    let x = 100;
-    let y = 100;
+    // Coordenadas iniciales - más separadas para evitar solapamiento
+    let x = 150;
+    let y = 150;
     
-    // Espaciado entre nodos
-    const spacingX = 300;
-    const spacingY = 150;
+    // Espaciado entre nodos - aumentado para evitar solapamiento
+    const spacingX = 400;
+    const spacingY = 200;
     
-    // Máximo de nodos por fila
-    const maxNodesPerRow = 3;
+    // Máximo de nodos por fila - reducido para mejor visualización
+    const maxNodesPerRow = 2;
     
     return nodes.map((node, index) => {
-      // Si el nodo ya tiene una posición definida, respetarla
-      if (node.position && node.position.x !== undefined && node.position.y !== undefined) {
-        return node;
+      // Si el nodo ya tiene una posición definida pero está superpuesto con otro nodo,
+      // forzar una nueva posición
+      const hasOverlap = nodes.some((otherNode, i) => {
+        if (i === index) return false;
+        if (!node.position || !otherNode.position) return false;
+        
+        // Detectar si hay nodos muy cercanos (menos de 50px de diferencia)
+        const xDiff = Math.abs((node.position?.x || 0) - (otherNode.position?.x || 0));
+        const yDiff = Math.abs((node.position?.y || 0) - (otherNode.position?.y || 0));
+        
+        return xDiff < 100 && yDiff < 50;
+      });
+      
+      // Aplicar posición automática si no hay posición o hay solapamiento
+      if (!node.position || hasOverlap) {
+        // Calcular la posición en la cuadrícula
+        const row = Math.floor(index / maxNodesPerRow);
+        const col = index % maxNodesPerRow;
+        
+        // Aplicar la posición
+        return {
+          ...node,
+          position: {
+            x: x + col * spacingX,
+            y: y + row * spacingY
+          }
+        };
       }
       
-      // Calcular la posición en la cuadrícula
-      const row = Math.floor(index / maxNodesPerRow);
-      const col = index % maxNodesPerRow;
-      
-      // Aplicar la posición
-      return {
-        ...node,
-        position: {
-          x: x + col * spacingX,
-          y: y + row * spacingY
-        }
-      };
+      return node;
     });
   };
 
@@ -880,7 +893,7 @@ export default function PipelineEditor({
     >
       {/* Grid de fondo para el canvas infinito - ocupa todo el espacio disponible */}
       <div 
-        className="absolute top-0 left-0 w-[10000px] h-[10000px]"
+        className="absolute top-0 left-0 right-0 bottom-0 w-[20000px] h-[20000px]"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
           backgroundSize: '20px 20px',
