@@ -1140,6 +1140,115 @@ export default function PipelineStudio() {
     }
   };
   
+  // Función para duplicar un pipeline existente
+  const handleDuplicatePipeline = async (pipelineId: string) => {
+    setIsLoading(true);
+    try {
+      // Obtener datos del pipeline
+      const response = await fetch(`/api/graphql`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            query GetPipelineDetails($id: uuid!) {
+              merlin_agent_Pipeline(where: {id: {_eq: $id}}) {
+                id
+                name
+                description
+                agent_passport_id
+                abort_on_error
+              }
+              merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $id}}) {
+                id
+                unit_type
+                command_id
+                query_queue_id
+                sftp_downloader_id
+                sftp_uploader_id
+                zip_id
+                unzip_id
+                comment
+                retry_after_milliseconds
+                retry_count
+                timeout_milliseconds
+                abort_on_timeout
+                continue_on_error
+                posx
+                posy
+                call_pipeline
+                details
+              }
+            }
+          `,
+          variables: {
+            id: pipelineId
+          }
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      const pipeline = result.data.merlin_agent_Pipeline[0];
+      const units = result.data.merlin_agent_PipelineUnit;
+      
+      if (!pipeline) {
+        throw new Error("Pipeline no encontrado");
+      }
+      
+      // Actualizar datos del pipeline (como copia)
+      setPipelineData({
+        name: `${pipeline.name} (Copia)`,
+        description: pipeline.description || '',
+        agent_passport_id: pipeline.agent_passport_id,
+        abort_on_error: pipeline.abort_on_error === true
+      });
+      
+      // Convertir unidades a formato de flow
+      const flow = convertUnitsToFlow(units);
+      setPipelineFlowData(flow);
+      
+      // Cambiar a modo creación
+      setEditorMode('create');
+      setUnsavedChanges(true);
+      
+      // Generar YAML si estamos en modo YAML
+      if (yamlMode) {
+        try {
+          const yaml = templateManager.convertFlowToYaml(flow, {
+            name: `${pipeline.name} (Copia)`,
+            description: pipeline.description || '',
+            agent_passport_id: pipeline.agent_passport_id,
+            abort_on_error: pipeline.abort_on_error === true
+          });
+          setYamlContent(yaml);
+        } catch (error) {
+          console.error("Error al convertir a YAML:", error);
+        }
+      }
+      
+      toast({
+        title: "Pipeline duplicado",
+        description: "El pipeline se ha duplicado correctamente. Guárdelo con un nuevo nombre.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error duplicando pipeline:", error);
+      toast({
+        title: "Error al duplicar pipeline",
+        description: `No se pudo duplicar el pipeline. ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Renderizar el componente
   return (
     <div className="container py-4 mx-auto">
@@ -1244,14 +1353,24 @@ export default function PipelineStudio() {
                               <TableCell className="font-medium">{pipeline.name}</TableCell>
                               <TableCell>{pipeline.agent_name || "—"}</TableCell>
                               <TableCell>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
-                                >
-                                  <Edit className="mr-1 h-4 w-4" />
-                                  Editar
-                                </Button>
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
+                                  >
+                                    <Edit className="mr-1 h-4 w-4" />
+                                    Editar
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => handleDuplicatePipeline(pipeline.id)}
+                                  >
+                                    <Copy className="mr-1 h-4 w-4" />
+                                    Duplicar
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
