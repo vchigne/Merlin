@@ -45,6 +45,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get SFTP links
+  app.get('/api/sftp-links', async (req, res) => {
+    try {
+      const result = await hasuraClient.query(`
+        query GetSFTPLinks {
+          merlin_agent_SFTPLink(limit: 100) {
+            id
+            name
+            server
+            port
+            user
+            created_at
+            updated_at
+          }
+        }
+      `);
+      
+      if (result.errors) {
+        console.error('Error fetching SFTP links:', result.errors);
+        return res.status(500).json({ error: 'Failed to fetch SFTP links' });
+      }
+      
+      res.json(result.data?.merlin_agent_SFTPLink || []);
+    } catch (error) {
+      console.error('Error in /api/sftp-links:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Get SQL connections
+  app.get('/api/sql-connections', async (req, res) => {
+    try {
+      const result = await hasuraClient.query(`
+        query GetSQLConnections {
+          merlin_agent_SQLConn(limit: 100) {
+            id
+            name
+            driver
+            connstring
+            created_at
+            updated_at
+          }
+        }
+      `);
+      
+      if (result.errors) {
+        console.error('Error fetching SQL connections:', result.errors);
+        return res.status(500).json({ error: 'Failed to fetch SQL connections' });
+      }
+      
+      res.json(result.data?.merlin_agent_SQLConn || []);
+    } catch (error) {
+      console.error('Error in /api/sql-connections:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
   // Get pipeline templates
   app.get('/api/pipeline-templates', (req, res) => {
     try {
