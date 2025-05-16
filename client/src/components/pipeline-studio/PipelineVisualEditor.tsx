@@ -28,6 +28,8 @@ export default function PipelineVisualEditor({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
 
   // Sincronizar estados con los datos de flujo
   useEffect(() => {
@@ -112,7 +114,50 @@ export default function PipelineVisualEditor({
 
   // Manejar el fin del arrastre
   const handleMouseUp = () => {
+    if (draggingNode) {
+      // Notificar el cambio de posición del nodo
+      notifyChange();
+      setDraggingNode(null);
+    }
     setDragging(false);
+  };
+  
+  // Funciones para manejar el arrastre de nodos individuales
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    if (readOnly) return;
+    e.stopPropagation();
+    setDraggingNode(nodeId);
+    setNodeDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+  
+  const handleNodeDrag = (e: React.MouseEvent) => {
+    if (!draggingNode || readOnly) return;
+    
+    const dx = (e.clientX - nodeDragStart.x) / zoom;
+    const dy = (e.clientY - nodeDragStart.y) / zoom;
+    
+    // Actualizar la posición del nodo
+    const updatedNodes = nodes.map(node => {
+      if (node.id === draggingNode) {
+        return {
+          ...node,
+          position: {
+            x: node.position.x + dx,
+            y: node.position.y + dy
+          }
+        };
+      }
+      return node;
+    });
+    
+    setNodes(updatedNodes);
+    setNodeDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
   };
 
   // Función para añadir un nuevo nodo
@@ -219,9 +264,10 @@ export default function PipelineVisualEditor({
     return (
       <div
         key={node.id}
-        className={`absolute rounded-md border p-3 ${nodeColor} cursor-pointer shadow-sm`}
+        className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
         style={nodeStyle}
         onClick={() => handleNodeClick(node.id)}
+        onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -306,7 +352,10 @@ export default function PipelineVisualEditor({
     <div
       className="relative w-full h-[500px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-sm"
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
+      onMouseMove={(e) => {
+        handleMouseMove(e);
+        handleNodeDrag(e);
+      }}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
