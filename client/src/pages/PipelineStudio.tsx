@@ -1012,7 +1012,7 @@ export default function PipelineStudio() {
                         </TabsTrigger>
                       </TabsList>
                       
-                      <TabsContent value="visual" className="h-[600px]">
+                      <TabsContent value="visual" className="h-[calc(100vh-200px)]">
                         <div className="relative w-full h-full">
                           {/* Canvas principal a pantalla completa */}
                           <div className="w-full h-full">
@@ -1021,7 +1021,40 @@ export default function PipelineStudio() {
                                 flowData={pipelineFlowData}
                                 onChange={handleVisualEditorChange}
                                 readOnly={editorMode === 'view'}
+                                pipelineId={pipelineId || undefined}
                               />
+                            )}
+                            
+                            {/* Panel flotante para propiedades del pipeline */}
+                            {pipelineFlowData && !selectedNode && (
+                              <div
+                                className="absolute z-40 shadow-xl bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700"
+                                style={{
+                                  width: '350px',
+                                  left: '20px',
+                                  top: '20px',
+                                  maxHeight: 'calc(100% - 40px)',
+                                  overflow: 'hidden'
+                                }}
+                              >
+                                <div className="p-3">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-sm font-medium flex items-center">
+                                      <Settings2 className="h-4 w-4 mr-2 text-indigo-500" />
+                                      Propiedades del Pipeline
+                                    </h3>
+                                  </div>
+                                  
+                                  <div className="max-h-[calc(100vh-200px)] overflow-auto p-2">
+                                    <PipelinePropertiesPanel
+                                      pipelineData={pipelineData}
+                                      onChange={setPipelineData}
+                                      agentOptions={agentOptions}
+                                      readOnly={editorMode === 'view'}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
                           

@@ -42,10 +42,56 @@ export default function PipelineEditor({
   // Referencias
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Aplicar espaciado automático a los nodos si no tienen posiciones definidas
+  const applyAutoLayout = (nodes: any[]): any[] => {
+    // Solo espaciar nodos si no hay posiciones guardadas
+    // Coordenadas iniciales
+    let x = 100;
+    let y = 100;
+    
+    // Espaciado entre nodos
+    const spacingX = 300;
+    const spacingY = 150;
+    
+    // Máximo de nodos por fila
+    const maxNodesPerRow = 3;
+    
+    return nodes.map((node, index) => {
+      // Si el nodo ya tiene una posición definida, respetarla
+      if (node.position && node.position.x !== undefined && node.position.y !== undefined) {
+        return node;
+      }
+      
+      // Calcular la posición en la cuadrícula
+      const row = Math.floor(index / maxNodesPerRow);
+      const col = index % maxNodesPerRow;
+      
+      // Aplicar la posición
+      return {
+        ...node,
+        position: {
+          x: x + col * spacingX,
+          y: y + row * spacingY
+        }
+      };
+    });
+  };
+
   // Sincronizar estados con los datos de flujo y cargar layout guardado si existe
   useEffect(() => {
     if (flowData) {
       let updatedNodes = flowData.nodes || [];
+      
+      // Asegurarse de que todos los nodos tengan posiciones iniciales
+      updatedNodes = updatedNodes.map(node => {
+        if (!node.position) {
+          return {
+            ...node,
+            position: { x: 100, y: 100 }
+          };
+        }
+        return node;
+      });
       
       // Si hay un ID de pipeline, intentar cargar posiciones guardadas
       if (pipelineId) {
@@ -64,8 +110,35 @@ export default function PipelineEditor({
         }
       }
       
+      // Aplicar espaciado automático si los nodos están muy juntos o no tienen posición
+      const needsAutoLayout = updatedNodes.some((node, index, array) => {
+        if (index === 0) return false;
+        
+        // Verificar si hay nodos con las mismas coordenadas
+        return array.some((otherNode, otherIndex) => 
+          otherIndex !== index && 
+          node.position.x === otherNode.position.x && 
+          node.position.y === otherNode.position.y
+        );
+      });
+      
+      if (needsAutoLayout) {
+        updatedNodes = applyAutoLayout(updatedNodes);
+      }
+      
       setNodes(updatedNodes);
       setEdges(flowData.edges || []);
+      
+      // Guardar layout inmediatamente si hay un ID de pipeline
+      if (pipelineId && updatedNodes.length > 0) {
+        try {
+          const positions = pipelineLayoutManager.extractPositionsFromNodes(updatedNodes);
+          const minimizedNodesArray = Array.from(minimizedNodes);
+          pipelineLayoutManager.saveLayout(pipelineId, positions, minimizedNodesArray);
+        } catch (error) {
+          console.error('Error al guardar layout inicial:', error);
+        }
+      }
     }
   }, [flowData, pipelineId]);
   
@@ -431,17 +504,35 @@ export default function PipelineEditor({
       const isSourceMinimized = minimizedNodes.has(sourceNode.id);
       const isTargetMinimized = minimizedNodes.has(targetNode.id);
       
+      // Dimensiones para calcular puntos de conexión
+      const sourceWidth = isSourceMinimized ? 150 : 220;
+      const targetWidth = isTargetMinimized ? 150 : 220;
+      const sourceHeight = isSourceMinimized ? 40 : 70;
+      const targetHeight = isTargetMinimized ? 40 : 70;
+      
       // Calcular posiciones de inicio y fin
-      const startX = sourceNode.position.x + (isSourceMinimized ? 50 : 100);
-      const startY = sourceNode.position.y + (isSourceMinimized ? 25 : 25);
-      const endX = targetNode.position.x + (isTargetMinimized ? 50 : 100);
-      const endY = targetNode.position.y + (isTargetMinimized ? 25 : 25);
+      // Puntos de salida y entrada optimizados
+      const startX = sourceNode.position.x + sourceWidth;
+      const startY = sourceNode.position.y + sourceHeight / 2;
+      const endX = targetNode.position.x;
+      const endY = targetNode.position.y + targetHeight / 2;
       
-      // Añadir un ligero curvado a la línea
-      const midX = (startX + endX) / 2;
-      const midY = (startY + endY) / 2 - 30;
+      // Calcular puntos de curvatura para evitar líneas rectas
+      // Esto crea una curva más natural entre los nodos
+      const dx = Math.abs(endX - startX);
+      const dy = Math.abs(endY - startY);
       
-      const pathD = `M${startX},${startY} Q${midX},${midY} ${endX},${endY}`;
+      // Factores para la curvatura
+      const curveFactor = Math.min(dx * 0.5, 100);
+      
+      // Puntos de control para la curva Bezier
+      const controlPoint1X = startX + curveFactor;
+      const controlPoint1Y = startY;
+      const controlPoint2X = endX - curveFactor;
+      const controlPoint2Y = endY;
+      
+      // Crear path con curva Bezier más natural
+      const pathD = `M${startX},${startY} C${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${endX},${endY}`;
       
       return (
         <path 
@@ -452,6 +543,7 @@ export default function PipelineEditor({
           fill="none"
           strokeDasharray={edge.animated ? "5,5" : "none"}
           className={edge.animated ? "animate-pulse" : ""}
+          markerEnd="url(#arrowhead)"
         />
       );
     });
@@ -695,9 +787,87 @@ export default function PipelineEditor({
     );
   };
 
+  // Función para manejar la importación de layout
+  const handleImportLayout = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!pipelineId) {
+      toast({
+        title: "Error",
+        description: "No se puede importar el layout sin un ID de pipeline",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const success = pipelineLayoutManager.importLayoutFromYAML(content);
+        
+        if (success) {
+          // Recargar el layout
+          const savedLayout = pipelineLayoutManager.getLayout(pipelineId);
+          if (savedLayout) {
+            const updatedNodes = nodes.map(node => {
+              const savedPos = savedLayout.find(pos => pos.id === node.id);
+              if (savedPos) {
+                return {
+                  ...node,
+                  position: {
+                    x: savedPos.x,
+                    y: savedPos.y
+                  }
+                };
+              }
+              return node;
+            });
+            
+            setNodes(updatedNodes);
+            
+            // Cargar nodos minimizados
+            const minimizedNodeIds = pipelineLayoutManager.getMinimizedNodes(pipelineId);
+            if (minimizedNodeIds && minimizedNodeIds.length > 0) {
+              setMinimizedNodes(new Set(minimizedNodeIds));
+            }
+            
+            toast({
+              title: "Éxito",
+              description: "Layout importado correctamente",
+              variant: "default"
+            });
+            
+            // Notificar cambios
+            onChange({ nodes: updatedNodes, edges }, selectedNode);
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "El archivo YAML no tiene el formato correcto",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Error al importar layout:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo importar el layout",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    reader.readAsText(file);
+    
+    // Limpiar el input
+    e.target.value = '';
+  };
+
   return (
     <div
-      className="relative w-full h-[calc(100vh-150px)] min-h-[600px] border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
+      className="relative w-full h-full border border-slate-300 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm"
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -708,19 +878,32 @@ export default function PipelineEditor({
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
     >
-      {/* Grid de fondo para el canvas infinito */}
+      {/* Grid de fondo para el canvas infinito - ocupa todo el espacio disponible */}
       <div 
-        className="absolute top-0 left-0 w-[5000px] h-[5000px]"
+        className="absolute top-0 left-0 w-[10000px] h-[10000px]"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
           backgroundSize: '20px 20px',
           transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
           transformOrigin: '0 0',
+          zIndex: 0
         }}
       />
       
       {/* SVG para renderizar las conexiones y líneas */}
       <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="7"
+            refX="0"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+        </defs>
         <g 
           transform={`scale(${zoom}) translate(${position.x}, ${position.y})`}
           style={{ transformOrigin: '0 0' }}
