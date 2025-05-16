@@ -67,14 +67,32 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
     }
   }, [expanded, id]);
 
+  // Manejar el inicio del arrastre
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+  
   // Manejar el final del arrastre
   const handleDragEnd = (_e: any, info: any) => {
     setIsDragging(false);
+    
     // Actualizar la posición con el offset del arrastre
-    setPosition({
+    const newPosition = {
       x: position.x + info.offset.x,
       y: position.y + info.offset.y
-    });
+    };
+    
+    // Asegurarse de que la posición está dentro de los límites de la ventana
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Límites de seguridad
+    if (newPosition.x < 0) newPosition.x = 0;
+    if (newPosition.y < 0) newPosition.y = 0;
+    if (newPosition.x > viewportWidth - 50) newPosition.x = viewportWidth - 50;
+    if (newPosition.y > viewportHeight - 50) newPosition.y = viewportHeight - 50;
+    
+    setPosition(newPosition);
   };
 
   // Asegurar que el panel esté dentro de los límites de la ventana
@@ -120,7 +138,7 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
       drag
       dragMomentum={false}
       dragElastic={0}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',

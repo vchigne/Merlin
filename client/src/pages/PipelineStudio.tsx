@@ -71,6 +71,7 @@ export default function PipelineStudio() {
   const [pipelineFlowData, setPipelineFlowData] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [pipelines, setPipelines] = useState<any[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>(pipelineId ? 'edit' : 'create');
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [yamlMode, setYamlMode] = useState<boolean>(false);
@@ -158,6 +159,63 @@ export default function PipelineStudio() {
     }
   };
   
+  // Función para cargar la lista de pipelines disponibles
+  const loadPipelines = async () => {
+    try {
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            query GetAllPipelines {
+              merlin_agent_Pipeline {
+                id
+                name
+                description
+                agent_passport_id
+                agent_passport {
+                  name
+                }
+                updated_at
+              }
+            }
+          `
+        })
+      });
+      
+      if (!response.ok) throw new Error('Error al cargar pipelines');
+      
+      const result = await response.json();
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+      
+      const pipelinesList = result.data.merlin_agent_Pipeline.map((pipeline: any) => ({
+        id: pipeline.id,
+        name: pipeline.name,
+        description: pipeline.description,
+        agent_id: pipeline.agent_passport_id,
+        agent_name: pipeline.agent_passport?.name || "Sin agente",
+        updated_at: pipeline.updated_at
+      }));
+      
+      // Ordenar por último actualizado
+      pipelinesList.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      
+      setPipelines(pipelinesList);
+    } catch (error) {
+      console.error("Error cargando pipelines:", error);
+      toast({
+        title: "Error al cargar pipelines",
+        description: "No se pudieron cargar los pipelines disponibles. Por favor, intente de nuevo.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Cargar datos iniciales al montar el componente
   useEffect(() => {
     const initializeData = async () => {
@@ -167,7 +225,8 @@ export default function PipelineStudio() {
           loadTemplates(), 
           loadAgents(),
           loadSftpConnections(),
-          loadSqlConnections()
+          loadSqlConnections(),
+          loadPipelines()
         ]);
         
         if (pipelineId) {
@@ -1154,26 +1213,76 @@ export default function PipelineStudio() {
               </TabsList>
               
               {/* Dialog para seleccionar plantilla */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    Cargar Plantilla
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Seleccionar Plantilla</DialogTitle>
-                    <DialogDescription>
-                      Elige una plantilla predefinida para comenzar tu pipeline.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <PipelineTemplateSelector
-                    templates={templates}
-                    onSelect={handleTemplateSelect}
-                  />
-                </DialogContent>
-              </Dialog>
+              <div className="flex items-center space-x-2">
+                {/* Dialog para cargar pipeline existente */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Search className="mr-2 h-4 w-4" />
+                      Cargar Pipeline Existente
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Cargar Pipeline Existente</DialogTitle>
+                      <DialogDescription>
+                        Selecciona un pipeline existente para editarlo
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[400px] overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nombre</TableHead>
+                            <TableHead>Agente</TableHead>
+                            <TableHead>Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pipelines.map((pipeline) => (
+                            <TableRow key={pipeline.id}>
+                              <TableCell className="font-medium">{pipeline.name}</TableCell>
+                              <TableCell>{pipeline.agent_name || "—"}</TableCell>
+                              <TableCell>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
+                                >
+                                  <Edit className="mr-1 h-4 w-4" />
+                                  Editar
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                {/* Dialog para cargar plantilla */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FolderOpen className="mr-2 h-4 w-4" />
+                      Cargar Plantilla
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Plantilla</DialogTitle>
+                      <DialogDescription>
+                        Elige una plantilla predefinida para comenzar tu pipeline.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <PipelineTemplateSelector
+                      templates={templates}
+                      onSelect={handleTemplateSelect}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
             
             <TabsContent value="visual" className="space-y-4">
