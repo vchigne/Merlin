@@ -28,7 +28,7 @@ import PipelineVisualEditor from "@/components/pipeline-studio/PipelineVisualEdi
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
-import { AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight, FolderOpen, Search, Edit } from "lucide-react";
+import { AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight, FolderOpen, Search, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipo de los modos de edición
