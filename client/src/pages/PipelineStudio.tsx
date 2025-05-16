@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 // No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
-import PipelineVisualEditor from "@/components/pipeline-studio/PipelineVisualEditor";
+import PipelineEditor from "@/components/pipeline-studio/PipelineEditor";
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
 import PipelineNodeProperties from "@/components/pipeline-studio/PipelineNodeProperties";
@@ -1017,7 +1017,7 @@ export default function PipelineStudio() {
                           {/* Canvas principal a pantalla completa */}
                           <div className="w-full h-full">
                             {pipelineFlowData && (
-                              <PipelineVisualEditor 
+                              <PipelineEditor 
                                 flowData={pipelineFlowData}
                                 onChange={handleVisualEditorChange}
                                 readOnly={editorMode === 'view'}
