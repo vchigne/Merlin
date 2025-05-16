@@ -49,9 +49,9 @@ export default function PipelineEditor({
     let x = 150;
     let y = 150;
     
-    // Espaciado entre nodos - aumentado para evitar solapamiento
-    const spacingX = 400;
-    const spacingY = 200;
+    // Espaciado entre nodos - significativamente aumentado para evitar solapamiento
+    const spacingX = 600;
+    const spacingY = 300;
     
     // Máximo de nodos por fila - reducido para mejor visualización
     const maxNodesPerRow = 2;
@@ -95,12 +95,16 @@ export default function PipelineEditor({
     if (flowData) {
       let updatedNodes = flowData.nodes || [];
       
-      // Asegurarse de que todos los nodos tengan posiciones iniciales
-      updatedNodes = updatedNodes.map(node => {
+      // Asegurarse de que todos los nodos tengan posiciones iniciales espaciadas
+      updatedNodes = updatedNodes.map((node, index) => {
         if (!node.position) {
+          // Posición inicial para evitar superposición
           return {
             ...node,
-            position: { x: 100, y: 100 }
+            position: { 
+              x: 150 + (index * 250), 
+              y: 150 + (Math.floor(index / 2) * 150) 
+            }
           };
         }
         return node;
@@ -123,21 +127,26 @@ export default function PipelineEditor({
         }
       }
       
-      // Aplicar espaciado automático si los nodos están muy juntos o no tienen posición
+      // Aplicar espaciado automático en todos los casos para garantizar que no haya solapamiento
+      // Verificar si hay nodos con posiciones muy cercanas o idénticas
       const needsAutoLayout = updatedNodes.some((node, index, array) => {
         if (index === 0) return false;
         
-        // Verificar si hay nodos con las mismas coordenadas
-        return array.some((otherNode, otherIndex) => 
-          otherIndex !== index && 
-          node.position.x === otherNode.position.x && 
-          node.position.y === otherNode.position.y
-        );
+        return array.some((otherNode, otherIndex) => {
+          if (otherIndex === index) return false;
+          if (!node.position || !otherNode.position) return true;
+          
+          // Detectar nodos demasiado cercanos (menos de un umbral específico)
+          const xDiff = Math.abs(node.position.x - otherNode.position.x);
+          const yDiff = Math.abs(node.position.y - otherNode.position.y);
+          
+          // Aumentamos el umbral para garantizar más espacio entre nodos
+          return xDiff < 200 && yDiff < 100;
+        });
       });
       
-      if (needsAutoLayout) {
-        updatedNodes = applyAutoLayout(updatedNodes);
-      }
+      // Aplicar siempre el diseño automático durante la carga inicial
+      updatedNodes = applyAutoLayout(updatedNodes);
       
       setNodes(updatedNodes);
       setEdges(flowData.edges || []);
@@ -616,6 +625,10 @@ export default function PipelineEditor({
     const isPipelineStart = node.id === 'start' || node.id === 'pipeline-start';
     const isMinimized = minimizedNodes.has(node.id);
     
+    // Aumentar el tamaño de los nodos para que se vean mejor en pantalla
+    const nodeWidth = isMinimized ? 220 : 280; // Aumentado para mostrar más del nombre
+    const nodeHeight = isMinimized ? 60 : 80;  // Aumentado para mejorar visualización
+    
     let nodeColor = 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
     let headerColor = 'bg-slate-100 dark:bg-slate-700';
     let textColor = 'text-slate-900 dark:text-slate-100';
@@ -734,11 +747,11 @@ export default function PipelineEditor({
             <div className="flex items-center">
               {iconComponent}
               {isMinimized ? (
-                // Versión minimizada con tooltip
+                // Versión minimizada con tooltip pero mostrando parte del nombre
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className={`font-medium ${textColor} truncate max-w-[80px]`}>
+                      <span className={`font-medium ${textColor} truncate max-w-[120px]`}>
                         {node.data.label}
                       </span>
                     </TooltipTrigger>
@@ -747,7 +760,7 @@ export default function PipelineEditor({
                 </TooltipProvider>
               ) : (
                 // Versión completa
-                <span className={`font-medium ${textColor} truncate max-w-[120px]`}>{node.data.label}</span>
+                <span className={`font-medium ${textColor} truncate max-w-[150px]`}>{node.data.label}</span>
               )}
             </div>
             
