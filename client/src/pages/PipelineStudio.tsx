@@ -28,7 +28,7 @@ import PipelineVisualEditor from "@/components/pipeline-studio/PipelineVisualEdi
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
-import { AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight } from "lucide-react";
+import { AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight, FolderOpen, Search, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipo de los modos de edición
@@ -51,6 +51,12 @@ export default function PipelineStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [agentOptions, setAgentOptions] = useState<any[]>([]);
+  
+  // Estados para el diálogo de selección de pipelines
+  const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
+  const [allPipelines, setAllPipelines] = useState<any[]>([]);
+  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
@@ -109,6 +115,50 @@ export default function PipelineStudio() {
     } catch (error) {
       console.error('Error al cargar agentes:', error);
     }
+  };
+  
+  // Función para cargar todos los pipelines
+  const fetchAllPipelines = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/pipelines');
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar los pipelines');
+      }
+      const data = await response.json();
+      setAllPipelines(data);
+      setFilteredPipelines(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error al cargar pipelines:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los pipelines disponibles."
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  // Función para filtrar los pipelines según el término de búsqueda
+  const handleSearchPipelines = (term: string) => {
+    setSearchTerm(term);
+    if (!term.trim()) {
+      setFilteredPipelines(allPipelines);
+      return;
+    }
+    
+    const filtered = allPipelines.filter((pipeline: any) => 
+      pipeline.name.toLowerCase().includes(term.toLowerCase()) || 
+      (pipeline.description && pipeline.description.toLowerCase().includes(term.toLowerCase()))
+    );
+    setFilteredPipelines(filtered);
+  };
+  
+  // Función para abrir el diálogo de cargar pipeline
+  const handleOpenLoadDialog = () => {
+    fetchAllPipelines();
+    setIsLoadDialogOpen(true);
   };
 
   // Función para generar datos del flujo visual desde un pipeline
@@ -529,6 +579,96 @@ export default function PipelineStudio() {
   // Renderizar la interfaz de usuario
   return (
       <div className="container mx-auto py-4">
+        
+        {/* Diálogo para cargar un pipeline existente */}
+        <Dialog open={isLoadDialogOpen} onOpenChange={setIsLoadDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Cargar Pipeline Existente</DialogTitle>
+              <DialogDescription>
+                Selecciona un pipeline existente para editarlo o duplicarlo
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4 space-y-4">
+              <div className="flex items-center border rounded-md pl-2">
+                <Search className="h-4 w-4 text-slate-400" />
+                <Input 
+                  className="border-0 focus-visible:ring-0" 
+                  placeholder="Buscar por nombre o descripción..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchPipelines(e.target.value)}
+                />
+              </div>
+              
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                          <span className="mt-2 block text-sm text-slate-500">Cargando pipelines...</span>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredPipelines.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8 text-slate-500">
+                          {searchTerm ? 'No se encontraron pipelines con ese criterio' : 'No hay pipelines disponibles'}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredPipelines.map((pipeline) => (
+                        <TableRow key={pipeline.id}>
+                          <TableCell className="font-medium">{pipeline.name}</TableCell>
+                          <TableCell className="text-sm text-slate-500">
+                            {pipeline.description || <span className="italic text-slate-400">Sin descripción</span>}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  fetchPipelineData(pipeline.id);
+                                  setIsLoadDialogOpen(false);
+                                }}
+                              >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Editar
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  fetchPipelineData(pipeline.id);
+                                  setTimeout(() => {
+                                    handleDuplicatePipeline();
+                                  }, 500);
+                                  setIsLoadDialogOpen(false);
+                                }}
+                              >
+                                <Copy className="mr-1 h-3 w-3" />
+                                Duplicar
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold">Pipeline Studio</h1>
@@ -541,6 +681,15 @@ export default function PipelineStudio() {
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Nuevo
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={handleOpenLoadDialog}
+              disabled={isLoading}
+            >
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Cargar Pipeline
             </Button>
             
             {pipelineData && (
