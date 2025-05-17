@@ -85,680 +85,185 @@ export default function PipelineStudio() {
   // Referencia al gestor de plantillas de pipeline
   const templateManager = new PipelineTemplateManager();
   
-  // Función para cargar las plantillas de pipeline
-  const loadTemplates = async () => {
-    try {
-      const templates = await templateManager.getTemplates();
-      setTemplates(templates);
-    } catch (error) {
-      console.error("Error cargando plantillas:", error);
-      toast({
-        title: "Error al cargar plantillas",
-        description: "No se pudieron cargar las plantillas de pipeline. Por favor, intente de nuevo.",
-        variant: "destructive"
-      });
+  // Efecto para cargar los datos del pipeline en modo edición
+  useEffect(() => {
+    if (pipelineId) {
+      loadPipeline(pipelineId);
+    } else {
+      // Inicializar pipeline vacío en modo creación
+      const emptyFlow = {
+        nodes: [],
+        edges: []
+      };
+      setPipelineFlowData(emptyFlow);
+      setIsLoading(false);
     }
-  };
+    
+    // Cargar opciones de agentes, conexiones SFTP y SQL
+    loadAgentOptions();
+    loadSftpOptions();
+    loadSqlConnections();
+    
+    // Cargar plantillas
+    loadTemplates();
+  }, [pipelineId]);
   
-  // Función para cargar los agentes disponibles
-  const loadAgents = async () => {
+  // Cargar opciones de agentes
+  const loadAgentOptions = async () => {
     try {
       const response = await fetch('/api/agents');
-      if (!response.ok) throw new Error('Error al cargar agentes');
-      
-      const agents = await response.json();
-      const formattedAgents = agents.map((agent: any) => ({
-        label: agent.name,
-        value: agent.id,
-        is_healthy: agent.is_healthy
-      }));
-      
-      setAgentOptions(formattedAgents);
+      if (!response.ok) {
+        throw new Error('Error al cargar agentes');
+      }
+      const data = await response.json();
+      setAgentOptions(data);
     } catch (error) {
-      console.error("Error cargando agentes:", error);
+      console.error('Error al cargar opciones de agentes:', error);
       toast({
         title: "Error al cargar agentes",
-        description: "No se pudieron cargar los agentes disponibles. Por favor, intente de nuevo.",
+        description: "No se pudieron cargar los agentes disponibles",
         variant: "destructive"
       });
     }
   };
   
-  // Función para cargar las conexiones SFTP disponibles
-  const loadSftpConnections = async () => {
+  // Cargar opciones de SFTP
+  const loadSftpOptions = async () => {
     try {
       const response = await fetch('/api/sftp-links');
-      if (!response.ok) throw new Error('Error al cargar conexiones SFTP');
-      
-      const connections = await response.json();
-      setSftpOptions(connections);
+      if (!response.ok) {
+        throw new Error('Error al cargar conexiones SFTP');
+      }
+      const data = await response.json();
+      setSftpOptions(data);
     } catch (error) {
-      console.error("Error cargando conexiones SFTP:", error);
-      toast({
-        title: "Error al cargar conexiones SFTP",
-        description: "No se pudieron cargar las conexiones SFTP disponibles.",
-        variant: "destructive"
-      });
+      console.error('Error al cargar opciones de SFTP:', error);
     }
   };
   
-  // Función para cargar las conexiones SQL disponibles
+  // Cargar conexiones SQL
   const loadSqlConnections = async () => {
     try {
       const response = await fetch('/api/sql-connections');
-      if (!response.ok) throw new Error('Error al cargar conexiones SQL');
-      
-      const connections = await response.json();
-      setSqlConnections(connections);
+      if (!response.ok) {
+        throw new Error('Error al cargar conexiones SQL');
+      }
+      const data = await response.json();
+      setSqlConnections(data);
     } catch (error) {
-      console.error("Error cargando conexiones SQL:", error);
-      toast({
-        title: "Error al cargar conexiones SQL",
-        description: "No se pudieron cargar las conexiones SQL disponibles.",
-        variant: "destructive"
-      });
+      console.error('Error al cargar conexiones SQL:', error);
     }
   };
   
-  // Función para cargar la lista de pipelines disponibles
+  // Cargar plantillas de pipeline
+  const loadTemplates = async () => {
+    try {
+      // Simulación de carga de plantillas
+      const mockTemplates = [
+        { id: 'template1', name: 'ETL Básico', description: 'Extracción, transformación y carga básica' },
+        { id: 'template2', name: 'Descarga SFTP', description: 'Descargar archivos desde SFTP y procesarlos' },
+        { id: 'template3', name: 'Pipeline SQL', description: 'Ejecutar consultas SQL secuenciales' }
+      ];
+      setTemplates(mockTemplates);
+    } catch (error) {
+      console.error('Error al cargar plantillas:', error);
+    }
+  };
+  
+  // Cargar listado de pipelines
   const loadPipelines = async () => {
     try {
-      // Primero obtenemos la lista de agentes para poder mapear los IDs a nombres
-      const agentsResponse = await fetch('/api/agents');
-      if (!agentsResponse.ok) throw new Error('Error al cargar agentes');
-      const agents = await agentsResponse.json();
-      
-      // Ahora obtenemos los pipelines
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `
-            query GetAllPipelines {
-              merlin_agent_Pipeline {
-                id
-                name
-                description
-                agent_passport_id
-                updated_at
-              }
-            }
-          `
-        })
-      });
-      
-      if (!response.ok) throw new Error('Error al cargar pipelines');
-      
-      const result = await response.json();
-      
-      if (result.errors) {
-        throw new Error(result.errors[0].message);
+      setIsLoading(true);
+      const response = await fetch('/api/pipelines');
+      if (!response.ok) {
+        throw new Error('Error al cargar pipelines');
       }
-      
-      const pipelinesList = result.data.merlin_agent_Pipeline.map((pipeline: any) => {
-        // Buscar el nombre del agente correspondiente al ID
-        const agent = agents.find((a: any) => a.id === pipeline.agent_passport_id);
-        
-        return {
-          id: pipeline.id,
-          name: pipeline.name,
-          description: pipeline.description,
-          agent_id: pipeline.agent_passport_id,
-          agent_name: agent ? agent.name : "Sin agente",
-          updated_at: pipeline.updated_at
-        };
-      });
-      
-      // Ordenar por último actualizado
-      pipelinesList.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-      
-      setPipelines(pipelinesList);
-      setFilteredPipelines(pipelinesList); // También establecemos la lista filtrada inicialmente
-      
-      // Log para depuración
-      console.log("Pipelines cargados:", pipelinesList);
+      const data = await response.json();
+      setPipelines(data);
+      setFilteredPipelines(data);
     } catch (error) {
-      console.error("Error cargando pipelines:", error);
+      console.error('Error al cargar pipelines:', error);
       toast({
         title: "Error al cargar pipelines",
-        description: "No se pudieron cargar los pipelines disponibles. Por favor, intente de nuevo.",
+        description: "No se pudieron cargar los pipelines existentes",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // Cargar datos iniciales al montar el componente
-  useEffect(() => {
-    const initializeData = async () => {
-      setIsLoading(true);
-      try {
-        await Promise.all([
-          loadTemplates(), 
-          loadAgents(),
-          loadSftpConnections(),
-          loadSqlConnections(),
-          loadPipelines()
-        ]);
-        
-        if (pipelineId) {
-          await loadPipeline();
-        } else {
-          // Pipeline nuevo, inicializar con datos por defecto
-          setPipelineData({
-            name: 'Nuevo Pipeline',
-            description: '',
-            agent_passport_id: '',
-            abort_on_error: true
-          });
-          
-          // Flujo inicial con solo el nodo de inicio
-          setPipelineFlowData({
-            nodes: [
-              {
-                id: 'pipeline-start',
-                type: 'pipelineStart',
-                position: { x: 250, y: 50 },
-                data: { label: 'Inicio de Pipeline' }
-              }
-            ],
-            edges: []
-          });
-          setEditorMode('create');
-        }
-      } catch (error) {
-        console.error("Error inicializando datos:", error);
-        toast({
-          title: "Error al cargar datos",
-          description: "No se pudieron cargar los datos necesarios. Por favor, intente de nuevo.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    initializeData();
-  }, []);
   
-  // Cargar un pipeline existente
-  const loadPipeline = async () => {
-    if (!pipelineId) return;
-    
+  // Cargar un pipeline por ID
+  const loadPipeline = async (id: string) => {
     try {
-      // Obtener datos del pipeline
-      const response = await fetch(`/api/graphql`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `
-            query GetPipeline($id: uuid!) {
-              merlin_agent_Pipeline(where: {id: {_eq: $id}}) {
-                id
-                name
-                description
-                agent_passport_id
-                abort_on_error
-                created_at
-                updated_at
-              }
-            }
-          `,
-          variables: {
-            id: pipelineId
-          }
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (result.errors) {
-        throw new Error(result.errors[0].message);
+      setIsLoading(true);
+      const response = await fetch(`/api/pipelines/${id}`);
+      if (!response.ok) {
+        throw new Error('Error al cargar pipeline');
       }
-      
-      const pipeline = result.data.merlin_agent_Pipeline[0];
-      if (!pipeline) {
-        throw new Error("Pipeline no encontrado");
-      }
-      
+      const pipeline = await response.json();
       setPipelineData(pipeline);
       
-      // Obtener unidades del pipeline
-      const unitsResponse = await fetch(`/api/graphql`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `
-            query GetPipelineUnits($pipelineId: uuid!) {
-              merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
-                id
-                unit_type
-                details
-                order_index
-                next_on_success
-                next_on_error
-              }
-            }
-          `,
-          variables: {
-            pipelineId
-          }
-        })
-      });
+      // Construir estructura de flujo para el editor visual
+      const layoutManager = new PipelineLayoutManager();
+      const flow = layoutManager.buildFlowFromPipeline(pipeline);
       
-      const unitsResult = await unitsResponse.json();
-      
-      if (unitsResult.errors) {
-        throw new Error(unitsResult.errors[0].message);
-      }
-      
-      const units = unitsResult.data.merlin_agent_PipelineUnit;
-      
-      // Convertir unidades a formato de flow
-      const flow = convertUnitsToFlow(units);
       setPipelineFlowData(flow);
       
-      // Cargar posiciones de nodos guardadas previamente
-      const layoutManager = new PipelineLayoutManager();
-      const savedLayout = await layoutManager.loadLayout(pipelineId);
-      
-      if (savedLayout && flow.nodes.length > 0) {
-        // Aplicar posiciones guardadas
-        const updatedNodes = flow.nodes.map(node => {
-          const savedPos = savedLayout.nodes.find(n => n.id === node.id);
-          if (savedPos) {
-            return {
-              ...node,
-              position: savedPos.position
-            };
-          }
-          return node;
-        });
-        
-        setPipelineFlowData({
-          ...flow,
-          nodes: updatedNodes
-        });
+      // Generar YAML si estamos en modo YAML
+      if (yamlMode) {
+        try {
+          const yaml = templateManager.convertFlowToYaml(flow, {
+            name: pipeline.name,
+            description: pipeline.description || '',
+            agent_passport_id: pipeline.agent_passport_id,
+            abort_on_error: pipeline.abort_on_error === true
+          });
+          setYamlContent(yaml);
+        } catch (error) {
+          console.error("Error al convertir a YAML:", error);
+        }
       }
-      
-      setEditorMode('edit');
     } catch (error) {
-      console.error("Error cargando pipeline:", error);
+      console.error('Error al cargar pipeline:', error);
       toast({
         title: "Error al cargar pipeline",
-        description: `No se pudo cargar el pipeline. ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        description: "No se pudo cargar el pipeline seleccionado",
         variant: "destructive"
       });
-      navigate('/pipelines');
+      
+      // Redireccionar a creación si hay error
+      navigate('/pipeline-studio');
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  // Convertir unidades de pipeline a formato de flow
-  const convertUnitsToFlow = (units: any[]) => {
-    if (!units || units.length === 0) {
-      // Pipeline vacío, solo nodo de inicio
-      return {
-        nodes: [
-          {
-            id: 'pipeline-start',
-            type: 'pipelineStart',
-            position: { x: 250, y: 50 },
-            data: { label: 'Inicio de Pipeline' }
-          }
-        ],
-        edges: []
-      };
-    }
-    
-    // Crear nodos
-    const nodes = [
-      // Nodo de inicio siempre presente
-      {
-        id: 'pipeline-start',
-        type: 'pipelineStart',
-        position: { x: 250, y: 50 },
-        data: { label: 'Inicio de Pipeline' }
-      }
-    ];
-    
-    // Crear nodos para cada unidad
-    units.forEach((unit, index) => {
-      const nodeType = getNodeTypeFromUnitType(unit.unit_type);
-      const details = typeof unit.details === 'string' ? JSON.parse(unit.details) : unit.details;
-      
-      // Calcular posición inicial (se ajustará después)
-      const position = { x: 250, y: 150 + index * 100 };
-      
-      nodes.push({
-        id: unit.id,
-        type: nodeType,
-        position,
-        data: {
-          label: details.name || getNodeLabel(nodeType),
-          details: details,
-          options: {}
-        }
-      });
-    });
-    
-    // Crear conexiones
-    const edges = [];
-    
-    // Ordenar unidades topológicamente
-    const orderedUnits = orderUnitsTopologically(units);
-    
-    // Si hay al menos una unidad, conectar el inicio con la primera
-    if (orderedUnits.length > 0) {
-      const firstUnit = orderedUnits[0];
-      edges.push({
-        id: `e-pipeline-start-${firstUnit.id}`,
-        source: 'pipeline-start',
-        target: firstUnit.id,
-        animated: false
-      });
-    }
-    
-    // Crear conexiones entre unidades según next_on_success
-    for (let i = 0; i < orderedUnits.length - 1; i++) {
-      const currentUnit = orderedUnits[i];
-      const nextUnit = orderedUnits[i + 1];
-      
-      edges.push({
-        id: `e-${currentUnit.id}-${nextUnit.id}`,
-        source: currentUnit.id,
-        target: nextUnit.id,
-        animated: false
-      });
-    }
-    
-    return { nodes, edges };
+  // Manejar la selección de un nodo en el editor
+  const handleNodeSelect = (node: any) => {
+    setSelectedNode(node);
   };
   
-  // Convertir tipo de unidad a tipo de nodo
-  const getNodeTypeFromUnitType = (unitType: string): string => {
-    switch (unitType) {
-      case 'Command':
-        return 'commandNode';
-      case 'QueryQueue':
-        return 'queryNode';
-      case 'SFTPDownloader':
-        return 'sftpDownloaderNode';
-      case 'SFTPUploader':
-        return 'sftpUploaderNode';
-      case 'Zip':
-        return 'zipNode';
-      case 'UnZip':
-        return 'unzipNode';
-      case 'CallPipeline':
-        return 'callPipelineNode';
-      default:
-        return 'commandNode';
-    }
-  };
-  
-  // Ordenar unidades topológicamente
-  const orderUnitsTopologically = (units: any[]): any[] => {
-    const visited = new Set<string>();
-    const orderedUnits: any[] = [];
-    
-    const visit = (id: string) => {
-      if (visited.has(id)) return;
-      visited.add(id);
-      
-      const unit = units.find(u => u.id === id);
-      if (!unit) return;
-      
-      if (unit.next_on_success) {
-        const nextUnit = units.find(u => u.id === unit.next_on_success);
-        if (nextUnit && !visited.has(nextUnit.id)) {
-          visit(nextUnit.id);
-        }
-      }
-      
-      orderedUnits.push(unit);
-    };
-    
-    // Encontrar el nodo inicial (sin dependencias)
-    const startUnit = units.find(u => !units.some(other => other.next_on_success === u.id));
-    if (startUnit) {
-      visit(startUnit.id);
-    }
-    
-    // En caso de que no todos los nodos sean visitados (ciclos o múltiples ramas)
-    units.forEach(unit => {
-      if (!visited.has(unit.id)) {
-        visit(unit.id);
-      }
-    });
-    
-    // Revertir para tener el orden correcto (de principio a fin)
-    return orderedUnits.reverse();
-  };
-  
-  // Función para añadir un nuevo nodo al flujo
-  const handleAddNode = (nodeType: string) => {
-    if (!pipelineFlowData) return;
-    
-    // Generar un ID único para el nodo
-    const nodeId = `${nodeType.replace('Node', '')}_${Date.now()}`;
-    
-    // Calcular la posición para el nuevo nodo
-    const lastNodeIndex = pipelineFlowData.nodes.length - 1;
-    const lastY = lastNodeIndex >= 0 ? pipelineFlowData.nodes[lastNodeIndex].position.y + 100 : 150;
-    
-    // Posición para el nuevo nodo
-    const position = { x: 250, y: lastY };
-    
-    // Crear nodo según el tipo
-    let newNode: any = {
-      id: nodeId,
-      type: nodeType,
-      position,
-      data: {
-        label: getNodeLabel(nodeType),
-        details: getNodeDefaultProperties(nodeType),
-        options: {}
-      }
-    };
-    
-    // Añadir el nuevo nodo al flujo
-    const updatedNodes = [...pipelineFlowData.nodes, newNode];
-    
-    // Crear una conexión desde el último nodo si existe
-    let updatedEdges = [...pipelineFlowData.edges];
-    if (lastNodeIndex >= 0) {
-      // Si hay nodos, conectar con el último o con el inicio
-      const sourceId = pipelineFlowData.nodes.length > 1 ? 
-        pipelineFlowData.nodes[lastNodeIndex].id : 
-        'pipeline-start';
-      
-      const newEdge = {
-        id: `e-${sourceId}-${nodeId}`,
-        source: sourceId,
-        target: nodeId,
-        animated: false
-      };
-      
-      updatedEdges.push(newEdge);
-    } else if (pipelineFlowData.nodes.length === 1 && pipelineFlowData.nodes[0].id === 'pipeline-start') {
-      // Si solo existe el nodo inicial, conectar desde él
-      const newEdge = {
-        id: `e-pipeline-start-${nodeId}`,
-        source: 'pipeline-start',
-        target: nodeId,
-        animated: false
-      };
-      
-      updatedEdges.push(newEdge);
-    }
-    
-    const updatedFlow = {
-      ...pipelineFlowData,
-      nodes: updatedNodes,
-      edges: updatedEdges
-    };
-    
-    // Actualizar el estado
-    setPipelineFlowData(updatedFlow);
-    
-    // Seleccionar el nuevo nodo para editar sus propiedades
-    setSelectedNode(newNode);
-    setUnsavedChanges(true);
-    
-    // Asegurar que el panel de propiedades esté visible
-    setShowPropertiesPanel(true);
-    
-    // Notificar el cambio
-    handleVisualEditorChange(updatedFlow, nodeId);
-  };
-  
-  // Función para obtener la etiqueta del nodo según su tipo
-  const getNodeLabel = (nodeType: string): string => {
-    switch (nodeType) {
-      case 'commandNode':
-        return 'Comando';
-      case 'queryNode':
-        return 'Consulta SQL';
-      case 'sftpDownloaderNode':
-        return 'SFTP Descarga';
-      case 'sftpUploaderNode':
-        return 'SFTP Subida';
-      case 'zipNode':
-        return 'Comprimir';
-      case 'unzipNode':
-        return 'Descomprimir';
-      case 'callPipelineNode':
-        return 'Llamar Pipeline';
-      case 'pipelineStart':
-        return 'Inicio de Pipeline';
-      default:
-        return 'Nodo';
-    }
-  };
-  
-  // Función para obtener propiedades por defecto según el tipo de nodo
-  const getNodeDefaultProperties = (nodeType: string): any => {
-    switch (nodeType) {
-      case 'commandNode':
-        return {
-          target: '',
-          working_directory: '',
-          args: '',
-          raw_script: '',
-          return_output: false
-        };
-      case 'queryNode':
-        return {
-          sqlconn_id: '',
-          return_output: false
-        };
-      case 'sftpDownloaderNode':
-        return {
-          sftp_link_id: '',
-          output: '',
-          return_output: false
-        };
-      case 'sftpUploaderNode':
-        return {
-          sftp_link_id: '',
-          input: '',
-          return_output: false
-        };
-      case 'zipNode':
-        return {
-          output: '',
-          return_output: false
-        };
-      case 'unzipNode':
-        return {
-          input: '',
-          output: '',
-          return_output: false
-        };
-      case 'callPipelineNode':
-        return {
-          call_pipeline: '',
-          wait_for_completion: true
-        };
-      default:
-        return {};
-    }
-  };
-  
-  // Función para actualizar un nodo
-  const handleNodeUpdate = (id: string, data: any) => {
-    if (!pipelineFlowData) return;
-    
-    const updatedNodes = pipelineFlowData.nodes.map(node => {
-      if (node.id === id) {
-        return { ...node, data };
-      }
-      return node;
-    });
-    
-    const updatedFlow = {
-      ...pipelineFlowData,
-      nodes: updatedNodes
-    };
-    
-    setPipelineFlowData(updatedFlow);
-    setUnsavedChanges(true);
-    
-    // Si el nodo actualizado es el seleccionado, actualizar también la selección
-    if (selectedNode && selectedNode.id === id) {
-      setSelectedNode({ ...selectedNode, data });
-    }
-    
-    // Notificar el cambio
-    handleVisualEditorChange(updatedFlow);
-  };
-  
-  // Función para eliminar un nodo
-  const handleNodeDelete = (id: string) => {
-    if (!pipelineFlowData || id === 'pipeline-start') return; // No se puede eliminar el nodo inicial
-    
-    // Filtrar nodos para eliminar el seleccionado
-    const updatedNodes = pipelineFlowData.nodes.filter(node => node.id !== id);
-    
-    // Filtrar aristas que involucran al nodo eliminado
-    const updatedEdges = pipelineFlowData.edges.filter(
-      edge => edge.source !== id && edge.target !== id
-    );
-    
-    const updatedFlow = {
-      ...pipelineFlowData,
-      nodes: updatedNodes,
-      edges: updatedEdges
-    };
-    
-    setPipelineFlowData(updatedFlow);
-    setSelectedNode(null);
-    setUnsavedChanges(true);
-    
-    // Notificar el cambio
-    handleVisualEditorChange(updatedFlow);
-  };
-  
-  // Función para manejar los cambios en el editor visual
-  const handleVisualEditorChange = (flowData: any, selectedNodeId?: string) => {
+  // Manejar cambios en el flujo del pipeline
+  const handleFlowChange = (flowData: any, selectedNodeId?: string) => {
     setPipelineFlowData(flowData);
     setUnsavedChanges(true);
     
-    // Actualizar selección de nodo si se proporciona un ID
+    // Si hay un nodo seleccionado, actualizar la referencia
     if (selectedNodeId) {
-      const node = flowData.nodes.find((n: any) => n.id === selectedNodeId);
-      setSelectedNode(node || null);
+      const selectedNode = flowData.nodes.find((n: any) => n.id === selectedNodeId);
+      setSelectedNode(selectedNode);
     }
     
-    // Actualizar el contenido YAML si estamos en modo YAML
-    if (yamlMode) {
+    // Actualizar YAML si estamos en modo YAML
+    if (yamlMode && pipelineData) {
       try {
-        const yaml = templateManager.convertFlowToYaml(flowData, pipelineData);
+        const yaml = templateManager.convertFlowToYaml(flowData, {
+          name: pipelineData.name || 'Nuevo Pipeline',
+          description: pipelineData.description || '',
+          agent_passport_id: pipelineData.agent_passport_id || '',
+          abort_on_error: pipelineData.abort_on_error === true
+        });
         setYamlContent(yaml);
       } catch (error) {
         console.error("Error al convertir a YAML:", error);
@@ -766,94 +271,94 @@ export default function PipelineStudio() {
     }
   };
   
-  // Función para manejar los cambios en el editor YAML
-  const handleYamlChange = (yaml: string) => {
-    setYamlContent(yaml);
-    setUnsavedChanges(true);
-    
-    // Intentar convertir YAML a flow para mantener sincronizada la vista visual
-    try {
-      const { flowData, pipelineData: updatedPipelineData } = templateManager.convertYamlToFlow(yaml);
-      setPipelineFlowData(flowData);
-      
-      // Actualizar los datos del pipeline si han cambiado
-      if (updatedPipelineData && updatedPipelineData.name) {
-        setPipelineData(updatedPipelineData);
-      }
-    } catch (error) {
-      console.error("Error al convertir YAML:", error);
-      // No actualizar la vista visual en caso de error
-    }
-  };
-  
-  // Función para cambiar entre modo visual y YAML
+  // Alternar entre modo visual y YAML
   const toggleYamlMode = () => {
     if (!yamlMode) {
-      // Cambiar a modo YAML
+      // Pasar de modo visual a YAML
       try {
-        const yaml = templateManager.convertFlowToYaml(pipelineFlowData, pipelineData);
-        setYamlContent(yaml);
-        setYamlMode(true);
+        if (pipelineFlowData && pipelineData) {
+          const yaml = templateManager.convertFlowToYaml(pipelineFlowData, {
+            name: pipelineData.name || 'Nuevo Pipeline',
+            description: pipelineData.description || '',
+            agent_passport_id: pipelineData.agent_passport_id || '',
+            abort_on_error: pipelineData.abort_on_error === true
+          });
+          setYamlContent(yaml);
+        }
       } catch (error) {
         console.error("Error al convertir a YAML:", error);
         toast({
-          title: "Error al cambiar a modo YAML",
-          description: "No se pudo convertir el pipeline a formato YAML.",
+          title: "Error al generar YAML",
+          description: "No se pudo convertir el pipeline a formato YAML",
           variant: "destructive"
         });
       }
     } else {
-      // Cambiar a modo visual
+      // Pasar de YAML a modo visual
       try {
-        const { flowData, pipelineData: updatedPipelineData } = templateManager.convertYamlToFlow(yamlContent);
-        setPipelineFlowData(flowData);
-        
-        // Actualizar los datos del pipeline si han cambiado
-        if (updatedPipelineData && updatedPipelineData.name) {
-          setPipelineData(updatedPipelineData);
+        if (yamlContent) {
+          const { flow, pipeline } = templateManager.convertYamlToFlow(yamlContent);
+          setPipelineFlowData(flow);
+          setPipelineData({
+            ...pipelineData,
+            name: pipeline.name || pipelineData?.name || 'Nuevo Pipeline',
+            description: pipeline.description || pipelineData?.description || '',
+            agent_passport_id: pipeline.agent_passport_id || pipelineData?.agent_passport_id || '',
+            abort_on_error: pipeline.abort_on_error !== undefined ? pipeline.abort_on_error : (pipelineData?.abort_on_error === true)
+          });
         }
-        
-        setYamlMode(false);
       } catch (error) {
-        console.error("Error al convertir desde YAML:", error);
+        console.error("Error al convertir de YAML:", error);
         toast({
-          title: "Error al cambiar a modo visual",
-          description: "El YAML contiene errores y no puede ser convertido a formato visual.",
+          title: "Error al procesar YAML",
+          description: "El formato YAML no es válido o contiene errores",
           variant: "destructive"
         });
+        return; // No cambiar de modo si hay error
       }
     }
+    
+    setYamlMode(!yamlMode);
   };
   
-  // Función para guardar el pipeline
+  // Manejar cambios en el YAML
+  const handleYamlChange = (yaml: string) => {
+    setYamlContent(yaml);
+    setUnsavedChanges(true);
+  };
+  
+  // Guardar pipeline
   const savePipeline = async () => {
-    if (!pipelineData || !pipelineData.name || !pipelineData.agent_passport_id) {
-      toast({
-        title: "Datos incompletos",
-        description: "Debe especificar un nombre y seleccionar un agente para el pipeline.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    
     try {
-      // Si estamos en modo YAML, asegurar que se convierta a flow antes de guardar
+      setIsSaving(true);
+      
+      if (!pipelineData || !pipelineData.name) {
+        toast({
+          title: "Error al guardar",
+          description: "El pipeline debe tener un nombre",
+          variant: "destructive"
+        });
+        setIsSaving(false);
+        return;
+      }
+      
+      // Si estamos en modo YAML, convertir primero a estructura de flujo
       if (yamlMode) {
         try {
-          const { flowData, pipelineData: updatedPipelineData } = templateManager.convertYamlToFlow(yamlContent);
-          setPipelineFlowData(flowData);
-          
-          // Actualizar los datos del pipeline si han cambiado
-          if (updatedPipelineData && updatedPipelineData.name) {
-            setPipelineData(updatedPipelineData);
-          }
+          const { flow, pipeline } = templateManager.convertYamlToFlow(yamlContent);
+          setPipelineFlowData(flow);
+          setPipelineData({
+            ...pipelineData,
+            name: pipeline.name || pipelineData.name,
+            description: pipeline.description || pipelineData.description || '',
+            agent_passport_id: pipeline.agent_passport_id || pipelineData.agent_passport_id || '',
+            abort_on_error: pipeline.abort_on_error !== undefined ? pipeline.abort_on_error : (pipelineData.abort_on_error === true)
+          });
         } catch (error) {
-          console.error("Error al convertir YAML para guardar:", error);
+          console.error("Error al convertir YAML:", error);
           toast({
-            title: "Error en el YAML",
-            description: "El YAML contiene errores y no puede ser guardado.",
+            title: "Error en el formato YAML",
+            description: "El YAML contiene errores y no puede ser procesado",
             variant: "destructive"
           });
           setIsSaving(false);
@@ -861,123 +366,53 @@ export default function PipelineStudio() {
         }
       }
       
-      // Convertir flow a unidades de pipeline
-      const units = convertFlowToUnits(pipelineFlowData);
+      // Construir estructura para guardar
+      const pipelineToSave = templateManager.buildPipelineFromFlow(
+        pipelineFlowData,
+        {
+          id: pipelineId,
+          name: pipelineData.name,
+          description: pipelineData.description || '',
+          agent_passport_id: pipelineData.agent_passport_id || '',
+          abort_on_error: pipelineData.abort_on_error === true
+        }
+      );
       
-      // Crear o actualizar pipeline
+      // Llamar a la API para guardar
+      const method = editorMode === 'create' ? 'POST' : 'PUT';
+      const url = editorMode === 'create' ? '/api/pipelines' : `/api/pipelines/${pipelineId}`;
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pipelineToSave)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al guardar pipeline');
+      }
+      
+      const savedPipeline = await response.json();
+      
+      toast({
+        title: "Pipeline guardado",
+        description: "El pipeline se ha guardado correctamente",
+        variant: "default"
+      });
+      
+      // Si estábamos creando, redirigir al modo edición
       if (editorMode === 'create') {
-        // Crear nuevo pipeline
-        const response = await fetch('/api/graphql', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: `
-              mutation CreatePipeline($pipeline: merlin_agent_Pipeline_insert_input!, $units: [merlin_agent_PipelineUnit_insert_input!]!) {
-                insert_merlin_agent_Pipeline_one(object: $pipeline) {
-                  id
-                  name
-                }
-                insert_merlin_agent_PipelineUnit(objects: $units) {
-                  affected_rows
-                }
-              }
-            `,
-            variables: {
-              pipeline: {
-                name: pipelineData.name,
-                description: pipelineData.description || '',
-                agent_passport_id: pipelineData.agent_passport_id,
-                abort_on_error: pipelineData.abort_on_error === true
-              },
-              units: units.map(unit => ({
-                ...unit,
-                pipeline_id: null  // Se rellenará en el servidor con el ID creado
-              }))
-            }
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.errors) {
-          throw new Error(result.errors[0].message);
-        }
-        
-        const newPipelineId = result.data.insert_merlin_agent_Pipeline_one.id;
-        
-        // Guardar el layout de nodos
-        await saveNodeLayout(newPipelineId);
-        
-        toast({
-          title: "Pipeline Creado",
-          description: "El pipeline ha sido creado exitosamente.",
-          variant: "default"
-        });
-        
-        // Navegar a la vista de edición del nuevo pipeline
-        navigate(`/pipelines/edit/${newPipelineId}`);
+        navigate(`/pipeline-studio/${savedPipeline.id}`);
         setEditorMode('edit');
-      } else {
-        // Actualizar pipeline existente
-        const response = await fetch('/api/graphql', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: `
-              mutation UpdatePipeline($id: uuid!, $pipeline: merlin_agent_Pipeline_set_input!, $units: [merlin_agent_PipelineUnit_insert_input!]!) {
-                update_merlin_agent_Pipeline_by_pk(pk_columns: {id: $id}, _set: $pipeline) {
-                  id
-                  name
-                }
-                delete_merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $id}}) {
-                  affected_rows
-                }
-                insert_merlin_agent_PipelineUnit(objects: $units) {
-                  affected_rows
-                }
-              }
-            `,
-            variables: {
-              id: pipelineId,
-              pipeline: {
-                name: pipelineData.name,
-                description: pipelineData.description || '',
-                agent_passport_id: pipelineData.agent_passport_id,
-                abort_on_error: pipelineData.abort_on_error === true
-              },
-              units: units.map(unit => ({
-                ...unit,
-                pipeline_id: pipelineId
-              }))
-            }
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.errors) {
-          throw new Error(result.errors[0].message);
-        }
-        
-        // Guardar el layout de nodos
-        await saveNodeLayout(pipelineId);
-        
-        toast({
-          title: "Pipeline Actualizado",
-          description: "El pipeline ha sido actualizado exitosamente.",
-          variant: "default"
-        });
       }
       
       setUnsavedChanges(false);
     } catch (error) {
-      console.error("Error guardando pipeline:", error);
+      console.error('Error al guardar pipeline:', error);
       toast({
-        title: "Error al guardar pipeline",
+        title: "Error al guardar",
         description: `No se pudo guardar el pipeline. ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: "destructive"
       });
@@ -986,247 +421,119 @@ export default function PipelineStudio() {
     }
   };
   
-  // Guardar la disposición de nodos
-  const saveNodeLayout = async (pipelineId: string) => {
-    try {
-      if (!pipelineFlowData) return;
-      
-      const layoutManager = new PipelineLayoutManager();
-      await layoutManager.saveLayout(pipelineId, pipelineFlowData);
-    } catch (error) {
-      console.error("Error guardando layout de nodos:", error);
-      // No mostrar error al usuario, ya que esto es secundario
-    }
-  };
-  
-  // Convertir flow a unidades de pipeline
-  const convertFlowToUnits = (flowData: any): any[] => {
-    if (!flowData || !flowData.nodes || flowData.nodes.length <= 1) {
-      return []; // No hay nodos o solo está el nodo inicial
-    }
-    
-    // Filtrar el nodo inicial
-    const nodes = flowData.nodes.filter((node: any) => node.id !== 'pipeline-start');
-    
-    // Ordenar nodos según las conexiones
-    const orderedNodes = orderNodesByConnections(flowData);
-    
-    // Crear unidades
-    return orderedNodes.map((node: any, index: number) => {
-      const unitType = getUnitTypeFromNodeType(node.type);
-      const details = node.data.details || {};
-      
-      // Ajustar details según type
-      if (node.data.label) {
-        details.name = node.data.label;
-      }
-      
-      // Determinar siguiente nodo en caso de éxito
-      const nextIndex = index + 1;
-      const nextOnSuccess = nextIndex < orderedNodes.length ? orderedNodes[nextIndex].id : null;
-      
-      return {
-        id: node.id,
-        unit_type: unitType,
-        details: JSON.stringify(details),
-        order_index: index,
-        next_on_success: nextOnSuccess,
-        next_on_error: null // Por ahora no soportamos bifurcación en error
-      };
+  // Manejar cambios en las propiedades del pipeline
+  const handlePipelinePropertiesChange = (properties: any) => {
+    setPipelineData({
+      ...pipelineData,
+      ...properties
     });
+    setUnsavedChanges(true);
   };
   
-  // Convertir tipo de nodo a tipo de unidad
-  const getUnitTypeFromNodeType = (nodeType: string): string => {
-    switch (nodeType) {
-      case 'commandNode':
-        return 'Command';
-      case 'queryNode':
-        return 'QueryQueue';
-      case 'sftpDownloaderNode':
-        return 'SFTPDownloader';
-      case 'sftpUploaderNode':
-        return 'SFTPUploader';
-      case 'zipNode':
-        return 'Zip';
-      case 'unzipNode':
-        return 'UnZip';
-      case 'callPipelineNode':
-        return 'CallPipeline';
-      default:
-        return 'Command';
-    }
-  };
-  
-  // Ordenar nodos según las conexiones
-  const orderNodesByConnections = (flowData: any): any[] => {
-    const { nodes, edges } = flowData;
-    
-    // Filtrar nodo de inicio
-    const actualNodes = nodes.filter((node: any) => node.id !== 'pipeline-start');
-    if (actualNodes.length === 0) return [];
-    
-    // Encontrar el primer nodo real (el que viene después del inicio)
-    const startEdge = edges.find((edge: any) => edge.source === 'pipeline-start');
-    if (!startEdge) return actualNodes; // Si no hay conexión desde el inicio, devolver nodos sin ordenar
-    
-    const firstNodeId = startEdge.target;
-    const firstNode = nodes.find((node: any) => node.id === firstNodeId);
-    if (!firstNode) return actualNodes;
-    
-    // Construir lista ordenada siguiendo las conexiones
-    const orderedNodes = [firstNode];
-    const visited = new Set([firstNode.id]);
-    
-    let currentNodeId = firstNode.id;
-    
-    while (true) {
-      // Encontrar la siguiente conexión
-      const nextEdge = edges.find((edge: any) => edge.source === currentNodeId);
-      if (!nextEdge) break;
-      
-      const nextNodeId = nextEdge.target;
-      if (visited.has(nextNodeId)) break; // Evitar ciclos
-      
-      const nextNode = nodes.find((node: any) => node.id === nextNodeId);
-      if (!nextNode) break;
-      
-      orderedNodes.push(nextNode);
-      visited.add(nextNodeId);
-      currentNodeId = nextNodeId;
-    }
-    
-    // Añadir nodos que no estén conectados al final
-    actualNodes.forEach((node: any) => {
-      if (!visited.has(node.id)) {
-        orderedNodes.push(node);
+  // Manejar cambios en las propiedades de un nodo
+  const handleNodePropertiesChange = (nodeId: string, properties: any) => {
+    const updatedNodes = pipelineFlowData.nodes.map((node: any) => {
+      if (node.id === nodeId) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...properties
+          }
+        };
       }
+      return node;
     });
     
-    return orderedNodes;
+    setPipelineFlowData({
+      ...pipelineFlowData,
+      nodes: updatedNodes
+    });
+    
+    if (selectedNode && selectedNode.id === nodeId) {
+      setSelectedNode({
+        ...selectedNode,
+        data: {
+          ...selectedNode.data,
+          ...properties
+        }
+      });
+    }
+    
+    setUnsavedChanges(true);
   };
   
-  // Cargar plantilla
+  // Cargar una plantilla de pipeline
   const handleTemplateSelect = async (templateId: string) => {
     try {
+      setIsLoading(true);
+      
+      // Simulación de carga de plantilla
       const template = templates.find(t => t.id === templateId);
       if (!template) {
-        toast({
-          title: "Plantilla no encontrada",
-          description: "La plantilla seleccionada no existe.",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('Plantilla no encontrada');
       }
       
-      // Cargar YAML de la plantilla
-      const yaml = await templateManager.loadTemplateContent(templateId);
+      // Generar flujo a partir de la plantilla
+      const { flow, pipeline } = templateManager.loadTemplate(templateId);
       
-      // Convertir YAML a flujo
-      const { flowData, pipelineData: templatePipelineData } = templateManager.convertYamlToFlow(yaml);
-      
-      // Actualizar datos del pipeline
+      setPipelineFlowData(flow);
       setPipelineData({
-        name: `${templatePipelineData.name || template.name} (Copia)`,
-        description: templatePipelineData.description || template.description || '',
-        agent_passport_id: pipelineData?.agent_passport_id || '',
-        abort_on_error: templatePipelineData.abort_on_error === true
+        name: template.name,
+        description: template.description,
+        agent_passport_id: '',
+        abort_on_error: false
       });
       
-      // Actualizar flujo
-      setPipelineFlowData(flowData);
-      setYamlContent(yaml);
+      setEditorMode('create');
       setUnsavedChanges(true);
       
       toast({
         title: "Plantilla cargada",
-        description: "La plantilla se ha cargado correctamente.",
+        description: `La plantilla "${template.name}" se ha cargado correctamente`,
         variant: "default"
       });
     } catch (error) {
-      console.error("Error cargando plantilla:", error);
+      console.error('Error al cargar plantilla:', error);
       toast({
         title: "Error al cargar plantilla",
-        description: "No se pudo cargar la plantilla seleccionada.",
+        description: "No se pudo cargar la plantilla seleccionada",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  // Función para duplicar un pipeline existente
+  // Duplicar un pipeline existente
   const handleDuplicatePipeline = async (pipelineId: string) => {
-    setIsLoading(true);
     try {
-      // Obtener datos del pipeline
-      const response = await fetch(`/api/graphql`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `
-            query GetPipelineDetails($id: uuid!) {
-              merlin_agent_Pipeline(where: {id: {_eq: $id}}) {
-                id
-                name
-                description
-                agent_passport_id
-                abort_on_error
-              }
-              merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $id}}) {
-                id
-                unit_type
-                command_id
-                query_queue_id
-                sftp_downloader_id
-                sftp_uploader_id
-                zip_id
-                unzip_id
-                comment
-                retry_after_milliseconds
-                retry_count
-                timeout_milliseconds
-                abort_on_timeout
-                continue_on_error
-                posx
-                posy
-                call_pipeline
-                details
-              }
-            }
-          `,
-          variables: {
-            id: pipelineId
-          }
-        })
-      });
+      setIsLoading(true);
       
-      const result = await response.json();
-      
-      if (result.errors) {
-        throw new Error(result.errors[0].message);
-      }
-      
-      const pipeline = result.data.merlin_agent_Pipeline[0];
-      const units = result.data.merlin_agent_PipelineUnit;
-      
+      // Buscar el pipeline a duplicar
+      const pipeline = pipelines.find(p => p.id === pipelineId);
       if (!pipeline) {
-        throw new Error("Pipeline no encontrado");
+        throw new Error('Pipeline no encontrado');
       }
       
-      // Actualizar datos del pipeline (como copia)
+      // Cargar el pipeline completo con sus detalles
+      const response = await fetch(`/api/pipelines/${pipelineId}`);
+      if (!response.ok) {
+        throw new Error('Error al cargar pipeline para duplicar');
+      }
+      const fullPipeline = await response.json();
+      
+      // Construir estructura de flujo para el editor visual
+      const layoutManager = new PipelineLayoutManager();
+      const flow = layoutManager.buildFlowFromPipeline(fullPipeline);
+      
+      // Actualizar estados
       setPipelineData({
-        name: `${pipeline.name} (Copia)`,
-        description: pipeline.description || '',
-        agent_passport_id: pipeline.agent_passport_id,
-        abort_on_error: pipeline.abort_on_error === true
+        ...fullPipeline,
+        name: `${fullPipeline.name} (Copia)`,
+        id: undefined
       });
-      
-      // Convertir unidades a formato de flow
-      const flow = convertUnitsToFlow(units);
       setPipelineFlowData(flow);
-      
-      // Cambiar a modo creación
       setEditorMode('create');
       setUnsavedChanges(true);
       
@@ -1272,8 +579,8 @@ export default function PipelineStudio() {
           </h1>
           <p className="text-muted-foreground">
             {editorMode === 'create' 
-              ? 'Diseña un nuevo pipeline para automatizar tareas' 
-              : 'Edita la configuración y flujo del pipeline'}
+              ? 'Diseña un nuevo pipeline de procesamiento' 
+              : pipelineData?.name ? `Editando: ${pipelineData.name}` : 'Cargando pipeline...'}
           </p>
         </div>
         
@@ -1289,10 +596,10 @@ export default function PipelineStudio() {
           
           {editorMode !== 'view' && (
             <>
-              <Button
-                variant="default"
+              <Button 
+                variant="default" 
                 onClick={savePipeline}
-                disabled={isSaving || !pipelineData?.name || !pipelineData?.agent_passport_id}
+                disabled={isSaving || (!pipelineData?.name)}
                 className="flex items-center"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -1337,7 +644,7 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <Dialog id="pipelines-dialog">
+                <Dialog>
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
@@ -1459,9 +766,10 @@ export default function PipelineStudio() {
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </div>
                     )}
                   </DialogContent>
@@ -1491,78 +799,50 @@ export default function PipelineStudio() {
               </div>
             </div>
             
-            <TabsContent value="visual" className="space-y-4">
-              <Card className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="relative w-full h-[calc(100vh-300px)] min-h-[500px]">
-                    {/* Editor de pipeline visual */}
-                    {pipelineFlowData && (
-                      <PipelineEditor 
-                        flowData={pipelineFlowData}
-                        onChange={handleVisualEditorChange}
-                        readOnly={editorMode === 'view'}
-                        pipelineId={pipelineId || undefined}
-                      />
-                    )}
-                    
-                    {/* Paneles flotantes verdaderamente arrastrables */}
-                    {pipelineFlowData && (
-                      <>
-                        {/* Paleta de nodos flotante */}
-                        <NodePalette 
-                          onAddNode={handleAddNode}
-                          readOnly={editorMode === 'view'}
-                          initialPosition={{ x: 20, y: 60 }}
-                        />
-                        
-                        {/* Panel de propiedades del pipeline */}
-                        {!selectedNode && (
-                          <DraggablePipelineProperties
-                            pipelineData={pipelineData}
-                            onChange={setPipelineData}
-                            agentOptions={agentOptions}
-                            readOnly={editorMode === 'view'}
-                            initialPosition={{ x: 20, y: 350 }}
-                          />
-                        )}
-                        
-                        {/* Panel de propiedades del nodo seleccionado */}
-                        {selectedNode && (
-                          <DraggableNodeProperties
-                            node={selectedNode}
-                            onUpdateNode={handleNodeUpdate}
-                            onDeleteNode={handleNodeDelete}
-                            readOnly={editorMode === 'view'}
-                            sftpOptions={sftpOptions.map(conn => ({
-                              label: conn.name,
-                              value: conn.id
-                            }))}
-                            sqlConnOptions={sqlConnections.map(conn => ({
-                              label: conn.name,
-                              value: conn.id
-                            }))}
-                            initialPosition={{ x: window.innerWidth - 370, y: 60 }}
-                          />
-                        )}
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="yaml" className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="relative w-full h-[calc(100vh-300px)] min-h-[500px]">
-                    <PipelineYamlEditor
-                      value={yamlContent}
-                      onChange={handleYamlChange}
+            <TabsContent value="visual" className="mt-4">
+              <div className="flex flex-col space-y-4">
+                {/* Editor de pipeline visual */}
+                <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
+                  <PipelineEditor
+                    flow={pipelineFlowData}
+                    onFlowChange={handleFlowChange}
+                    onNodeSelect={handleNodeSelect}
+                    readOnly={editorMode === 'view'}
+                  />
+                  
+                  {/* Paleta de nodos */}
+                  <NodePalette />
+                  
+                  {/* Panel de propiedades arrastrable */}
+                  {pipelineData && (
+                    <DraggablePipelineProperties
+                      pipeline={pipelineData}
+                      onChange={handlePipelinePropertiesChange}
+                      agentOptions={agentOptions}
                       readOnly={editorMode === 'view'}
                     />
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                  
+                  {/* Panel de propiedades del nodo seleccionado */}
+                  {selectedNode && (
+                    <DraggableNodeProperties
+                      node={selectedNode}
+                      onChange={(props) => handleNodePropertiesChange(selectedNode.id, props)}
+                      sftpOptions={sftpOptions}
+                      sqlConnections={sqlConnections}
+                      readOnly={editorMode === 'view'}
+                    />
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="yaml" className="mt-4">
+              <PipelineYamlEditor
+                value={yamlContent}
+                onChange={handleYamlChange}
+                readOnly={editorMode === 'view'}
+              />
             </TabsContent>
           </Tabs>
         </>
