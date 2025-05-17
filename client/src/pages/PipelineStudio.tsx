@@ -1419,7 +1419,11 @@ export default function PipelineStudio() {
                                     <Button 
                                       size="sm" 
                                       variant="ghost"
-                                      onClick={() => navigate(`/pipeline-studio/${pipeline.id}`)}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigate(`/pipeline-studio/${pipeline.id}`);
+                                      }}
                                     >
                                       <Edit className="mr-1 h-4 w-4" />
                                       Editar

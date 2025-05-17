@@ -142,7 +142,7 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
-        zIndex: 999,
+        zIndex: expanded ? 40 : 10,
         left: position.x,
         top: position.y,
         touchAction: 'none' // Para mejor soporte en dispositivos táctiles
