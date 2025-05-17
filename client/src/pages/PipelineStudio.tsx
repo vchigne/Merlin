@@ -1337,7 +1337,7 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <Dialog>
+                <Dialog id="pipelines-dialog">
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
@@ -1351,7 +1351,7 @@ export default function PipelineStudio() {
                       Cargar Pipeline Existente
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[90vw] md:max-w-[600px]">
+                  <DialogContent className="sm:max-w-[90vw] md:max-w-[650px]">
                     <DialogHeader>
                       <DialogTitle>Cargar Pipeline Existente</DialogTitle>
                       <DialogDescription>
@@ -1401,16 +1401,17 @@ export default function PipelineStudio() {
                       </div>
                     ) : (
                       <div className="max-h-[400px] overflow-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Nombre</TableHead>
-                              <TableHead>Agente</TableHead>
-                              <TableHead>Acciones</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredPipelines.map((pipeline) => (
+                        <div className="w-full overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="min-w-[120px]">Nombre</TableHead>
+                                <TableHead className="min-w-[120px]">Agente</TableHead>
+                                <TableHead className="min-w-[180px]">Acciones</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredPipelines.map((pipeline) => (
                               <TableRow key={pipeline.id}>
                                 <TableCell className="font-medium">{pipeline.name}</TableCell>
                                 <TableCell>{pipeline.agent_name || "—"}</TableCell>
@@ -1418,11 +1419,20 @@ export default function PipelineStudio() {
                                   <div className="flex space-x-2">
                                     <Button 
                                       size="sm" 
-                                      variant="ghost"
+                                      variant="default"
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        navigate(`/pipeline-studio/${pipeline.id}`);
+                                        console.log("Editando pipeline:", pipeline.id);
+                                        
+                                        // Cerramos el diálogo manualmente primero
+                                        const closeEvent = new CustomEvent('close-dialog');
+                                        document.dispatchEvent(closeEvent);
+                                        
+                                        // Esperamos un poco y luego navegamos
+                                        setTimeout(() => {
+                                          navigate(`/pipeline-studio/${pipeline.id}`);
+                                        }, 100);
                                       }}
                                     >
                                       <Edit className="mr-1 h-4 w-4" />
@@ -1430,8 +1440,12 @@ export default function PipelineStudio() {
                                     </Button>
                                     <Button 
                                       size="sm" 
-                                      variant="ghost"
-                                      onClick={() => handleDuplicatePipeline(pipeline.id)}
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDuplicatePipeline(pipeline.id);
+                                      }}
                                     >
                                       <Copy className="mr-1 h-4 w-4" />
                                       Duplicar
