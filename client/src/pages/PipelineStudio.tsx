@@ -1423,15 +1423,21 @@ export default function PipelineStudio() {
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        console.log("Editando pipeline:", pipeline.id);
                                         
-                                        // Cerramos el diálogo manualmente primero
-                                        const closeEvent = new CustomEvent('close-dialog');
-                                        document.dispatchEvent(closeEvent);
+                                        // Cerrar el diálogo y navegar
+                                        const dialog = document.querySelector('[role="dialog"]');
+                                        if (dialog) {
+                                          // Simular un clic fuera del diálogo para cerrarlo
+                                          dialog.dispatchEvent(new MouseEvent('click', {
+                                            bubbles: true,
+                                            cancelable: true,
+                                            view: window
+                                          }));
+                                        }
                                         
-                                        // Esperamos un poco y luego navegamos
+                                        // Navegar después de un pequeño delay
                                         setTimeout(() => {
-                                          navigate(`/pipeline-studio/${pipeline.id}`);
+                                          window.location.href = `/pipeline-studio/${pipeline.id}`;
                                         }, 100);
                                       }}
                                     >
