@@ -1419,7 +1419,7 @@ export default function PipelineStudio() {
                                     <Button 
                                       size="sm" 
                                       variant="ghost"
-                                      onClick={() => navigate(`/pipelines/edit/${pipeline.id}`)}
+                                      onClick={() => navigate(`/pipeline-studio/${pipeline.id}`)}
                                     >
                                       <Edit className="mr-1 h-4 w-4" />
                                       Editar
