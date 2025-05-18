@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,6 @@ interface PipelineBrowserProps {
 }
 
 export default function PipelineBrowser({ onDuplicate }: PipelineBrowserProps) {
-  const [, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,14 +67,6 @@ export default function PipelineBrowser({ onDuplicate }: PipelineBrowserProps) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Función para editar pipeline - navega a la ruta del editor
-  const handleEdit = (pipelineId: string) => {
-    // Cierra el diálogo antes de navegar
-    setIsOpen(false);
-    // Navega a la página de edición usando wouter
-    navigate(`/pipeline-studio/${pipelineId}`);
   };
 
   // Función para duplicar pipeline
@@ -191,14 +182,19 @@ export default function PipelineBrowser({ onDuplicate }: PipelineBrowserProps) {
                     <TableCell>{pipeline.description || "—"}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="default"
-                          onClick={() => handleEdit(pipeline.id)}
+                        {/* Usar Link directamente en lugar de una función custom */}
+                        <Link 
+                          href={`/pipeline-studio/${pipeline.id}`}
+                          onClick={() => setIsOpen(false)}
                         >
-                          <Edit className="mr-1 h-4 w-4" />
-                          Editar
-                        </Button>
+                          <Button 
+                            size="sm" 
+                            variant="default"
+                          >
+                            <Edit className="mr-1 h-4 w-4" />
+                            Editar
+                          </Button>
+                        </Link>
                         
                         {onDuplicate && (
                           <Button 
