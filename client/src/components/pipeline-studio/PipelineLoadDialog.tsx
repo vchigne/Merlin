@@ -79,11 +79,21 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
   const handleEdit = (pipelineId: string, pipelineName: string) => {
     console.log(`Editando pipeline: ${pipelineName} (${pipelineId})`);
     setIsOpen(false);
+    
+    // Esperar a que el diálogo se cierre completamente
     setTimeout(() => {
-      const url = `/pipeline-studio/${pipelineId}`;
-      console.log(`Navegando a: ${url}`);
-      window.location.href = url;
-    }, 100);
+      try {
+        // Navegar con página completa en lugar de navegación SPA
+        console.log(`Navegando a: /pipeline-studio/${pipelineId}`);
+        
+        // Usar window.location.replace para forzar recarga completa
+        window.location.replace(`/pipeline-studio/${pipelineId}`);
+      } catch (error) {
+        console.error("Error al navegar:", error);
+        // Plan B: usar href si replace falla
+        window.location.href = `/pipeline-studio/${pipelineId}`;
+      }
+    }, 300); // Aumentar tiempo de espera para asegurar que el diálogo se cierre
   };
 
   // Función para duplicar pipeline
