@@ -644,15 +644,17 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <Dialog>
+                <Dialog onOpenChange={(open) => {
+                    if (open) {
+                      // Cargar pipelines cuando se abre el diálogo
+                      console.log("Cargando pipelines...");
+                      loadPipelines();
+                    }
+                  }}>
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        // Forzar la carga de pipelines al abrir el diálogo
-                        loadPipelines();
-                      }}
                     >
                       <Search className="mr-2 h-4 w-4" />
                       Cargar Pipeline Existente
