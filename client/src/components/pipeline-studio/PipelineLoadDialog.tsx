@@ -75,35 +75,55 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
     }
   };
 
-  // Función para editar pipeline
+  // Función para editar pipeline de manera segura
   const handleEdit = (pipelineId: string, pipelineName: string) => {
     console.log(`Editando pipeline: ${pipelineName} (${pipelineId})`);
     
+    // Cerrar el diálogo inmediatamente para evitar problemas de UI
+    setIsOpen(false);
+    
+    // Usar un método más directo y confiable
     try {
-      // Cerrar el diálogo inmediatamente
-      setIsOpen(false);
+      // Construir la URL completa para asegurar que no hay problemas de enrutamiento
+      // Método extremo: usar redirección de página completa
+      const baseUrl = window.location.protocol + '//' + window.location.host;
+      const fullUrl = `${baseUrl}/pipeline-studio/${pipelineId}`;
+      console.log(`Navegando a URL completa: ${fullUrl}`);
       
-      // Usa una forma más directa para realizar un reload completo con el pipeline ID
-      const url = `/pipeline-studio/${pipelineId}`;
-      console.log(`Navegando directamente a: ${url}`);
-      
-      // Retraso muy corto para asegurar que se cierre el diálogo
+      // Pequeño delay para permitir que se cierre el diálogo primero
       setTimeout(() => {
-        // Redirección forzada para cargar completamente la página desde cero
-        window.location.href = url;
+        // Crear un enlace y simular un clic para una navegación más confiable
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        // Importante: _self garantiza que navegamos en la misma ventana
+        link.target = "_self";
+        link.rel = "noopener noreferrer";
+        // Agregar al DOM
+        document.body.appendChild(link);
+        // Simular clic para una navegación más confiable que window.location
+        link.click();
+        // Limpiar el DOM
+        document.body.removeChild(link);
         
-        // Si la redirección no funciona, mostrar mensaje para recargar manualmente
+        // Plan de respaldo por si acaso la navegación falla
         setTimeout(() => {
-          console.log("Verificando si la navegación fue exitosa...");
-          if (document.location.pathname !== url) {
-            console.warn("La navegación automática no funcionó correctamente.");
-            alert(`Por favor, ve manualmente a ${url} para ver el pipeline seleccionado.`);
+          if (window.location.pathname !== `/pipeline-studio/${pipelineId}`) {
+            console.warn("Navegación falló, usando método alternativo...");
+            // Método de respaldo usando location.replace
+            window.location.replace(fullUrl);
+            
+            // Último recurso: alertar al usuario si todo lo demás falla
+            setTimeout(() => {
+              if (window.location.pathname !== `/pipeline-studio/${pipelineId}`) {
+                alert(`Error de navegación. Por favor, ve manualmente a ${fullUrl}`);
+              }
+            }, 1000);
           }
-        }, 1000);
-      }, 50);
+        }, 500);
+      }, 100);
     } catch (error) {
-      console.error("Error crítico al navegar:", error);
-      alert(`Error al cargar el pipeline. Por favor, intenta ir manualmente a /pipeline-studio/${pipelineId}`);
+      console.error("Error crítico en la navegación:", error);
+      alert(`Error al navegar. Por favor, intenta ir manualmente a /pipeline-studio/${pipelineId}`);
     }
   };
 
