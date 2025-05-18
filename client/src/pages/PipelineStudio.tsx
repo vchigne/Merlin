@@ -84,7 +84,7 @@ export default function PipelineStudio() {
   const [sqlConnections, setSqlConnections] = useState<SQLConnection[]>([]);
   
   // Referencia al gestor de plantillas de pipeline
-  const templateManager = new PipelineTemplateManager();
+  const templateManager = PipelineTemplateManager.getInstance();
   
   // Efecto para cargar los datos del pipeline en modo edición
   useEffect(() => {
@@ -206,7 +206,7 @@ export default function PipelineStudio() {
       setPipelineData(pipeline);
       
       // Construir estructura de flujo para el editor visual
-      const layoutManager = new PipelineLayoutManager();
+      const layoutManager = PipelineLayoutManager.getInstance();
       const flow = layoutManager.buildFlowFromPipeline(pipeline);
       
       setPipelineFlowData(flow);
@@ -645,7 +645,8 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <PipelineLoadDialogSimple onDuplicate={handleDuplicatePipeline} />
+                {/* Usar el componente más simple y directo */}
+                <SimpleLoadDialog />
                 
                 {/* Dialog para cargar plantilla */}
                 <Dialog>
