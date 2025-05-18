@@ -644,23 +644,30 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <Dialog onOpenChange={(open) => {
-                    if (open) {
-                      // Cargar pipelines cuando se abre el diálogo
-                      console.log("Cargando pipelines...");
-                      loadPipelines();
-                    }
-                  }}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      Cargar Pipeline Existente
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[90vw] md:max-w-[650px]">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Pre-cargar la lista de pipelines
+                    loadPipelines();
+                    
+                    // Mostrar mensaje en consola para confirmar la acción
+                    console.log("Cargando lista de pipelines existentes...");
+                    
+                    // Mostrar el modal con un pequeño retraso para asegurar que loadPipelines tenga tiempo de ejecutarse
+                    setTimeout(() => {
+                      document.getElementById('load-pipeline-dialog')?.click();
+                    }, 100);
+                  }}
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Cargar Pipeline Existente
+                </Button>
+                
+                {/* Diálogo real que se abrirá con el botón de arriba */}
+                <Dialog>
+                  <DialogTrigger id="load-pipeline-dialog" className="hidden" />
+                  <DialogContent className="sm:max-w-[90vw] md:max-w-[650px] z-[9999]">
                     <DialogHeader>
                       <DialogTitle>Cargar Pipeline Existente</DialogTitle>
                       <DialogDescription>
