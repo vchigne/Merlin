@@ -22,7 +22,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
 interface PipelineTemplateProps {
-  onSelect: (template: any) => void;
+  templates: any[];
+  onSelect: (templateId: string) => Promise<void>;
 }
 
 export default function PipelineTemplateSelector({ onSelect }: PipelineTemplateProps) {
