@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +24,6 @@ interface PipelineLoadDialogProps {
 }
 
 export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogProps) {
-  const [, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pipelines, setPipelines] = useState<any[]>([]);
