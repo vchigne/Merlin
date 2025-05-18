@@ -78,22 +78,33 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
   // Función para editar pipeline
   const handleEdit = (pipelineId: string, pipelineName: string) => {
     console.log(`Editando pipeline: ${pipelineName} (${pipelineId})`);
-    setIsOpen(false);
     
-    // Esperar a que el diálogo se cierre completamente
-    setTimeout(() => {
-      try {
-        // Navegar con página completa en lugar de navegación SPA
-        console.log(`Navegando a: /pipeline-studio/${pipelineId}`);
+    try {
+      // Cerrar el diálogo inmediatamente
+      setIsOpen(false);
+      
+      // Usa una forma más directa para realizar un reload completo con el pipeline ID
+      const url = `/pipeline-studio/${pipelineId}`;
+      console.log(`Navegando directamente a: ${url}`);
+      
+      // Retraso muy corto para asegurar que se cierre el diálogo
+      setTimeout(() => {
+        // Redirección forzada para cargar completamente la página desde cero
+        window.location.href = url;
         
-        // Usar window.location.replace para forzar recarga completa
-        window.location.replace(`/pipeline-studio/${pipelineId}`);
-      } catch (error) {
-        console.error("Error al navegar:", error);
-        // Plan B: usar href si replace falla
-        window.location.href = `/pipeline-studio/${pipelineId}`;
-      }
-    }, 300); // Aumentar tiempo de espera para asegurar que el diálogo se cierre
+        // Si la redirección no funciona, mostrar mensaje para recargar manualmente
+        setTimeout(() => {
+          console.log("Verificando si la navegación fue exitosa...");
+          if (document.location.pathname !== url) {
+            console.warn("La navegación automática no funcionó correctamente.");
+            alert(`Por favor, ve manualmente a ${url} para ver el pipeline seleccionado.`);
+          }
+        }, 1000);
+      }, 50);
+    } catch (error) {
+      console.error("Error crítico al navegar:", error);
+      alert(`Error al cargar el pipeline. Por favor, intenta ir manualmente a /pipeline-studio/${pipelineId}`);
+    }
   };
 
   // Función para duplicar pipeline
