@@ -33,6 +33,7 @@ import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor"
 import NodePalette from "@/components/pipeline-studio/NodePalette";
 import DraggablePipelineProperties from "@/components/pipeline-studio/DraggablePipelineProperties";
 import DraggableNodeProperties from "@/components/pipeline-studio/DraggableNodeProperties";
+import PipelineLoadDialog from "@/components/pipeline-studio/PipelineLoadDialog";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
@@ -644,145 +645,7 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    // Pre-cargar la lista de pipelines
-                    loadPipelines();
-                    
-                    // Mostrar mensaje en consola para confirmar la acción
-                    console.log("Cargando lista de pipelines existentes...");
-                    
-                    // Mostrar el modal con un pequeño retraso para asegurar que loadPipelines tenga tiempo de ejecutarse
-                    setTimeout(() => {
-                      document.getElementById('load-pipeline-dialog')?.click();
-                    }, 100);
-                  }}
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Cargar Pipeline Existente
-                </Button>
-                
-                {/* Diálogo real que se abrirá con el botón de arriba */}
-                <Dialog>
-                  <DialogTrigger id="load-pipeline-dialog" className="hidden" />
-                  <DialogContent className="sm:max-w-[90vw] md:max-w-[650px] z-[9999]">
-                    <DialogHeader>
-                      <DialogTitle>Cargar Pipeline Existente</DialogTitle>
-                      <DialogDescription>
-                        Selecciona un pipeline existente para editarlo o duplicarlo
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    {/* Buscador de pipelines */}
-                    <div className="py-2">
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Buscar pipeline por nombre o agente..."
-                          className="pl-8"
-                          onChange={(e) => {
-                            const searchTerm = e.target.value.toLowerCase();
-                            // Si el campo está vacío, mostrar todos los pipelines
-                            if (!searchTerm) {
-                              setFilteredPipelines(pipelines);
-                              return;
-                            }
-                            
-                            // Filtrar pipelines por nombre o agente
-                            const filtered = pipelines.filter(p => 
-                              p.name.toLowerCase().includes(searchTerm) || 
-                              (p.agent_name && p.agent_name.toLowerCase().includes(searchTerm))
-                            );
-                            setFilteredPipelines(filtered);
-                          }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {pipelines.length === 0 ? (
-                      <div className="py-6 text-center">
-                        <div className="mb-2">No se encontraron pipelines</div>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => loadPipelines()}
-                        >
-                          Reintentar
-                        </Button>
-                      </div>
-                    ) : filteredPipelines.length === 0 ? (
-                      <div className="py-6 text-center">
-                        <div className="mb-2">No se encontraron pipelines que coincidan con la búsqueda</div>
-                      </div>
-                    ) : (
-                      <div className="max-h-[400px] overflow-auto">
-                        <div className="w-full overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="min-w-[120px]">Nombre</TableHead>
-                                <TableHead className="min-w-[120px]">Agente</TableHead>
-                                <TableHead className="min-w-[180px]">Acciones</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredPipelines.map((pipeline) => (
-                              <TableRow key={pipeline.id}>
-                                <TableCell className="font-medium">{pipeline.name}</TableCell>
-                                <TableCell>{pipeline.agent_name || "—"}</TableCell>
-                                <TableCell>
-                                  <div className="flex space-x-2">
-                                    <Button 
-                                      size="sm" 
-                                      variant="default"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        
-                                        // Cerrar el diálogo y navegar
-                                        const dialog = document.querySelector('[role="dialog"]');
-                                        if (dialog) {
-                                          // Simular un clic fuera del diálogo para cerrarlo
-                                          dialog.dispatchEvent(new MouseEvent('click', {
-                                            bubbles: true,
-                                            cancelable: true,
-                                            view: window
-                                          }));
-                                        }
-                                        
-                                        // Navegar después de un pequeño delay
-                                        setTimeout(() => {
-                                          window.location.href = `/pipeline-studio/${pipeline.id}`;
-                                        }, 100);
-                                      }}
-                                    >
-                                      <Edit className="mr-1 h-4 w-4" />
-                                      Editar
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleDuplicatePipeline(pipeline.id);
-                                      }}
-                                    >
-                                      <Copy className="mr-1 h-4 w-4" />
-                                      Duplicar
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    )}
-                  </DialogContent>
-                </Dialog>
+                <PipelineLoadDialog onDuplicate={handleDuplicatePipeline} />
                 
                 {/* Dialog para cargar plantilla */}
                 <Dialog>
