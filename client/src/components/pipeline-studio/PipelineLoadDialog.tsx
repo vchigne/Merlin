@@ -17,17 +17,27 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Edit, Copy, Loader2 } from "lucide-react";
+import { Search, Edit, Copy, Loader2, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface PipelineLoadDialogProps {
   onDuplicate: (pipelineId: string) => Promise<void>;
 }
 
+interface Pipeline {
+  id: string;
+  name: string;
+  agent_name?: string;
+  agent_passport_id?: string;
+  description?: string;
+}
+
 export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [pipelines, setPipelines] = useState<any[]>([]);
-  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [filteredPipelines, setFilteredPipelines] = useState<Pipeline[]>([]);
 
   // Cargar pipelines cuando se abre el diálogo
   useEffect(() => {
@@ -38,37 +48,53 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
 
   // Función para cargar los pipelines
   const loadPipelines = async () => {
+    setError(null);
     try {
       setIsLoading(true);
+      console.log("Cargando lista de pipelines...");
       const response = await fetch('/api/pipelines');
+      
       if (!response.ok) {
-        throw new Error('Error al cargar pipelines');
+        throw new Error(`Error al cargar pipelines: ${response.status} ${response.statusText}`);
       }
+      
       const data = await response.json();
+      console.log("Pipelines cargados:", data);
+      
+      if (!Array.isArray(data)) {
+        throw new Error('La respuesta no es un array de pipelines');
+      }
+      
       setPipelines(data);
       setFilteredPipelines(data);
     } catch (error) {
       console.error('Error al cargar pipelines:', error);
+      setError(error instanceof Error ? error.message : 'Error desconocido al cargar pipelines');
     } finally {
       setIsLoading(false);
     }
   };
 
   // Función para editar pipeline
-  const handleEdit = (pipelineId: string) => {
+  const handleEdit = (pipelineId: string, pipelineName: string) => {
+    console.log(`Editando pipeline: ${pipelineName} (${pipelineId})`);
     setIsOpen(false);
     setTimeout(() => {
-      window.location.href = `/pipeline-studio/${pipelineId}`;
+      const url = `/pipeline-studio/${pipelineId}`;
+      console.log(`Navegando a: ${url}`);
+      window.location.href = url;
     }, 100);
   };
 
   // Función para duplicar pipeline
-  const handleDuplicate = async (pipelineId: string) => {
+  const handleDuplicate = async (pipelineId: string, pipelineName: string) => {
     try {
+      console.log(`Duplicando pipeline: ${pipelineName} (${pipelineId})`);
       await onDuplicate(pipelineId);
       setIsOpen(false);
     } catch (error) {
       console.error("Error al duplicar pipeline:", error);
+      setError(error instanceof Error ? error.message : 'Error desconocido al duplicar pipeline');
     }
   };
 
@@ -121,6 +147,15 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
           </div>
         </div>
         
+        {/* Mensaje de error */}
+        {error && (
+          <Alert variant="destructive" className="my-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         {isLoading ? (
           <div className="py-6 text-center">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
@@ -146,14 +181,14 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[120px]">Nombre</TableHead>
+                    <TableHead className="min-w-[150px]">Nombre</TableHead>
                     <TableHead className="min-w-[120px]">Agente</TableHead>
                     <TableHead className="min-w-[180px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPipelines.map((pipeline) => (
-                  <TableRow key={pipeline.id}>
+                  <TableRow key={pipeline.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">{pipeline.name}</TableCell>
                     <TableCell>{pipeline.agent_name || "—"}</TableCell>
                     <TableCell>
@@ -161,7 +196,7 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
                         <Button 
                           size="sm" 
                           variant="default"
-                          onClick={() => handleEdit(pipeline.id)}
+                          onClick={() => handleEdit(pipeline.id, pipeline.name)}
                         >
                           <Edit className="mr-1 h-4 w-4" />
                           Editar
@@ -169,7 +204,7 @@ export default function PipelineLoadDialog({ onDuplicate }: PipelineLoadDialogPr
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleDuplicate(pipeline.id)}
+                          onClick={() => handleDuplicate(pipeline.id, pipeline.name)}
                         >
                           <Copy className="mr-1 h-4 w-4" />
                           Duplicar
