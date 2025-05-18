@@ -33,7 +33,7 @@ import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor"
 import NodePalette from "@/components/pipeline-studio/NodePalette";
 import DraggablePipelineProperties from "@/components/pipeline-studio/DraggablePipelineProperties";
 import DraggableNodeProperties from "@/components/pipeline-studio/DraggableNodeProperties";
-import PipelineBrowser from "@/components/pipeline-studio/PipelineBrowser";
+import SimplePipelineLoader from "@/components/pipeline-studio/SimplePipelineLoader";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
@@ -645,7 +645,7 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <PipelineBrowser onDuplicate={handleDuplicatePipeline} />
+                <SimplePipelineLoader />
                 
                 {/* Dialog para cargar plantilla */}
                 <Dialog>
