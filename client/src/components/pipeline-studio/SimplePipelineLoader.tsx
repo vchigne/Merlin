@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -33,10 +34,11 @@ interface Pipeline {
   disposable?: boolean;
 }
 
-// Componente simple que solo usa window.location.href para la navegación
+// Componente que usa wouter para la navegación SPA
 export default function SimplePipelineLoader() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [, navigate] = useLocation();
   
   // Usar el mismo hook que el dashboard para cargar pipelines
   const { 
@@ -61,12 +63,12 @@ export default function SimplePipelineLoader() {
       )
     : pipelines;
 
-  // Función simple de edición que navega directamente
+  // Función de edición que navega usando wouter (sin recargar la página)
   const handleEditPipeline = (pipelineId: string) => {
     // Cerrar diálogo
     setIsOpen(false);
-    // Navegar a la ruta del editor usando window.location
-    window.location.href = `/pipeline-studio/${pipelineId}`;
+    // Navegar a la ruta del editor usando wouter
+    navigate(`/pipeline-studio/${pipelineId}`);
   };
 
   return (
