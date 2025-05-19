@@ -227,14 +227,16 @@ export default function PipelineStudio() {
       }
     } catch (error) {
       console.error('Error al cargar pipeline:', error);
+      const errorMsg = error instanceof Error ? error.message : "Error desconocido";
+      
       toast({
         title: "Error al cargar pipeline",
-        description: "No se pudo cargar el pipeline seleccionado",
+        description: `Error: ${errorMsg}`,
         variant: "destructive"
       });
       
-      // Redireccionar a creación si hay error
-      navigate('/pipeline-studio');
+      // Mantener al usuario en la misma página para que pueda ver el error
+      // y decidir qué hacer a continuación
     } finally {
       setIsLoading(false);
     }
