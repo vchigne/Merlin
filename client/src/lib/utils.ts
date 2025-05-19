@@ -424,11 +424,30 @@ export function convertToFlowCoordinates(
     const unitType = getUnitType(unit);
     const typeLabel = getTypeReadableLabel(unitType);
     
+    // Obtener un nombre más descriptivo según el tipo
+    let descriptiveName = '';
+    
+    if (unitType === 'command' && unit.command_id) {
+      // Intentar obtener información más descriptiva para comandos
+      descriptiveName = unit.command?.name || unit.command?.target || 'Comando';
+    } else if (unitType === 'query' && unit.query_queue_id) {
+      // Intentar obtener información más descriptiva para consultas SQL
+      descriptiveName = unit.query?.name || 'Consulta SQL';
+    } else if (unitType === 'sftp_download') {
+      descriptiveName = 'Descarga SFTP';
+    } else if (unitType === 'sftp_upload') {
+      descriptiveName = 'Subida SFTP';
+    } else if (unitType === 'zip') {
+      descriptiveName = 'Compresión ZIP';
+    } else if (unitType === 'unzip') {
+      descriptiveName = 'Extracción ZIP';
+    }
+    
     // Si hay un comentario, úsalo como etiqueta principal
-    // De lo contrario, usa un tipo más descriptivo + ID corto
+    // De lo contrario, usa un tipo más descriptivo + un nombre adecuado
     const nodeLabel = unit.comment 
       ? unit.comment 
-      : `${typeLabel} ${unit.id.substring(0, 6)}`;
+      : (descriptiveName || `${typeLabel}`);
     
     nodes.push({
       id: unit.id,
