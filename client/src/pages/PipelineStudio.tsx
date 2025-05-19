@@ -689,9 +689,9 @@ export default function PipelineStudio() {
                 {/* Editor de pipeline visual */}
                 <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
                   <PipelineEditor
-                    flow={pipelineFlowData}
-                    onFlowChange={handleFlowChange}
-                    onNodeSelect={handleNodeSelect}
+                    flowData={pipelineFlowData}
+                    onChange={handleFlowChange}
+                    pipelineId={pipelineData?.id}
                     readOnly={editorMode === 'view'}
                   />
                   

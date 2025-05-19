@@ -14,6 +14,7 @@ interface PipelineEditorProps {
     edges: any[];
   };
   onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
+  onNodeSelect?: (node: any) => void; // Propiedad para manejar la selección de nodos
   readOnly?: boolean;
   pipelineId?: string; // ID del pipeline para guardar su layout
 }
@@ -21,6 +22,7 @@ interface PipelineEditorProps {
 export default function PipelineEditor({
   flowData,
   onChange,
+  onNodeSelect,
   readOnly = false,
   pipelineId,
 }: PipelineEditorProps) {
