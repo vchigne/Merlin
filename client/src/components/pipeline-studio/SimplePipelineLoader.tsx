@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,74 +17,57 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Edit, Loader2, AlertTriangle } from "lucide-react";
+import { Search, Edit, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { usePipelines } from "@/hooks/use-pipeline";
+
+// Definición de interfaz para Pipeline
+interface Pipeline {
+  id: string;
+  name: string;
+  description?: string;
+  abort_on_error?: boolean;
+  agent_passport_id?: string;
+  created_at: string;
+  updated_at: string;
+  disposable?: boolean;
+}
 
 // Componente simple que solo usa window.location.href para la navegación
 export default function SimplePipelineLoader() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pipelines, setPipelines] = useState<any[]>([]);
-  const [filteredPipelines, setFilteredPipelines] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Usar el mismo hook que el dashboard para cargar pipelines
+  const { 
+    data: pipelinesData, 
+    isLoading, 
+    error: queryError, 
+    refetch
+  } = usePipelines({
+    limit: 50, // Aumentamos el límite para mostrar más pipelines
+    includeJobInfo: false // No necesitamos información de jobs aquí
+  });
+  
+  // Extraer los pipelines y manejar el estado de carga
+  const pipelines = pipelinesData?.pipelines || [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Error al cargar pipelines') : null;
 
-  // Cargar pipelines cuando se abre el diálogo
-  useEffect(() => {
-    if (isOpen) {
-      loadPipelines();
-    }
-  }, [isOpen]);
-
-  // Función para cargar los pipelines
-  const loadPipelines = async () => {
-    setError(null);
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/pipelines');
-      
-      if (!response.ok) {
-        throw new Error(`Error al cargar pipelines: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!Array.isArray(data)) {
-        throw new Error('La respuesta no es un array de pipelines');
-      }
-      
-      setPipelines(data);
-      setFilteredPipelines(data);
-    } catch (error) {
-      console.error('Error al cargar pipelines:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido al cargar pipelines');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Filtrar pipelines
+  const filteredPipelines = searchTerm
+    ? pipelines.filter((p: Pipeline) => 
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : pipelines;
 
   // Función simple de edición que navega directamente
   const handleEditPipeline = (pipelineId: string) => {
     // Cerrar diálogo
     setIsOpen(false);
-    // Navegar a la ruta del editor
+    // Navegar a la ruta del editor usando window.location
     window.location.href = `/pipeline-studio/${pipelineId}`;
   };
-
-  // Filtrar pipelines
-  useEffect(() => {
-    if (!searchTerm) {
-      setFilteredPipelines(pipelines);
-      return;
-    }
-    
-    const term = searchTerm.toLowerCase();
-    const filtered = pipelines.filter(p => 
-      p.name.toLowerCase().includes(term) || 
-      (p.description && p.description.toLowerCase().includes(term))
-    );
-    setFilteredPipelines(filtered);
-  }, [searchTerm, pipelines]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -137,8 +120,9 @@ export default function SimplePipelineLoader() {
             <div className="mb-2">No se encontraron pipelines</div>
             <Button 
               variant="outline" 
-              onClick={loadPipelines}
+              onClick={() => refetch()}
             >
+              <RefreshCw className="mr-1 h-4 w-4" />
               Reintentar
             </Button>
           </div>
@@ -154,7 +138,7 @@ export default function SimplePipelineLoader() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPipelines.map((pipeline) => (
+                  {filteredPipelines.map((pipeline: Pipeline) => (
                   <TableRow key={pipeline.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">{pipeline.name}</TableCell>
                     <TableCell>{pipeline.description || "—"}</TableCell>
