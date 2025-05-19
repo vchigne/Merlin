@@ -4,6 +4,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2, Download, Upload, Save } from "lucide-react";
 import { pipelineLayoutManager } from "@/lib/pipeline-layout-manager";
 import { useToast } from "@/hooks/use-toast";
+import { executeQuery } from "@/lib/hasura-client";
+import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Componente mejorado para el editor visual de flujos de pipeline
 // Con canvas infinito y soporte completo para dispositivos móviles
@@ -40,6 +52,12 @@ export default function PipelineEditor({
   const [connectingNode, setConnectingNode] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null);
   const [minimizedNodes, setMinimizedNodes] = useState<Set<string>>(new Set());
+  
+  // Estados para el diálogo de detalles de nodo
+  const [showNodeDetails, setShowNodeDetails] = useState(false);
+  const [nodeDetailsLoading, setNodeDetailsLoading] = useState(false);
+  const [selectedNodeDetails, setSelectedNodeDetails] = useState<any>(null);
+  const [nodeDetailsData, setNodeDetailsData] = useState<any>(null);
   
   // Referencias
   const canvasRef = useRef<HTMLDivElement>(null);
