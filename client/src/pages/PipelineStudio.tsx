@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { convertToFlowCoordinates } from "../lib/utils";
 import {
   Table,
   TableBody,
@@ -207,7 +208,17 @@ export default function PipelineStudio() {
       
       // Construir estructura de flujo para el editor visual
       const layoutManager = PipelineLayoutManager.getInstance();
-      const flow = layoutManager.buildFlowFromPipeline(pipeline);
+      
+      // Obtener las unidades del pipeline
+      const pipelineUnits = pipeline.units || [];
+      
+      // Usar la función convertToFlowCoordinates para generar el flujo
+      const flow = convertToFlowCoordinates(pipelineUnits);
+      
+      // Aplicar las posiciones guardadas si existen
+      if (flow.nodes.length > 0) {
+        flow.nodes = layoutManager.applyLayoutToNodes(pipeline.id, flow.nodes);
+      }
       
       setPipelineFlowData(flow);
       
