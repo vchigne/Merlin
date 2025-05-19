@@ -140,18 +140,20 @@ export default function SimplePipelineLoader() {
                     <TableCell className="font-medium">{pipeline.name}</TableCell>
                     <TableCell>{pipeline.description || "—"}</TableCell>
                     <TableCell>
-                      <Link
-                        href={`/pipeline-studio/${pipeline.id}`}
-                        onClick={() => setIsOpen(false)}
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        onClick={() => {
+                          setIsOpen(false);
+                          // Navegar usando wouter pero con un pequeño retraso para permitir que el diálogo se cierre
+                          setTimeout(() => {
+                            navigate(`/pipeline-studio/${pipeline.id}`);
+                          }, 10);
+                        }}
                       >
-                        <Button 
-                          size="sm" 
-                          variant="default"
-                        >
-                          <Edit className="mr-1 h-4 w-4" />
-                          Editar
-                        </Button>
-                      </Link>
+                        <Edit className="mr-1 h-4 w-4" />
+                        Editar
+                      </Button>
                     </TableCell>
                   </TableRow>
                   ))}
