@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -63,13 +63,8 @@ export default function SimplePipelineLoader() {
       )
     : pipelines;
 
-  // Función de edición que navega usando wouter (sin recargar la página)
-  const handleEditPipeline = (pipelineId: string) => {
-    // Cerrar diálogo
-    setIsOpen(false);
-    // Navegar a la ruta del editor usando wouter
-    navigate(`/pipeline-studio/${pipelineId}`);
-  };
+  // Ya no necesitamos una función de navegación separada
+  // porque usaremos el componente Link directamente
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -145,14 +140,18 @@ export default function SimplePipelineLoader() {
                     <TableCell className="font-medium">{pipeline.name}</TableCell>
                     <TableCell>{pipeline.description || "—"}</TableCell>
                     <TableCell>
-                      <Button 
-                        size="sm" 
-                        variant="default"
-                        onClick={() => handleEditPipeline(pipeline.id)}
+                      <Link
+                        href={`/pipeline-studio/${pipeline.id}`}
+                        onClick={() => setIsOpen(false)}
                       >
-                        <Edit className="mr-1 h-4 w-4" />
-                        Editar
-                      </Button>
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                        >
+                          <Edit className="mr-1 h-4 w-4" />
+                          Editar
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                   ))}
