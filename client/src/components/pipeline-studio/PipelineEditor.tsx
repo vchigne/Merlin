@@ -1172,9 +1172,16 @@ export default function PipelineEditor({
         </div>
       )}
     </div>
-    
-    {/* Diálogo de detalles del nodo */}
-    <Dialog open={showNodeDetails} onOpenChange={setShowNodeDetails}>
+  );
+}
+
+export default function PipelineEditor({
+  flowData,
+  onChange,
+  onNodeSelect,
+  readOnly = false,
+  pipelineId,
+}: PipelineEditorProps) {
       <DialogContent className="max-w-xl">
         {nodeDetailsLoading ? (
           <div className="py-8 space-y-4">
