@@ -691,6 +691,7 @@ export default function PipelineStudio() {
                   <PipelineEditor
                     flowData={pipelineFlowData}
                     onChange={handleFlowChange}
+                    onNodeSelect={handleNodeSelect}
                     pipelineId={pipelineData?.id}
                     readOnly={editorMode === 'view'}
                   />

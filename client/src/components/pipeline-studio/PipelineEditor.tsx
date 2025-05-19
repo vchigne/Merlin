@@ -196,7 +196,18 @@ export default function PipelineEditor({
 
   // Manejar clics en nodos
   const handleNodeClick = (nodeId: string) => {
-    setSelectedNode(nodeId === selectedNode ? null : nodeId);
+    const newSelectedNodeId = nodeId === selectedNode ? null : nodeId;
+    setSelectedNode(newSelectedNodeId);
+    
+    // Notificar al componente padre sobre el nodo seleccionado
+    if (onNodeSelect) {
+      if (newSelectedNodeId) {
+        const selectedNodeData = nodes.find(node => node.id === newSelectedNodeId);
+        onNodeSelect(selectedNodeData || null);
+      } else {
+        onNodeSelect(null);
+      }
+    }
   };
   
   // Manejar eliminación de nodos
