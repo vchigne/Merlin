@@ -794,19 +794,10 @@ export default function PipelineEditor({
             </div>
           </div>
           
-          {/* Indicador de conexiones */}
-          {!isMinimized && edges.some(edge => edge.source === node.id || edge.target === node.id) && (
-            <div className="mt-2 text-xs text-slate-500">
-              {edges.filter(edge => edge.source === node.id).length > 0 && (
-                <span className="mr-2">
-                  Salidas: {edges.filter(edge => edge.source === node.id).length}
-                </span>
-              )}
-              {edges.filter(edge => edge.target === node.id).length > 0 && (
-                <span>
-                  Entradas: {edges.filter(edge => edge.target === node.id).length}
-                </span>
-              )}
+          {/* Descripción del nodo */}
+          {!isMinimized && node.data.description && (
+            <div className="mt-2 text-xs text-slate-600 dark:text-slate-300 italic">
+              {node.data.description}
             </div>
           )}
         </div>

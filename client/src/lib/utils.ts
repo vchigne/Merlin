@@ -511,16 +511,54 @@ function getTypeReadableLabel(type: string): string {
 function getUnitDescription(unit: any, type: string): string {
   switch (type) {
     case 'command':
-      return unit.command_id ? `Ejecuta comando en el sistema` : '';
+      if (unit.command_id) {
+        // Intentar extraer información más específica del comando
+        if (unit.command) {
+          if (unit.command.target && unit.command.args) {
+            return `Ejecuta: ${unit.command.target} ${unit.command.args}`;
+          } else if (unit.command.working_directory) {
+            return `Ejecuta en: ${unit.command.working_directory}`;
+          } else if (unit.command.name) {
+            return `Comando: ${unit.command.name}`;
+          }
+        }
+        return `Ejecuta comando en el sistema`;
+      }
+      return '';
     case 'query':
+      if (unit.query_queue_id && unit.query_queue) {
+        if (unit.query_queue.name) {
+          return `Consulta SQL: ${unit.query_queue.name}`;
+        }
+      }
       return unit.query_queue_id ? `Ejecuta consulta en base de datos` : '';
     case 'sftp_download':
+      if (unit.sftp_downloader_id && unit.sftp_downloader) {
+        if (unit.sftp_downloader.output) {
+          return `Descarga archivos a: ${unit.sftp_downloader.output}`;
+        }
+      }
       return unit.sftp_downloader_id ? `Descarga archivos desde servidor remoto` : '';
     case 'sftp_upload':
+      if (unit.sftp_uploader_id && unit.sftp_uploader) {
+        if (unit.sftp_uploader.input) {
+          return `Sube el archivo: ${unit.sftp_uploader.input}`;
+        }
+      }
       return unit.sftp_uploader_id ? `Sube archivos a servidor remoto` : '';
     case 'zip':
+      if (unit.zip_id && unit.zip) {
+        if (unit.zip.output) {
+          return `Comprime en: ${unit.zip.output}`;
+        }
+      }
       return unit.zip_id ? `Comprime archivos en archivo ZIP` : '';
     case 'unzip':
+      if (unit.unzip_id && unit.unzip) {
+        if (unit.unzip.input && unit.unzip.output) {
+          return `Extrae ${unit.unzip.input} en ${unit.unzip.output}`;
+        }
+      }
       return unit.unzip_id ? `Extrae archivos de archivo ZIP` : '';
     case 'pipeline':
       return unit.call_pipeline ? `Llama a otro pipeline` : '';
