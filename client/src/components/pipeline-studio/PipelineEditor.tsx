@@ -29,12 +29,14 @@ interface PipelineEditorProps {
   };
   onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
   onNodeSelect?: (node: any) => void; // Propiedad para manejar la selección de nodos
+  onNodeClick?: (nodeId: string) => void; // Para abrir detalles
   readOnly?: boolean;
-  pipelineId?: string; // ID del pipeline para guardar su layout
+  pipelineId?: string;
 }
 
-// Función auxiliar para determinar el tipo de nodo
+// Funciones auxiliares
 const determineUnitType = (unit: any): string => {
+  if (!unit) return 'unknown';
   if (unit.command_id) return 'command';
   if (unit.query_queue_id) return 'query';
   if (unit.sftp_downloader_id) return 'sftp_download';
@@ -61,11 +63,11 @@ export default function PipelineEditor({
   flowData,
   onChange,
   onNodeSelect,
+  onNodeClick,
   readOnly = false,
-  pipelineId,
+  pipelineId
 }: PipelineEditorProps) {
   const { toast } = useToast();
-  // Estados para el editor
   const [nodes, setNodes] = useState<any[]>([]);
   const [edges, setEdges] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -89,20 +91,19 @@ export default function PipelineEditor({
   
   // Inicializar nodes y edges cuando cambia flowData
   useEffect(() => {
-    if (flowData) {
-      setNodes(flowData.nodes || []);
-      setEdges(flowData.edges || []);
-      
-      // Si hay nodos, centrar el canvas en el primer nodo
-      if (flowData.nodes && flowData.nodes.length > 0 && position.x === 0 && position.y === 0) {
-        const firstNode = flowData.nodes[0];
-        
-        if (firstNode.position) {
-          setPosition({
-            x: -firstNode.position.x + window.innerWidth / 2 - 100,
-            y: -firstNode.position.y + window.innerHeight / 2 - 100
-          });
-        }
+    if (flowData?.nodes && flowData?.edges) {
+      setNodes(flowData.nodes);
+      setEdges(flowData.edges);
+    }
+    
+    // Si hay nodos, intentar centrar el primer nodo
+    if (flowData?.nodes && flowData.nodes.length > 0) {
+      const firstNode = flowData.nodes.find(node => !node.data?.unit?.pipeline_unit_id);
+      if (firstNode) {
+        setPosition({
+          x: -firstNode.position.x + window.innerWidth / 2 - 100,
+          y: -firstNode.position.y + window.innerHeight / 2 - 100
+        });
       }
     }
   }, [flowData]);
@@ -207,97 +208,135 @@ export default function PipelineEditor({
     }, 0);
   }, [emitChanges]);
   
-  // Manejar el zoom
-  const handleZoom = useCallback((delta: number) => {
-    setZoom(current => {
-      const newZoom = Math.max(0.1, Math.min(2, current + delta * 0.1));
-      return newZoom;
-    });
+  // Manejar zoom
+  const handleZoomIn = useCallback(() => {
+    setZoom(current => Math.min(current * 1.2, 3));
   }, []);
   
-  // Manejar eventos de rueda del mouse para zoom
+  const handleZoomOut = useCallback(() => {
+    setZoom(current => Math.max(current / 1.2, 0.3));
+  }, []);
+  
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey) {
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 1 : -1;
-      handleZoom(delta);
-    }
-  }, [handleZoom]);
-  
-  // Manejar eventos de teclado
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Si estamos editando un campo, no procesamos teclas
-      if (
-        document.activeElement &&
-        (document.activeElement.tagName === "INPUT" ||
-         document.activeElement.tagName === "TEXTAREA")
-      ) {
-        return;
+      if (e.deltaY < 0) {
+        handleZoomIn();
+      } else {
+        handleZoomOut();
       }
+    }
+  }, [handleZoomIn, handleZoomOut]);
+  
+  // Manejar selección de nodo
+  const handleNodeClick = useCallback((e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    
+    if (connecting) {
+      // Si estamos en modo conexión, conectar con el nodo seleccionado
+      if (connectionStart && connectionStart !== nodeId) {
+        connectNodes(connectionStart, nodeId);
+        setConnecting(false);
+        setConnectionStart(null);
+      }
+      return;
+    }
+    
+    // Establecer nodo seleccionado
+    setSelectedNode(nodeId);
+    
+    // Notificar al padre sobre la selección
+    if (onNodeSelect) {
+      const selectedNodeData = nodes.find(node => node.id === nodeId);
+      if (selectedNodeData) {
+        onNodeSelect(selectedNodeData);
+      }
+    }
+    
+    // Si hay manejador para click en nodo, ejecutarlo
+    if (onNodeClick) {
+      onNodeClick(nodeId);
+    } else {
+      // Sino, mostrar el diálogo de detalles del nodo
+      const nodeData = nodes.find(node => node.id === nodeId);
+      if (nodeData?.data?.unit) {
+        setSelectedUnit(nodeData.data.unit);
+        setIsDialogOpen(true);
+      }
+    }
+  }, [nodes, connecting, connectionStart, connectNodes, onNodeSelect, onNodeClick]);
+  
+  // Iniciar arrastre de un nodo
+  const handleNodeMouseDown = useCallback((e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    
+    // No permitir arrastre en modo solo lectura
+    if (readOnly) return;
+    
+    // Iniciar arrastre del nodo
+    setDraggingNode(nodeId);
+    setNodeStart({ x: e.clientX, y: e.clientY });
+  }, [readOnly]);
+  
+  // Iniciar modo conexión
+  const handleStartConnection = useCallback((e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    
+    // No permitir conexiones en modo solo lectura
+    if (readOnly) return;
+    
+    // Iniciar modo conexión
+    setConnecting(true);
+    setConnectionStart(nodeId);
+    
+    // Obtener posición inicial para la vista previa de conexión
+    const nodeData = nodes.find(node => node.id === nodeId);
+    if (nodeData) {
+      const sourceX = nodeData.position.x + 90; // Salida desde el lado derecho
+      const sourceY = nodeData.position.y + 40; // Centro vertical del nodo
       
-      switch (e.key) {
-        case "Delete":
-        case "Backspace":
-          if (selectedNode && !readOnly) {
-            removeNode(selectedNode);
-          }
-          break;
-        case "+":
-          handleZoom(1);
-          break;
-        case "-":
-          handleZoom(-1);
-          break;
-        case "Escape":
-          if (connecting) {
-            setConnecting(false);
-            setConnectionStart(null);
-          } else {
-            setSelectedNode(null);
-          }
-          break;
-        default:
-          break;
-      }
-    };
-    
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [selectedNode, removeNode, handleZoom, connecting, readOnly]);
+      setConnectionPreview({ 
+        x: (sourceX * zoom) + position.x, 
+        y: (sourceY * zoom) + position.y 
+      });
+    }
+  }, [nodes, zoom, position, readOnly]);
   
-  // Manejar inicio de arrastre del canvas
+  // Manejar inicio de arrastre de la vista
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Solo iniciamos arrastre con clic principal y sin nodo seleccionado
-    if (e.button === 0 && !selectedNode && !connecting) {
-      setDragging(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
-  }, [selectedNode, connecting]);
-  
-  // Manejar movimiento durante arrastre
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Actualizar posición del cursor para la vista previa de conexiones
-    if (connecting && connectionStart) {
-      const bounds = canvasRef.current?.getBoundingClientRect();
-      if (bounds) {
-        setConnectionPreview({
-          x: (e.clientX - bounds.left) / zoom - position.x / zoom,
-          y: (e.clientY - bounds.top) / zoom - position.y / zoom
-        });
-      }
+    // Solo iniciar arrastre con click principal
+    if (e.button !== 0) return;
+    
+    // Cancelar modo conexión si se hace click en el fondo
+    if (connecting) {
+      setConnecting(false);
+      setConnectionStart(null);
+      return;
     }
     
-    // Actualizar posición durante arrastre del canvas
+    // Limpiar selección de nodo si se hace click en el fondo
+    setSelectedNode(null);
+    
+    // Iniciar modo arrastre
+    setDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [connecting]);
+  
+  // Manejar movimiento del cursor
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // Si estamos en modo conexión, actualizar posición de la vista previa
+    if (connecting) {
+      setConnectionPreview({ x: e.clientX, y: e.clientY });
+    }
+    
+    // Si estamos arrastrando el fondo, mover vista
     if (dragging) {
       const dx = e.clientX - dragStart.x;
       const dy = e.clientY - dragStart.y;
       
-      setPosition(current => ({
-        x: current.x + dx,
-        y: current.y + dy
+      setPosition(prevPosition => ({
+        x: prevPosition.x + dx,
+        y: prevPosition.y + dy
       }));
       
       setDragStart({ x: e.clientX, y: e.clientY });
@@ -329,7 +368,7 @@ export default function PipelineEditor({
         emitChanges();
       }, 100);
     }
-  }, [dragging, dragStart, zoom, position, draggingNode, nodeStart, emitChanges, connecting, connectionStart]);
+  }, [dragging, dragStart, zoom, position, draggingNode, nodeStart, emitChanges, connecting]);
   
   // Manejar fin de arrastre
   const handleMouseUp = useCallback(() => {
@@ -349,193 +388,155 @@ export default function PipelineEditor({
     setIsLoadingDetails(true);
     
     try {
+      // Determinar tipo de unidad
+      const unitType = determineUnitType(unitData);
       let query = '';
-      let variables = {};
+      let variables: any = {};
       
-      // Determinar qué tipo de unidad es y obtener los detalles correspondientes
-      if (unitData.command_id) {
-        query = COMMAND_QUERY;
-        variables = { id: unitData.command_id };
-      } else if (unitData.query_queue_id) {
-        // Para las colas de consulta, obtenemos primero la metadata de la cola
-        query = QUERY_QUEUE_QUERY;
-        variables = { id: unitData.query_queue_id };
-      } else if (unitData.sftp_downloader_id) {
-        query = SFTP_DOWNLOADER_QUERY;
-        variables = { id: unitData.sftp_downloader_id };
-      } else if (unitData.sftp_uploader_id) {
-        query = SFTP_UPLOADER_QUERY;
-        variables = { id: unitData.sftp_uploader_id };
-      } else if (unitData.zip_id) {
-        query = ZIP_QUERY;
-        variables = { id: unitData.zip_id };
-      } else if (unitData.unzip_id) {
-        query = UNZIP_QUERY;
-        variables = { id: unitData.unzip_id };
-      } else if (unitData.call_pipeline) {
-        // En caso de llamada a otro pipeline
-        const result = await executeQuery(PIPELINE_QUERY, { id: unitData.call_pipeline });
-        if (result.data && !result.errors) {
-          setUnitDetails({
-            type: 'pipeline',
-            name: result.data.merlin_agent_Pipeline[0]?.name || 'Pipeline',
-            description: result.data.merlin_agent_Pipeline[0]?.description || 'Llamada a otro pipeline',
-            details: result.data.merlin_agent_Pipeline[0]
-          });
-        }
-        setIsLoadingDetails(false);
-        return;
+      // Construir consulta apropiada basada en el tipo
+      switch (unitType) {
+        case 'command':
+          query = COMMAND_QUERY;
+          variables = { id: unitData.command_id };
+          break;
+        case 'query':
+          query = QUERY_QUEUE_QUERY;
+          variables = { id: unitData.query_queue_id };
+          break;
+        case 'sftp_download':
+          query = SFTP_DOWNLOADER_QUERY;
+          variables = { id: unitData.sftp_downloader_id };
+          break;
+        case 'sftp_upload':
+          query = SFTP_UPLOADER_QUERY;
+          variables = { id: unitData.sftp_uploader_id };
+          break;
+        case 'zip':
+          query = ZIP_QUERY;
+          variables = { id: unitData.zip_id };
+          break;
+        case 'unzip':
+          query = UNZIP_QUERY;
+          variables = { id: unitData.unzip_id };
+          break;
+        case 'pipeline':
+          if (unitData.call_pipeline) {
+            query = PIPELINE_QUERY;
+            variables = { id: unitData.call_pipeline };
+          }
+          break;
       }
       
+      // Ejecutar consulta si hay una válida
       if (query) {
-        const result = await executeQuery(query, variables);
-        if (result.data && !result.errors) {
-          // Determinar el tipo para mostrar en la interfaz
-          const type = determineUnitType(unitData);
+        const response = await executeQuery(query, variables);
+        
+        if (response.errors) {
+          toast({
+            title: "Error",
+            description: "No se pudieron cargar los detalles de la unidad",
+            variant: "destructive",
+          });
+          setUnitDetails(null);
+        } else {
+          // Procesar resultados según tipo
+          let details = null;
+          let name = '';
+          let description = '';
           
-          // Obtener los datos relevantes según el tipo
-          let data;
-          if (unitData.command_id) {
-            data = result.data.merlin_agent_Command[0];
-          } else if (unitData.query_queue_id) {
-            data = result.data.merlin_agent_QueryQueue[0];
-            
-            if (data) {
-              // Para las consultas SQL, obtenemos detalles adicionales
-              try {
-                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unitData.query_queue_id });
-                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
-                  // Agregamos las consultas al objeto de datos
-                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+          switch (unitType) {
+            case 'command':
+              details = response.data?.merlin_agent_Command?.[0];
+              name = details?.name || 'Comando';
+              description = details?.description || 'Ejecuta un comando en el sistema';
+              break;
+            case 'query':
+              details = response.data?.merlin_agent_QueryQueue?.[0];
+              name = details?.name || 'Consulta SQL';
+              description = details?.description || 'Ejecuta consultas en base de datos';
+              if (unitData.query_queue_id) {
+                // Cargar queries asociadas
+                const queriesResponse = await executeQuery(QUERY_DETAILS_QUERY, { query_queue_id: unitData.query_queue_id });
+                if (!queriesResponse.errors && queriesResponse.data?.merlin_agent_Query) {
+                  details.queries = queriesResponse.data.merlin_agent_Query;
                 }
-              } catch (error) {
-                console.error("Error fetching SQL queries:", error);
               }
-            }
-          } else if (unitData.sftp_downloader_id) {
-            data = result.data.merlin_agent_SFTPDownloader[0];
-          } else if (unitData.sftp_uploader_id) {
-            data = result.data.merlin_agent_SFTPUploader[0];
-          } else if (unitData.zip_id) {
-            data = result.data.merlin_agent_Zip[0];
-          } else if (unitData.unzip_id) {
-            data = result.data.merlin_agent_UnZip[0];
+              break;
+            case 'sftp_download':
+              details = response.data?.merlin_agent_SFTPDownloader?.[0];
+              name = details?.name || 'Descarga SFTP';
+              description = 'Descarga archivos desde un servidor SFTP';
+              break;
+            case 'sftp_upload':
+              details = response.data?.merlin_agent_SFTPUploader?.[0];
+              name = details?.name || 'Subida SFTP';
+              description = 'Sube archivos a un servidor SFTP';
+              break;
+            case 'zip':
+              details = response.data?.merlin_agent_Zip?.[0];
+              name = details?.name || 'Compresión ZIP';
+              description = 'Comprime archivos en formato ZIP';
+              break;
+            case 'unzip':
+              details = response.data?.merlin_agent_UnZip?.[0];
+              name = details?.name || 'Extracción ZIP';
+              description = 'Extrae archivos de formato ZIP';
+              break;
+            case 'pipeline':
+              details = response.data?.merlin_agent_Pipeline?.[0];
+              name = details?.name || 'Pipeline';
+              description = details?.description || 'Ejecuta otro pipeline';
+              break;
           }
           
           setUnitDetails({
-            type,
-            name: data?.name || getUnitTypeDescription(unitData),
-            description: data?.description || '',
-            details: data
+            type: unitType,
+            name,
+            description,
+            details
           });
         }
+      } else {
+        // Si no hay consulta disponible, usar datos básicos
+        setUnitDetails({
+          type: unitType,
+          name: 'Unidad',
+          description: 'Información limitada disponible',
+          details: null
+        });
       }
     } catch (error) {
-      console.error("Error fetching unit details:", error);
-      setUnitDetails({
-        type: determineUnitType(unitData),
-        name: 'Error',
-        description: 'No se pudieron cargar los detalles',
-        details: null
+      console.error("Error al cargar detalles de la unidad:", error);
+      setUnitDetails(null);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los detalles de la unidad",
+        variant: "destructive",
       });
     } finally {
       setIsLoadingDetails(false);
     }
   };
   
-  // Manejar clics en nodos
-  const handleNodeClick = (nodeId: string) => {
-    const newSelectedNodeId = nodeId === selectedNode ? null : nodeId;
-    setSelectedNode(newSelectedNodeId);
-    
-    // Notificar al componente padre sobre el nodo seleccionado
-    if (onNodeSelect) {
-      if (newSelectedNodeId) {
-        const selectedNodeData = nodes.find(node => node.id === newSelectedNodeId);
-        
-        // Mostrar diálogo con detalles del nodo
-        if (selectedNodeData?.data?.unit) {
-          fetchUnitDetails(selectedNodeData.data.unit);
-        }
-        
-        onNodeSelect(selectedNodeData);
-      } else {
-        onNodeSelect(null);
-      }
-    }
-  };
-  
-  // Cerrar el diálogo de detalles
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setTimeout(() => {
-      setSelectedUnit(null);
-      setUnitDetails(null);
-    }, 200);
-  };
-  
-  // Manejar inicio de arrastre de nodo
-  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
-    e.stopPropagation(); // Prevenir propagación al canvas
-    
-    if (e.button === 0) { // Clic principal
-      if (connecting) {
-        // Finalizar conexión si estamos en modo conexión
-        if (connectionStart && connectionStart !== nodeId) {
-          connectNodes(connectionStart, nodeId);
-        }
-        setConnecting(false);
-        setConnectionStart(null);
-      } else if (e.ctrlKey || e.metaKey) {
-        // Iniciar conexión con Ctrl+clic
-        setConnecting(true);
-        setConnectionStart(nodeId);
-      } else if (!readOnly) {
-        // Iniciar arrastre de nodo
-        setDraggingNode(nodeId);
-        setNodeStart({ x: e.clientX, y: e.clientY });
-      }
-      
-      // Seleccionar el nodo
-      setSelectedNode(nodeId);
-    }
-  };
-  
-  // Manejar clic en borde
-  const handleEdgeClick = (e: React.MouseEvent, edgeId: string) => {
-    e.stopPropagation();
-    
-    if (!readOnly) {
-      removeConnection(edgeId);
-    }
-  };
-  
-  // Renderizado del canvas y sus elementos
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900">
-      {/* Barra de herramientas flotante */}
-      <div 
-        className={`absolute top-4 right-4 bg-white dark:bg-slate-800 rounded-lg shadow-lg p-1 z-50 transition-all duration-300 ${
-          showControls ? "opacity-100" : "opacity-40"
-        }`}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
-      >
-        <div className="flex flex-col gap-1">
+    <div className="flex flex-col h-full border rounded-md bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 relative overflow-hidden">
+      {/* Barra de herramientas */}
+      <div className="flex items-center justify-between p-2 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <div className="flex items-center space-x-1">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleZoom(1)}
+                  onClick={handleZoomIn}
                   className="w-8 h-8"
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Acercar (Zoom In)</p>
+              <TooltipContent side="bottom">
+                <p>Acercar</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -546,62 +547,24 @@ export default function PipelineEditor({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleZoom(-1)}
+                  onClick={handleZoomOut}
                   className="w-8 h-8"
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Alejar (Zoom Out)</p>
+              <TooltipContent side="bottom">
+                <p>Alejar</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setZoom(1);
-                    setPosition({ x: 0, y: 0 });
-                  }}
-                  className="w-8 h-8"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Restablecer vista</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          {connecting && connectionStart && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setConnecting(false);
-                      setConnectionStart(null);
-                    }}
-                    className="w-8 h-8 text-red-500"
-                  >
-                    <XCircle className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Cancelar conexión</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          
+          <div className="text-xs text-slate-500 mx-1">
+            {Math.round(zoom * 100)}%
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-1">
           {selectedNode && !readOnly && (
             <TooltipProvider>
               <Tooltip>
@@ -622,11 +585,6 @@ export default function PipelineEditor({
             </TooltipProvider>
           )}
         </div>
-      </div>
-      
-      {/* Información de ayuda */}
-      <div className="absolute bottom-2 left-2 text-xs text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 p-1 rounded">
-        Zoom: {(zoom * 100).toFixed(0)}% | {connecting ? "Conectando nodos..." : dragging ? "Moviendo vista..." : "Click para seleccionar, arrastrar para mover"}
       </div>
       
       {/* El canvas principal */}
@@ -650,87 +608,112 @@ export default function PipelineEditor({
         >
           {/* Renderizado de nodos */}
           {nodes.map(node => {
-            // Determinar el tipo de nodo para mostrar el icono adecuado
-            let Icon = Settings2;
-            let nodeType = "Unidad";
-            const unit = node.data.unit;
+            const NODE_WIDTH = 180;
+            const NODE_HEIGHT = 80;
             
-            if (unit) {
-              if (unit.command_id) {
-                Icon = Wrench;
-                nodeType = "Comando";
-              } else if (unit.query_queue_id) {
-                Icon = Database;
-                nodeType = "Consulta SQL";
-              } else if (unit.sftp_downloader_id) {
-                Icon = Download;
-                nodeType = "Descarga SFTP";
-              } else if (unit.sftp_uploader_id) {
-                Icon = Upload;
-                nodeType = "Subida SFTP";
-              } else if (unit.zip_id) {
-                Icon = ArrowRight;
-                nodeType = "Compresión ZIP";
-              } else if (unit.unzip_id) {
-                Icon = ArrowRight;
-                nodeType = "Extracción ZIP";
-              } else if (unit.call_pipeline) {
-                Icon = Link2;
-                nodeType = "Llamada Pipeline";
-              }
+            // Determinar tipo de unidad para estilo
+            let unitType = 'default';
+            let unitDescription = 'Unidad';
+            
+            if (node.data?.unit) {
+              unitType = determineUnitType(node.data.unit);
+              unitDescription = getUnitTypeDescription(node.data.unit);
+            }
+            
+            // Estilos basados en el tipo
+            let bgColor = 'bg-slate-100 dark:bg-slate-800';
+            let borderColor = 'border-slate-300 dark:border-slate-700';
+            let textColor = 'text-slate-800 dark:text-slate-200';
+            let iconColor = 'text-slate-500';
+            
+            // Colores según tipo
+            switch (unitType) {
+              case 'command':
+                bgColor = 'bg-amber-50 dark:bg-amber-950/30';
+                borderColor = 'border-amber-200 dark:border-amber-800';
+                iconColor = 'text-amber-500';
+                break;
+              case 'query':
+                bgColor = 'bg-blue-50 dark:bg-blue-950/30';
+                borderColor = 'border-blue-200 dark:border-blue-800';
+                iconColor = 'text-blue-500';
+                break;
+              case 'sftp_download':
+              case 'sftp_upload':
+                bgColor = 'bg-green-50 dark:bg-green-950/30';
+                borderColor = 'border-green-200 dark:border-green-800';
+                iconColor = 'text-green-500';
+                break;
+              case 'zip':
+              case 'unzip':
+                bgColor = 'bg-purple-50 dark:bg-purple-950/30';
+                borderColor = 'border-purple-200 dark:border-purple-800';
+                iconColor = 'text-purple-500';
+                break;
+              case 'pipeline':
+                bgColor = 'bg-cyan-50 dark:bg-cyan-950/30';
+                borderColor = 'border-cyan-200 dark:border-cyan-800';
+                iconColor = 'text-cyan-500';
+                break;
+            }
+            
+            // Si el nodo está seleccionado, destacar
+            if (node.id === selectedNode) {
+              borderColor = 'border-primary-500 dark:border-primary-400 border-2';
+            }
+            
+            // Ícono según tipo
+            let Icon = Settings2;
+            switch (unitType) {
+              case 'command': Icon = Wrench; break;
+              case 'query': Icon = Database; break;
+              case 'sftp_download': Icon = Download; break;
+              case 'sftp_upload': Icon = Upload; break;
+              case 'zip': 
+              case 'unzip': Icon = ArrowRight; break;
+              case 'pipeline': Icon = Link2; break;
             }
             
             return (
               <div
                 key={node.id}
-                className={`absolute cursor-pointer transition-shadow duration-200 ${
-                  selectedNode === node.id
-                    ? "shadow-lg ring-2 ring-blue-500"
-                    : "shadow hover:shadow-md"
-                }`}
+                className={`absolute ${bgColor} ${borderColor} ${textColor} border rounded-md shadow-sm overflow-hidden transition-shadow hover:shadow-md`}
                 style={{
+                  width: NODE_WIDTH,
+                  height: NODE_HEIGHT,
                   left: node.position.x,
                   top: node.position.y,
-                  minWidth: "180px",
+                  zIndex: node.id === selectedNode ? 100 : 10,
+                  cursor: readOnly ? 'pointer' : 'move'
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNodeClick(node.id);
-                }}
-                onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                onClick={(e) => handleNodeClick(e, node.id)}
+                onMouseDown={(e) => !readOnly && handleNodeMouseDown(e, node.id)}
               >
-                <div className={`bg-white dark:bg-slate-800 rounded-lg overflow-hidden border ${
-                  selectedNode === node.id 
-                    ? "border-blue-500" 
-                    : "border-slate-200 dark:border-slate-700"
-                }`}>
-                  <div className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-slate-100 dark:bg-slate-700 p-1.5 rounded-md">
-                        <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <h3 className="text-sm font-medium truncate">{node.data.label}</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {nodeType}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-center p-2 border-b border-slate-200 dark:border-slate-700">
+                  <div className={`mr-2 ${iconColor}`}>
+                    <Icon size={16} />
+                  </div>
+                  <div className="text-sm font-medium truncate flex-1">
+                    {node.data?.label || unitDescription}
                   </div>
                   
-                  {/* Punto de conexión en la parte inferior del nodo */}
-                  <div 
-                    className="w-3 h-3 rounded-full bg-green-500 absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 cursor-crosshair"
-                    title="Ctrl+click para conectar"
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      if ((e.ctrlKey || e.metaKey) && !readOnly) {
-                        setConnecting(true);
-                        setConnectionStart(node.id);
-                      }
-                    }}
-                  />
+                  {!readOnly && (
+                    <div
+                      className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 text-green-500 hover:bg-green-200 dark:hover:bg-green-800 transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartConnection(e, node.id);
+                      }}
+                    >
+                      <Plus size={14} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-2 text-xs">
+                  <div className="truncate">
+                    {node.data?.description || (node.data?.unit?.comment || 'Sin descripción')}
+                  </div>
                 </div>
               </div>
             );
@@ -738,43 +721,50 @@ export default function PipelineEditor({
           
           {/* Renderizado de conexiones entre nodos */}
           <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
-              </marker>
-            </defs>
             {edges.map(edge => {
-              // Encontrar posiciones de los nodos origen y destino
               const sourceNode = nodes.find(node => node.id === edge.source);
               const targetNode = nodes.find(node => node.id === edge.target);
               
               if (!sourceNode || !targetNode) return null;
               
-              // Calcular puntos de inicio y fin de la conexión
-              const startX = sourceNode.position.x + 90; // Centro del nodo origen
-              const startY = sourceNode.position.y + 70; // Punto inferior del nodo origen
-              const endX = targetNode.position.x + 90; // Centro del nodo destino
-              const endY = targetNode.position.y; // Punto superior del nodo destino
+              const sourceX = sourceNode.position.x + 180; // Salida desde el lado derecho
+              const sourceY = sourceNode.position.y + 40; // Centro vertical del nodo
+              
+              const targetX = targetNode.position.x; // Entrada desde el lado izquierdo
+              const targetY = targetNode.position.y + 40; // Centro vertical del nodo
+              
+              // Puntos de control para la curva Bezier
+              const controlPoint1X = sourceX + 50;
+              const controlPoint1Y = sourceY;
+              const controlPoint2X = targetX - 50;
+              const controlPoint2Y = targetY;
               
               return (
-                <g key={edge.id} onClick={(e) => handleEdgeClick(e, edge.id)}>
+                <g key={edge.id}>
                   <path
-                    d={`M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`}
-                    stroke={edge.style?.stroke || "#10b981"}
-                    strokeWidth={edge.style?.strokeWidth || 2}
+                    d={`M ${sourceX} ${sourceY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${targetX} ${targetY}`}
+                    stroke="#10b981"
+                    strokeWidth={2}
                     fill="none"
-                    strokeDasharray={edge.animated ? "5,5" : "none"}
-                    markerEnd="url(#arrowhead)"
-                    className="cursor-pointer"
-                    pointerEvents="stroke"
+                    className={edge.animated ? 'animate-pulse' : ''}
                   />
+                  {/* Marcador de flecha en el destino */}
+                  <polygon
+                    points={`${targetX},${targetY} ${targetX-8},${targetY-4} ${targetX-8},${targetY+4}`}
+                    fill="#10b981"
+                  />
+                  
+                  {/* Área para hacer click y eliminar la conexión */}
+                  {!readOnly && (
+                    <path
+                      d={`M ${sourceX} ${sourceY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${targetX} ${targetY}`}
+                      stroke="transparent"
+                      strokeWidth={10}
+                      fill="none"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => removeConnection(edge.id)}
+                    />
+                  )}
                 </g>
               );
             })}
@@ -786,7 +776,7 @@ export default function PipelineEditor({
                 if (!sourceNode) return null;
                 
                 const startX = sourceNode.position.x + 90; // Centro del nodo origen
-                const startY = sourceNode.position.y + 70; // Punto inferior del nodo origen
+                const startY = sourceNode.position.y + 40; // Centro vertical del nodo origen
                 
                 return (
                   <path
@@ -811,250 +801,6 @@ export default function PipelineEditor({
         nodeId={selectedNode} 
         nodes={nodes} 
       />
-                  let Icon;
-                  
-                  switch (unitType) {
-                    case 'command':
-                      Icon = Wrench;
-                      break;
-                    case 'query':
-                      Icon = Database;
-                      break;
-                    case 'sftp_download':
-                      Icon = Download;
-                      break;
-                    case 'sftp_upload':
-                      Icon = Upload;
-                      break;
-                    case 'zip':
-                      Icon = ArrowRight;
-                      break;
-                    case 'unzip':
-                      Icon = ArrowRight;
-                      break;
-                    case 'pipeline':
-                      Icon = Link2;
-                      break;
-                    default:
-                      Icon = Settings2;
-                  }
-                  
-                  return <Icon className="h-5 w-5 text-primary" />;
-                })()}
-                <span>{unitDetails?.name || "Detalles de la Unidad"}</span>
-              </DialogTitle>
-              <DialogDescription>
-                {unitDetails?.description || "Información detallada sobre esta unidad del pipeline"}
-              </DialogDescription>
-            </DialogHeader>
-            
-            {isLoadingDetails ? (
-              <div className="py-8 flex justify-center">
-                <Skeleton className="h-32 w-full" />
-              </div>
-            ) : (
-              <div className="grid gap-4 py-2">
-                <div>
-                  <h3 className="text-lg font-medium mb-1">
-                    {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {getUnitTypeDescription(selectedUnit)}
-                  </p>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
-                </div>
-                
-                {selectedUnit.pipeline_unit_id && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
-                  </div>
-                )}
-                
-                {/* Contenido específico basado en el tipo de unidad */}
-                {unitDetails && unitDetails.type === 'command' && unitDetails.details && (
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Comando</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
-                        {unitDetails.details.target} {unitDetails.details.args}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Directorio de trabajo</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                        {unitDetails.details.working_directory || 'Directorio por defecto'}
-                      </div>
-                    </div>
-                    {unitDetails.details.raw_script && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Script</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 max-h-40 overflow-y-auto">
-                          <pre>{unitDetails.details.raw_script}</pre>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {unitDetails && unitDetails.type === 'query' && unitDetails.details && (
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Descripción</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {unitDetails.details.description || 'Sin descripción'}
-                      </p>
-                    </div>
-                    <Separator />
-                    {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
-                        <div className="space-y-2">
-                          {unitDetails.details.Queries.map((query: any, index: number) => (
-                            <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
-                              <div className="flex justify-between mb-1">
-                                <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
-                                <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
-                              </div>
-                              <div className="mt-2 max-h-32 overflow-y-auto">
-                                <pre>{query.query_string}</pre>
-                              </div>
-                              <div className="mt-1">
-                                <span className="text-slate-500">Archivo: </span>
-                                {query.path || 'No especificado'}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {unitDetails && (unitDetails.type === 'sftp_download' || unitDetails.type === 'sftp_upload') && unitDetails.details && (
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Servidor SFTP</h4>
-                      {unitDetails.details.sftp_link && (
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                          <div><span className="font-medium">Servidor: </span>{unitDetails.details.sftp_link.server}:{unitDetails.details.sftp_link.port}</div>
-                          <div><span className="font-medium">Usuario: </span>{unitDetails.details.sftp_link.user}</div>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">{unitDetails.type === 'sftp_download' ? 'Ruta de salida' : 'Ruta de entrada'}</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                        {unitDetails.type === 'sftp_download' ? unitDetails.details.output : unitDetails.details.input}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails && (unitDetails.type === 'zip' || unitDetails.type === 'unzip') && unitDetails.details && (
-                  <div className="space-y-3">
-                    {unitDetails.type === 'zip' ? (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Ruta de salida (archivo ZIP)</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                          {unitDetails.details.output}
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Archivo ZIP a extraer</h4>
-                          <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                            {unitDetails.details.input}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Directorio de extracción</h4>
-                          <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                            {unitDetails.details.output}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-                
-                {unitDetails && unitDetails.type === 'pipeline' && unitDetails.details && (
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Pipeline llamado</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 border border-slate-200 dark:border-slate-700">
-                        <p className="text-sm font-medium">{unitDetails.details.name}</p>
-                        <p className="text-xs text-slate-500 mt-1">{unitDetails.details.description || 'Sin descripción'}</p>
-                      </div>
-                    </div>
-                    <Separator />
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="font-medium">ID: </span>
-                        <span className="font-mono">{unitDetails.details.id.substring(0, 10)}...</span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Agente: </span>
-                        <span>{unitDetails.details.agent_passport_id?.substring(0, 10)}...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Información adicional de configuración */}
-                <Separator />
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  {selectedUnit.timeout_milliseconds > 0 && (
-                    <div>
-                      <span className="font-medium">Timeout: </span>
-                      <span>{selectedUnit.timeout_milliseconds}ms</span>
-                    </div>
-                  )}
-                  
-                  {selectedUnit.retry_count > 0 && (
-                    <div>
-                      <span className="font-medium">Reintentos: </span>
-                      <span>{selectedUnit.retry_count}</span>
-                    </div>
-                  )}
-                  
-                  {selectedUnit.retry_after_milliseconds > 0 && (
-                    <div>
-                      <span className="font-medium">Espera entre reintentos: </span>
-                      <span>{selectedUnit.retry_after_milliseconds}ms</span>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <span className="font-medium">Continuar en error: </span>
-                    <Badge variant={selectedUnit.continue_on_error ? "success" : "destructive"}>
-                      {selectedUnit.continue_on_error ? "Sí" : "No"}
-                    </Badge>
-                  </div>
-                  
-                  <div>
-                    <span className="font-medium">Abortar en timeout: </span>
-                    <Badge variant={selectedUnit.abort_on_timeout ? "destructive" : "outline"}>
-                      {selectedUnit.abort_on_timeout ? "Sí" : "No"}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <DialogFooter>
-              <Button onClick={handleCloseDialog}>Cerrar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
