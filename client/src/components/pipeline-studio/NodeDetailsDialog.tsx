@@ -121,13 +121,13 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             name = detailsData?.name || 'Consulta SQL';
             description = detailsData?.description || 'Ejecuta una consulta en base de datos';
             
-            // Obtener las consultas asociadas a la cola
+            // Obtener las consultas asociadas a la cola - usamos el mismo nombre de propiedad que PipelineFlow.tsx
             if (detailsData) {
               try {
                 const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { query_queue_id: unitData.query_queue_id });
                 if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
-                  // Agregar las consultas ordenadas al detalle
-                  detailsData.queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                  // Agregar las consultas ordenadas con el mismo nombre de propiedad que en PipelineFlow.tsx
+                  detailsData.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
                 }
               } catch (error) {
                 console.error('Error al cargar consultas:', error);
