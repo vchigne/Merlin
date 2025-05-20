@@ -98,6 +98,9 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
           let name = '';
           let description = '';
           
+          console.log('Respuesta de la API:', result.data);
+          console.log('Tipo de nodo:', nodeType);
+          
           if (nodeType === 'command' && result.data.merlin_agent_Command) {
             detailsData = result.data.merlin_agent_Command[0];
             name = detailsData?.name || 'Comando';
@@ -119,14 +122,26 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                 console.error('Error al cargar consultas:', error);
               }
             }
-          } else if (nodeType === 'sftp_download' && result.data.merlin_agent_SFTPDownloader) {
-            detailsData = result.data.merlin_agent_SFTPDownloader[0];
-            name = detailsData?.name || 'Descarga SFTP';
-            description = 'Descarga archivos desde un servidor SFTP';
-          } else if (nodeType === 'sftp_upload' && result.data.merlin_agent_SFTPUploader) {
-            detailsData = result.data.merlin_agent_SFTPUploader[0];
-            name = detailsData?.name || 'Subida SFTP';
-            description = 'Sube archivos a un servidor SFTP';
+          } else if (nodeType === 'sftp_download') {
+            console.log('Datos SFTP Downloader:', result.data.merlin_agent_SFTPDownloader);
+            if (result.data.merlin_agent_SFTPDownloader && result.data.merlin_agent_SFTPDownloader.length > 0) {
+              detailsData = result.data.merlin_agent_SFTPDownloader[0];
+              console.log('Detalles SFTP Downloader:', detailsData);
+              name = detailsData?.name || 'Descarga SFTP';
+              description = 'Descarga archivos desde un servidor SFTP';
+            } else {
+              console.error('No se encontraron datos para SFTP Downloader');
+            }
+          } else if (nodeType === 'sftp_upload') {
+            console.log('Datos SFTP Uploader:', result.data.merlin_agent_SFTPUploader);
+            if (result.data.merlin_agent_SFTPUploader && result.data.merlin_agent_SFTPUploader.length > 0) {
+              detailsData = result.data.merlin_agent_SFTPUploader[0];
+              console.log('Detalles SFTP Uploader:', detailsData);
+              name = detailsData?.name || 'Subida SFTP';
+              description = 'Sube archivos a un servidor SFTP';
+            } else {
+              console.error('No se encontraron datos para SFTP Uploader');
+            }
           } else if (nodeType === 'zip' && result.data.merlin_agent_Zip) {
             detailsData = result.data.merlin_agent_Zip[0];
             name = detailsData?.name || 'Compresión ZIP';
