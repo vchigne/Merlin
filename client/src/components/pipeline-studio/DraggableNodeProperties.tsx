@@ -58,11 +58,11 @@ interface SQLConnOption {
 
 interface NodePropertiesProps {
   node: any;
-  onUpdateNode: (id: string, data: any) => void;
-  onDeleteNode: (id: string) => void;
+  onChange: (data: any) => void;
   readOnly?: boolean;
   sftpOptions?: SFTPOption[];
   sqlConnOptions?: SQLConnOption[];
+  sqlConnections?: any[]; // Soporte para ambos nombres de props
   initialPosition?: { x: number, y: number };
 }
 
