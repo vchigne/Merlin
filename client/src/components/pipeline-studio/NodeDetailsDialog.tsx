@@ -6,10 +6,7 @@ import {
   QUERY_DETAILS_QUERY, 
   ZIP_QUERY, 
   UNZIP_QUERY, 
-  PIPELINE_QUERY,
-  SFTP_DOWNLOADER_QUERY,
-  SFTP_UPLOADER_QUERY,
-  SFTP_LINK_QUERY
+  PIPELINE_QUERY
 } from "@shared/queries";
 import { useToast } from "@/hooks/use-toast";
 import UnitDetailsDialog from "./UnitDetailsDialog";
@@ -51,8 +48,8 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
       setNodeDetails(null);
     }
   }, [open, nodeId]);
-  
-  // Función para obtener los detalles completos de un nodo
+
+  // Función principal para obtener los detalles del nodo
   const fetchNodeDetails = async (id: string) => {
     const selectedNodeData = nodes.find(node => node.id === id);
     if (!selectedNodeData) return;
@@ -63,31 +60,14 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
       const unitData = selectedNodeData.data.unit;
       const nodeType = determineUnitType(unitData);
       
-      // Para nodos SFTP
-      if (nodeType === 'sftp_download' || nodeType === 'sftp_upload') {
-        const isDownloader = nodeType === 'sftp_download';
-        const sftp_link_id = unitData.sftp_link_id;
-        
-        // Preparar datos básicos para mostrar aunque no haya conexión
-        const basicData = {
-          id: isDownloader ? unitData.sftp_downloader_id : unitData.sftp_uploader_id,
-          name: isDownloader ? 'Descarga SFTP' : 'Subida SFTP',
-          description: isDownloader ? 
-            'Descarga archivos desde un servidor SFTP remoto' : 
-            'Sube archivos a un servidor SFTP remoto',
-          input: unitData.input || "Sin ruta de entrada especificada",
-          output: unitData.output || "Sin ruta de salida especificada",
-          sftp_link_id: unitData.sftp_link_id || "No disponible",
-          return_output: unitData.return_output || false,
-          created_at: unitData.created_at,
-          updated_at: unitData.updated_at
-        };
-        
-        // Crear un servidor SFTP de ejemplo solo para propósitos de visualización
-        // Este objeto solo se usa para mostrar la estructura de los datos cuando no hay API
+      console.log('Obteniendo detalles para tipo:', nodeType);
+      
+      // SFTP Downloader
+      if (nodeType === 'sftp_download') {
+        // Datos básicos
         const demoServer = {
           id: "demo-id",
-          name: "SFTP Demo",
+          name: "SFTP Demo", 
           server: "sftp.example.com",
           port: 22,
           user: "usuario_sftp",
@@ -95,67 +75,55 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
           updated_at: new Date().toISOString()
         };
         
-        // Establecer los detalles con la información de demostración para visualizar la interfaz
         setNodeDetails({
           type: nodeType,
-          name: basicData.name,
-          description: basicData.description,
+          name: 'Descarga SFTP',
+          description: 'Descarga archivos desde un servidor SFTP remoto',
           details: {
-            ...basicData,
-            // Incluimos la información del servidor para visualizar la estructura de datos
+            id: unitData.sftp_downloader_id,
+            name: 'Descarga SFTP',
+            input: unitData.input || "Sin ruta de entrada especificada",
+            output: unitData.output || "Sin ruta de salida especificada",
+            sftp_link_id: unitData.sftp_link_id || "No disponible",
+            return_output: unitData.return_output || false,
+            created_at: unitData.created_at,
+            updated_at: unitData.updated_at,
             SFTPLink: demoServer
           }
         });
+      }
+      // SFTP Uploader
+      else if (nodeType === 'sftp_upload') {
+        // Datos básicos
+        const demoServer = {
+          id: "demo-id",
+          name: "SFTP Demo", 
+          server: "sftp.example.com",
+          port: 22,
+          user: "usuario_sftp",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
         
-        // Si tenemos un ID de enlace SFTP, intentamos buscar los datos reales
-        if (sftp_link_id) {
-          try {
-            const result = await executeQuery(`
-              query GetSftpLinkDetails($id: uuid!) {
-                merlin_agent_SFTPLink(where: {id: {_eq: $id}}) {
-                  id
-                  name
-                  server
-                  port
-                  user
-                  created_at
-                  updated_at
-                }
-              }
-            `, { id: sftp_link_id });
-            
-            if (result.data?.merlin_agent_SFTPLink?.length > 0) {
-              const sftpLinkData = result.data.merlin_agent_SFTPLink[0];
-              
-              // Actualizar los detalles con los datos reales
-              setNodeDetails({
-                type: nodeType,
-                name: basicData.name,
-                description: basicData.description,
-                details: {
-                  ...basicData,
-                  SFTPLink: sftpLinkData
-                }
-              });
-              
-              console.log(`Datos reales obtenidos para ${nodeType}:`, sftpLinkData);
-            }
-          } catch (error) {
-            console.error(`Error al obtener datos SFTP para ${nodeType}:`, error);
-            // No hacemos nada más, ya hemos configurado los datos de demostración
+        setNodeDetails({
+          type: nodeType,
+          name: 'Subida SFTP',
+          description: 'Sube archivos a un servidor SFTP remoto',
+          details: {
+            id: unitData.sftp_uploader_id,
+            name: 'Subida SFTP',
+            input: unitData.input || "Sin ruta de entrada especificada",
+            output: unitData.output || "Sin ruta de salida especificada", 
+            sftp_link_id: unitData.sftp_link_id || "No disponible",
+            return_output: unitData.return_output || false,
+            created_at: unitData.created_at,
+            updated_at: unitData.updated_at,
+            SFTPLink: demoServer
           }
-        }
-        
-        setLoading(false);
-        return;
+        });
       }
-      // Continuamos con otros tipos de nodos
-        
-        setLoading(false);
-        return;
-      }
+      // Pipeline
       else if (unitData.call_pipeline) {
-        // En caso de llamada a otro pipeline
         try {
           const result = await executeQuery(PIPELINE_QUERY, { id: unitData.call_pipeline });
           if (result.data && !result.errors) {
@@ -177,114 +145,139 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             details: { id: unitData.call_pipeline, name: 'Pipeline' }
           });
         }
-        setLoading(false);
-        return;
       }
-      
-      // Para otros tipos de nodos, usamos la consulta específica a la API
-      let query = '';
-      let variables = {};
-      
-      if (unitData.command_id) {
-        query = COMMAND_QUERY;
-        variables = { id: unitData.command_id };
-      } else if (unitData.query_queue_id) {
-        query = QUERY_QUEUE_QUERY;
-        variables = { id: unitData.query_queue_id };
-      } else if (unitData.zip_id) {
-        query = ZIP_QUERY;
-        variables = { id: unitData.zip_id };
-      } else if (unitData.unzip_id) {
-        query = UNZIP_QUERY;
-        variables = { id: unitData.unzip_id };
-      }
-      
-      if (query) {
+      // Comando
+      else if (unitData.command_id) {
         try {
-          const result = await executeQuery(query, variables);
+          const result = await executeQuery(COMMAND_QUERY, { id: unitData.command_id });
           if (result.data && !result.errors) {
-            console.log('Respuesta de la API:', result.data);
-            
-            // Determinar el objeto de datos según el tipo
-            let detailsData = null;
-            let name = '';
-            let description = '';
-            
-            if (nodeType === 'command' && result.data.merlin_agent_Command) {
-              detailsData = result.data.merlin_agent_Command[0];
-              name = detailsData?.name || 'Comando';
-              description = detailsData?.description || 'Ejecuta un comando en el sistema';
-            } else if (nodeType === 'query' && result.data.merlin_agent_QueryQueue) {
-              detailsData = result.data.merlin_agent_QueryQueue[0];
-              name = detailsData?.name || 'Consulta SQL';
-              description = detailsData?.description || 'Ejecuta una consulta en base de datos';
-              
-              // Obtener las consultas asociadas a la cola
-              if (detailsData) {
-                try {
-                  const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { query_queue_id: unitData.query_queue_id });
-                  if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
-                    // Agregar las consultas ordenadas
-                    detailsData.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
-                  }
-                } catch (error) {
-                  console.error('Error al cargar consultas:', error);
-                }
-              }
-            } else if (nodeType === 'zip' && result.data.merlin_agent_Zip) {
-              detailsData = result.data.merlin_agent_Zip[0];
-              name = detailsData?.name || 'Compresión ZIP';
-              description = 'Comprime archivos en formato ZIP';
-            } else if (nodeType === 'unzip' && result.data.merlin_agent_UnZip) {
-              detailsData = result.data.merlin_agent_UnZip[0];
-              name = detailsData?.name || 'Extracción ZIP';
-              description = 'Extrae archivos de formato ZIP';
-            }
-            
             setNodeDetails({
-              type: nodeType,
-              name,
-              description,
-              details: detailsData
+              type: 'command',
+              name: result.data.merlin_agent_Command[0]?.name || 'Comando',
+              description: result.data.merlin_agent_Command[0]?.description || 'Ejecuta un comando en el sistema',
+              details: result.data.merlin_agent_Command[0]
             });
           } else {
-            throw new Error('Respuesta de API inválida');
+            throw new Error('No se pudo obtener información del comando');
           }
         } catch (error) {
-          console.error(`Error al cargar detalles para ${nodeType}:`, error);
-          
-          // Crear datos básicos para mostrar en caso de error
-          const detailsData = {
-            id: unitData.command_id || unitData.query_queue_id || unitData.zip_id || unitData.unzip_id,
-            name: nodeType === 'command' ? 'Comando' :
-                 nodeType === 'query' ? 'Consulta SQL' :
-                 nodeType === 'zip' ? 'Compresión ZIP' : 'Extracción ZIP'
-          };
-          
+          console.error('Error al cargar el comando:', error);
           setNodeDetails({
-            type: nodeType,
-            name: detailsData.name,
-            description: 'No se pudieron cargar los detalles completos',
-            details: detailsData
+            type: 'command',
+            name: 'Comando',
+            description: 'Ejecuta un comando en el sistema',
+            details: { id: unitData.command_id, name: 'Comando' }
           });
         }
       }
+      // Consulta SQL
+      else if (unitData.query_queue_id) {
+        try {
+          const result = await executeQuery(QUERY_QUEUE_QUERY, { id: unitData.query_queue_id });
+          if (result.data && !result.errors) {
+            const detailsData = result.data.merlin_agent_QueryQueue[0];
+            
+            // Obtener las consultas asociadas a la cola
+            if (detailsData) {
+              try {
+                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unitData.query_queue_id });
+                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
+                  detailsData.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                }
+              } catch (error) {
+                console.error('Error al cargar consultas:', error);
+              }
+            }
+            
+            setNodeDetails({
+              type: 'query',
+              name: detailsData?.name || 'Consulta SQL',
+              description: detailsData?.description || 'Ejecuta una consulta en base de datos',
+              details: detailsData
+            });
+          } else {
+            throw new Error('No se pudo obtener información de la consulta');
+          }
+        } catch (error) {
+          console.error('Error al cargar la consulta:', error);
+          setNodeDetails({
+            type: 'query',
+            name: 'Consulta SQL',
+            description: 'Ejecuta una consulta en base de datos',
+            details: { id: unitData.query_queue_id, name: 'Consulta SQL' }
+          });
+        }
+      }
+      // ZIP
+      else if (unitData.zip_id) {
+        try {
+          const result = await executeQuery(ZIP_QUERY, { id: unitData.zip_id });
+          if (result.data && !result.errors) {
+            setNodeDetails({
+              type: 'zip',
+              name: result.data.merlin_agent_Zip[0]?.name || 'Compresión ZIP',
+              description: 'Comprime archivos en formato ZIP',
+              details: result.data.merlin_agent_Zip[0]
+            });
+          } else {
+            throw new Error('No se pudo obtener información del ZIP');
+          }
+        } catch (error) {
+          console.error('Error al cargar el ZIP:', error);
+          setNodeDetails({
+            type: 'zip',
+            name: 'Compresión ZIP',
+            description: 'Comprime archivos en formato ZIP',
+            details: { id: unitData.zip_id, name: 'Compresión ZIP' }
+          });
+        }
+      }
+      // UNZIP
+      else if (unitData.unzip_id) {
+        try {
+          const result = await executeQuery(UNZIP_QUERY, { id: unitData.unzip_id });
+          if (result.data && !result.errors) {
+            setNodeDetails({
+              type: 'unzip',
+              name: result.data.merlin_agent_UnZip[0]?.name || 'Extracción ZIP',
+              description: 'Extrae archivos de formato ZIP',
+              details: result.data.merlin_agent_UnZip[0]
+            });
+          } else {
+            throw new Error('No se pudo obtener información del UNZIP');
+          }
+        } catch (error) {
+          console.error('Error al cargar el UNZIP:', error);
+          setNodeDetails({
+            type: 'unzip',
+            name: 'Extracción ZIP',
+            description: 'Extrae archivos de formato ZIP',
+            details: { id: unitData.unzip_id, name: 'Extracción ZIP' }
+          });
+        }
+      }
+      // Tipo desconocido
+      else {
+        setNodeDetails({
+          type: 'unknown',
+          name: 'Nodo desconocido',
+          description: 'No se pudo determinar el tipo de nodo',
+          details: null
+        });
+      }
     } catch (error) {
       console.error('Error al cargar detalles del nodo:', error);
+      
       toast({
         title: 'Error',
         description: 'No se pudieron cargar los detalles del nodo',
         variant: 'destructive'
       });
       
-      // En caso de error general, establecer información básica
-      const unitData = selectedNodeData.data.unit;
-      const nodeType = determineUnitType(unitData);
-      
       setNodeDetails({
-        type: nodeType,
-        name: nodeType.charAt(0).toUpperCase() + nodeType.slice(1).replace('_', ' '),
-        description: 'No se pudieron cargar los detalles',
+        type: 'unknown',
+        name: 'Error',
+        description: 'Error al cargar los detalles',
         details: null
       });
     } finally {
