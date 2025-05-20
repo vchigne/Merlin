@@ -802,6 +802,259 @@ export default function PipelineEditor({
           </svg>
         </div>
       </div>
+      
+      {/* Modal de detalles del nodo */}
+      {isDialogOpen && selectedUnit && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                {(() => {
+                  const unitType = determineUnitType(selectedUnit);
+                  let Icon;
+                  
+                  switch (unitType) {
+                    case 'command':
+                      Icon = Wrench;
+                      break;
+                    case 'query':
+                      Icon = Database;
+                      break;
+                    case 'sftp_download':
+                      Icon = Download;
+                      break;
+                    case 'sftp_upload':
+                      Icon = Upload;
+                      break;
+                    case 'zip':
+                      Icon = ArrowRight;
+                      break;
+                    case 'unzip':
+                      Icon = ArrowRight;
+                      break;
+                    case 'pipeline':
+                      Icon = Link2;
+                      break;
+                    default:
+                      Icon = Settings2;
+                  }
+                  
+                  return <Icon className="h-5 w-5 text-primary" />;
+                })()}
+                <span>{unitDetails?.name || "Detalles de la Unidad"}</span>
+              </DialogTitle>
+              <DialogDescription>
+                {unitDetails?.description || "Información detallada sobre esta unidad del pipeline"}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {isLoadingDetails ? (
+              <div className="py-8 flex justify-center">
+                <Skeleton className="h-32 w-full" />
+              </div>
+            ) : (
+              <div className="grid gap-4 py-2">
+                <div>
+                  <h3 className="text-lg font-medium mb-1">
+                    {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {getUnitTypeDescription(selectedUnit)}
+                  </p>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
+                </div>
+                
+                {selectedUnit.pipeline_unit_id && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
+                  </div>
+                )}
+                
+                {/* Contenido específico basado en el tipo de unidad */}
+                {unitDetails && unitDetails.type === 'command' && unitDetails.details && (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Comando</h4>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
+                        {unitDetails.details.target} {unitDetails.details.args}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Directorio de trabajo</h4>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
+                        {unitDetails.details.working_directory || 'Directorio por defecto'}
+                      </div>
+                    </div>
+                    {unitDetails.details.raw_script && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Script</h4>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 max-h-40 overflow-y-auto">
+                          <pre>{unitDetails.details.raw_script}</pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {unitDetails && unitDetails.type === 'query' && unitDetails.details && (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Descripción</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {unitDetails.details.description || 'Sin descripción'}
+                      </p>
+                    </div>
+                    <Separator />
+                    {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
+                        <div className="space-y-2">
+                          {unitDetails.details.Queries.map((query: any, index: number) => (
+                            <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
+                              <div className="flex justify-between mb-1">
+                                <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
+                                <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
+                              </div>
+                              <div className="mt-2 max-h-32 overflow-y-auto">
+                                <pre>{query.query_string}</pre>
+                              </div>
+                              <div className="mt-1">
+                                <span className="text-slate-500">Archivo: </span>
+                                {query.path || 'No especificado'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {unitDetails && (unitDetails.type === 'sftp_download' || unitDetails.type === 'sftp_upload') && unitDetails.details && (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Servidor SFTP</h4>
+                      {unitDetails.details.sftp_link && (
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
+                          <div><span className="font-medium">Servidor: </span>{unitDetails.details.sftp_link.server}:{unitDetails.details.sftp_link.port}</div>
+                          <div><span className="font-medium">Usuario: </span>{unitDetails.details.sftp_link.user}</div>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">{unitDetails.type === 'sftp_download' ? 'Ruta de salida' : 'Ruta de entrada'}</h4>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                        {unitDetails.type === 'sftp_download' ? unitDetails.details.output : unitDetails.details.input}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {unitDetails && (unitDetails.type === 'zip' || unitDetails.type === 'unzip') && unitDetails.details && (
+                  <div className="space-y-3">
+                    {unitDetails.type === 'zip' ? (
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Ruta de salida (archivo ZIP)</h4>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                          {unitDetails.details.output}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Archivo ZIP a extraer</h4>
+                          <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                            {unitDetails.details.input}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Directorio de extracción</h4>
+                          <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                            {unitDetails.details.output}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                {unitDetails && unitDetails.type === 'pipeline' && unitDetails.details && (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Pipeline llamado</h4>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 border border-slate-200 dark:border-slate-700">
+                        <p className="text-sm font-medium">{unitDetails.details.name}</p>
+                        <p className="text-xs text-slate-500 mt-1">{unitDetails.details.description || 'Sin descripción'}</p>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="font-medium">ID: </span>
+                        <span className="font-mono">{unitDetails.details.id.substring(0, 10)}...</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Agente: </span>
+                        <span>{unitDetails.details.agent_passport_id?.substring(0, 10)}...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Información adicional de configuración */}
+                <Separator />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  {selectedUnit.timeout_milliseconds > 0 && (
+                    <div>
+                      <span className="font-medium">Timeout: </span>
+                      <span>{selectedUnit.timeout_milliseconds}ms</span>
+                    </div>
+                  )}
+                  
+                  {selectedUnit.retry_count > 0 && (
+                    <div>
+                      <span className="font-medium">Reintentos: </span>
+                      <span>{selectedUnit.retry_count}</span>
+                    </div>
+                  )}
+                  
+                  {selectedUnit.retry_after_milliseconds > 0 && (
+                    <div>
+                      <span className="font-medium">Espera entre reintentos: </span>
+                      <span>{selectedUnit.retry_after_milliseconds}ms</span>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <span className="font-medium">Continuar en error: </span>
+                    <Badge variant={selectedUnit.continue_on_error ? "success" : "destructive"}>
+                      {selectedUnit.continue_on_error ? "Sí" : "No"}
+                    </Badge>
+                  </div>
+                  
+                  <div>
+                    <span className="font-medium">Abortar en timeout: </span>
+                    <Badge variant={selectedUnit.abort_on_timeout ? "destructive" : "outline"}>
+                      {selectedUnit.abort_on_timeout ? "Sí" : "No"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button onClick={handleCloseDialog}>Cerrar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
