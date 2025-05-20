@@ -6,7 +6,17 @@ import { pipelineLayoutManager } from "@/lib/pipeline-layout-manager";
 import { useToast } from "@/hooks/use-toast";
 import { executeQuery } from "@/lib/hasura-client";
 import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
-import { showNodeDetails } from "./NodeInfoToast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 // Componente mejorado para el editor visual de flujos de pipeline
 // Con canvas infinito y soporte completo para dispositivos móviles
@@ -21,6 +31,30 @@ interface PipelineEditorProps {
   readOnly?: boolean;
   pipelineId?: string; // ID del pipeline para guardar su layout
 }
+
+// Función auxiliar para determinar el tipo de nodo
+const determineUnitType = (unit: any): string => {
+  if (unit.command_id) return 'command';
+  if (unit.query_queue_id) return 'query';
+  if (unit.sftp_downloader_id) return 'sftp_download';
+  if (unit.sftp_uploader_id) return 'sftp_upload';
+  if (unit.zip_id) return 'zip';
+  if (unit.unzip_id) return 'unzip';
+  if (unit.call_pipeline) return 'pipeline';
+  return 'unknown';
+};
+
+// Función auxiliar para obtener una descripción legible del tipo de unidad
+const getUnitTypeDescription = (unit: any): string => {
+  if (unit.command_id) return 'Comando';
+  if (unit.query_queue_id) return 'Consulta SQL';
+  if (unit.sftp_downloader_id) return 'Descarga SFTP';
+  if (unit.sftp_uploader_id) return 'Subida SFTP';
+  if (unit.zip_id) return 'Compresión ZIP';
+  if (unit.unzip_id) return 'Extracción ZIP';
+  if (unit.call_pipeline) return 'Llamada a Pipeline';
+  return 'Unidad desconocida';
+};
 
 export default function PipelineEditor({
   flowData,
@@ -39,6 +73,12 @@ export default function PipelineEditor({
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  
+  // Estados para el diálogo de detalles del nodo
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
+  const [unitDetails, setUnitDetails] = useState<any>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [nodeStart, setNodeStart] = useState({ x: 0, y: 0 });
   const [connecting, setConnecting] = useState<boolean>(false);
   const [connectionStart, setConnectionStart] = useState<string | null>(null);
@@ -301,6 +341,107 @@ export default function PipelineEditor({
     }
   }, [dragging, draggingNode]);
   
+  // Función para obtener los detalles de una unidad específica
+  const fetchUnitDetails = async (unitData: any) => {
+    setSelectedUnit(unitData);
+    setIsDialogOpen(true);
+    setIsLoadingDetails(true);
+    
+    try {
+      let query = '';
+      let variables = {};
+      
+      // Determinar qué tipo de unidad es y obtener los detalles correspondientes
+      if (unitData.command_id) {
+        query = COMMAND_QUERY;
+        variables = { id: unitData.command_id };
+      } else if (unitData.query_queue_id) {
+        // Para las colas de consulta, obtenemos primero la metadata de la cola
+        query = QUERY_QUEUE_QUERY;
+        variables = { id: unitData.query_queue_id };
+      } else if (unitData.sftp_downloader_id) {
+        query = SFTP_DOWNLOADER_QUERY;
+        variables = { id: unitData.sftp_downloader_id };
+      } else if (unitData.sftp_uploader_id) {
+        query = SFTP_UPLOADER_QUERY;
+        variables = { id: unitData.sftp_uploader_id };
+      } else if (unitData.zip_id) {
+        query = ZIP_QUERY;
+        variables = { id: unitData.zip_id };
+      } else if (unitData.unzip_id) {
+        query = UNZIP_QUERY;
+        variables = { id: unitData.unzip_id };
+      } else if (unitData.call_pipeline) {
+        // En caso de llamada a otro pipeline
+        const result = await executeQuery(PIPELINE_QUERY, { id: unitData.call_pipeline });
+        if (result.data && !result.errors) {
+          setUnitDetails({
+            type: 'pipeline',
+            name: result.data.merlin_agent_Pipeline[0]?.name || 'Pipeline',
+            description: result.data.merlin_agent_Pipeline[0]?.description || 'Llamada a otro pipeline',
+            details: result.data.merlin_agent_Pipeline[0]
+          });
+        }
+        setIsLoadingDetails(false);
+        return;
+      }
+      
+      if (query) {
+        const result = await executeQuery(query, variables);
+        if (result.data && !result.errors) {
+          // Determinar el tipo para mostrar en la interfaz
+          const type = determineUnitType(unitData);
+          
+          // Obtener los datos relevantes según el tipo
+          let data;
+          if (unitData.command_id) {
+            data = result.data.merlin_agent_Command[0];
+          } else if (unitData.query_queue_id) {
+            data = result.data.merlin_agent_QueryQueue[0];
+            
+            if (data) {
+              // Para las consultas SQL, obtenemos detalles adicionales
+              try {
+                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unitData.query_queue_id });
+                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
+                  // Agregamos las consultas al objeto de datos
+                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                }
+              } catch (error) {
+                console.error("Error fetching SQL queries:", error);
+              }
+            }
+          } else if (unitData.sftp_downloader_id) {
+            data = result.data.merlin_agent_SFTPDownloader[0];
+          } else if (unitData.sftp_uploader_id) {
+            data = result.data.merlin_agent_SFTPUploader[0];
+          } else if (unitData.zip_id) {
+            data = result.data.merlin_agent_Zip[0];
+          } else if (unitData.unzip_id) {
+            data = result.data.merlin_agent_UnZip[0];
+          }
+          
+          setUnitDetails({
+            type,
+            name: data?.name || getUnitTypeDescription(unitData),
+            description: data?.description || '',
+            details: data
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching unit details:", error);
+      setUnitDetails({
+        type: determineUnitType(unitData),
+        name: 'Error',
+        description: 'No se pudieron cargar los detalles',
+        details: null
+      });
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+  
   // Manejar clics en nodos
   const handleNodeClick = (nodeId: string) => {
     const newSelectedNodeId = nodeId === selectedNode ? null : nodeId;
@@ -311,9 +452,9 @@ export default function PipelineEditor({
       if (newSelectedNodeId) {
         const selectedNodeData = nodes.find(node => node.id === newSelectedNodeId);
         
-        // Mostrar información adicional sobre el nodo en un toast
+        // Mostrar diálogo con detalles del nodo
         if (selectedNodeData?.data?.unit) {
-          showNodeDetails(toast, selectedNodeData);
+          fetchUnitDetails(selectedNodeData.data.unit);
         }
         
         onNodeSelect(selectedNodeData);
@@ -321,6 +462,15 @@ export default function PipelineEditor({
         onNodeSelect(null);
       }
     }
+  };
+  
+  // Cerrar el diálogo de detalles
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setTimeout(() => {
+      setSelectedUnit(null);
+      setUnitDetails(null);
+    }, 200);
   };
   
   // Manejar inicio de arrastre de nodo
