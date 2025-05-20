@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
 
 interface NodeDetailsDialogProps {
   open: boolean;
@@ -244,52 +245,78 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                     </p>
                   </div>
                   <Separator />
-                  {nodeDetails.details.queries && nodeDetails.details.queries.length > 0 && (
+                  
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">ID de la cola de consultas:</h4>
+                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{nodeDetails.details.id}</p>
+                  </div>
+                  
+                  {/* Consultas relacionadas */}
+                  {nodeDetails.details.Queries && nodeDetails.details.Queries.length > 0 ? (
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
-                      <div className="space-y-2">
-                        {nodeDetails.details.queries.map((query: any, index: number) => (
-                          <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
-                            <div className="flex justify-between mb-1">
-                              <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
-                              <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
+                      <h4 className="text-sm font-medium mb-1">Consultas ({nodeDetails.details.Queries.length}):</h4>
+                      <div className="space-y-3">
+                        {nodeDetails.details.Queries.map((query: any, index: number) => (
+                          <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm font-medium">Consulta {index + 1}: {query.name}</p>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                {query.sqlconn_id ? 'SQL Connection' : 'Query'}
+                              </span>
                             </div>
-                            <div className="mt-2 max-h-32 overflow-y-auto">
-                              <pre className="whitespace-pre-wrap break-words">{query.query_string}</pre>
+                            
+                            {/* SQL query string */}
+                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono mb-2 overflow-auto max-h-32 whitespace-pre">
+                              {query.query_string}
                             </div>
-                            <div className="mt-1">
-                              <span className="text-slate-500">Archivo: </span>
-                              {query.path || 'No especificado'}
+                            
+                            {/* Advertencia de seguridad */}
+                            <div className="text-xs text-amber-600 dark:text-amber-400 mt-1 mb-2 flex items-center">
+                              <AlertCircle className="h-4 w-4 mr-1" />
+                              Modo solo lectura - No se ejecutará ni modificará esta consulta
+                            </div>
+                            
+                            {/* Query metadata */}
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              {query.path && (
+                                <div className="col-span-2">
+                                  <span className="font-medium">Path de salida:</span> {query.path}
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-medium">Print headers:</span> {query.print_headers ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Habilitado:</span> {query.enabled ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Retornar salida:</span> {query.return_output ? 'Sí' : 'No'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Orden:</span> {query.order}
+                              </div>
+                              <div>
+                                <span className="font-medium">Timeout:</span> {query.timeout ? `${query.timeout}ms` : 'N/A'}
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      No hay consultas definidas en esta cola.
                     </div>
                   )}
                   
-                  {/* Si no hay consultas explícitas pero existe el objeto Queries */}
-                  {!nodeDetails.details.queries && nodeDetails.details.Queries && nodeDetails.details.Queries.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
-                      <div className="space-y-2">
-                        {nodeDetails.details.Queries.map((query: any, index: number) => (
-                          <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
-                            <div className="flex justify-between mb-1">
-                              <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
-                              <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
-                            </div>
-                            <div className="mt-2 max-h-32 overflow-y-auto">
-                              <pre className="whitespace-pre-wrap break-words">{query.query_string}</pre>
-                            </div>
-                            <div className="mt-1">
-                              <span className="text-slate-500">Archivo: </span>
-                              {query.path || 'No especificado'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <span className="font-medium">Creado:</span> {new Date(nodeDetails.details.created_at).toLocaleString()}
                     </div>
-                  )}
+                    <div>
+                      <span className="font-medium">Actualizado:</span> {new Date(nodeDetails.details.updated_at).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               )}
               
