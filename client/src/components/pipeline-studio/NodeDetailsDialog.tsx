@@ -120,6 +120,19 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             detailsData = result.data.merlin_agent_QueryQueue[0];
             name = detailsData?.name || 'Consulta SQL';
             description = detailsData?.description || 'Ejecuta una consulta en base de datos';
+            
+            // Obtener las consultas asociadas a la cola
+            if (detailsData) {
+              try {
+                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { query_queue_id: unitData.query_queue_id });
+                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
+                  // Agregar las consultas ordenadas al detalle
+                  detailsData.queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+                }
+              } catch (error) {
+                console.error('Error al cargar consultas:', error);
+              }
+            }
           } else if (nodeType === 'sftp_download' && result.data.merlin_agent_SFTPDownloader) {
             detailsData = result.data.merlin_agent_SFTPDownloader[0];
             name = 'Descarga SFTP';
@@ -222,6 +235,30 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                       <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
                       <div className="space-y-2">
                         {nodeDetails.details.queries.map((query: any, index: number) => (
+                          <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
+                            <div className="flex justify-between mb-1">
+                              <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
+                              <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
+                            </div>
+                            <div className="mt-2 max-h-32 overflow-y-auto">
+                              <pre>{query.query_string}</pre>
+                            </div>
+                            <div className="mt-1">
+                              <span className="text-slate-500">Archivo: </span>
+                              {query.path || 'No especificado'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Si no hay consultas explícitas pero existe el objeto Queries */}
+                  {!nodeDetails.details.queries && nodeDetails.details.Queries && nodeDetails.details.Queries.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Consultas SQL</h4>
+                      <div className="space-y-2">
+                        {nodeDetails.details.Queries.map((query: any, index: number) => (
                           <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
                             <div className="flex justify-between mb-1">
                               <span className="font-medium">{query.name || `Consulta ${index + 1}`}</span>
