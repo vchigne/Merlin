@@ -1,19 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { executeQuery } from "@/lib/hasura-client";
 import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
+import UnitDetailsDialog from "./UnitDetailsDialog";
 
 interface NodeDetailsDialogProps {
   open: boolean;
@@ -28,18 +17,19 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
   const [loading, setLoading] = useState(false);
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   
-  // Función para obtener el tipo legible
-  const getTypeReadableLabel = (type: string) => {
-    switch (type) {
-      case 'command': return 'Comando';
-      case 'query': return 'Consulta SQL';
-      case 'sftp_download': return 'Descarga SFTP';
-      case 'sftp_upload': return 'Subida SFTP';
-      case 'zip': return 'Compresión ZIP';
-      case 'unzip': return 'Extracción ZIP';
-      case 'pipeline': return 'Pipeline';
-      default: return type;
-    }
+  // Función para determinar el tipo de unidad
+  const determineUnitType = (unit: any) => {
+    if (!unit) return 'unknown';
+    
+    if (unit.command_id) return 'command';
+    if (unit.query_queue_id) return 'query';
+    if (unit.sftp_downloader_id) return 'sftp_download';
+    if (unit.sftp_uploader_id) return 'sftp_upload';
+    if (unit.zip_id) return 'zip';
+    if (unit.unzip_id) return 'unzip';
+    if (unit.call_pipeline) return 'pipeline';
+    
+    return 'unknown';
   };
   
   // Cargar detalles del nodo cuando cambia el ID seleccionado
@@ -101,13 +91,8 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
       if (query) {
         const result = await executeQuery(query, variables);
         if (result.data && !result.errors) {
-          const nodeType = unitData.command_id ? 'command' : 
-                          unitData.query_queue_id ? 'query' : 
-                          unitData.sftp_downloader_id ? 'sftp_download' : 
-                          unitData.sftp_uploader_id ? 'sftp_upload' : 
-                          unitData.zip_id ? 'zip' : 
-                          unitData.unzip_id ? 'unzip' : 'unknown';
-                          
+          const nodeType = determineUnitType(unitData);
+          
           // Determinar el objeto de datos según el tipo
           let detailsData = null;
           let name = '';
@@ -136,11 +121,11 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             }
           } else if (nodeType === 'sftp_download' && result.data.merlin_agent_SFTPDownloader) {
             detailsData = result.data.merlin_agent_SFTPDownloader[0];
-            name = 'Descarga SFTP';
+            name = detailsData?.name || 'Descarga SFTP';
             description = 'Descarga archivos desde un servidor SFTP';
           } else if (nodeType === 'sftp_upload' && result.data.merlin_agent_SFTPUploader) {
             detailsData = result.data.merlin_agent_SFTPUploader[0];
-            name = 'Subida SFTP';
+            name = detailsData?.name || 'Subida SFTP';
             description = 'Sube archivos a un servidor SFTP';
           } else if (nodeType === 'zip' && result.data.merlin_agent_Zip) {
             detailsData = result.data.merlin_agent_Zip[0];
@@ -173,235 +158,12 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
   };
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          .node-details-dialog pre {
-            white-space: pre-wrap;
-            word-break: break-all;
-            overflow-x: auto;
-            max-width: 100%;
-          }
-          .node-details-dialog .bg-slate-50 {
-            max-width: 100%;
-            overflow-x: hidden;
-          }
-          `
-        }} />
-        {loading ? (
-          <div className="py-8 space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        ) : nodeDetails ? (
-          <div className="node-details-dialog">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {nodeDetails.name}
-                <span className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
-                  {getTypeReadableLabel(nodeDetails.type)}
-                </span>
-              </DialogTitle>
-              <DialogDescription>
-                {nodeDetails.description}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-2">
-              {/* Contenido específico basado en el tipo de nodo */}
-              {nodeDetails.type === 'command' && nodeDetails.details && (
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Comando</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 break-words">
-                      {nodeDetails.details.target} {nodeDetails.details.args}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Directorio de trabajo</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs break-words">
-                      {nodeDetails.details.working_directory || 'Directorio por defecto'}
-                    </div>
-                  </div>
-                  {nodeDetails.details.raw_script && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Script</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 max-h-40 overflow-y-auto break-words">
-                        <pre className="whitespace-pre-wrap">{nodeDetails.details.raw_script}</pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {nodeDetails.type === 'query' && nodeDetails.details && (
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Descripción</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {nodeDetails.details.description || 'Sin descripción'}
-                    </p>
-                  </div>
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">ID de la cola de consultas:</h4>
-                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{nodeDetails.details.id}</p>
-                  </div>
-                  
-                  {/* Consultas relacionadas */}
-                  {nodeDetails.details.Queries && nodeDetails.details.Queries.length > 0 ? (
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Consultas ({nodeDetails.details.Queries.length}):</h4>
-                      <div className="space-y-3">
-                        {nodeDetails.details.Queries.map((query: any, index: number) => (
-                          <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
-                            <div className="flex justify-between items-center mb-2">
-                              <p className="text-sm font-medium">Consulta {index + 1}: {query.name}</p>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                                {query.sqlconn_id ? 'SQL Connection' : 'Query'}
-                              </span>
-                            </div>
-                            
-                            {/* SQL query string */}
-                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono mb-2 overflow-auto max-h-32 whitespace-pre">
-                              {query.query_string}
-                            </div>
-                            
-                            {/* Advertencia de seguridad */}
-                            <div className="text-xs text-amber-600 dark:text-amber-400 mt-1 mb-2 flex items-center">
-                              <AlertCircle className="h-4 w-4 mr-1" />
-                              Modo solo lectura - No se ejecutará ni modificará esta consulta
-                            </div>
-                            
-                            {/* Query metadata */}
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              {query.path && (
-                                <div className="col-span-2">
-                                  <span className="font-medium">Path de salida:</span> {query.path}
-                                </div>
-                              )}
-                              <div>
-                                <span className="font-medium">Print headers:</span> {query.print_headers ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Habilitado:</span> {query.enabled ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {query.return_output ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Orden:</span> {query.order}
-                              </div>
-                              <div>
-                                <span className="font-medium">Timeout:</span> {query.timeout ? `${query.timeout}ms` : 'N/A'}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      No hay consultas definidas en esta cola.
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                    <div>
-                      <span className="font-medium">Creado:</span> {new Date(nodeDetails.details.created_at).toLocaleString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">Actualizado:</span> {new Date(nodeDetails.details.updated_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {(nodeDetails.type === 'sftp_download' || nodeDetails.type === 'sftp_upload') && nodeDetails.details && (
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Servidor SFTP</h4>
-                    {nodeDetails.details.sftp_link && (
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                        <div><span className="font-medium">Servidor: </span>{nodeDetails.details.sftp_link.server}:{nodeDetails.details.sftp_link.port}</div>
-                        <div><span className="font-medium">Usuario: </span>{nodeDetails.details.sftp_link.user}</div>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">{nodeDetails.type === 'sftp_download' ? 'Ruta de salida' : 'Ruta de entrada'}</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
-                      {nodeDetails.type === 'sftp_download' ? nodeDetails.details.output : nodeDetails.details.input}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {(nodeDetails.type === 'zip' || nodeDetails.type === 'unzip') && nodeDetails.details && (
-                <div className="space-y-3">
-                  {nodeDetails.type === 'zip' ? (
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Ruta de salida (archivo ZIP)</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
-                        {nodeDetails.details.output}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Archivo ZIP a extraer</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
-                          {nodeDetails.details.input}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Directorio de extracción</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
-                          {nodeDetails.details.output}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-              
-              {nodeDetails.type === 'pipeline' && nodeDetails.details && (
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Pipeline llamado</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 border border-slate-200 dark:border-slate-700">
-                      <p className="text-sm font-medium">{nodeDetails.details.name}</p>
-                      <p className="text-xs text-slate-500 mt-1">{nodeDetails.details.description || 'Sin descripción'}</p>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="font-medium">ID: </span>
-                      <span className="font-mono">{nodeDetails.details.id.substring(0, 10)}...</span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Agente: </span>
-                      <span>{nodeDetails.details.agent_passport_id?.substring(0, 10)}...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
-            </DialogFooter>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-slate-500">No se pudieron cargar los detalles del nodo</p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <UnitDetailsDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      loading={loading}
+      unitDetails={nodeDetails}
+      determineUnitType={determineUnitType}
+    />
   );
 }
