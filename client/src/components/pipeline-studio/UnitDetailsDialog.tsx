@@ -200,17 +200,55 @@ export default function UnitDetailsDialog({
               {unitDetails.type === 'sftp_download' && (
                 <>
                   <div>
-                    <p className="text-sm font-medium mb-1">Output:</p>
-                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details?.output}</p>
+                    <p className="text-sm font-medium mb-1">Nombre:</p>
+                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details?.name || 'Sin nombre'}</p>
                   </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium mb-1">Ruta de salida:</p>
+                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{unitDetails.details?.output}</p>
+                  </div>
+                  
+                  {/* Información del servidor SFTP */}
+                  {unitDetails.details?.SFTPLink && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Servidor SFTP:</p>
+                      <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Nombre conexión:</span> {unitDetails.details.SFTPLink.name}
+                          </div>
+                          <div>
+                            <span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink.server}
+                          </div>
+                          <div>
+                            <span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink.port}
+                          </div>
+                          <div>
+                            <span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                     <div>
-                      <span className="font-medium">SFTP Link ID:</span> {unitDetails.details?.sftp_link_id}
+                      <span className="font-medium">ID:</span> <span className="font-mono">{unitDetails.details?.id?.substring(0, 10)}...</span>
                     </div>
                     <div>
                       <span className="font-medium">Retornar salida:</span> {unitDetails.details?.return_output ? 'Sí' : 'No'}
                     </div>
+                    {unitDetails.details?.created_at && (
+                      <>
+                        <div>
+                          <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                        </div>
+                        <div>
+                          <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </>
               )}
@@ -219,17 +257,55 @@ export default function UnitDetailsDialog({
               {unitDetails.type === 'sftp_upload' && (
                 <>
                   <div>
-                    <p className="text-sm font-medium mb-1">Input:</p>
-                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details?.input}</p>
+                    <p className="text-sm font-medium mb-1">Nombre:</p>
+                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details?.name || 'Sin nombre'}</p>
                   </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium mb-1">Ruta de entrada:</p>
+                    <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{unitDetails.details?.input}</p>
+                  </div>
+                  
+                  {/* Información del servidor SFTP */}
+                  {unitDetails.details?.SFTPLink && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Servidor SFTP:</p>
+                      <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Nombre conexión:</span> {unitDetails.details.SFTPLink.name}
+                          </div>
+                          <div>
+                            <span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink.server}
+                          </div>
+                          <div>
+                            <span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink.port}
+                          </div>
+                          <div>
+                            <span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                     <div>
-                      <span className="font-medium">SFTP Link ID:</span> {unitDetails.details?.sftp_link_id}
+                      <span className="font-medium">ID:</span> <span className="font-mono">{unitDetails.details?.id?.substring(0, 10)}...</span>
                     </div>
                     <div>
                       <span className="font-medium">Retornar salida:</span> {unitDetails.details?.return_output ? 'Sí' : 'No'}
                     </div>
+                    {unitDetails.details?.created_at && (
+                      <>
+                        <div>
+                          <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
+                        </div>
+                        <div>
+                          <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </>
               )}

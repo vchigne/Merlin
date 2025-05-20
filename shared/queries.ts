@@ -273,6 +273,15 @@ export const SFTP_DOWNLOADER_QUERY = `
       output
       return_output
       sftp_link_id
+      created_at
+      updated_at
+      SFTPLink {
+        id
+        name
+        server
+        port
+        user
+      }
     }
   }
 `;
@@ -285,6 +294,15 @@ export const SFTP_UPLOADER_QUERY = `
       input
       return_output
       sftp_link_id
+      created_at
+      updated_at
+      SFTPLink {
+        id
+        name
+        server
+        port
+        user
+      }
     }
   }
 `;
