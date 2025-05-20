@@ -68,11 +68,11 @@ interface NodePropertiesProps {
 
 const DraggableNodeProperties: React.FC<NodePropertiesProps> = ({
   node,
-  onUpdateNode,
-  onDeleteNode,
+  onChange,
   readOnly = false,
   sftpOptions = [],
   sqlConnOptions = [],
+  sqlConnections = [],
   initialPosition = { x: window.innerWidth - 350, y: 70 }
 }) => {
   const [label, setLabel] = useState('');
@@ -80,246 +80,282 @@ const DraggableNodeProperties: React.FC<NodePropertiesProps> = ({
   // Estados específicos para cada tipo de nodo
   const [commandFields, setCommandFields] = useState({
     target: '',
-    workingDirectory: '',
+    working_directory: '',
     args: '',
-    rawScript: '',
-    returnOutput: false
+    raw_script: ''
   });
   
-  const [queryFields, setQueryFields] = useState({
-    sqlConnId: '',
-    returnOutput: false
+  const [sftpDownloaderFields, setSftpDownloaderFields] = useState({
+    sftp_link_id: '',
+    output: '',
+    return_output: false
   });
   
-  const [sftpFields, setSftpFields] = useState({
-    sftpLinkId: '',
-    path: '',
-    returnOutput: false
+  const [sftpUploaderFields, setSftpUploaderFields] = useState({
+    sftp_link_id: '',
+    input: '',
+    return_output: false
   });
   
   const [zipFields, setZipFields] = useState({
     output: '',
-    returnOutput: false
+    return_output: false
   });
   
   const [unzipFields, setUnzipFields] = useState({
     input: '',
     output: '',
-    returnOutput: false
+    return_output: false
   });
   
-  const [callPipelineFields, setCallPipelineFields] = useState({
-    pipelineId: '',
-    waitForCompletion: true
+  const [pipelineCallFields, setPipelineCallFields] = useState({
+    pipeline_id: ''
   });
   
-  // Cargar datos del nodo
+  const [queryFields, setQueryFields] = useState({
+    sql_conn_id: '',
+    path: '',
+    return_output: false
+  });
+  
+  // Inicializar estados con datos del nodo
   useEffect(() => {
-    if (node) {
-      setLabel(node.data.label || '');
+    if (!node || !node.data) return;
+    
+    setLabel(node.data.label || '');
+    
+    if (node.data.details) {
+      // Configurar campos específicos según el tipo de nodo
       
-      // Cargar datos específicos según el tipo de nodo
-      if (node.type === 'commandNode') {
-        const details = node.data.details || {};
+      if (node.type === 'commandNode' && node.data.details.command) {
         setCommandFields({
-          target: details.target || '',
-          workingDirectory: details.working_directory || '',
-          args: details.args || '',
-          rawScript: details.raw_script || '',
-          returnOutput: details.return_output === true
+          target: node.data.details.command.target || '',
+          working_directory: node.data.details.command.working_directory || '',
+          args: node.data.details.command.args || '',
+          raw_script: node.data.details.command.raw_script || ''
         });
-      } else if (node.type === 'queryNode') {
-        const details = node.data.details || {};
-        setQueryFields({
-          sqlConnId: details.sqlconn_id || '',
-          returnOutput: details.return_output === true
+      }
+      
+      else if (node.type === 'sftpDownloaderNode' && node.data.details.sftpDownloader) {
+        setSftpDownloaderFields({
+          sftp_link_id: node.data.details.sftpDownloader.sftp_link_id || '',
+          output: node.data.details.sftpDownloader.output || '',
+          return_output: !!node.data.details.sftpDownloader.return_output
         });
-      } else if (node.type === 'sftpDownloaderNode' || node.type === 'sftpUploaderNode') {
-        const details = node.data.details || {};
-        setSftpFields({
-          sftpLinkId: details.sftp_link_id || '',
-          path: node.type === 'sftpDownloaderNode' ? (details.output || '') : (details.input || ''),
-          returnOutput: details.return_output === true
+      }
+      
+      else if (node.type === 'sftpUploaderNode' && node.data.details.sftpUploader) {
+        setSftpUploaderFields({
+          sftp_link_id: node.data.details.sftpUploader.sftp_link_id || '',
+          input: node.data.details.sftpUploader.input || '',
+          return_output: !!node.data.details.sftpUploader.return_output
         });
-      } else if (node.type === 'zipNode') {
-        const details = node.data.details || {};
+      }
+      
+      else if (node.type === 'zipNode' && node.data.details.zip) {
         setZipFields({
-          output: details.output || '',
-          returnOutput: details.return_output === true
+          output: node.data.details.zip.output || '',
+          return_output: !!node.data.details.zip.return_output
         });
-      } else if (node.type === 'unzipNode') {
-        const details = node.data.details || {};
+      }
+      
+      else if (node.type === 'unzipNode' && node.data.details.unzip) {
         setUnzipFields({
-          input: details.input || '',
-          output: details.output || '',
-          returnOutput: details.return_output === true
+          input: node.data.details.unzip.input || '',
+          output: node.data.details.unzip.output || '',
+          return_output: !!node.data.details.unzip.return_output
         });
-      } else if (node.type === 'callPipelineNode') {
-        const details = node.data.details || {};
-        setCallPipelineFields({
-          pipelineId: details.call_pipeline || '',
-          waitForCompletion: details.wait_for_completion !== false
+      }
+      
+      else if (node.type === 'callPipelineNode' && node.data.details.pipelineCall) {
+        setPipelineCallFields({
+          pipeline_id: node.data.details.pipelineCall.pipeline_id || ''
+        });
+      }
+      
+      else if (node.type === 'queryNode' && node.data.details.query) {
+        setQueryFields({
+          sql_conn_id: node.data.details.query.sql_conn_id || '',
+          path: node.data.details.query.path || '',
+          return_output: !!node.data.details.query.return_output
         });
       }
     }
   }, [node]);
   
-  // Funciones para actualizar el nodo
+  // Manejar cambio de etiqueta
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (readOnly) return;
+    
     const newLabel = e.target.value;
     setLabel(newLabel);
     
     const updatedData = { ...node.data, label: newLabel };
-    onUpdateNode(node.id, updatedData);
+    onChange(updatedData);
   };
   
   const handleCommandChange = (field: keyof typeof commandFields, value: any) => {
     if (readOnly) return;
     
-    const updatedFields = { ...commandFields, [field]: value };
-    setCommandFields(updatedFields);
-    
-    const details = {
-      ...node.data.details || {},
-      target: updatedFields.target,
-      working_directory: updatedFields.workingDirectory,
-      args: updatedFields.args,
-      raw_script: updatedFields.rawScript,
-      return_output: updatedFields.returnOutput
-    };
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setCommandFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        command: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
-  const handleQueryChange = (field: keyof typeof queryFields, value: any) => {
+  const handleSFTPDownloaderChange = (field: keyof typeof sftpDownloaderFields, value: any) => {
     if (readOnly) return;
     
-    const updatedFields = { ...queryFields, [field]: value };
-    setQueryFields(updatedFields);
-    
-    const details = {
-      ...node.data.details || {},
-      sqlconn_id: updatedFields.sqlConnId,
-      return_output: updatedFields.returnOutput
-    };
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setSftpDownloaderFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        sftpDownloader: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
-  const handleSftpChange = (field: keyof typeof sftpFields, value: any) => {
+  const handleSFTPUploaderChange = (field: keyof typeof sftpUploaderFields, value: any) => {
     if (readOnly) return;
     
-    const updatedFields = { ...sftpFields, [field]: value };
-    setSftpFields(updatedFields);
-    
-    const details = {
-      ...node.data.details || {},
-      sftp_link_id: updatedFields.sftpLinkId,
-      return_output: updatedFields.returnOutput
-    };
-    
-    // Asignar path a input u output según el tipo de nodo
-    if (node.type === 'sftpDownloaderNode') {
-      details.output = updatedFields.path;
-    } else {
-      details.input = updatedFields.path;
-    }
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setSftpUploaderFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        sftpUploader: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
   const handleZipChange = (field: keyof typeof zipFields, value: any) => {
     if (readOnly) return;
     
-    const updatedFields = { ...zipFields, [field]: value };
-    setZipFields(updatedFields);
-    
-    const details = {
-      ...node.data.details || {},
-      output: updatedFields.output,
-      return_output: updatedFields.returnOutput
-    };
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setZipFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        zip: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
   const handleUnzipChange = (field: keyof typeof unzipFields, value: any) => {
     if (readOnly) return;
     
-    const updatedFields = { ...unzipFields, [field]: value };
-    setUnzipFields(updatedFields);
-    
-    const details = {
-      ...node.data.details || {},
-      input: updatedFields.input,
-      output: updatedFields.output,
-      return_output: updatedFields.returnOutput
-    };
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setUnzipFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        unzip: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
-  const handleCallPipelineChange = (field: keyof typeof callPipelineFields, value: any) => {
+  const handlePipelineCallChange = (value: string) => {
     if (readOnly) return;
     
-    const updatedFields = { ...callPipelineFields, [field]: value };
-    setCallPipelineFields(updatedFields);
+    setPipelineCallFields(prev => {
+      const updated = { ...prev, pipeline_id: value };
+      const details = {
+        ...node.data.details,
+        pipelineCall: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
+  };
+  
+  const handleQueryChange = (field: keyof typeof queryFields, value: any) => {
+    if (readOnly) return;
     
-    const details = {
-      ...node.data.details || {},
-      call_pipeline: updatedFields.pipelineId,
-      wait_for_completion: updatedFields.waitForCompletion
-    };
-    
-    onUpdateNode(node.id, { ...node.data, details });
+    setQueryFields(prev => {
+      const updated = { ...prev, [field]: value };
+      const details = {
+        ...node.data.details,
+        query: updated
+      };
+      onChange({ ...node.data, details });
+      return updated;
+    });
   };
   
   const handleDeleteNode = () => {
     if (readOnly) return;
-    onDeleteNode(node.id);
+    // Esta función ahora no hace nada porque el prop onDeleteNode no existe
+    console.log("Delete node requested for:", node.id);
+    // En una implementación futura, podríamos usar un callback opcional
   };
   
   if (!node) return null;
   
   // Obtener el título del panel según el tipo de nodo
-  const getNodeTypeTitle = () => {
+  const getNodeTitle = () => {
     switch (node.type) {
-      case 'commandNode': return 'Comando';
-      case 'queryNode': return 'Consulta SQL';
-      case 'sftpDownloaderNode': return 'Descarga SFTP';
-      case 'sftpUploaderNode': return 'Subida SFTP';
-      case 'zipNode': return 'Compresión';
-      case 'unzipNode': return 'Descompresión';
-      case 'callPipelineNode': return 'Llamada a Pipeline';
-      case 'pipelineStart': return 'Inicio de Pipeline';
-      default: return 'Nodo';
+      case 'commandNode':
+        return 'Comando';
+      case 'queryNode':
+        return 'Consulta SQL';
+      case 'sftpDownloaderNode':
+        return 'Descarga SFTP';
+      case 'sftpUploaderNode':
+        return 'Subida SFTP';
+      case 'zipNode':
+        return 'Compresión ZIP';
+      case 'unzipNode':
+        return 'Extracción ZIP';
+      case 'callPipelineNode':
+        return 'Llamada a Pipeline';
+      case 'pipelineStart':
+        return 'Inicio de Pipeline';
+      default:
+        return 'Propiedades del Nodo';
     }
   };
   
-  const nodeIcon = NODE_TYPE_ICONS[node.type] || NODE_TYPE_ICONS.default;
+  // Obtener el icono según el tipo de nodo
+  const getNodeIcon = () => {
+    return NODE_TYPE_ICONS[node.type] || NODE_TYPE_ICONS.default;
+  };
+  
+  // Obtener el color según el tipo de nodo
+  const getNodeColor = () => {
+    return NODE_TYPE_COLORS[node.type] || '';
+  };
   
   return (
-    <DraggablePanel
-      title={`${getNodeTypeTitle()}: ${label || 'Sin título'}`}
-      icon={nodeIcon}
+    <DraggablePanel 
+      title={getNodeTitle()}
       initialPosition={initialPosition}
-      id={`node-properties-${node.id}`}
-      minWidth={320}
-      maxWidth={350}
-      className="bg-card/95 backdrop-blur-md"
-      onClose={node.type !== 'pipelineStart' ? handleDeleteNode : undefined}
+      icon={getNodeIcon()}
+      iconClass={getNodeColor()}
+      onClose={handleDeleteNode}
+      closable={!readOnly}
+      defaultSize={{ width: 320, height: 'auto' }}
     >
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="node-label" className="text-xs">Nombre</Label>
+      <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        {/* Campo de etiqueta común a todos los nodos */}
+        <div>
+          <Label htmlFor="node-label" className="text-sm font-medium">Etiqueta</Label>
           <Input
             id="node-label"
             value={label}
             onChange={handleLabelChange}
+            placeholder="Etiqueta del nodo"
+            className="mt-1"
             disabled={readOnly}
-            placeholder="Nombre del nodo"
-            className="text-sm h-9"
           />
         </div>
         
@@ -327,272 +363,283 @@ const DraggableNodeProperties: React.FC<NodePropertiesProps> = ({
         
         {/* Campos específicos según el tipo de nodo */}
         {node.type === 'commandNode' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="command-target" className="text-xs">Comando</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="command-target" className="text-sm font-medium">Comando</Label>
               <Input
                 id="command-target"
                 value={commandFields.target}
                 onChange={(e) => handleCommandChange('target', e.target.value)}
+                placeholder="Comando a ejecutar"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="Ejecutable (ej: bash, python)"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="command-working-dir" className="text-xs">Directorio de trabajo</Label>
-              <Input
-                id="command-working-dir"
-                value={commandFields.workingDirectory}
-                onChange={(e) => handleCommandChange('workingDirectory', e.target.value)}
-                disabled={readOnly}
-                placeholder="/ruta/al/directorio"
-                className="text-sm h-9"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="command-args" className="text-xs">Argumentos</Label>
+            <div>
+              <Label htmlFor="command-args" className="text-sm font-medium">Argumentos</Label>
               <Input
                 id="command-args"
                 value={commandFields.args}
                 onChange={(e) => handleCommandChange('args', e.target.value)}
+                placeholder="Argumentos del comando"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="-c ./script.sh"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="command-script" className="text-xs">Script</Label>
+            <div>
+              <Label htmlFor="command-dir" className="text-sm font-medium">Directorio de trabajo</Label>
+              <Input
+                id="command-dir"
+                value={commandFields.working_directory}
+                onChange={(e) => handleCommandChange('working_directory', e.target.value)}
+                placeholder="Directorio de trabajo"
+                className="mt-1"
+                disabled={readOnly}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="command-script" className="text-sm font-medium">Script</Label>
               <Textarea
                 id="command-script"
-                value={commandFields.rawScript}
-                onChange={(e) => handleCommandChange('rawScript', e.target.value)}
-                disabled={readOnly}
-                placeholder="#!/bin/bash\necho 'Hola mundo'"
-                className="text-sm min-h-[100px] font-mono text-xs"
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="command-return-output" className="text-xs">Retornar salida</Label>
-              <Switch
-                id="command-return-output"
-                checked={commandFields.returnOutput}
-                onCheckedChange={(checked) => handleCommandChange('returnOutput', checked)}
+                value={commandFields.raw_script}
+                onChange={(e) => handleCommandChange('raw_script', e.target.value)}
+                placeholder="Script a ejecutar"
+                className="mt-1 min-h-[100px]"
                 disabled={readOnly}
               />
             </div>
           </div>
         )}
         
-        {node.type === 'queryNode' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="query-connection" className="text-xs">Conexión SQL</Label>
+        {node.type === 'sftpDownloaderNode' && (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="sftp-link" className="text-sm font-medium">Conexión SFTP</Label>
               <Select
-                value={queryFields.sqlConnId}
-                onValueChange={(value) => handleQueryChange('sqlConnId', value)}
+                value={sftpDownloaderFields.sftp_link_id}
+                onValueChange={(value) => handleSFTPDownloaderChange('sftp_link_id', value)}
                 disabled={readOnly}
               >
-                <SelectTrigger id="query-connection" className="text-sm h-9">
-                  <SelectValue placeholder="Seleccionar conexión" />
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Selecciona conexión SFTP" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sqlConnOptions.map((conn) => (
-                    <SelectItem key={conn.value} value={conn.value}>
-                      {conn.label}
+                  {sftpOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="query-return-output" className="text-xs">Retornar resultados</Label>
-              <Switch
-                id="query-return-output"
-                checked={queryFields.returnOutput}
-                onCheckedChange={(checked) => handleQueryChange('returnOutput', checked)}
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-        )}
-        
-        {(node.type === 'sftpDownloaderNode' || node.type === 'sftpUploaderNode') && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="sftp-connection" className="text-xs">Conexión SFTP</Label>
-              <Select
-                value={sftpFields.sftpLinkId}
-                onValueChange={(value) => handleSftpChange('sftpLinkId', value)}
-                disabled={readOnly}
-              >
-                <SelectTrigger id="sftp-connection" className="text-sm h-9">
-                  <SelectValue placeholder="Seleccionar conexión" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sftpOptions.map((conn) => (
-                    <SelectItem key={conn.value} value={conn.value}>
-                      {conn.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="sftp-path" className="text-xs">
-                {node.type === 'sftpDownloaderNode' ? 'Ruta de destino' : 'Ruta de origen'}
-              </Label>
+            <div>
+              <Label htmlFor="sftp-output" className="text-sm font-medium">Ruta de salida</Label>
               <Input
-                id="sftp-path"
-                value={sftpFields.path}
-                onChange={(e) => handleSftpChange('path', e.target.value)}
+                id="sftp-output"
+                value={sftpDownloaderFields.output}
+                onChange={(e) => handleSFTPDownloaderChange('output', e.target.value)}
+                placeholder="Ruta de salida"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder={node.type === 'sftpDownloaderNode' ? '/ruta/destino' : '/ruta/origen'}
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="sftp-return-output" className="text-xs">Retornar información</Label>
+            <div className="flex items-center space-x-2">
               <Switch
-                id="sftp-return-output"
-                checked={sftpFields.returnOutput}
-                onCheckedChange={(checked) => handleSftpChange('returnOutput', checked)}
+                checked={sftpDownloaderFields.return_output}
+                onCheckedChange={(value) => handleSFTPDownloaderChange('return_output', value)}
                 disabled={readOnly}
               />
+              <Label className="text-sm">Retornar salida</Label>
+            </div>
+          </div>
+        )}
+        
+        {node.type === 'sftpUploaderNode' && (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="sftp-link" className="text-sm font-medium">Conexión SFTP</Label>
+              <Select
+                value={sftpUploaderFields.sftp_link_id}
+                onValueChange={(value) => handleSFTPUploaderChange('sftp_link_id', value)}
+                disabled={readOnly}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Selecciona conexión SFTP" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sftpOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="sftp-input" className="text-sm font-medium">Ruta de entrada</Label>
+              <Input
+                id="sftp-input"
+                value={sftpUploaderFields.input}
+                onChange={(e) => handleSFTPUploaderChange('input', e.target.value)}
+                placeholder="Ruta de entrada"
+                className="mt-1"
+                disabled={readOnly}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={sftpUploaderFields.return_output}
+                onCheckedChange={(value) => handleSFTPUploaderChange('return_output', value)}
+                disabled={readOnly}
+              />
+              <Label className="text-sm">Retornar salida</Label>
             </div>
           </div>
         )}
         
         {node.type === 'zipNode' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="zip-output" className="text-xs">Ruta de salida</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="zip-output" className="text-sm font-medium">Ruta de salida (archivo ZIP)</Label>
               <Input
                 id="zip-output"
                 value={zipFields.output}
                 onChange={(e) => handleZipChange('output', e.target.value)}
+                placeholder="Ruta de salida"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="/ruta/archivo.zip"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="zip-return-output" className="text-xs">Retornar información</Label>
+            <div className="flex items-center space-x-2">
               <Switch
-                id="zip-return-output"
-                checked={zipFields.returnOutput}
-                onCheckedChange={(checked) => handleZipChange('returnOutput', checked)}
+                checked={zipFields.return_output}
+                onCheckedChange={(value) => handleZipChange('return_output', value)}
                 disabled={readOnly}
               />
+              <Label className="text-sm">Retornar salida</Label>
             </div>
           </div>
         )}
         
         {node.type === 'unzipNode' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="unzip-input" className="text-xs">Archivo a descomprimir</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="unzip-input" className="text-sm font-medium">Archivo ZIP a extraer</Label>
               <Input
                 id="unzip-input"
                 value={unzipFields.input}
                 onChange={(e) => handleUnzipChange('input', e.target.value)}
+                placeholder="Ruta al archivo ZIP"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="/ruta/archivo.zip"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="unzip-output" className="text-xs">Directorio destino</Label>
+            <div>
+              <Label htmlFor="unzip-output" className="text-sm font-medium">Directorio de extracción</Label>
               <Input
                 id="unzip-output"
                 value={unzipFields.output}
                 onChange={(e) => handleUnzipChange('output', e.target.value)}
+                placeholder="Directorio de salida"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="/ruta/destino"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="unzip-return-output" className="text-xs">Retornar información</Label>
+            <div className="flex items-center space-x-2">
               <Switch
-                id="unzip-return-output"
-                checked={unzipFields.returnOutput}
-                onCheckedChange={(checked) => handleUnzipChange('returnOutput', checked)}
+                checked={unzipFields.return_output}
+                onCheckedChange={(value) => handleUnzipChange('return_output', value)}
                 disabled={readOnly}
               />
+              <Label className="text-sm">Retornar salida</Label>
             </div>
           </div>
         )}
         
         {node.type === 'callPipelineNode' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="call-pipeline-id" className="text-xs">ID del Pipeline</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="pipeline-id" className="text-sm font-medium">ID del Pipeline</Label>
               <Input
-                id="call-pipeline-id"
-                value={callPipelineFields.pipelineId}
-                onChange={(e) => handleCallPipelineChange('pipelineId', e.target.value)}
+                id="pipeline-id"
+                value={pipelineCallFields.pipeline_id}
+                onChange={(e) => handlePipelineCallChange(e.target.value)}
+                placeholder="ID del pipeline a llamar"
+                className="mt-1"
                 disabled={readOnly}
-                placeholder="ID del pipeline a ejecutar"
-                className="text-sm h-9"
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="pipeline-wait" className="text-xs">Esperar a que termine</Label>
-              <Switch
-                id="pipeline-wait"
-                checked={callPipelineFields.waitForCompletion}
-                onCheckedChange={(checked) => handleCallPipelineChange('waitForCompletion', checked)}
+            <div className="text-sm text-slate-500 dark:text-slate-400 flex items-start mt-2">
+              <Info className="h-4 w-4 mr-2 mt-0.5" />
+              <span>El pipeline llamado debe existir y estar accesible para el agente.</span>
+            </div>
+          </div>
+        )}
+        
+        {node.type === 'queryNode' && (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="sql-conn" className="text-sm font-medium">Conexión SQL</Label>
+              <Select
+                value={queryFields.sql_conn_id}
+                onValueChange={(value) => handleQueryChange('sql_conn_id', value)}
+                disabled={readOnly}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Selecciona conexión SQL" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(sqlConnections.length > 0 ? sqlConnections : sqlConnOptions).map((option: any) => (
+                    <SelectItem key={option.value || option.id} value={option.value || option.id}>
+                      {option.label || option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="query-path" className="text-sm font-medium">Ruta de salida</Label>
+              <Input
+                id="query-path"
+                value={queryFields.path}
+                onChange={(e) => handleQueryChange('path', e.target.value)}
+                placeholder="Ruta de salida para el resultado"
+                className="mt-1"
                 disabled={readOnly}
               />
             </div>
-          </div>
-        )}
-        
-        {node.type === 'pipelineStart' && (
-          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 p-3">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <Info className="h-4 w-4 text-blue-500" />
-              </div>
-              <div className="ml-2">
-                <h3 className="text-xs font-medium text-blue-800 dark:text-blue-300">
-                  Nodo inicial
-                </h3>
-                <div className="mt-1 text-xs text-blue-700 dark:text-blue-400">
-                  <p>
-                    Este es el nodo de inicio del pipeline. No puede ser eliminado 
-                    y sirve como punto de entrada para la ejecución.
-                  </p>
-                </div>
-              </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={queryFields.return_output}
+                onCheckedChange={(value) => handleQueryChange('return_output', value)}
+                disabled={readOnly}
+              />
+              <Label className="text-sm">Retornar salida</Label>
             </div>
           </div>
         )}
         
-        {/* Botón para eliminar el nodo (no disponible para nodo inicial) */}
-        {!readOnly && node.type !== 'pipelineStart' && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteNode}
-            className="w-full mt-2"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Eliminar Nodo
-          </Button>
-        )}
+        {/* Sección de ayuda contextual */}
+        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {readOnly 
+              ? "Modo de solo lectura. No se pueden editar las propiedades."
+              : "Modifica las propiedades del nodo y haz clic fuera del panel para aplicar los cambios."}
+          </p>
+        </div>
       </div>
     </DraggablePanel>
   );
