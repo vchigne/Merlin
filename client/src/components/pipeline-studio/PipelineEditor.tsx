@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import NodeDetailsDialog from "./NodeDetailsDialog";
 
 // Componente mejorado para el editor visual de flujos de pipeline
 // Con canvas infinito y soporte completo para dispositivos móviles
