@@ -804,14 +804,13 @@ export default function PipelineEditor({
         </div>
       </div>
       
-      {/* Modal de detalles del nodo */}
-      {isDialogOpen && selectedUnit && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                {(() => {
-                  const unitType = determineUnitType(selectedUnit);
+      {/* Modal de detalles del nodo usando el componente compartido */}
+      <NodeDetailsDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        nodeId={selectedNode} 
+        nodes={nodes} 
+      />
                   let Icon;
                   
                   switch (unitType) {
