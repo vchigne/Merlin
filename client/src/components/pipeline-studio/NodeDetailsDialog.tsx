@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { executeQuery } from "@/lib/hasura-client";
-import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
+import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, SFTP_LINK_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
 import { useToast } from "@/hooks/use-toast";
 import UnitDetailsDialog from "./UnitDetailsDialog";
 
@@ -129,6 +129,20 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
               console.log('Detalles SFTP Downloader:', detailsData);
               name = detailsData?.name || 'Descarga SFTP';
               description = 'Descarga archivos desde un servidor SFTP';
+              
+              // Obtener información del enlace SFTP asociado
+              if (detailsData.sftp_link_id) {
+                try {
+                  const sftpLinkResult = await executeQuery(SFTP_LINK_QUERY, { id: detailsData.sftp_link_id });
+                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
+                    // Agregar los datos del enlace SFTP al objeto de detalles
+                    detailsData.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
+                    console.log('SFTP Link obtenido:', detailsData.SFTPLink);
+                  }
+                } catch (err) {
+                  console.error('Error al cargar los detalles del enlace SFTP:', err);
+                }
+              }
             } else {
               console.error('No se encontraron datos para SFTP Downloader');
             }
@@ -139,6 +153,20 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
               console.log('Detalles SFTP Uploader:', detailsData);
               name = detailsData?.name || 'Subida SFTP';
               description = 'Sube archivos a un servidor SFTP';
+              
+              // Obtener información del enlace SFTP asociado
+              if (detailsData.sftp_link_id) {
+                try {
+                  const sftpLinkResult = await executeQuery(SFTP_LINK_QUERY, { id: detailsData.sftp_link_id });
+                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
+                    // Agregar los datos del enlace SFTP al objeto de detalles
+                    detailsData.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
+                    console.log('SFTP Link obtenido:', detailsData.SFTPLink);
+                  }
+                } catch (err) {
+                  console.error('Error al cargar los detalles del enlace SFTP:', err);
+                }
+              }
             } else {
               console.error('No se encontraron datos para SFTP Uploader');
             }
