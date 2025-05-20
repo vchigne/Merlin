@@ -123,53 +123,42 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
               }
             }
           } else if (nodeType === 'sftp_download') {
-            console.log('Datos SFTP Downloader:', result.data.merlin_agent_SFTPDownloader);
-            if (result.data.merlin_agent_SFTPDownloader && result.data.merlin_agent_SFTPDownloader.length > 0) {
-              detailsData = result.data.merlin_agent_SFTPDownloader[0];
-              console.log('Detalles SFTP Downloader:', detailsData);
-              name = detailsData?.name || 'Descarga SFTP';
-              description = 'Descarga archivos desde un servidor SFTP';
-              
-              // Obtener información del enlace SFTP asociado
-              if (detailsData.sftp_link_id) {
-                try {
-                  const sftpLinkResult = await executeQuery(SFTP_LINK_QUERY, { id: detailsData.sftp_link_id });
-                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
-                    // Agregar los datos del enlace SFTP al objeto de detalles
-                    detailsData.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
-                    console.log('SFTP Link obtenido:', detailsData.SFTPLink);
-                  }
-                } catch (err) {
-                  console.error('Error al cargar los detalles del enlace SFTP:', err);
-                }
-              }
-            } else {
-              console.error('No se encontraron datos para SFTP Downloader');
-            }
+            // Utilizamos los datos básicos disponibles en el objeto del pipeline
+            console.log('Unidad SFTP Downloader:', unitData);
+            
+            // Información básica que ya tenemos disponible
+            name = 'Descarga SFTP';
+            description = 'Descarga archivos desde un servidor SFTP';
+            
+            // Crear un objeto de datos simplificado con la información disponible
+            detailsData = {
+              id: unitData.sftp_downloader_id,
+              name: name,
+              output: unitData.output || "Sin ruta de salida especificada",
+              sftp_link_id: unitData.sftp_link_id || "No disponible",
+              return_output: unitData.return_output || false
+            };
+            
+            console.log('Detalles simplificados:', detailsData);
+            
           } else if (nodeType === 'sftp_upload') {
-            console.log('Datos SFTP Uploader:', result.data.merlin_agent_SFTPUploader);
-            if (result.data.merlin_agent_SFTPUploader && result.data.merlin_agent_SFTPUploader.length > 0) {
-              detailsData = result.data.merlin_agent_SFTPUploader[0];
-              console.log('Detalles SFTP Uploader:', detailsData);
-              name = detailsData?.name || 'Subida SFTP';
-              description = 'Sube archivos a un servidor SFTP';
-              
-              // Obtener información del enlace SFTP asociado
-              if (detailsData.sftp_link_id) {
-                try {
-                  const sftpLinkResult = await executeQuery(SFTP_LINK_QUERY, { id: detailsData.sftp_link_id });
-                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
-                    // Agregar los datos del enlace SFTP al objeto de detalles
-                    detailsData.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
-                    console.log('SFTP Link obtenido:', detailsData.SFTPLink);
-                  }
-                } catch (err) {
-                  console.error('Error al cargar los detalles del enlace SFTP:', err);
-                }
-              }
-            } else {
-              console.error('No se encontraron datos para SFTP Uploader');
-            }
+            // Utilizamos los datos básicos disponibles en el objeto del pipeline
+            console.log('Unidad SFTP Uploader:', unitData);
+            
+            // Información básica que ya tenemos disponible
+            name = 'Subida SFTP';
+            description = 'Sube archivos a un servidor SFTP';
+            
+            // Crear un objeto de datos simplificado con la información disponible
+            detailsData = {
+              id: unitData.sftp_uploader_id,
+              name: name,
+              input: unitData.input || "Sin ruta de entrada especificada",
+              sftp_link_id: unitData.sftp_link_id || "No disponible",
+              return_output: unitData.return_output || false
+            };
+            
+            console.log('Detalles simplificados:', detailsData);
           } else if (nodeType === 'zip' && result.data.merlin_agent_Zip) {
             detailsData = result.data.merlin_agent_Zip[0];
             name = detailsData?.name || 'Compresión ZIP';
