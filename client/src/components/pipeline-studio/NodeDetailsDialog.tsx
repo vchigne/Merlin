@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { executeQuery } from "@/lib/hasura-client";
-import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_QUERY } from "@shared/queries";
+import { 
+  COMMAND_QUERY, 
+  QUERY_QUEUE_QUERY, 
+  QUERY_DETAILS_QUERY, 
+  ZIP_QUERY, 
+  UNZIP_QUERY, 
+  PIPELINE_QUERY,
+  SFTP_DOWNLOADER_QUERY,
+  SFTP_UPLOADER_QUERY
+} from "@shared/queries";
 import { useToast } from "@/hooks/use-toast";
 import UnitDetailsDialog from "./UnitDetailsDialog";
 
@@ -53,24 +62,69 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
       const unitData = selectedNodeData.data.unit;
       const nodeType = determineUnitType(unitData);
       
-      // Para nodos SFTP, usamos directamente los datos disponibles sin consultar la API
+      // Para nodos SFTP, consultamos la información completa de la API
       if (nodeType === 'sftp_download') {
-        // Información básica para nodos de descarga SFTP
+        const sftp_downloader_id = unitData.sftp_downloader_id;
+        if (sftp_downloader_id) {
+          try {
+            // Consultar detalles del SFTP Downloader
+            const response = await fetch(`/api/graphql`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: SFTP_DOWNLOADER_QUERY,
+                variables: { id: sftp_downloader_id }
+              }),
+            });
+    
+            const { data, errors } = await response.json();
+            
+            if (errors) {
+              console.error('Error al obtener detalles del SFTP Downloader:', errors);
+              throw new Error('Error al obtener detalles del SFTP Downloader');
+            }
+            
+            if (data && data.merlin_agent_SFTPDownloader && data.merlin_agent_SFTPDownloader.length > 0) {
+              const sftpData = data.merlin_agent_SFTPDownloader[0];
+              
+              // Establecer los detalles del nodo con los datos completos de la API
+              setNodeDetails({
+                type: nodeType,
+                name: sftpData.name || 'Descarga SFTP',
+                description: 'Descarga archivos desde un servidor SFTP',
+                details: {
+                  ...sftpData,
+                  // Aseguramos que input siempre tenga un valor, aunque sea del unitData
+                  input: unitData.input || "Sin ruta de entrada especificada",
+                }
+              });
+              
+              console.log('Detalles de SFTP Download obtenidos:', sftpData);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Error al consultar detalles del SFTP Downloader:', error);
+          }
+        }
+        
+        // Si falla la consulta a la API o no hay ID, usamos los datos disponibles
         const name = 'Descarga SFTP';
         const description = 'Descarga archivos desde un servidor SFTP';
         
-        // Datos que ya tenemos disponibles en la unidad del pipeline
         const detailsData = {
           id: unitData.sftp_downloader_id,
           name: name,
+          input: unitData.input || "Sin ruta de entrada especificada",
           output: unitData.output || "Sin ruta de salida especificada",
           sftp_link_id: unitData.sftp_link_id || "No disponible",
           return_output: unitData.return_output || false
         };
         
-        console.log('Detalles de SFTP Download:', detailsData);
+        console.log('Usando datos locales para SFTP Download:', detailsData);
         
-        // Establecer los detalles del nodo directamente
         setNodeDetails({
           type: nodeType,
           name: name,
@@ -82,22 +136,63 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
         return;
       } 
       else if (nodeType === 'sftp_upload') {
-        // Información básica para nodos de subida SFTP
+        const sftp_uploader_id = unitData.sftp_uploader_id;
+        if (sftp_uploader_id) {
+          try {
+            // Consultar detalles del SFTP Uploader
+            const response = await fetch(`/api/graphql`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: SFTP_UPLOADER_QUERY,
+                variables: { id: sftp_uploader_id }
+              }),
+            });
+    
+            const { data, errors } = await response.json();
+            
+            if (errors) {
+              console.error('Error al obtener detalles del SFTP Uploader:', errors);
+              throw new Error('Error al obtener detalles del SFTP Uploader');
+            }
+            
+            if (data && data.merlin_agent_SFTPUploader && data.merlin_agent_SFTPUploader.length > 0) {
+              const sftpData = data.merlin_agent_SFTPUploader[0];
+              
+              // Establecer los detalles del nodo con los datos completos de la API
+              setNodeDetails({
+                type: nodeType,
+                name: sftpData.name || 'Subida SFTP',
+                description: 'Sube archivos a un servidor SFTP',
+                details: sftpData
+              });
+              
+              console.log('Detalles de SFTP Upload obtenidos:', sftpData);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Error al consultar detalles del SFTP Uploader:', error);
+          }
+        }
+        
+        // Si falla la consulta a la API o no hay ID, usamos los datos disponibles
         const name = 'Subida SFTP';
         const description = 'Sube archivos a un servidor SFTP';
         
-        // Datos que ya tenemos disponibles en la unidad del pipeline
         const detailsData = {
           id: unitData.sftp_uploader_id,
           name: name,
           input: unitData.input || "Sin ruta de entrada especificada",
+          output: unitData.output || "Sin ruta de salida especificada",
           sftp_link_id: unitData.sftp_link_id || "No disponible",
           return_output: unitData.return_output || false
         };
         
-        console.log('Detalles de SFTP Upload:', detailsData);
+        console.log('Usando datos locales para SFTP Upload:', detailsData);
         
-        // Establecer los detalles del nodo directamente
         setNodeDetails({
           type: nodeType,
           name: name,
