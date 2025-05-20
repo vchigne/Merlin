@@ -174,6 +174,20 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          .node-details-dialog pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+            max-width: 100%;
+          }
+          .node-details-dialog .bg-slate-50 {
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          `
+        }} />
         {loading ? (
           <div className="py-8 space-y-4">
             <Skeleton className="h-8 w-3/4" />
@@ -181,7 +195,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             <Skeleton className="h-32 w-full" />
           </div>
         ) : nodeDetails ? (
-          <>
+          <div className="node-details-dialog">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {nodeDetails.name}
@@ -200,21 +214,21 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                 <div className="space-y-3">
                   <div>
                     <h4 className="text-sm font-medium mb-1">Comando</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 break-words">
                       {nodeDetails.details.target} {nodeDetails.details.args}
                     </div>
                   </div>
                   <div>
                     <h4 className="text-sm font-medium mb-1">Directorio de trabajo</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs break-words">
                       {nodeDetails.details.working_directory || 'Directorio por defecto'}
                     </div>
                   </div>
                   {nodeDetails.details.raw_script && (
                     <div>
                       <h4 className="text-sm font-medium mb-1">Script</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 max-h-40 overflow-y-auto">
-                        <pre>{nodeDetails.details.raw_script}</pre>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono border border-slate-200 dark:border-slate-700 max-h-40 overflow-y-auto break-words">
+                        <pre className="whitespace-pre-wrap">{nodeDetails.details.raw_script}</pre>
                       </div>
                     </div>
                   )}
@@ -241,7 +255,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                               <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
                             </div>
                             <div className="mt-2 max-h-32 overflow-y-auto">
-                              <pre>{query.query_string}</pre>
+                              <pre className="whitespace-pre-wrap break-words">{query.query_string}</pre>
                             </div>
                             <div className="mt-1">
                               <span className="text-slate-500">Archivo: </span>
@@ -265,7 +279,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                               <span className="text-slate-500">{query.enabled ? 'Activa' : 'Inactiva'}</span>
                             </div>
                             <div className="mt-2 max-h-32 overflow-y-auto">
-                              <pre>{query.query_string}</pre>
+                              <pre className="whitespace-pre-wrap break-words">{query.query_string}</pre>
                             </div>
                             <div className="mt-1">
                               <span className="text-slate-500">Archivo: </span>
@@ -292,7 +306,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                   </div>
                   <div>
                     <h4 className="text-sm font-medium mb-1">{nodeDetails.type === 'sftp_download' ? 'Ruta de salida' : 'Ruta de entrada'}</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
                       {nodeDetails.type === 'sftp_download' ? nodeDetails.details.output : nodeDetails.details.input}
                     </div>
                   </div>
@@ -304,7 +318,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                   {nodeDetails.type === 'zip' ? (
                     <div>
                       <h4 className="text-sm font-medium mb-1">Ruta de salida (archivo ZIP)</h4>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
                         {nodeDetails.details.output}
                       </div>
                     </div>
@@ -312,13 +326,13 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
                     <>
                       <div>
                         <h4 className="text-sm font-medium mb-1">Archivo ZIP a extraer</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
                           {nodeDetails.details.input}
                         </div>
                       </div>
                       <div>
                         <h4 className="text-sm font-medium mb-1">Directorio de extracción</h4>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono break-words">
                           {nodeDetails.details.output}
                         </div>
                       </div>
@@ -354,7 +368,7 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
             <DialogFooter>
               <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
             </DialogFooter>
-          </>
+          </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-slate-500">No se pudieron cargar los detalles del nodo</p>
