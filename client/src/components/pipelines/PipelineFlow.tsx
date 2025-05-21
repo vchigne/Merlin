@@ -187,6 +187,12 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
   
   // Función para precargar detalles de SFTP Uploaders
   const preloadSftpUploaderDetails = async (units: any[]) => {
+    // Por ahora, simplemente devolvemos las unidades sin cambios
+    // porque la consulta está fallando y necesitamos investigar más
+    return units;
+    
+    // Esta es la implementación que queremos, pero por ahora está comentada
+    /*
     // Filtrar solo las unidades que son SFTP Uploaders
     const sftpUploaderUnits = units.filter(unit => unit.sftp_uploader_id);
     if (sftpUploaderUnits.length === 0) return units;
@@ -211,6 +217,7 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
     }
     
     return unitsWithDetails;
+    */
   };
 
   useEffect(() => {
@@ -448,32 +455,20 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Información adicional para nodos de tipo SFTP Uploader */}
-                {unitType === 'sftp_upload' && node.data.unit.sftp_uploader_details && (
+                {/* Información adicional para nodos de tipo SFTP Uploader - Versión simplificada */}
+                {unitType === 'sftp_upload' && (
                   <div className="px-2 mb-1">
-                    {/* Mostrar el directorio de salida */}
+                    {/* Mostrar información básica de SFTP Uploader */}
                     <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
                       <span className="font-medium">DIR:</span> {
                         (() => {
-                          const inputDir = node.data.unit.sftp_uploader_details.input || '';
+                          // Intentar obtener el directorio de entrada del uploader
+                          const sftpUnit = node.data.unit;
+                          const inputDir = sftpUnit.input || 'Directorio no especificado';
                           return inputDir.length > 40 ? `${inputDir.substring(0, 40)}...` : inputDir;
                         })()
                       }
                     </div>
-                    
-                    {/* Mostrar el nombre del enlace SFTP */}
-                    {node.data.unit.sftp_uploader_details.SFTPLink && (
-                      <>
-                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SFTP:</span> {node.data.unit.sftp_uploader_details.SFTPLink.name || ''}
-                        </div>
-                        
-                        {/* Mostrar el servidor SFTP */}
-                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SERVIDOR:</span> {node.data.unit.sftp_uploader_details.SFTPLink.server || ''}
-                        </div>
-                      </>
-                    )}
                   </div>
                 )}
                 
