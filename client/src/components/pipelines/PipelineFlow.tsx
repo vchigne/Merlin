@@ -356,6 +356,47 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
+                {/* Detalles específicos según tipo de nodo */}
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 max-w-full overflow-hidden">
+                  {unitType === 'command' && node.data.unit.command && (
+                    <div>
+                      <span className="font-medium">Comando:</span> {node.data.unit.command.target || ''}
+                      {node.data.unit.command.args && <span className="block mt-1"><span className="font-medium">Args:</span> {node.data.unit.command.args}</span>}
+                    </div>
+                  )}
+                  {unitType === 'query' && node.data.unit.query_queue && (
+                    <div>
+                      <span className="font-medium">Cola:</span> {node.data.unit.query_queue.name || ''}
+                    </div>
+                  )}
+                  {unitType === 'sftp_download' && node.data.unit.sftp_downloader && (
+                    <div>
+                      <span className="font-medium">Destino:</span> {node.data.unit.sftp_downloader.output || ''}
+                    </div>
+                  )}
+                  {unitType === 'sftp_upload' && node.data.unit.sftp_uploader && (
+                    <div>
+                      <span className="font-medium">Origen:</span> {node.data.unit.sftp_uploader.input || ''}
+                    </div>
+                  )}
+                  {unitType === 'zip' && node.data.unit.zip && (
+                    <div>
+                      <span className="font-medium">Destino:</span> {node.data.unit.zip.output || ''}
+                    </div>
+                  )}
+                  {unitType === 'unzip' && node.data.unit.unzip && (
+                    <div>
+                      <span className="font-medium">Origen:</span> {node.data.unit.unzip.input || ''}
+                      <span className="block mt-1"><span className="font-medium">Destino:</span> {node.data.unit.unzip.output || ''}</span>
+                    </div>
+                  )}
+                  {unitType === 'pipeline' && node.data.unit.call_pipeline && (
+                    <div>
+                      <span className="font-medium">ID Pipeline:</span> {node.data.unit.call_pipeline.substring(0, 8) + '...'}
+                    </div>
+                  )}
+                </div>
+                
                 <div className="flex mt-1">
                   <Badge variant="outline" className={`text-xs ${
                     status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
