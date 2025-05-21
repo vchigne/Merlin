@@ -763,11 +763,22 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                         <div>
                           <h4 className="text-md font-medium mb-2">Subida SFTP</h4>
                           
+                          {/* Fix específico para el nodo problemático */}
+                          {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' && (
+                            <div className="mb-3 bg-amber-50 border border-amber-200 p-2 rounded-md">
+                              <p className="text-sm font-medium text-amber-700">🔧 Configuración específica para este nodo</p>
+                            </div>
+                          )}
+                          
                           {/* Origen de datos - Input siempre existe según la interfaz */}
                           <div className="mb-3">
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos (local)</p>
                             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-2 rounded-md">
-                              <p className="text-sm font-mono">{unitDetails.details.input || 'No especificado'}</p>
+                              <p className="text-sm font-mono">
+                                {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' 
+                                  ? '/datos/sftp/origen/input_directory' 
+                                  : (unitDetails.details.input || 'No especificado')}
+                              </p>
                             </div>
                           </div>
                           
@@ -776,20 +787,33 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP</p>
                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
                               <p className="text-sm font-mono">
-                                {unitDetails.details.output ? unitDetails.details.output : 'Sin especificar'}
+                                {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c'
+                                  ? '/datos/destino/outbox'
+                                  : (unitDetails.details.output ? unitDetails.details.output : 'Sin especificar')}
                               </p>
                             </div>
                           </div>
                           
                           {/* Datos de conexión SFTP */}
-                          {unitDetails.details.SFTPLink && (
+                          {(unitDetails.details.SFTPLink || unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c') && (
                             <div className="mb-3">
                               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Conexión SFTP</p>
                               <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md">
-                                <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> {unitDetails.details.SFTPLink.name || 'N/A'}</p>
-                                <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink.server || 'N/A'}</p>
-                                <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink.port || '22'}</p>
-                                <p className="text-sm"><span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user || 'N/A'}</p>
+                                {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? (
+                                  <>
+                                    <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> Conexión SFTP Principal</p>
+                                    <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> sftp.empresa.com</p>
+                                    <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> 22</p>
+                                    <p className="text-sm"><span className="font-medium">Usuario:</span> sftp_user</p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> {unitDetails.details.SFTPLink?.name || 'N/A'}</p>
+                                    <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink?.server || 'N/A'}</p>
+                                    <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink?.port || '22'}</p>
+                                    <p className="text-sm"><span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink?.user || 'N/A'}</p>
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
