@@ -356,41 +356,100 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Detalles específicos según tipo de nodo - Con información simplificada */}
+                {/* Detalles específicos según tipo de nodo - Con información útil */}
                 <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
                   {unitType === 'command' && (
                     <div className="mt-1">
-                      Comando: {node.data.unit.command_id ? node.data.unit.command_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'query' && (
                     <div className="mt-1">
-                      Query: {node.data.unit.query_queue_id ? node.data.unit.query_queue_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'sftp_download' && (
                     <div className="mt-1">
-                      SFTP Descarga ID: {node.data.unit.sftp_downloader_id ? node.data.unit.sftp_downloader_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'sftp_upload' && (
                     <div className="mt-1">
-                      SFTP Subida ID: {node.data.unit.sftp_uploader_id ? node.data.unit.sftp_uploader_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'zip' && (
                     <div className="mt-1">
-                      ZIP ID: {node.data.unit.zip_id ? node.data.unit.zip_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'unzip' && (
                     <div className="mt-1">
-                      UNZIP ID: {node.data.unit.unzip_id ? node.data.unit.unzip_id.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
                     </div>
                   )}
                   {unitType === 'pipeline' && (
                     <div className="mt-1">
-                      Pipeline: {node.data.unit.call_pipeline ? node.data.unit.call_pipeline.substring(0, 8) + '...' : ''}
+                      <div className="truncate">
+                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
+                      </div>
+                      {node.data.unit.retry_count > 0 && (
+                        <div className="truncate">
+                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {node.data.unit.continue_on_error && (
+                    <div className="truncate text-green-600 dark:text-green-400">
+                      Continúa en error
+                    </div>
+                  )}
+                  {node.data.unit.abort_on_timeout && (
+                    <div className="truncate text-red-600 dark:text-red-400">
+                      Aborta en timeout
                     </div>
                   )}
                 </div>
