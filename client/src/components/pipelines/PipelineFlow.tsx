@@ -398,10 +398,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* Configuración */}
                   <div className="mt-3 grid grid-cols-2 gap-2 border rounded-md p-3 bg-slate-50 dark:bg-slate-800">
                     <div>
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Reintentos</p>
-                      <p className="text-sm">{selectedUnit.retry_count || 0}</p>
-                    </div>
-                    <div>
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Timeout</p>
                       <p className="text-sm">{Math.round((selectedUnit.timeout_milliseconds || 0) / 1000)} seg</p>
                     </div>
