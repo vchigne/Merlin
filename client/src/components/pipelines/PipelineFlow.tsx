@@ -184,17 +184,47 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
     
     return unitsWithDetails;
   };
+  
+  // Función para precargar detalles de SFTP Uploaders
+  const preloadSftpUploaderDetails = async (units: any[]) => {
+    // Filtrar solo las unidades que son SFTP Uploaders
+    const sftpUploaderUnits = units.filter(unit => unit.sftp_uploader_id);
+    if (sftpUploaderUnits.length === 0) return units;
+
+    // Crear una copia de las unidades para modificarlas
+    const unitsWithDetails = [...units];
+    
+    // Precargar detalles para cada SFTP Uploader
+    for (const unit of sftpUploaderUnits) {
+      try {
+        const result = await executeQuery(SFTP_UPLOADER_QUERY, { id: unit.sftp_uploader_id });
+        if (result.data && result.data.merlin_agent_SFTPUploader && result.data.merlin_agent_SFTPUploader.length > 0) {
+          // Buscar la unidad correspondiente en la lista de unidades completa y añadir los detalles
+          const unitIndex = unitsWithDetails.findIndex(u => u.id === unit.id);
+          if (unitIndex !== -1) {
+            unitsWithDetails[unitIndex].sftp_uploader_details = result.data.merlin_agent_SFTPUploader[0];
+          }
+        }
+      } catch (error) {
+        console.error(`Error precargando detalles del SFTP Uploader ${unit.sftp_uploader_id}:`, error);
+      }
+    }
+    
+    return unitsWithDetails;
+  };
 
   useEffect(() => {
     if (pipelineUnits && pipelineUnits.length > 0) {
       console.log('Pipeline Units (datos originales):', JSON.stringify(pipelineUnits, null, 2));
       
-      // Precargar detalles de comandos antes de convertir a coordenadas del flujo
-      preloadCommandDetails(pipelineUnits).then(unitsWithDetails => {
-        const result = convertToFlowCoordinates(unitsWithDetails);
-        console.log('Flow Elements (después de conversión):', JSON.stringify(result, null, 2));
-        setFlowElements(result);
-      });
+      // Precargar detalles de comandos y SFTP Uploaders antes de convertir a coordenadas del flujo
+      preloadCommandDetails(pipelineUnits)
+        .then(unitsWithCommandDetails => preloadSftpUploaderDetails(unitsWithCommandDetails))
+        .then(unitsWithAllDetails => {
+          const result = convertToFlowCoordinates(unitsWithAllDetails);
+          console.log('Flow Elements (después de conversión):', JSON.stringify(result, null, 2));
+          setFlowElements(result);
+        });
     }
   }, [pipelineUnits]);
 
@@ -415,6 +445,35 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                         })()
                       }
                     </div>
+                  </div>
+                )}
+                
+                {/* Información adicional para nodos de tipo SFTP Uploader */}
+                {unitType === 'sftp_upload' && node.data.unit.sftp_uploader_details && (
+                  <div className="px-2 mb-1">
+                    {/* Mostrar el directorio de salida */}
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      <span className="font-medium">DIR:</span> {
+                        (() => {
+                          const inputDir = node.data.unit.sftp_uploader_details.input || '';
+                          return inputDir.length > 40 ? `${inputDir.substring(0, 40)}...` : inputDir;
+                        })()
+                      }
+                    </div>
+                    
+                    {/* Mostrar el nombre del enlace SFTP */}
+                    {node.data.unit.sftp_uploader_details.SFTPLink && (
+                      <>
+                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                          <span className="font-medium">SFTP:</span> {node.data.unit.sftp_uploader_details.SFTPLink.name || ''}
+                        </div>
+                        
+                        {/* Mostrar el servidor SFTP */}
+                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                          <span className="font-medium">SERVIDOR:</span> {node.data.unit.sftp_uploader_details.SFTPLink.server || ''}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 
