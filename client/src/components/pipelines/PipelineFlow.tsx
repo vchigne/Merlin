@@ -350,13 +350,6 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 </div>
                 
-                {/* Solo mostrar reintentos si es > 0 */}
-                {node.data.unit.retry_count > 0 && (
-                  <div className="px-2 mb-1">
-                    <span className="text-xs text-slate-500">Reintentos: {node.data.unit.retry_count}</span>
-                  </div>
-                )}
-                
                 {status !== 'pending' && (
                   <div className="px-2 mt-1">
                     <Badge variant="outline" className={`text-xs ${
