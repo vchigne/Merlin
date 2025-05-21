@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2, Download, Upload } from "lucide-react";
+import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2, Download, Upload, Eye } from "lucide-react";
 
 // Componentes para el editor visual de flujos
 // Implementación mejorada con soporte para móviles y conectar nodos
@@ -856,7 +856,7 @@ export default function PipelineVisualEditor({
             >
               {/* Barra de título (solo esta área es arrastrable) */}
               <div 
-                className={`p-2 border-b ${nodeBorderColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : ''} flex items-center justify-between`}
+                className={`p-2 border-b border-slate-200 dark:border-slate-700 ${!readOnly ? 'cursor-grab active:cursor-grabbing' : ''} flex items-center justify-between`}
                 onMouseDown={(e) => {
                   if (!readOnly && !isConnecting) {
                     e.stopPropagation();
@@ -882,7 +882,9 @@ export default function PipelineVisualEditor({
                     onClick={(e) => {
                       e.stopPropagation();
                       // Abrir diálogo de detalles
-                      onNodeSelect?.(node);
+                      if (onViewNodeDetails) {
+                        onViewNodeDetails(node.id);
+                      }
                     }}
                     title="Ver detalles"
                   >
