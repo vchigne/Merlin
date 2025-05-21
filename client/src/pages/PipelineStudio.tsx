@@ -26,15 +26,9 @@ import {
 import { Input } from "@/components/ui/input";
 // No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
-import PipelineFlow from "@/components/pipelines/PipelineFlow";
-import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
-import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
-import PipelineNodeProperties from "@/components/pipeline-studio/PipelineNodeProperties";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
-import NodePalette from "@/components/pipeline-studio/NodePalette";
-import DraggablePipelineProperties from "@/components/pipeline-studio/DraggablePipelineProperties";
-import DraggableNodeProperties from "@/components/pipeline-studio/DraggableNodeProperties";
 import SimplePipelineLoader from "@/components/pipeline-studio/SimplePipelineLoader";
+import PipelineFlow from "@/components/pipelines/PipelineFlow";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
