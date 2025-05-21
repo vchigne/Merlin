@@ -112,13 +112,26 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
           user: 'No disponible'
         };
         
+        // Incluir un log para depuración
+        console.log('Configurando detalles del SFTP Uploader:', {
+          realSftpData,
+          realSftpLinkData,
+          unitDataOriginal: unitData
+        });
+        
         setNodeDetails({
           type: nodeType,
           name: realSftpData.name || 'Subida SFTP',
           description: 'Sube archivos a un servidor SFTP remoto',
           details: {
             ...realSftpData,
-            SFTPLink: realSftpLinkData
+            SFTPLink: realSftpLinkData,
+            // Incluir datos adicionales para depuración
+            _debug: {
+              originalUnitData: JSON.stringify(unitData),
+              originalSftpUploader: JSON.stringify(unitData.SFTPUploader),
+              hasSftpLinkData: !!unitData.SFTPUploader?.SFTPLink
+            }
           }
         });
       }
