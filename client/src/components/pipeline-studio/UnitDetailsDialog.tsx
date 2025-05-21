@@ -423,6 +423,19 @@ export default function UnitDetailsDialog({
               {/* Detalles específicos para SFTP Uploader */}
               {unitDetails.type === 'sftp_upload' && (
                 <div className="space-y-4">
+                  {/* Panel de depuración (temporal) */}
+                  <details className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs">
+                    <summary className="cursor-pointer font-medium text-blue-600 dark:text-blue-400">Datos de Debug (click para expandir)</summary>
+                    <div className="mt-2 p-2 font-mono overflow-auto max-h-40">
+                      <p>Tipo: {unitDetails.type}</p>
+                      <p>sftp_link_id: {unitDetails.details?.sftp_link_id}</p>
+                      <p>SFTPLink presente: {unitDetails.details?.SFTPLink ? 'Sí' : 'No'}</p>
+                      <pre className="text-xs overflow-auto mt-2 p-2 bg-slate-200 dark:bg-slate-900 rounded">
+                        {JSON.stringify(unitDetails.details, null, 2)}
+                      </pre>
+                    </div>
+                  </details>
+                  
                   {/* Encabezado con información principal */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
                     <div className="flex items-center justify-between mb-2">
@@ -485,13 +498,12 @@ export default function UnitDetailsDialog({
                         </span>
                       </div>
                       
-                      {/* Detalles de la conexión SFTP */}
-                      {unitDetails.details?.SFTPLink ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      {/* Detalles de la conexión SFTP - con acceso seguro a propiedades anidadas */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-2">
                           <div className="space-y-1">
                             <h5 className="font-medium text-amber-800 dark:text-amber-300">Nombre de Conexión</h5>
                             <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                              {unitDetails.details.SFTPLink.name}
+                              {(unitDetails.details?.SFTPLink?.name) || "Sin especificar"}
                             </p>
                           </div>
                           <div className="space-y-1">
@@ -504,14 +516,14 @@ export default function UnitDetailsDialog({
                                 <line x1="6" y1="18" x2="6.01" y2="18" />
                               </svg>
                               <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                {unitDetails.details.SFTPLink.server}
+                                {(unitDetails.details?.SFTPLink?.server) || "Sin especificar"}
                               </p>
                             </div>
                           </div>
                           <div className="space-y-1">
                             <h5 className="font-medium text-amber-800 dark:text-amber-300">Puerto</h5>
                             <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                              {unitDetails.details.SFTPLink.port || 22}
+                              {(unitDetails.details?.SFTPLink?.port) || "22 (predeterminado)"}
                             </p>
                           </div>
                           <div className="space-y-1">
@@ -522,12 +534,11 @@ export default function UnitDetailsDialog({
                                 <circle cx="12" cy="7" r="4" />
                               </svg>
                               <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                {unitDetails.details.SFTPLink.user}
+                                {(unitDetails.details?.SFTPLink?.user) || "Sin especificar"}
                               </p>
                             </div>
                           </div>
                         </div>
-                      ) : (
                         <div className="text-xs text-amber-600 dark:text-amber-400 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10" />
