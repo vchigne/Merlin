@@ -878,7 +878,7 @@ export default function PipelineVisualEditor({
                 <div className="flex items-center gap-2">
                   {/* Botón para ver detalles */}
                   <button
-                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 p-1 bg-slate-100 dark:bg-slate-700 rounded-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Abrir diálogo de detalles
@@ -888,7 +888,7 @@ export default function PipelineVisualEditor({
                     }}
                     title="Ver detalles"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Info className="h-4 w-4" />
                   </button>
 
                   {!readOnly && !isPipelineStart && (
