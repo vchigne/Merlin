@@ -330,7 +330,7 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
             return (
               <div 
                 key={node.id}
-                className={`absolute w-52 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
+                className={`absolute w-44 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
                 style={{ 
                   top: `${node.position.y}px`, 
                   left: `${node.position.x}px`, 
@@ -343,16 +343,16 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="flex items-center space-x-2 mb-1 px-2">
                   {getUnitIcon(unitType)}
-                  <div className="text-sm font-medium dark:text-white truncate max-w-[90%]">
+                  <div className="text-sm font-medium dark:text-white truncate max-w-[85%]">
                     {node.data.label}
                   </div>
                 </div>
                 
-                {/* Solo mostrar configuración de reintentos si es > 0 */}
+                {/* Solo mostrar reintentos si es > 0 */}
                 {node.data.unit.retry_count > 0 && (
-                  <div className="px-2 mt-1 mb-2">
+                  <div className="px-2 mb-1">
                     <span className="text-xs text-slate-500">Reintentos: {node.data.unit.retry_count}</span>
                   </div>
                 )}
@@ -401,324 +401,133 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   <h3 className="text-lg font-medium mb-1">
                     {selectedUnit.comment || `Unidad ${selectedUnit.id.substring(0, 8)}`}
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {getUnitTypeDescription(selectedUnit)}
-                  </p>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-1">ID de la Unidad</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.id}</p>
-                </div>
-                
-                {selectedUnit.pipeline_unit_id && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Unidad Padre</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 break-all">{selectedUnit.pipeline_unit_id}</p>
+                  
+                  {/* Configuración */}
+                  <div className="mt-3 grid grid-cols-2 gap-2 border rounded-md p-3 bg-slate-50 dark:bg-slate-800">
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Reintentos</p>
+                      <p className="text-sm">{selectedUnit.retry_count || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Timeout</p>
+                      <p className="text-sm">{Math.round((selectedUnit.timeout_milliseconds || 0) / 1000)} seg</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Continúa en error</p>
+                      <p className="text-sm">{selectedUnit.continue_on_error ? 'Sí' : 'No'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aborta en timeout</p>
+                      <p className="text-sm">{selectedUnit.abort_on_timeout ? 'Sí' : 'No'}</p>
+                    </div>
                   </div>
-                )}
-                
-                <div className="flex flex-wrap gap-2">
-                  {selectedUnit.abort_on_timeout && (
-                    <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-                      Abortar en Timeout
-                    </Badge>
-                  )}
-                  {selectedUnit.continue_on_error && (
-                    <Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-                      Continuar en Error
-                    </Badge>
+                  
+                  {/* Detalles específicos según el tipo */}
+                  {unitDetails && (
+                    <div className="mt-4">
+                      <Separator className="my-3" />
+                      
+                      {unitDetails.type === 'command' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Comando</h4>
+                          <div className="bg-slate-900 text-slate-50 p-3 rounded-md font-mono text-xs overflow-auto max-h-[200px]">
+                            <pre>{unitDetails.details.target} {unitDetails.details.args}</pre>
+                          </div>
+                          
+                          {unitDetails.details.working_directory && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Directorio de trabajo</p>
+                              <p className="text-sm font-mono">{unitDetails.details.working_directory}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'query' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Consultas SQL</h4>
+                          
+                          {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 ? (
+                            <div className="space-y-3">
+                              {unitDetails.details.Queries.map((query: any, idx: number) => (
+                                <div key={idx} className="border rounded-md p-3 bg-slate-50 dark:bg-slate-800">
+                                  <p className="text-sm font-medium mb-1">
+                                    {query.name || `Consulta ${idx + 1}`}
+                                  </p>
+                                  
+                                  <div className="bg-slate-900 text-slate-50 p-3 rounded-md font-mono text-xs overflow-auto max-h-[150px]">
+                                    <pre>{query.query_string}</pre>
+                                  </div>
+                                  
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                                    Archivo de salida: {query.path || 'N/A'}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                              No hay consultas definidas
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'sftp_download' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Descarga SFTP</h4>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Directorio de salida</p>
+                          <p className="text-sm font-mono">{unitDetails.details.output || 'N/A'}</p>
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'sftp_upload' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Subida SFTP</h4>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos</p>
+                          <p className="text-sm font-mono">{unitDetails.details.input || 'N/A'}</p>
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'zip' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Compresión ZIP</h4>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Archivo de salida</p>
+                          <p className="text-sm font-mono">{unitDetails.details.output || 'N/A'}</p>
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'unzip' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Extracción ZIP</h4>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen</p>
+                          <p className="text-sm font-mono">{unitDetails.details.input || 'N/A'}</p>
+                          
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">Destino</p>
+                          <p className="text-sm font-mono">{unitDetails.details.output || 'N/A'}</p>
+                        </div>
+                      )}
+                      
+                      {unitDetails.type === 'pipeline' && unitDetails.details && (
+                        <div>
+                          <h4 className="text-md font-medium mb-2">Pipeline</h4>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Nombre</p>
+                          <p className="text-sm">{unitDetails.details.name || 'N/A'}</p>
+                          
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">Descripción</p>
+                          <p className="text-sm">{unitDetails.details.description || 'N/A'}</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-                
-                <Separator />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {selectedUnit.timeout_milliseconds > 0 && (
-                    <div>
-                      <h4 className="text-xs font-medium mb-1">Timeout</h4>
-                      <p className="text-sm">{Math.round(selectedUnit.timeout_milliseconds / 1000)} seg</p>
-                    </div>
-                  )}
-                  
-                  {selectedUnit.retry_count > 0 && (
-                    <div>
-                      <h4 className="text-xs font-medium mb-1">Reintentos</h4>
-                      <p className="text-sm">{selectedUnit.retry_count} veces</p>
-                    </div>
-                  )}
-                  
-                  {selectedUnit.retry_after_milliseconds > 0 && (
-                    <div>
-                      <h4 className="text-xs font-medium mb-1">Espera entre reintentos</h4>
-                      <p className="text-sm">{Math.round(selectedUnit.retry_after_milliseconds / 1000)} seg</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Detalles específicos por tipo de unidad */}
-                {unitDetails?.details && (
-                  <>
-                    <Separator />
-                    <Card className="overflow-hidden">
-                      <CardHeader className="bg-slate-50 dark:bg-slate-800 p-4">
-                        <CardTitle className="text-base">Detalles de la tarea</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 space-y-3 max-h-[300px] overflow-y-auto">
-                        {/* Detalles específicos para Comandos */}
-                        {determineUnitType(selectedUnit) === 'command' && (
-                          <>
-                            {unitDetails.details.target && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Objetivo:</p>
-                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.target}</p>
-                              </div>
-                            )}
-                            
-                            {unitDetails.details.args && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Comando:</p>
-                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono">{unitDetails.details.args}</p>
-                              </div>
-                            )}
-                            
-                            {unitDetails.details.raw_script && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Script:</p>
-                                <div className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded font-mono whitespace-pre overflow-auto max-h-32">
-                                  {unitDetails.details.raw_script}
-                                </div>
-                              </div>
-                            )}
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">Instantáneo:</span> {unitDetails.details.instant ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
-                              </div>
-                              {unitDetails.details.working_directory && (
-                                <div className="col-span-2">
-                                  <span className="font-medium">Directorio de trabajo:</span> {unitDetails.details.working_directory}
-                                </div>
-                              )}
-                              <div>
-                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para SQL Queries */}
-                        {determineUnitType(selectedUnit) === 'query' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">ID de la cola de consultas:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.id}</p>
-                            </div>
-                            
-                            {/* Consultas relacionadas */}
-                            {unitDetails.details.Queries && unitDetails.details.Queries.length > 0 ? (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Consultas ({unitDetails.details.Queries.length}):</p>
-                                <div className="space-y-3">
-                                  {unitDetails.details.Queries.map((query: any, index: number) => (
-                                    <div key={query.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-md">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <p className="text-sm font-medium">Consulta {index + 1}: {query.name}</p>
-                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                                          {query.sqlconn_id ? 'SQL Connection' : 'Query'}
-                                        </span>
-                                      </div>
-                                      
-                                      {/* SQL query string */}
-                                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-mono mb-2 overflow-auto max-h-32 whitespace-pre">
-                                        {query.query_string}
-                                      </div>
-                                      
-                                      {/* Advertencia de seguridad */}
-                                      <div className="text-xs text-amber-600 dark:text-amber-400 mt-1 mb-2 flex items-center">
-                                        <AlertCircle className="h-4 w-4 mr-1" />
-                                        Modo solo lectura - No se ejecutará ni modificará esta consulta
-                                      </div>
-                                      
-                                      {/* Query metadata */}
-                                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                                        {query.path && (
-                                          <div className="col-span-2">
-                                            <span className="font-medium">Path de salida:</span> {query.path}
-                                          </div>
-                                        )}
-                                        <div>
-                                          <span className="font-medium">Print headers:</span> {query.print_headers ? 'Sí' : 'No'}
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Habilitado:</span> {query.enabled ? 'Sí' : 'No'}
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Retornar salida:</span> {query.return_output ? 'Sí' : 'No'}
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Orden:</span> {query.order}
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Timeout:</span> {query.timeout ? `${query.timeout}ms` : 'N/A'}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-slate-600 dark:text-slate-400">
-                                No hay consultas definidas en esta cola.
-                              </div>
-                            )}
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para SFTP Downloader */}
-                        {determineUnitType(selectedUnit) === 'sftp_download' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Output:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">SFTP Link ID:</span> {unitDetails.details.sftp_link_id}
-                              </div>
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para SFTP Uploader */}
-                        {determineUnitType(selectedUnit) === 'sftp_upload' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Input:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.input}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">SFTP Link ID:</span> {unitDetails.details.sftp_link_id}
-                              </div>
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para Zip Files */}
-                        {determineUnitType(selectedUnit) === 'zip' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Output:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para Unzip Files */}
-                        {determineUnitType(selectedUnit) === 'unzip' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Input:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.input}</p>
-                            </div>
-                            
-                            <div>
-                              <p className="text-sm font-medium mb-1">Output:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.output}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">Retornar salida:</span> {unitDetails.details.return_output ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* Detalles específicos para Call Pipeline */}
-                        {determineUnitType(selectedUnit) === 'pipeline' && (
-                          <>
-                            <div>
-                              <p className="text-sm font-medium mb-1">Pipeline llamado:</p>
-                              <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.name || unitDetails.details.id}</p>
-                            </div>
-                            
-                            {unitDetails.details.description && (
-                              <div>
-                                <p className="text-sm font-medium mb-1">Descripción:</p>
-                                <p className="text-sm bg-slate-100 dark:bg-slate-700 p-2 rounded">{unitDetails.details.description}</p>
-                              </div>
-                            )}
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div>
-                                <span className="font-medium">Abortar en error:</span> {unitDetails.details.abort_on_error ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Descartable:</span> {unitDetails.details.disposable ? 'Sí' : 'No'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Creado:</span> {new Date(unitDetails.details.created_at).toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Actualizado:</span> {new Date(unitDetails.details.updated_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </>
-                )}
               </div>
             )}
             
             <DialogFooter>
-              <Button onClick={handleCloseDialog}>Cerrar</Button>
+              <Button variant="secondary" onClick={handleCloseDialog}>
+                Cerrar
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -727,48 +536,64 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
   );
 }
 
-// Función para determinar el tipo de unidad
+// Utility function to determine unit type
 function determineUnitType(unit: any): string {
-  if (unit.command_id) return 'command';
-  if (unit.query_queue_id) return 'query';
-  if (unit.sftp_downloader_id) return 'sftp_download';
-  if (unit.sftp_uploader_id) return 'sftp_upload';
-  if (unit.zip_id) return 'zip';
-  if (unit.unzip_id) return 'unzip';
-  if (unit.call_pipeline) return 'pipeline';
+  if (unit.command_id) {
+    return 'command';
+  } else if (unit.query_queue_id) {
+    return 'query';
+  } else if (unit.sftp_downloader_id) {
+    return 'sftp_download';
+  } else if (unit.sftp_uploader_id) {
+    return 'sftp_upload';
+  } else if (unit.zip_id) {
+    return 'zip';
+  } else if (unit.unzip_id) {
+    return 'unzip';
+  } else if (unit.call_pipeline) {
+    return 'pipeline';
+  }
   return 'unknown';
 }
 
-// Función para obtener color según el tipo de nodo
+// Utility function to get node color
 function getNodeColor(type: string): string {
   switch (type) {
     case 'command':
-      return '#4f46e5'; // Indigo para comandos
+      return '#4f46e5'; // indigo
     case 'query':
-      return '#0ea5e9'; // Azul para consultas SQL
+      return '#3b82f6'; // blue
     case 'sftp_download':
-      return '#10b981'; // Verde para SFTP descarga
+      return '#22c55e'; // green
     case 'sftp_upload':
-      return '#84cc16'; // Lima para SFTP subida
+      return '#f97316'; // orange
     case 'zip':
-      return '#f59e0b'; // Ámbar para compresión
+      return '#f59e0b'; // amber
     case 'unzip':
-      return '#f97316'; // Naranja para descompresión
+      return '#8b5cf6'; // violet
     case 'pipeline':
-      return '#8b5cf6'; // Violeta para llamadas a pipeline
+      return '#ec4899'; // pink
     default:
-      return '#6b7280'; // Gris para desconocidos
+      return '#64748b'; // slate
   }
 }
 
-// Función para obtener una descripción más detallada del tipo de unidad
+// Utility function to get description for unit type
 function getUnitTypeDescription(unit: any): string {
-  if (unit.command_id) return 'Esta unidad ejecuta un comando en el sistema operativo del agente.';
-  if (unit.query_queue_id) return 'Esta unidad ejecuta una o más consultas SQL en una base de datos.';
-  if (unit.sftp_downloader_id) return 'Esta unidad descarga archivos desde un servidor remoto usando SFTP.';
-  if (unit.sftp_uploader_id) return 'Esta unidad sube archivos a un servidor remoto usando SFTP.';
-  if (unit.zip_id) return 'Esta unidad comprime archivos en un archivo ZIP.';
-  if (unit.unzip_id) return 'Esta unidad extrae archivos de un archivo ZIP.';
-  if (unit.call_pipeline) return 'Esta unidad llama a otro pipeline para su ejecución.';
-  return 'Unidad de pipeline';
+  if (unit.command_id) {
+    return 'Comando';
+  } else if (unit.query_queue_id) {
+    return 'Consulta SQL';
+  } else if (unit.sftp_downloader_id) {
+    return 'Descarga SFTP';
+  } else if (unit.sftp_uploader_id) {
+    return 'Subida SFTP';
+  } else if (unit.zip_id) {
+    return 'Compresión ZIP';
+  } else if (unit.unzip_id) {
+    return 'Extracción ZIP';
+  } else if (unit.call_pipeline) {
+    return 'Pipeline';
+  }
+  return 'Unidad desconocida';
 }
