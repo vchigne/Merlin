@@ -27,18 +27,86 @@ export default function UnitDetailsDialog({
   determineUnitType 
 }: UnitDetailsDialogProps) {
   
+  // Función genérica para obtener valores de un nodo anidado - examina todos los niveles posibles
+  const getNestedValue = (obj: any, paths: string[]): any => {
+    if (!obj) return null;
+    
+    // Probar cada ruta posible
+    for (const path of paths) {
+      const parts = path.split('.');
+      let current = obj;
+      let found = true;
+      
+      // Navegar por cada parte de la ruta
+      for (const part of parts) {
+        if (current[part] === undefined) {
+          found = false;
+          break;
+        }
+        current = current[part];
+      }
+      
+      if (found && current !== null && current !== undefined) {
+        return current;
+      }
+    }
+    
+    return null;
+  };
+  
+  // Funciones específicas para obtener valores en cualquier estructura de nodo SFTP
+  const getSFTPOutput = () => {
+    return getNestedValue(unitDetails, [
+      'details.output',
+      'details.SFTPUploader.output',
+      'details.SFTPDownloader.output'
+    ]);
+  };
+  
+  const getSFTPInput = () => {
+    return getNestedValue(unitDetails, [
+      'details.input',
+      'details.SFTPUploader.input',
+      'details.SFTPDownloader.input'
+    ]);
+  };
+  
+  const getSFTPLinkId = () => {
+    return getNestedValue(unitDetails, [
+      'details.sftp_link_id',
+      'details.SFTPUploader.sftp_link_id',
+      'details.SFTPDownloader.sftp_link_id'
+    ]);
+  };
+  
+  const getSFTPLinkData = () => {
+    return getNestedValue(unitDetails, [
+      'details.SFTPLink',
+      'details.SFTPUploader.SFTPLink',
+      'details.SFTPDownloader.SFTPLink'
+    ]);
+  };
+  
   // Función para determinar si este es un nodo de tipo SFTP
   const isSFTPNode = () => {
-    if (!unitDetails || !unitDetails.type) return false;
+    if (!unitDetails) return false;
     
-    const type = unitDetails.type.toLowerCase();
-    return type.includes('sftp') || 
-           (unitDetails.details && (
-             unitDetails.details.sftp_link_id || 
-             unitDetails.details.SFTPLink || 
-             unitDetails.details.SFTPUploader || 
-             unitDetails.details.SFTPDownloader
-           ));
+    // Verificar el tipo explícito
+    if (unitDetails.type) {
+      const type = unitDetails.type.toLowerCase();
+      if (type.includes('sftp')) return true;
+    }
+    
+    // Verificar IDs específicos de SFTP
+    if (unitDetails.details) {
+      if (unitDetails.details.sftp_downloader_id || 
+          unitDetails.details.sftp_uploader_id) return true;
+    }
+    
+    // Verificar campos relacionados con SFTP
+    if (getSFTPLinkId() || getSFTPLinkData()) return true;
+    
+    return false;
   };
 
   return (
@@ -83,9 +151,7 @@ export default function UnitDetailsDialog({
               {isSFTPNode() && (
                 <div className="space-y-4">
                   {/* Sección de Rutas SFTP - Ruta de salida */}
-                  {(unitDetails.details?.output || 
-                    unitDetails.details?.SFTPUploader?.output || 
-                    unitDetails.details?.SFTPDownloader?.output) && (
+                  {getSFTPOutput() && (
                     <div>
                       <h3 className="text-sm font-semibold mb-3 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -98,10 +164,7 @@ export default function UnitDetailsDialog({
                         {/* Directorio de Destino */}
                         <div className="mb-1">
                           <div className="bg-white/70 dark:bg-black/30 p-3 rounded font-mono text-sm text-orange-700 dark:text-orange-300 font-medium">
-                            {unitDetails.details?.output || 
-                             unitDetails.details?.SFTPUploader?.output || 
-                             unitDetails.details?.SFTPDownloader?.output || 
-                             'Sin especificar'}
+                            {getSFTPOutput() || 'Sin especificar'}
                           </div>
                         </div>
                       </div>
@@ -109,9 +172,7 @@ export default function UnitDetailsDialog({
                   )}
                   
                   {/* Ruta de entrada, si está disponible */}
-                  {(unitDetails.details?.input || 
-                    unitDetails.details?.SFTPUploader?.input || 
-                    unitDetails.details?.SFTPDownloader?.input) && (
+                  {getSFTPInput() && (
                     <div>
                       <h3 className="text-sm font-semibold mb-3 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -123,10 +184,7 @@ export default function UnitDetailsDialog({
                       <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3 mb-3">
                         <div className="mb-1">
                           <div className="bg-white/70 dark:bg-black/30 p-3 rounded font-mono text-sm text-green-700 dark:text-green-300 font-medium">
-                            {unitDetails.details?.input || 
-                             unitDetails.details?.SFTPUploader?.input || 
-                             unitDetails.details?.SFTPDownloader?.input || 
-                             'Sin especificar'}
+                            {getSFTPInput() || 'Sin especificar'}
                           </div>
                         </div>
                       </div>
@@ -134,22 +192,12 @@ export default function UnitDetailsDialog({
                   )}
                   
                   {/* Separador si hay rutas */}
-                  {(unitDetails.details?.output || 
-                    unitDetails.details?.SFTPUploader?.output || 
-                    unitDetails.details?.SFTPDownloader?.output ||
-                    unitDetails.details?.input || 
-                    unitDetails.details?.SFTPUploader?.input || 
-                    unitDetails.details?.SFTPDownloader?.input) && (
+                  {(getSFTPOutput() || getSFTPInput()) && (
                     <Separator />
                   )}
                   
                   {/* Sección de Conexión SFTP */}
-                  {(unitDetails.details?.sftp_link_id || 
-                    unitDetails.details?.SFTPUploader?.sftp_link_id || 
-                    unitDetails.details?.SFTPDownloader?.sftp_link_id || 
-                    unitDetails.details?.SFTPLink || 
-                    unitDetails.details?.SFTPUploader?.SFTPLink || 
-                    unitDetails.details?.SFTPDownloader?.SFTPLink) && (
+                  {(getSFTPLinkId() || getSFTPLinkData()) && (
                     <div>
                       <h3 className="text-sm font-semibold mb-3 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -165,26 +213,18 @@ export default function UnitDetailsDialog({
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">ID de Conexión:</span>
                           <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 rounded-full text-blue-700 dark:text-blue-400 font-mono">
-                            {unitDetails.details?.sftp_link_id || 
-                             unitDetails.details?.SFTPUploader?.sftp_link_id || 
-                             unitDetails.details?.SFTPDownloader?.sftp_link_id || 
-                             'No disponible'}
+                            {getSFTPLinkId() || 'No disponible'}
                           </span>
                         </div>
                         
                         {/* Detalles de la conexión SFTP */}
-                        {(unitDetails.details?.SFTPLink || 
-                          unitDetails.details?.SFTPUploader?.SFTPLink || 
-                          unitDetails.details?.SFTPDownloader?.SFTPLink) && (
+                        {getSFTPLinkData() && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-2">
                             {/* Nombre de la conexión */}
                             <div className="space-y-1">
                               <h5 className="font-medium text-blue-800 dark:text-blue-300">Nombre de Conexión</h5>
                               <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                                {unitDetails.details?.SFTPLink?.name || 
-                                 unitDetails.details?.SFTPUploader?.SFTPLink?.name || 
-                                 unitDetails.details?.SFTPDownloader?.SFTPLink?.name || 
-                                 "Sin especificar"}
+                                {getSFTPLinkData().name || "Sin especificar"}
                               </p>
                             </div>
                             
@@ -199,10 +239,7 @@ export default function UnitDetailsDialog({
                                   <line x1="6" y1="18" x2="6.01" y2="18" />
                                 </svg>
                                 <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                  {unitDetails.details?.SFTPLink?.server || 
-                                   unitDetails.details?.SFTPUploader?.SFTPLink?.server || 
-                                   unitDetails.details?.SFTPDownloader?.SFTPLink?.server || 
-                                   "Sin especificar"}
+                                  {getSFTPLinkData().server || "Sin especificar"}
                                 </p>
                               </div>
                             </div>
@@ -211,10 +248,7 @@ export default function UnitDetailsDialog({
                             <div className="space-y-1">
                               <h5 className="font-medium text-blue-800 dark:text-blue-300">Puerto</h5>
                               <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                                {unitDetails.details?.SFTPLink?.port || 
-                                 unitDetails.details?.SFTPUploader?.SFTPLink?.port || 
-                                 unitDetails.details?.SFTPDownloader?.SFTPLink?.port || 
-                                 "22 (predeterminado)"}
+                                {getSFTPLinkData().port || "22 (predeterminado)"}
                               </p>
                             </div>
                             
@@ -227,10 +261,7 @@ export default function UnitDetailsDialog({
                                   <circle cx="12" cy="7" r="4" />
                                 </svg>
                                 <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                  {unitDetails.details?.SFTPLink?.user || 
-                                   unitDetails.details?.SFTPUploader?.SFTPLink?.user || 
-                                   unitDetails.details?.SFTPDownloader?.SFTPLink?.user || 
-                                   "Sin especificar"}
+                                  {getSFTPLinkData().user || "Sin especificar"}
                                 </p>
                               </div>
                             </div>
@@ -248,10 +279,14 @@ export default function UnitDetailsDialog({
                 <div className="mt-2 p-2 font-mono overflow-auto max-h-40">
                   <p>ID: {unitDetails.details?.id || 'N/A'}</p>
                   <p>Tipo: {unitDetails.type}</p>
-                  {unitDetails.details && <p>sftp_link_id: {unitDetails.details.sftp_link_id || 'N/A'}</p>}
-                  {unitDetails.details && <p>output: {unitDetails.details.output || 'N/A'}</p>}
-                  {unitDetails.details && <p>input: {unitDetails.details.input || 'N/A'}</p>}
                   <p>Es nodo SFTP: {isSFTPNode() ? 'Sí' : 'No'}</p>
+                  <p>Datos disponibles:</p>
+                  <ul className="pl-4 mt-1 space-y-1">
+                    <li>- output: {getSFTPOutput() ? 'Sí' : 'No'}</li>
+                    <li>- input: {getSFTPInput() ? 'Sí' : 'No'}</li>
+                    <li>- sftp_link_id: {getSFTPLinkId() ? 'Sí' : 'No'}</li>
+                    <li>- SFTPLink: {getSFTPLinkData() ? 'Sí' : 'No'}</li>
+                  </ul>
                 </div>
               </details>
               
