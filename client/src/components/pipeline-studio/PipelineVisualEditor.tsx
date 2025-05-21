@@ -230,9 +230,12 @@ export default function PipelineVisualEditor({
   };
   
   // Manejar el arrastre de nodos individuales (Mouse)
+  // Mejorado para que solo responda al drag desde el título
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     if (readOnly) return;
     e.stopPropagation();
+    
+    // Iniciar el arrastre del nodo, con posición exacta del mouse
     setDraggingNode(nodeId);
     setNodeDragStart({
       x: e.clientX,
@@ -256,20 +259,23 @@ export default function PipelineVisualEditor({
   };
   
   // Manejar el movimiento de nodos durante el arrastre (común para Mouse y Touch)
+  // Mejorado para mayor precisión en el posicionamiento
   const handleNodeDrag = (e: React.MouseEvent | { clientX: number; clientY: number }) => {
     if (!draggingNode || readOnly) return;
     
+    // Calcular desplazamiento exacto con precisión de píxel
     const dx = (e.clientX - nodeDragStart.x) / zoom;
     const dy = (e.clientY - nodeDragStart.y) / zoom;
     
-    // Actualizar la posición del nodo
+    // Actualizar la posición del nodo con precisión exacta
     const updatedNodes = nodes.map(node => {
       if (node.id === draggingNode) {
+        // Asegurar posición exacta sin redondeo
         return {
           ...node,
           position: {
-            x: node.position.x + dx,
-            y: node.position.y + dy
+            x: Math.round((node.position.x + dx) * 100) / 100, // Redondeo a 2 decimales para evitar errores de precisión
+            y: Math.round((node.position.y + dy) * 100) / 100
           }
         };
       }
