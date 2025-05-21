@@ -159,9 +159,9 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
 
   useEffect(() => {
     if (pipelineUnits && pipelineUnits.length > 0) {
-      console.log('Pipeline Units:', pipelineUnits);
+      console.log('Pipeline Units (datos originales):', JSON.stringify(pipelineUnits, null, 2));
       const result = convertToFlowCoordinates(pipelineUnits);
-      console.log('Flow Elements:', result);
+      console.log('Flow Elements (después de conversión):', JSON.stringify(result, null, 2));
       setFlowElements(result);
     }
   }, [pipelineUnits]);
@@ -356,125 +356,103 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Detalles específicos según tipo de nodo - Con información avanzada */}
+                {/* Información más simple pero útil - Adaptada a lo que realmente tenemos disponible */}
                 <div className="text-xs text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
-                  {/* COMANDOS - Mostrar el comando actual y directorio */}
+                  {/* COMANDOS */}
                   {unitType === 'command' && (
                     <div className="mt-1">
-                      {node.data.unit.command && (
-                        <>
-                          <div className="font-medium">Comando:</div>
-                          <div className="truncate pl-1 font-mono text-green-600 dark:text-green-400">{node.data.unit.command.target || ''}</div>
-                          {node.data.unit.command.args && (
-                            <div className="truncate pl-1 font-mono text-amber-600 dark:text-amber-400">{node.data.unit.command.args}</div>
-                          )}
-                          {node.data.unit.command.working_directory && (
-                            <div className="truncate"><span className="font-medium">Dir:</span> {node.data.unit.command.working_directory}</div>
-                          )}
-                        </>
-                      )}
+                      <div className="font-medium">ID de Comando:</div>
+                      <div className="truncate font-mono text-amber-600 dark:text-amber-400">
+                        {node.data.unit.command_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* CONSULTAS SQL - Mostrar partes del query */}
+                  {/* CONSULTAS SQL */}
                   {unitType === 'query' && (
                     <div className="mt-1">
-                      {node.data.unit.query && (
-                        <>
-                          <div className="font-medium">Query:</div>
-                          <div className="truncate pl-1 font-mono text-blue-600 dark:text-blue-400">{node.data.unit.query.query_string?.substring(0, 30)}...</div>
-                          {node.data.unit.query.path && (
-                            <div className="truncate"><span className="font-medium">Archivo:</span> {node.data.unit.query.path}</div>
-                          )}
-                        </>
-                      )}
-                      {!node.data.unit.query && node.data.unit.query_queue && (
-                        <div className="truncate"><span className="font-medium">Cola:</span> {node.data.unit.query_queue.name || ''}</div>
-                      )}
+                      <div className="font-medium">Cola de Consultas:</div>
+                      <div className="truncate font-mono text-blue-600 dark:text-blue-400">
+                        {node.data.unit.query_queue_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* SFTP DOWNLOAD - Mostrar rutas y servidor */}
+                  {/* SFTP DOWNLOAD */}
                   {unitType === 'sftp_download' && (
                     <div className="mt-1">
-                      {node.data.unit.sftp_downloader && (
-                        <>
-                          <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.sftp_downloader.output || ''}</div>
-                          {node.data.unit.sftp_link && (
-                            <div className="truncate"><span className="font-medium">Servidor:</span> {node.data.unit.sftp_link.server || ''}</div>
-                          )}
-                        </>
-                      )}
+                      <div className="font-medium">Descarga SFTP:</div>
+                      <div className="truncate font-mono text-green-600 dark:text-green-400">
+                        {node.data.unit.sftp_downloader_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* SFTP UPLOAD - Mostrar rutas y servidor */}
+                  {/* SFTP UPLOAD */}
                   {unitType === 'sftp_upload' && (
                     <div className="mt-1">
-                      {node.data.unit.sftp_uploader && (
-                        <>
-                          <div className="truncate"><span className="font-medium">Origen:</span> {node.data.unit.sftp_uploader.input || ''}</div>
-                          {node.data.unit.sftp_link && (
-                            <div className="truncate"><span className="font-medium">Servidor:</span> {node.data.unit.sftp_link.server || ''}</div>
-                          )}
-                        </>
-                      )}
+                      <div className="font-medium">Subida SFTP:</div>
+                      <div className="truncate font-mono text-orange-600 dark:text-orange-400">
+                        {node.data.unit.sftp_uploader_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* ZIP - Mostrar rutas */}
+                  {/* ZIP */}
                   {unitType === 'zip' && (
                     <div className="mt-1">
-                      {node.data.unit.zip && (
-                        <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.zip.output || ''}</div>
-                      )}
+                      <div className="font-medium">Compresión ZIP:</div>
+                      <div className="truncate font-mono text-amber-600 dark:text-amber-400">
+                        {node.data.unit.zip_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* UNZIP - Mostrar rutas */}
+                  {/* UNZIP */}
                   {unitType === 'unzip' && (
                     <div className="mt-1">
-                      {node.data.unit.unzip && (
-                        <>
-                          <div className="truncate"><span className="font-medium">Origen:</span> {node.data.unit.unzip.input || ''}</div>
-                          <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.unzip.output || ''}</div>
-                        </>
-                      )}
+                      <div className="font-medium">Extracción ZIP:</div>
+                      <div className="truncate font-mono text-indigo-600 dark:text-indigo-400">
+                        {node.data.unit.unzip_id?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* PIPELINE - Mostrar nombre */}
+                  {/* PIPELINE */}
                   {unitType === 'pipeline' && (
                     <div className="mt-1">
-                      {node.data.unit.pipeline && (
-                        <div className="truncate"><span className="font-medium">Pipeline:</span> {node.data.unit.pipeline.name || ''}</div>
-                      )}
-                      {!node.data.unit.pipeline && node.data.unit.call_pipeline && (
-                        <div className="truncate"><span className="font-medium">Pipeline ID:</span> {node.data.unit.call_pipeline.substring(0, 8)}...</div>
-                      )}
+                      <div className="font-medium">Pipeline:</div>
+                      <div className="truncate font-mono text-pink-600 dark:text-pink-400">
+                        {node.data.unit.call_pipeline?.substring(0, 12)}...
+                      </div>
                     </div>
                   )}
                   
-                  {/* Configuraciones críticas */}
-                  <div className="mt-1 flex flex-wrap gap-2">
+                  {/* Configuraciones importantes */}
+                  <div className="mt-2 flex flex-wrap gap-1">
                     {node.data.unit.timeout_milliseconds > 0 && (
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
-                        ⏱️ {Math.round(node.data.unit.timeout_milliseconds/1000)}s
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
+                        <span className="text-slate-600 dark:text-slate-300">Timeout:</span> 
+                        <span className="ml-1 font-medium">{Math.round(node.data.unit.timeout_milliseconds/1000)}s</span>
                       </span>
                     )}
                     {node.data.unit.retry_count > 0 && (
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
-                        🔄 {node.data.unit.retry_count}
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
+                        <span className="text-slate-600 dark:text-slate-300">Reintentos:</span> 
+                        <span className="ml-1 font-medium">{node.data.unit.retry_count}</span>
                       </span>
                     )}
+                  </div>
+                  
+                  <div className="mt-1 flex flex-wrap gap-1">
                     {node.data.unit.continue_on_error && (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/40 dark:text-green-400">
-                        ⏭️ En error
+                      <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/40 dark:text-green-400">
+                        Continúa en error
                       </span>
                     )}
                     {node.data.unit.abort_on_timeout && (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/40 dark:text-red-400">
-                        ⏹️ En timeout
+                      <span className="inline-flex items-center rounded-md bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/40 dark:text-red-400">
+                        Aborta en timeout
                       </span>
                     )}
                   </div>
