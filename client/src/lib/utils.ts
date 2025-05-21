@@ -429,7 +429,13 @@ export function convertToFlowCoordinates(
     
     if (unitType === 'command' && unit.command_id) {
       // Para comandos, usamos el nombre como título y mostraremos el comando y directorio más abajo
-      descriptiveName = unit.command?.name || unit.comment || 'Comando';
+      if (unit.command_details && unit.command_details.name) {
+        // Si tenemos los detalles precargados, usar el nombre de ahí
+        descriptiveName = unit.command_details.name;
+      } else {
+        // Fallback a otros nombres disponibles
+        descriptiveName = unit.command?.name || unit.comment || 'Comando';
+      }
     } else if (unitType === 'query' && unit.query_queue_id) {
       // Intentar obtener información más descriptiva para consultas SQL
       descriptiveName = unit.query?.name || 'Consulta SQL';
