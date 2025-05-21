@@ -96,10 +96,10 @@ export default function UnitDetailsDialog({
                           <div className="bg-white/70 dark:bg-black/30 p-3 rounded font-mono text-sm text-orange-700 dark:text-orange-300 font-medium">
                             {unitDetails.details?.output || unitDetails.details?.SFTPUploader?.output || unitDetails.details?.SFTPDownloader?.output || 
                             (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? '/BANCO_PICHINCHA/INT' : 'Sin especificar')}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   )}
                   
                   {/* Separador - solo si hay output */}
@@ -140,50 +140,50 @@ export default function UnitDetailsDialog({
                         {/* Detalles de la conexión SFTP - adaptado para funcionar con cualquier estructura */}
                         {(unitDetails.details?.SFTPLink || unitDetails.details?.SFTPUploader?.SFTPLink || 
                           unitDetails.details?.SFTPDownloader?.SFTPLink || unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c') && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-2">
-                          <div className="space-y-1">
-                            <h5 className="font-medium text-blue-800 dark:text-blue-300">Nombre de Conexión</h5>
-                            <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                              {unitDetails.details.SFTPLink?.name || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'CONECTOR SFTP QV-PRD BANCO PICHINCHA' : "Sin especificar")}
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <h5 className="font-medium text-blue-800 dark:text-blue-300">Servidor</h5>
-                            <div className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-                                <line x1="6" y1="6" x2="6.01" y2="6" />
-                                <line x1="6" y1="18" x2="6.01" y2="18" />
-                              </svg>
-                              <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                {unitDetails.details.SFTPLink?.server || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'sftp.qvision.com.pe' : "Sin especificar")}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-2">
+                            <div className="space-y-1">
+                              <h5 className="font-medium text-blue-800 dark:text-blue-300">Nombre de Conexión</h5>
+                              <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
+                                {unitDetails.details.SFTPLink?.name || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'CONECTOR SFTP QV-PRD BANCO PICHINCHA' : "Sin especificar")}
                               </p>
                             </div>
-                          </div>
-                          <div className="space-y-1">
-                            <h5 className="font-medium text-blue-800 dark:text-blue-300">Puerto</h5>
-                            <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
-                              {unitDetails.details.SFTPLink?.port || "22 (predeterminado)"}
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <h5 className="font-medium text-blue-800 dark:text-blue-300">Usuario</h5>
-                            <div className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                              </svg>
-                              <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
-                                {unitDetails.details.SFTPLink?.user || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'bcp_sftp_usr' : "Sin especificar")}
+                            <div className="space-y-1">
+                              <h5 className="font-medium text-blue-800 dark:text-blue-300">Servidor</h5>
+                              <div className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                                  <line x1="6" y1="6" x2="6.01" y2="6" />
+                                  <line x1="6" y1="18" x2="6.01" y2="18" />
+                                </svg>
+                                <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
+                                  {unitDetails.details.SFTPLink?.server || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'sftp.qvision.com.pe' : "Sin especificar")}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <h5 className="font-medium text-blue-800 dark:text-blue-300">Puerto</h5>
+                              <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded">
+                                {unitDetails.details.SFTPLink?.port || "22 (predeterminado)"}
                               </p>
                             </div>
+                            <div className="space-y-1">
+                              <h5 className="font-medium text-blue-800 dark:text-blue-300">Usuario</h5>
+                              <div className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <p className="bg-white/60 dark:bg-black/20 p-1.5 rounded flex-1">
+                                  {unitDetails.details.SFTPLink?.user || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'bcp_sftp_usr' : "Sin especificar")}
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   {/* Panel de depuración (condensado) */}
                   <details className="mt-3 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs">
