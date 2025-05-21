@@ -595,23 +595,29 @@ export default function UnitDetailsDialog({
                         <div className="bg-white dark:bg-slate-900 p-2 rounded-md border border-slate-200 dark:border-slate-700 font-mono text-xs">
                           {unitDetails.details?.output || "No especificada"}
                         </div>
-
-                        {/* Panel de diagnóstico temporal */}
-                        <div className="mt-2 bg-slate-100 dark:bg-slate-800 p-2 text-xs rounded border border-amber-200 dark:border-amber-800">
-                          <details>
-                            <summary className="font-bold text-amber-700 dark:text-amber-400 cursor-pointer">Información de Diagnóstico</summary>
-                            <div className="mt-1 space-y-1">
-                              <div><span className="font-semibold">output:</span> {JSON.stringify(unitDetails.details?.output)}</div>
-                              <div><span className="font-semibold">Todas las props:</span> {JSON.stringify(Object.keys(unitDetails.details || {}))}</div>
-                              <div><span className="font-semibold">SFTPLink presente:</span> {unitDetails.details?.SFTPLink ? "Sí" : "No"}</div>
-                              <div><span className="font-semibold">Datos completos:</span> <pre className="whitespace-pre-wrap">{JSON.stringify(unitDetails.details, null, 2)}</pre></div>
-                            </div>
-                          </details>
-                        </div>
                         
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Ruta en el servidor SFTP donde será guardado el archivo
                         </p>
+                      </div>
+                      
+                      {/* Panel de diagnóstico SFTP */}
+                      <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                        <h4 className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-2">Diagnóstico SFTP</h4>
+                        <div className="space-y-2">
+                          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded">
+                            <span className="font-medium">Campo output:</span> {unitDetails.details?.output ? `"${unitDetails.details.output}"` : "No presente"}
+                          </div>
+                          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded">
+                            <span className="font-medium">Campos disponibles:</span> {Object.keys(unitDetails.details || {}).join(", ") || "Ninguno"}
+                          </div>
+                          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded">
+                            <span className="font-medium">JSON completo:</span>
+                            <pre className="mt-1 text-xs overflow-auto max-h-40 p-2 bg-slate-100 dark:bg-slate-900 rounded">
+                              {JSON.stringify(unitDetails.details, null, 2) || "{}"}
+                            </pre>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
