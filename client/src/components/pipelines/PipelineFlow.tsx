@@ -356,102 +356,128 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Detalles específicos según tipo de nodo - Con información útil */}
-                <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
+                {/* Detalles específicos según tipo de nodo - Con información avanzada */}
+                <div className="text-xs text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
+                  {/* COMANDOS - Mostrar el comando actual y directorio */}
                   {unitType === 'command' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.command && (
+                        <>
+                          <div className="font-medium">Comando:</div>
+                          <div className="truncate pl-1 font-mono text-green-600 dark:text-green-400">{node.data.unit.command.target || ''}</div>
+                          {node.data.unit.command.args && (
+                            <div className="truncate pl-1 font-mono text-amber-600 dark:text-amber-400">{node.data.unit.command.args}</div>
+                          )}
+                          {node.data.unit.command.working_directory && (
+                            <div className="truncate"><span className="font-medium">Dir:</span> {node.data.unit.command.working_directory}</div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
+                  
+                  {/* CONSULTAS SQL - Mostrar partes del query */}
                   {unitType === 'query' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.query && (
+                        <>
+                          <div className="font-medium">Query:</div>
+                          <div className="truncate pl-1 font-mono text-blue-600 dark:text-blue-400">{node.data.unit.query.query_string?.substring(0, 30)}...</div>
+                          {node.data.unit.query.path && (
+                            <div className="truncate"><span className="font-medium">Archivo:</span> {node.data.unit.query.path}</div>
+                          )}
+                        </>
+                      )}
+                      {!node.data.unit.query && node.data.unit.query_queue && (
+                        <div className="truncate"><span className="font-medium">Cola:</span> {node.data.unit.query_queue.name || ''}</div>
                       )}
                     </div>
                   )}
+                  
+                  {/* SFTP DOWNLOAD - Mostrar rutas y servidor */}
                   {unitType === 'sftp_download' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.sftp_downloader && (
+                        <>
+                          <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.sftp_downloader.output || ''}</div>
+                          {node.data.unit.sftp_link && (
+                            <div className="truncate"><span className="font-medium">Servidor:</span> {node.data.unit.sftp_link.server || ''}</div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
+                  
+                  {/* SFTP UPLOAD - Mostrar rutas y servidor */}
                   {unitType === 'sftp_upload' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.sftp_uploader && (
+                        <>
+                          <div className="truncate"><span className="font-medium">Origen:</span> {node.data.unit.sftp_uploader.input || ''}</div>
+                          {node.data.unit.sftp_link && (
+                            <div className="truncate"><span className="font-medium">Servidor:</span> {node.data.unit.sftp_link.server || ''}</div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
+                  
+                  {/* ZIP - Mostrar rutas */}
                   {unitType === 'zip' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.zip && (
+                        <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.zip.output || ''}</div>
                       )}
                     </div>
                   )}
+                  
+                  {/* UNZIP - Mostrar rutas */}
                   {unitType === 'unzip' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.unzip && (
+                        <>
+                          <div className="truncate"><span className="font-medium">Origen:</span> {node.data.unit.unzip.input || ''}</div>
+                          <div className="truncate"><span className="font-medium">Destino:</span> {node.data.unit.unzip.output || ''}</div>
+                        </>
                       )}
                     </div>
                   )}
+                  
+                  {/* PIPELINE - Mostrar nombre */}
                   {unitType === 'pipeline' && (
                     <div className="mt-1">
-                      <div className="truncate">
-                        <span className="text-slate-500">Timeout:</span> {node.data.unit.timeout_milliseconds ? Math.round(node.data.unit.timeout_milliseconds/1000) + 's' : 'No timeout'}
-                      </div>
-                      {node.data.unit.retry_count > 0 && (
-                        <div className="truncate">
-                          <span className="text-slate-500">Reintentos:</span> {node.data.unit.retry_count}
-                        </div>
+                      {node.data.unit.pipeline && (
+                        <div className="truncate"><span className="font-medium">Pipeline:</span> {node.data.unit.pipeline.name || ''}</div>
+                      )}
+                      {!node.data.unit.pipeline && node.data.unit.call_pipeline && (
+                        <div className="truncate"><span className="font-medium">Pipeline ID:</span> {node.data.unit.call_pipeline.substring(0, 8)}...</div>
                       )}
                     </div>
                   )}
-                  {node.data.unit.continue_on_error && (
-                    <div className="truncate text-green-600 dark:text-green-400">
-                      Continúa en error
-                    </div>
-                  )}
-                  {node.data.unit.abort_on_timeout && (
-                    <div className="truncate text-red-600 dark:text-red-400">
-                      Aborta en timeout
-                    </div>
-                  )}
+                  
+                  {/* Configuraciones críticas */}
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {node.data.unit.timeout_milliseconds > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
+                        ⏱️ {Math.round(node.data.unit.timeout_milliseconds/1000)}s
+                      </span>
+                    )}
+                    {node.data.unit.retry_count > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
+                        🔄 {node.data.unit.retry_count}
+                      </span>
+                    )}
+                    {node.data.unit.continue_on_error && (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/40 dark:text-green-400">
+                        ⏭️ En error
+                      </span>
+                    )}
+                    {node.data.unit.abort_on_timeout && (
+                      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/40 dark:text-red-400">
+                        ⏹️ En timeout
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex mt-1">
