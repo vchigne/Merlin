@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 // No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
-import PipelineEditor from "@/components/pipeline-studio/PipelineEditor";
+import PipelineFlow from "@/components/pipelines/PipelineFlow";
 import PipelineTemplateSelector from "@/components/pipeline-studio/PipelineTemplateSelector";
 import PipelinePropertiesPanel from "@/components/pipeline-studio/PipelinePropertiesPanel";
 import PipelineNodeProperties from "@/components/pipeline-studio/PipelineNodeProperties";
@@ -688,35 +688,12 @@ export default function PipelineStudio() {
               <div className="flex flex-col space-y-4">
                 {/* Editor de pipeline visual */}
                 <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
-                  <PipelineEditor
-                    flowData={pipelineFlowData}
-                    onChange={handleFlowChange}
-                    onNodeSelect={handleNodeSelect}
-                    pipelineId={pipelineData?.id}
-                    readOnly={editorMode === 'view'}
-                  />
-                  
-                  {/* Paleta de nodos */}
-                  <NodePalette />
-                  
-                  {/* Panel de propiedades arrastrable */}
+                  {/* Visualización estándar del pipeline usando PipelineFlow */}
                   {pipelineData && (
-                    <DraggablePipelineProperties
-                      pipeline={pipelineData}
-                      onChange={handlePipelinePropertiesChange}
-                      agentOptions={agentOptions}
-                      readOnly={editorMode === 'view'}
-                    />
-                  )}
-                  
-                  {/* Panel de propiedades del nodo seleccionado */}
-                  {selectedNode && (
-                    <DraggableNodeProperties
-                      node={selectedNode}
-                      onChange={(props) => handleNodePropertiesChange(selectedNode.id, props)}
-                      sftpOptions={sftpOptions}
-                      sqlConnections={sqlConnections}
-                      readOnly={editorMode === 'view'}
+                    <PipelineFlow
+                      pipelineUnits={pipelineData.units || []}
+                      pipelineJobs={pipelineData.PipelineJobQueues || []}
+                      isLoading={isLoading}
                     />
                   )}
                 </div>
