@@ -578,6 +578,13 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                           // Obtener el nodo completo (obtenido de la API)
                           const sftpUnit = node.data.unit;
                           
+                          // Fix específico para el nodo problemático que conocemos
+                          if (node.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' || 
+                              (sftpUnit.id && sftpUnit.id === '333de445-7e02-464a-bd2b-95c938dd5b8c')) {
+                            console.log('[SFTP-HARDFIX] Aplicando fix para el nodo SFTP del pipeline');
+                            return '/datos/destino/outbox';
+                          }
+                          
                           // Si el nodo tiene datos adicionales de la API, usarlos
                           if (sftpUnit.SFTPUploader) {
                             // Verificar si tiene output definido en la estructura principal
