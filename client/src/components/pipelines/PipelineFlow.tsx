@@ -571,14 +571,20 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 {/* Información adicional para nodos de tipo SFTP Uploader */}
                 {unitType === 'sftp_upload' && (
                   <div className="px-2 mb-1">
-                    {/* Mostrar información básica de SFTP Uploader */}
+                    {/* Mostrar directorio de salida (output) */}
                     <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                      <span className="font-medium">DIR:</span> {
+                      <span className="font-medium">DESTINO:</span> {
                         (() => {
-                          // Obtener el directorio de entrada del uploader usando la nueva estructura
+                          // Obtener el directorio de salida (output) del uploader 
                           const sftpUnit = node.data.unit;
-                          const inputDir = sftpUnit.SFTPUploader?.input || 'Directorio no especificado';
-                          return inputDir.length > 40 ? `${inputDir.substring(0, 40)}...` : inputDir;
+                          const outputDir = sftpUnit.SFTPUploader?.output || '';
+                          
+                          // Si no hay output definido, mostrar un mensaje adecuado
+                          if (!outputDir) {
+                            return 'Sin especificar';
+                          }
+                          
+                          return outputDir.length > 40 ? `${outputDir.substring(0, 40)}...` : outputDir;
                         })()
                       }
                     </div>
@@ -587,12 +593,12 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                     {node.data.unit.SFTPUploader?.SFTPLink && (
                       <>
                         <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SFTP:</span> {node.data.unit.SFTPUploader.SFTPLink.name || ''}
+                          <span className="font-medium">ENLACE:</span> {node.data.unit.SFTPUploader.SFTPLink.name || ''}
                         </div>
                         
                         {/* Mostrar el servidor SFTP */}
                         <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SERVIDOR:</span> {node.data.unit.SFTPUploader.SFTPLink.server || ''}
+                          <span className="font-medium">SERV:</span> {node.data.unit.SFTPUploader.SFTPLink.server || ''}
                         </div>
                       </>
                     )}
