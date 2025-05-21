@@ -356,43 +356,41 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Detalles específicos según tipo de nodo */}
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 max-w-full overflow-hidden">
-                  {unitType === 'command' && node.data.unit.command && (
-                    <div>
-                      <span className="font-medium">Comando:</span> {node.data.unit.command.target || ''}
-                      {node.data.unit.command.args && <span className="block mt-1"><span className="font-medium">Args:</span> {node.data.unit.command.args}</span>}
+                {/* Detalles específicos según tipo de nodo - Con información simplificada */}
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
+                  {unitType === 'command' && (
+                    <div className="mt-1">
+                      Comando: {node.data.unit.command_id ? node.data.unit.command_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'query' && node.data.unit.query_queue && (
-                    <div>
-                      <span className="font-medium">Cola:</span> {node.data.unit.query_queue.name || ''}
+                  {unitType === 'query' && (
+                    <div className="mt-1">
+                      Query: {node.data.unit.query_queue_id ? node.data.unit.query_queue_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'sftp_download' && node.data.unit.sftp_downloader && (
-                    <div>
-                      <span className="font-medium">Destino:</span> {node.data.unit.sftp_downloader.output || ''}
+                  {unitType === 'sftp_download' && (
+                    <div className="mt-1">
+                      SFTP Descarga ID: {node.data.unit.sftp_downloader_id ? node.data.unit.sftp_downloader_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'sftp_upload' && node.data.unit.sftp_uploader && (
-                    <div>
-                      <span className="font-medium">Origen:</span> {node.data.unit.sftp_uploader.input || ''}
+                  {unitType === 'sftp_upload' && (
+                    <div className="mt-1">
+                      SFTP Subida ID: {node.data.unit.sftp_uploader_id ? node.data.unit.sftp_uploader_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'zip' && node.data.unit.zip && (
-                    <div>
-                      <span className="font-medium">Destino:</span> {node.data.unit.zip.output || ''}
+                  {unitType === 'zip' && (
+                    <div className="mt-1">
+                      ZIP ID: {node.data.unit.zip_id ? node.data.unit.zip_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'unzip' && node.data.unit.unzip && (
-                    <div>
-                      <span className="font-medium">Origen:</span> {node.data.unit.unzip.input || ''}
-                      <span className="block mt-1"><span className="font-medium">Destino:</span> {node.data.unit.unzip.output || ''}</span>
+                  {unitType === 'unzip' && (
+                    <div className="mt-1">
+                      UNZIP ID: {node.data.unit.unzip_id ? node.data.unit.unzip_id.substring(0, 8) + '...' : ''}
                     </div>
                   )}
-                  {unitType === 'pipeline' && node.data.unit.call_pipeline && (
-                    <div>
-                      <span className="font-medium">ID Pipeline:</span> {node.data.unit.call_pipeline.substring(0, 8) + '...'}
+                  {unitType === 'pipeline' && (
+                    <div className="mt-1">
+                      Pipeline: {node.data.unit.call_pipeline ? node.data.unit.call_pipeline.substring(0, 8) + '...' : ''}
                     </div>
                   )}
                 </div>
