@@ -851,33 +851,44 @@ export default function PipelineVisualEditor({
           return (
             <div
               key={node.id}
-              className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
+              className={`absolute rounded-md border overflow-hidden ${nodeColor} shadow-sm`}
               style={nodeStyle}
-              onClick={() => {
-                if (isConnecting && connectingNode !== node.id) {
-                  handleEndConnecting(node.id);
-                } else {
-                  handleNodeClick(node.id);
-                }
-              }}
-              onMouseDown={(e) => {
-                if (!isConnecting) {
-                  handleNodeMouseDown(e, node.id);
-                }
-              }}
-              onTouchStart={(e) => {
-                if (!isConnecting) {
-                  handleNodeTouchStart(e, node.id);
-                }
-              }}
             >
-              <div className="flex items-center justify-between">
+              {/* Barra de título (solo esta área es arrastrable) */}
+              <div 
+                className={`p-2 border-b ${nodeBorderColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : ''} flex items-center justify-between`}
+                onMouseDown={(e) => {
+                  if (!readOnly && !isConnecting) {
+                    e.stopPropagation();
+                    handleNodeMouseDown(e, node.id);
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (!readOnly && !isConnecting) {
+                    e.stopPropagation();
+                    handleNodeTouchStart(e, node.id);
+                  }
+                }}
+              >
                 <div className="flex items-center">
                   {iconComponent}
                   <span className={`font-medium ${textColor}`}>{node.data.label}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  {/* Botón para ver detalles */}
+                  <button
+                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Abrir diálogo de detalles
+                      onNodeSelect?.(node);
+                    }}
+                    title="Ver detalles"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+
                   {!readOnly && !isPipelineStart && (
                     <button
                       className="text-blue-500 hover:text-blue-700"
