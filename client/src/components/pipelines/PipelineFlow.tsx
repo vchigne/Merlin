@@ -784,12 +784,15 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                           
                           {/* Destino en servidor SFTP (output) - Siempre mostrar, incluso si es vacío */}
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP</p>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
-                              <p className="text-sm font-mono">
-                                {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c'
-                                  ? '/datos/destino/outbox'
-                                  : (unitDetails.details.output ? unitDetails.details.output : 'Sin especificar')}
+                            <p className="text-xs font-medium text-orange-600 dark:text-orange-400 flex items-center font-semibold">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                              </svg>
+                              DESTINO en servidor SFTP:
+                            </p>
+                            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-3 rounded-md mt-1">
+                              <p className="text-sm font-mono text-orange-700 dark:text-orange-300">
+                                {unitDetails.details.output ? unitDetails.details.output : 'Sin especificar'}
                               </p>
                             </div>
                           </div>
@@ -797,23 +800,22 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                           {/* Datos de conexión SFTP */}
                           {(unitDetails.details.SFTPLink || unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c') && (
                             <div className="mb-3">
-                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Conexión SFTP</p>
-                              <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md">
-                                {unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? (
-                                  <>
-                                    <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> Conexión SFTP Principal</p>
-                                    <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> sftp.empresa.com</p>
-                                    <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> 22</p>
-                                    <p className="text-sm"><span className="font-medium">Usuario:</span> sftp_user</p>
-                                  </>
-                                ) : (
-                                  <>
-                                    <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> {unitDetails.details.SFTPLink?.name || 'N/A'}</p>
-                                    <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink?.server || 'N/A'}</p>
-                                    <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink?.port || '22'}</p>
-                                    <p className="text-sm"><span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink?.user || 'N/A'}</p>
-                                  </>
-                                )}
+                              <p className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center font-semibold">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect>
+                                  <rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect>
+                                  <line x1="6" x2="6.01" y1="6" y2="6"></line>
+                                  <line x1="6" x2="6.01" y1="18" y2="18"></line>
+                                </svg>
+                                Conexión SFTP:
+                              </p>
+                              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md mt-1">
+                                <div className="grid sm:grid-cols-2 gap-2">
+                                  <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> {unitDetails.details.SFTPLink?.name || 'N/A'}</p>
+                                  <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink?.server || 'N/A'}</p>
+                                  <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink?.port || '22'}</p>
+                                  <p className="text-sm"><span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink?.user || 'N/A'}</p>
+                                </div>
                               </div>
                             </div>
                           )}
