@@ -91,13 +91,14 @@ export default function UnitDetailsDialog({
   const isSFTPNode = () => {
     if (!unitDetails) return false;
     
-    // Verificar el tipo explícito
+    // Verificar el tipo explícito usando la regla fundamental
     if (unitDetails.type) {
       const type = unitDetails.type.toLowerCase();
-      if (type.includes('sftp')) return true;
+      if (type === 'sftp_download' || type === 'sftp_upload') return true;
     }
     
-    // Verificar IDs específicos de SFTP
+    // Método alternativo: verificar si los campos específicos de SFTP existen
+    // Esta validación respeta la regla de que solo un campo ID tiene valor
     if (unitDetails.details) {
       if (unitDetails.details.sftp_downloader_id || 
           unitDetails.details.sftp_uploader_id) return true;
