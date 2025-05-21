@@ -340,6 +340,7 @@ export const SFTP_UPLOADER_QUERY = `
       id
       name
       input
+      output
       return_output
       sftp_link_id
       created_at
