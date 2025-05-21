@@ -153,18 +153,83 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
             }
           } else if (unitData.sftp_downloader_id) {
             data = result.data.merlin_agent_SFTPDownloader[0];
+            // Asegurarse de que los datos de SFTPLink estén incluidos
+            if (data) {
+              // Incluir información adicional del enlace si está disponible
+              try {
+                // Si no tenemos la información del enlace SFTP, intentamos obtenerla
+                if (!data.SFTPLink && data.sftp_link_id) {
+                  console.log("Obteniendo datos adicionales del enlace SFTP para el downloader");
+                  const sftpLinkResult = await executeQuery(`
+                    query GetSFTPLink($id: uuid!) {
+                      merlin_agent_SFTPLink(where: {id: {_eq: $id}}) {
+                        id
+                        name
+                        server
+                        port
+                        user
+                      }
+                    }
+                  `, { id: data.sftp_link_id });
+                  
+                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
+                    data.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
+                  }
+                }
+              } catch (error) {
+                console.error("Error obteniendo datos adicionales del enlace SFTP:", error);
+              }
+            }
           } else if (unitData.sftp_uploader_id) {
             data = result.data.merlin_agent_SFTPUploader[0];
+            // Asegurarse de que los datos de SFTPLink estén incluidos
+            if (data) {
+              // Incluir información adicional del enlace si está disponible
+              try {
+                // Si no tenemos la información del enlace SFTP, intentamos obtenerla
+                if (!data.SFTPLink && data.sftp_link_id) {
+                  console.log("Obteniendo datos adicionales del enlace SFTP para el uploader");
+                  const sftpLinkResult = await executeQuery(`
+                    query GetSFTPLink($id: uuid!) {
+                      merlin_agent_SFTPLink(where: {id: {_eq: $id}}) {
+                        id
+                        name
+                        server
+                        port
+                        user
+                      }
+                    }
+                  `, { id: data.sftp_link_id });
+                  
+                  if (sftpLinkResult.data && sftpLinkResult.data.merlin_agent_SFTPLink && sftpLinkResult.data.merlin_agent_SFTPLink.length > 0) {
+                    data.SFTPLink = sftpLinkResult.data.merlin_agent_SFTPLink[0];
+                  }
+                }
+              } catch (error) {
+                console.error("Error obteniendo datos adicionales del enlace SFTP:", error);
+              }
+            }
           } else if (unitData.zip_id) {
             data = result.data.merlin_agent_Zip[0];
           } else if (unitData.unzip_id) {
             data = result.data.merlin_agent_UnZip[0];
           }
           
+          // Agregar lógica para proporcionar más información contextual
+          let description = data?.description || '';
+          
+          if (type === 'sftp_upload') {
+            description = data?.description || 'Proceso para subir archivos desde una ubicación local a un servidor SFTP remoto';
+          } else if (type === 'sftp_download') {
+            description = data?.description || 'Proceso para descargar archivos desde un servidor SFTP remoto a una ubicación local';
+          }
+          
+          console.log(`Datos finales para ${type}:`, JSON.stringify(data, null, 2));
+          
           setUnitDetails({
             type,
             name: data?.name || getUnitTypeDescription(unitData),
-            description: data?.description || '',
+            description: description,
             details: data
           });
         }
