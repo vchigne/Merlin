@@ -375,39 +375,54 @@ export default function PipelineVisualEditor({
     
     let nodeColor = 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white';
     let iconComponent = <Settings2 className="h-4 w-4 mr-2 text-slate-500 dark:text-slate-400" />;
+    let headerColor = 'bg-slate-200 dark:bg-slate-700';
     
     // Asignar color e ícono según el tipo de nodo
     switch (node.type) {
       case 'pipelineStart':
-        nodeColor = 'bg-blue-100 dark:bg-blue-950 border-blue-400 dark:border-blue-800 text-blue-900 dark:text-blue-100';
+        nodeColor = 'bg-blue-50 dark:bg-blue-950 border-blue-400 dark:border-blue-800 text-blue-900 dark:text-blue-100';
+        headerColor = 'bg-blue-200 dark:bg-blue-900';
         iconComponent = <Settings2 className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />;
         break;
       case 'commandNode':
-        nodeColor = 'bg-amber-100 dark:bg-amber-950 border-amber-400 dark:border-amber-800 text-amber-900 dark:text-amber-100';
+        nodeColor = 'bg-amber-50 dark:bg-amber-950 border-amber-400 dark:border-amber-800 text-amber-900 dark:text-amber-100';
+        headerColor = 'bg-amber-200 dark:bg-amber-900';
         iconComponent = <Wrench className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />;
         break;
       case 'queryNode':
-        nodeColor = 'bg-green-100 dark:bg-green-950 border-green-400 dark:border-green-800 text-green-900 dark:text-green-100';
+        nodeColor = 'bg-green-50 dark:bg-green-950 border-green-400 dark:border-green-800 text-green-900 dark:text-green-100';
+        headerColor = 'bg-green-200 dark:bg-green-900';
         iconComponent = <Database className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />;
         break;
       case 'sftpDownloaderNode':
+        nodeColor = 'bg-purple-50 dark:bg-purple-950 border-purple-400 dark:border-purple-800 text-purple-900 dark:text-purple-100';
+        headerColor = 'bg-purple-200 dark:bg-purple-900';
+        iconComponent = <Download className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />;
+        break;
       case 'sftpUploaderNode':
-        nodeColor = 'bg-purple-100 dark:bg-purple-950 border-purple-400 dark:border-purple-800 text-purple-900 dark:text-purple-100';
-        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />;
+        nodeColor = 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-800 text-indigo-900 dark:text-indigo-100';
+        headerColor = 'bg-indigo-200 dark:bg-indigo-900';
+        iconComponent = <Upload className="h-4 w-4 mr-2 text-indigo-600 dark:text-indigo-400" />;
         break;
       case 'zipNode':
-      case 'unzipNode':
-        nodeColor = 'bg-red-100 dark:bg-red-950 border-red-400 dark:border-red-800 text-red-900 dark:text-red-100';
+        nodeColor = 'bg-red-50 dark:bg-red-950 border-red-400 dark:border-red-800 text-red-900 dark:text-red-100';
+        headerColor = 'bg-red-200 dark:bg-red-900';
         iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />;
         break;
+      case 'unzipNode':
+        nodeColor = 'bg-orange-50 dark:bg-orange-950 border-orange-400 dark:border-orange-800 text-orange-900 dark:text-orange-100';
+        headerColor = 'bg-orange-200 dark:bg-orange-900';
+        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />;
+        break;
       case 'callPipelineNode':
-        nodeColor = 'bg-emerald-100 dark:bg-emerald-950 border-emerald-400 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100';
-        iconComponent = <ArrowRight className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />;
+        nodeColor = 'bg-emerald-50 dark:bg-emerald-950 border-emerald-400 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100';
+        headerColor = 'bg-emerald-200 dark:bg-emerald-900';
+        iconComponent = <Link2 className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />;
         break;
     }
     
     if (isSelected) {
-      nodeColor += ' ring-2 ring-offset-2 ring-blue-500';
+      nodeColor += ' ring-2 ring-offset-1 ring-blue-500';
     }
     
     // Calcular posición con zoom y desplazamiento
@@ -416,53 +431,121 @@ export default function PipelineVisualEditor({
       top: `${(node.position.y * zoom) + position.y}px`,
       transform: `scale(${zoom})`,
       transformOrigin: 'top left',
-      width: '200px',
+      width: '220px',
       zIndex: isSelected ? 10 : 1
+    };
+    
+    // Obtener descripción según tipo de nodo
+    const getNodeTypeName = () => {
+      switch (node.type) {
+        case 'commandNode': return 'Comando';
+        case 'queryNode': return 'Consulta SQL';
+        case 'sftpDownloaderNode': return 'SFTP Descarga';
+        case 'sftpUploaderNode': return 'SFTP Subida';
+        case 'zipNode': return 'Comprimir';
+        case 'unzipNode': return 'Descomprimir';
+        case 'callPipelineNode': return 'Llamar Pipeline';
+        case 'pipelineStart': return 'Inicio Pipeline';
+        default: return 'Nodo';
+      }
     };
     
     return (
       <div
         key={node.id}
-        className={`absolute rounded-md border p-3 ${nodeColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} shadow-sm`}
+        className={`absolute rounded-md border p-0 ${nodeColor} shadow-md overflow-hidden`}
         style={nodeStyle}
         onClick={() => handleNodeClick(node.id)}
-        onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
       >
-        <div className="flex items-center justify-between">
+        {/* Cabecera arrastrable */}
+        <div 
+          className={`flex items-center justify-between p-2 ${headerColor} ${!readOnly ? 'cursor-grab active:cursor-grabbing' : ''}`}
+          onMouseDown={(e) => !readOnly && handleNodeMouseDown(e, node.id)}
+          onTouchStart={(e) => !readOnly && handleNodeTouchStart(e, node.id)}
+        >
           <div className="flex items-center">
             {iconComponent}
-            <span className="font-medium">{node.data.label}</span>
+            <span className="font-medium truncate max-w-[120px]" title={node.data.label}>
+              {node.data.label}
+            </span>
           </div>
           
-          {isSelected && !readOnly && !isPipelineStart && (
-            <button
-              className="text-red-500 hover:text-red-700"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteNode(node.id);
-              }}
-            >
-              <XCircle className="h-4 w-4" />
-            </button>
+          <div className="flex space-x-1">
+            {!readOnly && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 bg-white/20 dark:bg-black/20 rounded p-0.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Aquí debería ir la función para mostrar detalles
+                        console.log("Ver detalles del nodo", node.id);
+                      }}
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Ver detalles</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {isSelected && !readOnly && !isPipelineStart && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="text-red-500 hover:text-red-700 bg-white/20 dark:bg-black/20 rounded p-0.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNode(node.id);
+                      }}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Eliminar nodo</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
+        
+        {/* Contenido del nodo */}
+        <div className="p-2">
+          <div className="flex items-center mb-1">
+            <div className="text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">
+              {getNodeTypeName()}
+            </div>
+          </div>
+          
+          {node.data.description && (
+            <div className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+              {node.data.description}
+            </div>
+          )}
+          
+          {/* Características específicas por tipo de nodo */}
+          {(node.type === 'sftpDownloaderNode' || node.type === 'sftpUploaderNode') && (
+            <div className="mt-1 text-xs text-slate-500 flex flex-col gap-1">
+              {node.data.details?.sftpDownloader?.output && (
+                <span className="truncate" title={node.data.details.sftpDownloader.output}>
+                  Salida: {node.data.details.sftpDownloader.output}
+                </span>
+              )}
+              {node.data.details?.sftpUploader?.input && (
+                <span className="truncate" title={node.data.details.sftpUploader.input}>
+                  Entrada: {node.data.details.sftpUploader.input}
+                </span>
+              )}
+            </div>
           )}
         </div>
-        
-        <div className="mt-1 text-xs text-slate-500">
-          {node.type === 'commandNode' && 'Comando'}
-          {node.type === 'queryNode' && 'Consulta SQL'}
-          {node.type === 'sftpDownloaderNode' && 'SFTP Descarga'}
-          {node.type === 'sftpUploaderNode' && 'SFTP Subida'}
-          {node.type === 'zipNode' && 'Comprimir'}
-          {node.type === 'unzipNode' && 'Descomprimir'}
-          {node.type === 'callPipelineNode' && 'Llamar Pipeline'}
-          {node.type === 'pipelineStart' && 'Inicio Pipeline'}
-        </div>
-        
-        {node.data.description && (
-          <div className="mt-1 text-xs text-slate-500">
-            {node.data.description}
-          </div>
-        )}
       </div>
     );
   };
