@@ -213,6 +213,7 @@ export interface SFTPUploader {
   id: string;
   name: string;
   input: string;
+  output: string;
   return_output: boolean;
   sftp_link_id: string;
 }

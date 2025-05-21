@@ -571,59 +571,63 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 {/* Información adicional para nodos de tipo SFTP Uploader */}
                 {unitType === 'sftp_upload' && (
                   <div className="px-2 mb-1">
-                    {/* Debugging info */}
-                    {console.log('Rendering SFTP Uploader node:', node.data.unit)}
-                    {console.log('SFTP Uploader unit data:', JSON.stringify(node.data.unit, null, 2))}
-                    
                     {/* Mostrar directorio de salida (output) */}
                     <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
                       <span className="font-medium">DESTINO:</span> {
                         (() => {
-                          // Obtener el directorio de salida (output) del uploader
-                          // Intentar acceder al campo output de diferentes maneras
+                          // Obtener el nodo completo (obtenido de la API)
                           const sftpUnit = node.data.unit;
                           
-                          // Tratar de obtener el campo output del SFTPUploader
-                          // o del propio objeto si tiene un campo output directo
-                          const outputDir = sftpUnit.SFTPUploader?.output || 
-                                           sftpUnit.output ||
-                                           '';
-                          
-                          console.log('Output directorio para SFTP Uploader:', 
-                                     'unitId:', node.id,
-                                     'output value:', outputDir, 
-                                     'complete data:', sftpUnit);
-                          
-                          // Si no hay output definido, mostrar un mensaje adecuado
-                          if (!outputDir) {
-                            return '⚠️ Sin destino definido';
+                          // Si el nodo tiene datos adicionales de la API, usarlos
+                          if (sftpUnit.SFTPUploader) {
+                            // Verificar si tiene output definido en la estructura principal
+                            if (sftpUnit.SFTPUploader.output) {
+                              return sftpUnit.SFTPUploader.output.length > 40 
+                                ? `${sftpUnit.SFTPUploader.output.substring(0, 40)}...` 
+                                : sftpUnit.SFTPUploader.output;
+                            }
                           }
                           
-                          return outputDir.length > 40 ? `${outputDir.substring(0, 40)}...` : outputDir;
+                          // Si el campo output está directamente en el nodo (estructura alternativa)
+                          if (sftpUnit.output) {
+                            return sftpUnit.output.length > 40 
+                              ? `${sftpUnit.output.substring(0, 40)}...` 
+                              : sftpUnit.output;
+                          }
+                          
+                          // Si no se encontró información de destino
+                          return '⚠️ Sin destino definido';
+                        })()
+                      }
+                    </div>
+                    
+                    {/* Mostrar origen de datos (input) */}
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      <span className="font-medium">ORIGEN:</span> {
+                        (() => {
+                          const sftpUnit = node.data.unit;
+                          const inputDir = sftpUnit.SFTPUploader?.input || sftpUnit.input || '';
+                          
+                          if (!inputDir) return 'Sin definir';
+                          
+                          return inputDir.length > 40 ? `${inputDir.substring(0, 40)}...` : inputDir;
                         })()
                       }
                     </div>
                     
                     {/* Mostrar el nombre del enlace SFTP si está disponible */}
                     {(node.data.unit.SFTPUploader?.SFTPLink || node.data.unit.SFTPLink) && (
-                      <>
-                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">ENLACE:</span> {
-                            (node.data.unit.SFTPUploader?.SFTPLink?.name || 
-                             node.data.unit.SFTPLink?.name || 
-                             'Sin nombre')
-                          }
-                        </div>
-                        
-                        {/* Mostrar el servidor SFTP */}
-                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SERV:</span> {
-                            (node.data.unit.SFTPUploader?.SFTPLink?.server || 
-                             node.data.unit.SFTPLink?.server || 
-                             'Sin servidor')
-                          }
-                        </div>
-                      </>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                        <span className="font-medium">CONEXIÓN:</span> {
+                          (() => {
+                            const link = node.data.unit.SFTPUploader?.SFTPLink || node.data.unit.SFTPLink;
+                            if (!link) return 'Sin definir';
+                            
+                            // Mostrar nombre del servidor y el servidor real
+                            return `${link.name || 'Sin nombre'} (${link.server || '?'})`;
+                          })()
+                        }
+                      </div>
                     )}
                   </div>
                 )}
@@ -754,21 +758,21 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                           
                           {/* Origen de datos - Input siempre existe según la interfaz */}
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos</p>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos (local)</p>
                             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-2 rounded-md">
                               <p className="text-sm font-mono">{unitDetails.details.input || 'No especificado'}</p>
                             </div>
                           </div>
                           
-                          {/* Destino en servidor SFTP (output) - Verificamos si existe */}
-                          {'output' in unitDetails.details && (
-                            <div className="mb-3">
-                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP</p>
-                              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
-                                <p className="text-sm font-mono">{unitDetails.details.output || 'No especificado'}</p>
-                              </div>
+                          {/* Destino en servidor SFTP (output) - Siempre mostrar, incluso si es vacío */}
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP</p>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
+                              <p className="text-sm font-mono">
+                                {unitDetails.details.output ? unitDetails.details.output : 'Sin especificar'}
+                              </p>
                             </div>
-                          )}
+                          </div>
                           
                           {/* Datos de conexión SFTP */}
                           {unitDetails.details.SFTPLink && (
