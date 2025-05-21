@@ -428,8 +428,17 @@ export function convertToFlowCoordinates(
     let descriptiveName = '';
     
     if (unitType === 'command' && unit.command_id) {
-      // Intentar obtener información más descriptiva para comandos
-      descriptiveName = unit.command?.name || unit.command?.target || 'Comando';
+      // Para comandos, mostrar los primeros 40 caracteres del comando real
+      if (unit.command_details) {
+        // Si ya tenemos los detalles precargados
+        const commandText = unit.command_details.target || '';
+        const args = unit.command_details.args || '';
+        const fullCommand = `${commandText} ${args}`.trim();
+        descriptiveName = fullCommand.length > 40 ? fullCommand.substring(0, 40) + '...' : fullCommand;
+      } else {
+        // Fallback a nombres genéricos si no tenemos los detalles
+        descriptiveName = unit.command?.name || unit.comment || 'Comando';
+      }
     } else if (unitType === 'query' && unit.query_queue_id) {
       // Intentar obtener información más descriptiva para consultas SQL
       descriptiveName = unit.query?.name || 'Consulta SQL';

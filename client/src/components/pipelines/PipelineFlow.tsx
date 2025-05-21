@@ -157,12 +157,44 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
     fetchUnitDetails(unitData);
   };
 
+  // Función para precargar detalles de comandos
+  const preloadCommandDetails = async (units: any[]) => {
+    // Filtrar solo las unidades que son comandos
+    const commandUnits = units.filter(unit => unit.command_id);
+    if (commandUnits.length === 0) return units;
+
+    // Crear una copia de las unidades para modificarlas
+    const unitsWithDetails = [...units];
+    
+    // Precargar detalles para cada comando
+    for (const unit of commandUnits) {
+      try {
+        const result = await executeQuery(COMMAND_QUERY, { id: unit.command_id });
+        if (result.data && result.data.merlin_agent_Command && result.data.merlin_agent_Command.length > 0) {
+          // Buscar la unidad correspondiente en la lista de unidades completa y añadir los detalles
+          const unitIndex = unitsWithDetails.findIndex(u => u.id === unit.id);
+          if (unitIndex !== -1) {
+            unitsWithDetails[unitIndex].command_details = result.data.merlin_agent_Command[0];
+          }
+        }
+      } catch (error) {
+        console.error(`Error precargando detalles del comando ${unit.command_id}:`, error);
+      }
+    }
+    
+    return unitsWithDetails;
+  };
+
   useEffect(() => {
     if (pipelineUnits && pipelineUnits.length > 0) {
       console.log('Pipeline Units (datos originales):', JSON.stringify(pipelineUnits, null, 2));
-      const result = convertToFlowCoordinates(pipelineUnits);
-      console.log('Flow Elements (después de conversión):', JSON.stringify(result, null, 2));
-      setFlowElements(result);
+      
+      // Precargar detalles de comandos antes de convertir a coordenadas del flujo
+      preloadCommandDetails(pipelineUnits).then(unitsWithDetails => {
+        const result = convertToFlowCoordinates(unitsWithDetails);
+        console.log('Flow Elements (después de conversión):', JSON.stringify(result, null, 2));
+        setFlowElements(result);
+      });
     }
   }, [pipelineUnits]);
 
