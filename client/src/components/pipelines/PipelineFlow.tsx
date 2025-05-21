@@ -114,9 +114,13 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         // Hacer la consulta para obtener datos SFTP completos
         const result = await executeQuery(SFTP_UPLOADER_QUERY, { id: unitData.sftp_uploader_id });
         
+        console.log('SFTP_UPLOADER_QUERY ejecutado para ID:', unitData.sftp_uploader_id);
+        console.log('Resultado completo de la consulta SFTP Uploader:', JSON.stringify(result, null, 2));
+        
         if (result.data && result.data.merlin_agent_SFTPUploader && result.data.merlin_agent_SFTPUploader.length > 0) {
           const sftpData = result.data.merlin_agent_SFTPUploader[0];
-          console.log('Datos SFTP Uploader obtenidos:', sftpData);
+          console.log('Datos SFTP Uploader obtenidos:', JSON.stringify(sftpData, null, 2));
+          console.log('¿Campo output presente?', sftpData.output !== undefined ? 'SÍ - Valor: ' + sftpData.output : 'NO');
           
           // Si tenemos SFTPLink, perfecto
           if (sftpData.SFTPLink) {
