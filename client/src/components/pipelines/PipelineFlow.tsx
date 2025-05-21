@@ -726,6 +726,28 @@ function determineUnitType(unit: any): string {
   return 'unknown';
 }
 
+// Función para obtener color según el tipo de nodo
+function getNodeColor(type: string): string {
+  switch (type) {
+    case 'command':
+      return '#4f46e5'; // Indigo para comandos
+    case 'query':
+      return '#0ea5e9'; // Azul para consultas SQL
+    case 'sftp_download':
+      return '#10b981'; // Verde para SFTP descarga
+    case 'sftp_upload':
+      return '#84cc16'; // Lima para SFTP subida
+    case 'zip':
+      return '#f59e0b'; // Ámbar para compresión
+    case 'unzip':
+      return '#f97316'; // Naranja para descompresión
+    case 'pipeline':
+      return '#8b5cf6'; // Violeta para llamadas a pipeline
+    default:
+      return '#6b7280'; // Gris para desconocidos
+  }
+}
+
 // Función para obtener una descripción más detallada del tipo de unidad
 function getUnitTypeDescription(unit: any): string {
   if (unit.command_id) return 'Esta unidad ejecuta un comando en el sistema operativo del agente.';
