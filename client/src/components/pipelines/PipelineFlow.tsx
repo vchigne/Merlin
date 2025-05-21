@@ -722,8 +722,28 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                       {unitDetails.type === 'sftp_upload' && unitDetails.details && (
                         <div>
                           <h4 className="text-md font-medium mb-2">Subida SFTP</h4>
-                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos</p>
-                          <p className="text-sm font-mono">{unitDetails.details.input || 'N/A'}</p>
+                          
+                          {/* Origen de datos (input) */}
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos (input)</p>
+                            <p className="text-sm font-mono bg-slate-50 dark:bg-slate-800 p-2 rounded-md">{unitDetails.details.input || 'N/A'}</p>
+                          </div>
+                          
+                          {/* Destino en servidor SFTP (output) */}
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP (output)</p>
+                            <p className="text-sm font-mono bg-slate-50 dark:bg-slate-800 p-2 rounded-md">{unitDetails.details.output || 'N/A'}</p>
+                          </div>
+                          
+                          {/* Información de diagnóstico */}
+                          <details className="mt-3 text-xs">
+                            <summary className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">
+                              Ver información técnica
+                            </summary>
+                            <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800 overflow-auto max-h-[200px]">
+                              <pre className="whitespace-pre-wrap">{JSON.stringify(unitDetails.details, null, 2)}</pre>
+                            </div>
+                          </details>
                         </div>
                       )}
                       
