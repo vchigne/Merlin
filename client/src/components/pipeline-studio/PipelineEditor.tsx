@@ -797,7 +797,10 @@ export default function PipelineEditor({
       {/* Modal de detalles del nodo usando el componente compartido */}
       <NodeDetailsDialog 
         open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setSelectedNode(null);
+        }} 
         nodeId={selectedNode} 
         nodes={nodes} 
       />

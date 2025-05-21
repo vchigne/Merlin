@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Plus, Minus, Trash2, XCircle, Settings2, ArrowRight, Wrench, Database, Info, Link2, Download, Upload } from "lucide-react";
 
 // Componentes para el editor visual de flujos
 // Implementación mejorada con soporte para móviles y conectar nodos
@@ -13,12 +13,14 @@ interface PipelineVisualEditorProps {
     edges: any[];
   };
   onChange: (updatedFlow: any, selectedNodeId?: string | null) => void;
+  onViewNodeDetails?: (nodeId: string) => void; // Callback para ver detalles de un nodo
   readOnly?: boolean;
 }
 
 export default function PipelineVisualEditor({
   flowData,
   onChange,
+  onViewNodeDetails,
   readOnly = false,
 }: PipelineVisualEditorProps) {
   const [nodes, setNodes] = useState<any[]>([]);
@@ -479,8 +481,10 @@ export default function PipelineVisualEditor({
                       className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 bg-white/20 dark:bg-black/20 rounded p-0.5"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Aquí debería ir la función para mostrar detalles
-                        console.log("Ver detalles del nodo", node.id);
+                        // Notificar al padre que el usuario quiere ver los detalles del nodo
+                        if (onViewNodeDetails) {
+                          onViewNodeDetails(node.id);
+                        }
                       }}
                     >
                       <Info className="h-3.5 w-3.5" />
