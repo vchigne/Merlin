@@ -356,14 +356,13 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 )}
                 
-                {/* Información más simple pero útil - Adaptada a lo que realmente tenemos disponible */}
+                {/* Información simplificada y más específica */}
                 <div className="text-xs text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
                   {/* COMANDOS */}
                   {unitType === 'command' && (
                     <div className="mt-1">
-                      <div className="font-medium">ID de Comando:</div>
                       <div className="truncate font-mono text-amber-600 dark:text-amber-400">
-                        {node.data.unit.command_id?.substring(0, 12)}...
+                        ID: {node.data.unit.command_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -371,9 +370,8 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* CONSULTAS SQL */}
                   {unitType === 'query' && (
                     <div className="mt-1">
-                      <div className="font-medium">Cola de Consultas:</div>
                       <div className="truncate font-mono text-blue-600 dark:text-blue-400">
-                        {node.data.unit.query_queue_id?.substring(0, 12)}...
+                        ID: {node.data.unit.query_queue_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -381,9 +379,8 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* SFTP DOWNLOAD */}
                   {unitType === 'sftp_download' && (
                     <div className="mt-1">
-                      <div className="font-medium">Descarga SFTP:</div>
                       <div className="truncate font-mono text-green-600 dark:text-green-400">
-                        {node.data.unit.sftp_downloader_id?.substring(0, 12)}...
+                        ID: {node.data.unit.sftp_downloader_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -391,9 +388,8 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* SFTP UPLOAD */}
                   {unitType === 'sftp_upload' && (
                     <div className="mt-1">
-                      <div className="font-medium">Subida SFTP:</div>
                       <div className="truncate font-mono text-orange-600 dark:text-orange-400">
-                        {node.data.unit.sftp_uploader_id?.substring(0, 12)}...
+                        ID: {node.data.unit.sftp_uploader_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -401,9 +397,8 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* ZIP */}
                   {unitType === 'zip' && (
                     <div className="mt-1">
-                      <div className="font-medium">Compresión ZIP:</div>
                       <div className="truncate font-mono text-amber-600 dark:text-amber-400">
-                        {node.data.unit.zip_id?.substring(0, 12)}...
+                        ID: {node.data.unit.zip_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -411,9 +406,8 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* UNZIP */}
                   {unitType === 'unzip' && (
                     <div className="mt-1">
-                      <div className="font-medium">Extracción ZIP:</div>
                       <div className="truncate font-mono text-indigo-600 dark:text-indigo-400">
-                        {node.data.unit.unzip_id?.substring(0, 12)}...
+                        ID: {node.data.unit.unzip_id?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
@@ -421,41 +415,18 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   {/* PIPELINE */}
                   {unitType === 'pipeline' && (
                     <div className="mt-1">
-                      <div className="font-medium">Pipeline:</div>
                       <div className="truncate font-mono text-pink-600 dark:text-pink-400">
-                        {node.data.unit.call_pipeline?.substring(0, 12)}...
+                        ID: {node.data.unit.call_pipeline?.substring(0, 8)}...
                       </div>
                     </div>
                   )}
                   
-                  {/* Configuraciones importantes */}
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {node.data.unit.timeout_milliseconds > 0 && (
-                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
-                        <span className="text-slate-600 dark:text-slate-300">Timeout:</span> 
-                        <span className="ml-1 font-medium">{Math.round(node.data.unit.timeout_milliseconds/1000)}s</span>
-                      </span>
-                    )}
-                    {node.data.unit.retry_count > 0 && (
-                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
-                        <span className="text-slate-600 dark:text-slate-300">Reintentos:</span> 
-                        <span className="ml-1 font-medium">{node.data.unit.retry_count}</span>
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {node.data.unit.continue_on_error && (
-                      <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/40 dark:text-green-400">
-                        Continúa en error
-                      </span>
-                    )}
-                    {node.data.unit.abort_on_timeout && (
-                      <span className="inline-flex items-center rounded-md bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/40 dark:text-red-400">
-                        Aborta en timeout
-                      </span>
-                    )}
-                  </div>
+                  {/* Solo mostrar configuración de reintentos si es > 0 */}
+                  {node.data.unit.retry_count > 0 && (
+                    <div className="mt-1">
+                      <span className="text-xs text-slate-500">Reintentos: {node.data.unit.retry_count}</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex mt-1">
