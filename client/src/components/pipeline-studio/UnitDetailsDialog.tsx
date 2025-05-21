@@ -58,9 +58,20 @@ export default function UnitDetailsDialog({
                 <span className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
                   {unitDetails.type}
                 </span>
+                <span className="text-xs bg-red-100 dark:bg-red-900 px-2 py-1 rounded-full text-red-700 dark:text-red-300">
+                  ID: {unitDetails.details?.id || 'N/A'}
+                </span>
               </DialogTitle>
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 {unitDetails.description}
+              </div>
+              <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono overflow-auto max-h-32">
+                <p>Tipo exacto: {JSON.stringify(unitDetails.type)}</p>
+                <p>SFTP Link ID: {JSON.stringify(unitDetails.details?.sftp_link_id)}</p>
+                <p>Tiene SFTPLink: {JSON.stringify(!!unitDetails.details?.SFTPLink)}</p>
+                <p>Output: {JSON.stringify(unitDetails.details?.output)}</p>
+                <p>Input: {JSON.stringify(unitDetails.details?.input)}</p>
+                <p>Coincide con ID especial: {JSON.stringify(unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c')}</p>
               </div>
             </DialogHeader>
             
