@@ -382,6 +382,33 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 </div>
                 
+                {/* Información adicional para nodos de tipo comando */}
+                {unitType === 'command' && node.data.unit.command_details && (
+                  <div className="px-2 mb-1">
+                    {/* Mostrar los primeros 40 caracteres del comando */}
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      <span className="font-medium">CMD:</span> {
+                        (() => {
+                          const target = node.data.unit.command_details.target || '';
+                          const args = node.data.unit.command_details.args || '';
+                          const fullCommand = `${target} ${args}`.trim();
+                          return fullCommand.length > 40 ? `${fullCommand.substring(0, 40)}...` : fullCommand;
+                        })()
+                      }
+                    </div>
+                    
+                    {/* Mostrar el directorio de trabajo */}
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      <span className="font-medium">DIR:</span> {
+                        (() => {
+                          const workDir = node.data.unit.command_details.working_directory || '';
+                          return workDir.length > 40 ? `${workDir.substring(0, 40)}...` : workDir;
+                        })()
+                      }
+                    </div>
+                  </div>
+                )}
+                
                 {status !== 'pending' && (
                   <div className="px-2 mt-1">
                     <Badge variant="outline" className={`text-xs ${
