@@ -270,12 +270,12 @@ export default function PipelineVisualEditor({
     // Actualizar la posición del nodo con precisión exacta
     const updatedNodes = nodes.map(node => {
       if (node.id === draggingNode) {
-        // Asegurar posición exacta sin redondeo
+        // Asegurar posición exacta sin redondeo, usando integers para mejor posicionamiento
         return {
           ...node,
           position: {
-            x: Math.round((node.position.x + dx) * 100) / 100, // Redondeo a 2 decimales para evitar errores de precisión
-            y: Math.round((node.position.y + dy) * 100) / 100
+            x: Math.round(node.position.x + dx),
+            y: Math.round(node.position.y + dy)
           }
         };
       }
