@@ -331,7 +331,15 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
               <div 
                 key={node.id}
                 className={`absolute w-52 pipeline-node ${status} cursor-pointer hover:shadow-md transition-shadow`}
-                style={{ top: `${node.position.y}px`, left: `${node.position.x}px`, zIndex: 1 }}
+                style={{ 
+                  top: `${node.position.y}px`, 
+                  left: `${node.position.x}px`, 
+                  zIndex: 1,
+                  borderLeft: `4px solid ${getNodeColor(unitType)}`,
+                  borderTop: `1px solid ${getNodeColor(unitType)}20`,
+                  borderRight: `1px solid ${getNodeColor(unitType)}20`,
+                  borderBottom: `1px solid ${getNodeColor(unitType)}20`,
+                }}
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
