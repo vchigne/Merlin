@@ -66,7 +66,7 @@ export default function UnitDetailsDialog({
             
             <div className="space-y-4 py-4">
               {/* Detalles específicos para SFTP Uploader */}
-              {unitDetails.type === 'sftp_upload' && unitDetails.details && (
+              {(unitDetails.type === 'sftp_upload' || unitDetails.type === 'sftp_uploader') && unitDetails.details && (
                 <div className="space-y-4">
                   {/* Sección de Rutas SFTP */}
                   <div>
