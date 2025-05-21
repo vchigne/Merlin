@@ -8,33 +8,26 @@ import { parse, stringify } from "yaml";
 import { useToast } from "@/hooks/use-toast";
 
 interface PipelineYamlEditorProps {
-  pipelineData: any;
-  onChange: (updatedPipeline: any) => void;
+  value: string;
+  onChange: (yaml: string) => void;
   readOnly?: boolean;
 }
 
 export default function PipelineYamlEditor({
-  pipelineData,
+  value,
   onChange,
   readOnly = false,
 }: PipelineYamlEditorProps) {
-  const [yamlContent, setYamlContent] = useState("");
+  const [yamlContent, setYamlContent] = useState(value || "");
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  // Actualizar el contenido YAML cuando cambian los datos del pipeline
+  // Actualizar el contenido YAML cuando cambia el valor de entrada
   useEffect(() => {
-    if (pipelineData) {
-      try {
-        const yaml = stringify(pipelineData);
-        setYamlContent(yaml);
-        setError(null);
-      } catch (err: any) {
-        setError(`Error al generar YAML: ${err.message}`);
-      }
-    }
-  }, [pipelineData]);
+    setYamlContent(value || "");
+    setError(null);
+  }, [value]);
 
   // Procesar cambios en el editor YAML
   const handleYamlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -45,11 +38,11 @@ export default function PipelineYamlEditor({
     
     try {
       // Intentar parsear el YAML para validarlo
-      const parsedData = parse(newYaml);
+      parse(newYaml); // Solo validamos la sintaxis
       setError(null);
       
       // Solo notificar cambios válidos
-      onChange(parsedData);
+      onChange(newYaml);
     } catch (err: any) {
       setError(`Error de sintaxis: ${err.message}`);
     }
