@@ -375,11 +375,20 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 onClick={() => handleUnitClick(node.data.unit)}
                 title="Haz clic para ver detalles"
               >
-                <div className="flex items-center space-x-2 mb-1 px-2">
-                  {getUnitIcon(unitType)}
-                  <div className="text-sm font-medium dark:text-white truncate max-w-[85%]">
-                    {node.data.label}
+                <div className="flex flex-col px-2">
+                  <div className="flex items-center space-x-2 mb-1">
+                    {getUnitIcon(unitType)}
+                    <div className="text-sm font-medium dark:text-white truncate max-w-[85%]">
+                      {unitType === 'command' ? 'Comando' : node.data.label}
+                    </div>
                   </div>
+                  
+                  {/* Subtítulo para nodos de comando */}
+                  {unitType === 'command' && node.data.unit.command_details && (
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate ml-6 -mt-1 mb-1">
+                      {node.data.unit.command_details.name || node.data.label}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Información adicional para nodos de tipo comando */}
