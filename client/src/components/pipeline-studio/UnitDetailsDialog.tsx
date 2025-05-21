@@ -595,6 +595,20 @@ export default function UnitDetailsDialog({
                         <div className="bg-white dark:bg-slate-900 p-2 rounded-md border border-slate-200 dark:border-slate-700 font-mono text-xs">
                           {unitDetails.details?.output || "No especificada"}
                         </div>
+
+                        {/* Panel de diagnóstico temporal */}
+                        <div className="mt-2 bg-slate-100 dark:bg-slate-800 p-2 text-xs rounded border border-amber-200 dark:border-amber-800">
+                          <details>
+                            <summary className="font-bold text-amber-700 dark:text-amber-400 cursor-pointer">Información de Diagnóstico</summary>
+                            <div className="mt-1 space-y-1">
+                              <div><span className="font-semibold">output:</span> {JSON.stringify(unitDetails.details?.output)}</div>
+                              <div><span className="font-semibold">Todas las props:</span> {JSON.stringify(Object.keys(unitDetails.details || {}))}</div>
+                              <div><span className="font-semibold">SFTPLink presente:</span> {unitDetails.details?.SFTPLink ? "Sí" : "No"}</div>
+                              <div><span className="font-semibold">Datos completos:</span> <pre className="whitespace-pre-wrap">{JSON.stringify(unitDetails.details, null, 2)}</pre></div>
+                            </div>
+                          </details>
+                        </div>
+                        
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Ruta en el servidor SFTP donde será guardado el archivo
                         </p>
