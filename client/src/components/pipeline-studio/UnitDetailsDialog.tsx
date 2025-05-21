@@ -424,9 +424,9 @@ export default function UnitDetailsDialog({
               {unitDetails.type === 'sftp_upload' && (
                 <div className="space-y-4">
                   {/* Encabezado con información principal */}
-                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md p-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-md font-semibold text-orange-700 dark:text-orange-400 flex items-center">
+                      <h3 className="text-md font-semibold text-blue-700 dark:text-blue-400 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                           <polyline points="17 8 12 3 7 8" />

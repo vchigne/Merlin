@@ -62,63 +62,63 @@ export default function NodeDetailsDialog({ open, onOpenChange, nodeId, nodes }:
       
       console.log('Obteniendo detalles para tipo:', nodeType);
       
-      // SFTP Downloader
+      // SFTP Downloader - Ahora usando datos reales de la unidad
       if (nodeType === 'sftp_download') {
-        // Datos básicos
-        const demoServer = {
-          id: "demo-id",
-          name: "SFTP Demo", 
-          server: "sftp.example.com",
+        console.log('Detalles del SFTP Downloader:', unitData.SFTPDownloader);
+        
+        // Usar los datos reales que vienen en la consulta principal
+        const realSftpData = unitData.SFTPDownloader || {
+          id: unitData.sftp_downloader_id,
+          name: 'Descarga SFTP',
+          output: 'Sin ruta de salida especificada',
+          return_output: false
+        };
+        
+        const realSftpLinkData = unitData.SFTPDownloader?.SFTPLink || {
+          id: realSftpData.sftp_link_id || 'N/A',
+          name: 'Enlace SFTP',
+          server: 'No disponible',
           port: 22,
-          user: "usuario_sftp",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          user: 'No disponible'
         };
         
         setNodeDetails({
           type: nodeType,
-          name: 'Descarga SFTP',
+          name: realSftpData.name || 'Descarga SFTP',
           description: 'Descarga archivos desde un servidor SFTP remoto',
           details: {
-            id: unitData.sftp_downloader_id,
-            name: 'Descarga SFTP',
-            input: unitData.input || "Sin ruta de entrada especificada",
-            output: unitData.output || "Sin ruta de salida especificada",
-            sftp_link_id: unitData.sftp_link_id || "No disponible",
-            return_output: unitData.return_output || false,
-            created_at: unitData.created_at,
-            updated_at: unitData.updated_at,
-            SFTPLink: demoServer
+            ...realSftpData,
+            SFTPLink: realSftpLinkData
           }
         });
       }
-      // SFTP Uploader
+      // SFTP Uploader - Ahora usando datos reales de la unidad
       else if (nodeType === 'sftp_upload') {
-        // Datos básicos
-        const demoServer = {
-          id: "demo-id",
-          name: "SFTP Demo", 
-          server: "sftp.example.com",
+        console.log('Detalles del SFTP Uploader:', unitData.SFTPUploader);
+        
+        // Usar los datos reales que vienen en la consulta principal
+        const realSftpData = unitData.SFTPUploader || {
+          id: unitData.sftp_uploader_id,
+          name: 'Subida SFTP',
+          input: 'Sin ruta de entrada especificada',
+          return_output: false
+        };
+        
+        const realSftpLinkData = unitData.SFTPUploader?.SFTPLink || {
+          id: realSftpData.sftp_link_id || 'N/A',
+          name: 'Enlace SFTP',
+          server: 'No disponible',
           port: 22,
-          user: "usuario_sftp",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          user: 'No disponible'
         };
         
         setNodeDetails({
           type: nodeType,
-          name: 'Subida SFTP',
+          name: realSftpData.name || 'Subida SFTP',
           description: 'Sube archivos a un servidor SFTP remoto',
           details: {
-            id: unitData.sftp_uploader_id,
-            name: 'Subida SFTP',
-            input: unitData.input || "Sin ruta de entrada especificada",
-            output: unitData.output || "Sin ruta de salida especificada", 
-            sftp_link_id: unitData.sftp_link_id || "No disponible",
-            return_output: unitData.return_output || false,
-            created_at: unitData.created_at,
-            updated_at: unitData.updated_at,
-            SFTPLink: demoServer
+            ...realSftpData,
+            SFTPLink: realSftpLinkData
           }
         });
       }
