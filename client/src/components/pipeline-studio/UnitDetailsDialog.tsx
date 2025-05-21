@@ -76,56 +76,70 @@ export default function UnitDetailsDialog({
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              {/* Detalles específicos para SFTP Uploader o cualquier nodo SFTP */}
-              {(unitDetails.type === 'sftp_upload' || unitDetails.type === 'sftp_uploader' || unitDetails.type === 'SFTP Upload' || unitDetails.type === 'SFTP Download' || 
-                (unitDetails.details && unitDetails.details.sftp_link_id) ||
-                (unitDetails.details && unitDetails.details.SFTPLink) ||
-                (unitDetails.details && unitDetails.details.id === '333de445-7e02-464a-bd2b-95c938dd5b8c')) && unitDetails.details && (
+              {/* Detalles para cualquier tipo de nodo - incluyendo el popup "genérico" */}
+              {unitDetails.details && (
                 <div className="space-y-4">
-                  {/* Sección de Rutas SFTP */}
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                      </svg>
-                      Ruta de Destino SFTP
-                    </h3>
-                    
-                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md p-3 mb-3">
-                      {/* Directorio de Destino */}
-                      <div className="mb-1">
-                        <div className="bg-white/70 dark:bg-black/30 p-3 rounded font-mono text-sm text-orange-700 dark:text-orange-300 font-medium">
-                          {unitDetails.details?.output || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? '/BANCO_PICHINCHA/INT' : 'Sin especificar')}
+                  {/* Sección de Rutas SFTP - Solo mostrar si hay una ruta de salida */}
+                  {(unitDetails.details?.output || unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' || 
+                    unitDetails.details?.SFTPUploader?.output || unitDetails.details?.SFTPDownloader?.output) && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                        </svg>
+                        Ruta de Destino SFTP
+                      </h3>
+                      
+                      <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md p-3 mb-3">
+                        {/* Directorio de Destino */}
+                        <div className="mb-1">
+                          <div className="bg-white/70 dark:bg-black/30 p-3 rounded font-mono text-sm text-orange-700 dark:text-orange-300 font-medium">
+                            {unitDetails.details?.output || unitDetails.details?.SFTPUploader?.output || unitDetails.details?.SFTPDownloader?.output || 
+                            (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? '/BANCO_PICHINCHA/INT' : 'Sin especificar')}
                         </div>
                       </div>
                     </div>
                   </div>
+                  )}
                   
-                  {/* Separador */}
-                  <Separator />
+                  {/* Separador - solo si hay output */}
+                  {(unitDetails.details?.output || unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' || 
+                    unitDetails.details?.SFTPUploader?.output || unitDetails.details?.SFTPDownloader?.output) && (
+                    <Separator />
+                  )}
                   
-                  {/* Sección de Conexión SFTP */}
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-                        <line x1="6" y1="6" x2="6.01" y2="6" />
-                        <line x1="6" y1="18" x2="6.01" y2="18" />
-                      </svg>
-                      Conexión SFTP
-                    </h3>
-                    
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3 mb-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">ID de Conexión:</span>
-                        <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 rounded-full text-blue-700 dark:text-blue-400 font-mono">
-                          {unitDetails.details?.sftp_link_id || (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'c2953f0b-e62d-4fed-8bd1-308c5822eb80' : 'No disponible')}
-                        </span>
-                      </div>
+                  {/* Sección de Conexión SFTP - Solo mostrar si tiene datos de SFTP */}
+                  {(unitDetails.details?.sftp_link_id || unitDetails.details?.SFTPUploader?.sftp_link_id || 
+                    unitDetails.details?.SFTPDownloader?.sftp_link_id || unitDetails.details?.SFTPLink || 
+                    unitDetails.details?.SFTPUploader?.SFTPLink || unitDetails.details?.SFTPDownloader?.SFTPLink ||
+                    unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ||
+                    unitDetails.type === 'sftp_upload' || unitDetails.type === 'sftp_uploader' || 
+                    unitDetails.type === 'SFTP Upload' || unitDetails.type === 'SFTP Download' ||
+                    unitDetails.type === 'sftpDownloaderNode' || unitDetails.type === 'sftpUploaderNode') && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                          <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                          <line x1="6" y1="6" x2="6.01" y2="6" />
+                          <line x1="6" y1="18" x2="6.01" y2="18" />
+                        </svg>
+                        Conexión SFTP
+                      </h3>
                       
-                      {/* Detalles de la conexión SFTP - con acceso seguro a propiedades anidadas */}
-                      {(unitDetails.details?.SFTPLink || unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c') ? (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3 mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">ID de Conexión:</span>
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 rounded-full text-blue-700 dark:text-blue-400 font-mono">
+                            {unitDetails.details?.sftp_link_id || unitDetails.details?.SFTPUploader?.sftp_link_id || 
+                             unitDetails.details?.SFTPDownloader?.sftp_link_id || 
+                             (unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c' ? 'c2953f0b-e62d-4fed-8bd1-308c5822eb80' : 'No disponible')}
+                          </span>
+                        </div>
+                        
+                        {/* Detalles de la conexión SFTP - adaptado para funcionar con cualquier estructura */}
+                        {(unitDetails.details?.SFTPLink || unitDetails.details?.SFTPUploader?.SFTPLink || 
+                          unitDetails.details?.SFTPDownloader?.SFTPLink || unitDetails.details?.id === '333de445-7e02-464a-bd2b-95c938dd5b8c') && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-2">
                           <div className="space-y-1">
                             <h5 className="font-medium text-blue-800 dark:text-blue-300">Nombre de Conexión</h5>
@@ -166,15 +180,7 @@ export default function UnitDetailsDialog({
                             </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-xs text-amber-600 dark:text-amber-400 flex items-center mt-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                          </svg>
-                          Información completa de conexión no disponible
-                        </div>
+                      )}
                       )}
                     </div>
                   </div>
