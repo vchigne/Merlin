@@ -571,17 +571,32 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                 {/* Información adicional para nodos de tipo SFTP Uploader */}
                 {unitType === 'sftp_upload' && (
                   <div className="px-2 mb-1">
+                    {/* Debugging info */}
+                    {console.log('Rendering SFTP Uploader node:', node.data.unit)}
+                    {console.log('SFTP Uploader unit data:', JSON.stringify(node.data.unit, null, 2))}
+                    
                     {/* Mostrar directorio de salida (output) */}
                     <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
                       <span className="font-medium">DESTINO:</span> {
                         (() => {
-                          // Obtener el directorio de salida (output) del uploader 
+                          // Obtener el directorio de salida (output) del uploader
+                          // Intentar acceder al campo output de diferentes maneras
                           const sftpUnit = node.data.unit;
-                          const outputDir = sftpUnit.SFTPUploader?.output || '';
+                          
+                          // Tratar de obtener el campo output del SFTPUploader
+                          // o del propio objeto si tiene un campo output directo
+                          const outputDir = sftpUnit.SFTPUploader?.output || 
+                                           sftpUnit.output ||
+                                           '';
+                          
+                          console.log('Output directorio para SFTP Uploader:', 
+                                     'unitId:', node.id,
+                                     'output value:', outputDir, 
+                                     'complete data:', sftpUnit);
                           
                           // Si no hay output definido, mostrar un mensaje adecuado
                           if (!outputDir) {
-                            return 'Sin especificar';
+                            return '⚠️ Sin destino definido';
                           }
                           
                           return outputDir.length > 40 ? `${outputDir.substring(0, 40)}...` : outputDir;
@@ -590,15 +605,23 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                     </div>
                     
                     {/* Mostrar el nombre del enlace SFTP si está disponible */}
-                    {node.data.unit.SFTPUploader?.SFTPLink && (
+                    {(node.data.unit.SFTPUploader?.SFTPLink || node.data.unit.SFTPLink) && (
                       <>
                         <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">ENLACE:</span> {node.data.unit.SFTPUploader.SFTPLink.name || ''}
+                          <span className="font-medium">ENLACE:</span> {
+                            (node.data.unit.SFTPUploader?.SFTPLink?.name || 
+                             node.data.unit.SFTPLink?.name || 
+                             'Sin nombre')
+                          }
                         </div>
                         
                         {/* Mostrar el servidor SFTP */}
                         <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                          <span className="font-medium">SERV:</span> {node.data.unit.SFTPUploader.SFTPLink.server || ''}
+                          <span className="font-medium">SERV:</span> {
+                            (node.data.unit.SFTPUploader?.SFTPLink?.server || 
+                             node.data.unit.SFTPLink?.server || 
+                             'Sin servidor')
+                          }
                         </div>
                       </>
                     )}
