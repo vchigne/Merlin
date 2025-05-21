@@ -669,10 +669,22 @@ export default function PipelineStudio() {
                         Elige una plantilla predefinida para comenzar tu pipeline.
                       </DialogDescription>
                     </DialogHeader>
-                    <PipelineTemplateSelector
-                      templates={templates}
-                      onSelect={handleTemplateSelect}
-                    />
+                    <div className="grid grid-cols-2 gap-3 p-4">
+                      {templates.map(template => (
+                        <Card 
+                          key={template.id} 
+                          className="cursor-pointer hover:bg-secondary/30 transition-colors"
+                          onClick={() => handleTemplateSelect(template)}
+                        >
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">{template.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{template.description}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
