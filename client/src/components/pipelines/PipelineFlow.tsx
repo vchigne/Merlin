@@ -350,95 +350,27 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                   </div>
                 </div>
                 
-                {node.data.description && (
-                  <div className="text-xs text-slate-600 dark:text-slate-300 mb-2 max-w-full overflow-hidden text-ellipsis">
-                    {node.data.description}
+                {/* Solo mostrar configuración de reintentos si es > 0 */}
+                {node.data.unit.retry_count > 0 && (
+                  <div className="px-2 mt-1 mb-2">
+                    <span className="text-xs text-slate-500">Reintentos: {node.data.unit.retry_count}</span>
                   </div>
                 )}
                 
-                {/* Información simplificada y más específica */}
-                <div className="text-xs text-slate-700 dark:text-slate-300 mb-2 max-w-full overflow-hidden">
-                  {/* COMANDOS */}
-                  {unitType === 'command' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-amber-600 dark:text-amber-400">
-                        ID: {node.data.unit.command_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* CONSULTAS SQL */}
-                  {unitType === 'query' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-blue-600 dark:text-blue-400">
-                        ID: {node.data.unit.query_queue_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* SFTP DOWNLOAD */}
-                  {unitType === 'sftp_download' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-green-600 dark:text-green-400">
-                        ID: {node.data.unit.sftp_downloader_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* SFTP UPLOAD */}
-                  {unitType === 'sftp_upload' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-orange-600 dark:text-orange-400">
-                        ID: {node.data.unit.sftp_uploader_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* ZIP */}
-                  {unitType === 'zip' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-amber-600 dark:text-amber-400">
-                        ID: {node.data.unit.zip_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* UNZIP */}
-                  {unitType === 'unzip' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-indigo-600 dark:text-indigo-400">
-                        ID: {node.data.unit.unzip_id?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* PIPELINE */}
-                  {unitType === 'pipeline' && (
-                    <div className="mt-1">
-                      <div className="truncate font-mono text-pink-600 dark:text-pink-400">
-                        ID: {node.data.unit.call_pipeline?.substring(0, 8)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Solo mostrar configuración de reintentos si es > 0 */}
-                  {node.data.unit.retry_count > 0 && (
-                    <div className="mt-1">
-                      <span className="text-xs text-slate-500">Reintentos: {node.data.unit.retry_count}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex mt-1">
-                  <Badge variant="outline" className={`text-xs ${
-                    status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                    status === 'running' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 animate-pulse' :
-                    status === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
-                    'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Badge>
-                </div>
+                {status !== 'pending' && (
+                  <div className="px-2 mt-1">
+                    <Badge variant="outline" className={`text-xs ${
+                      status === 'completed' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                      status === 'running' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 animate-pulse' :
+                      status === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                      'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}>
+                      {status === 'completed' ? 'Completado' :
+                       status === 'running' ? 'Ejecutando' :
+                       status === 'error' ? 'Error' : ''}
+                    </Badge>
+                  </div>
+                )}
               </div>
             );
           })}
