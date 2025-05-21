@@ -70,11 +70,41 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         query = QUERY_QUEUE_QUERY;
         variables = { id: unitData.query_queue_id };
       } else if (unitData.sftp_downloader_id) {
-        query = SFTP_DOWNLOADER_QUERY;
-        variables = { id: unitData.sftp_downloader_id };
+        // Si tenemos los datos del SFTP Downloader en la unidad, los usamos directamente
+        if (unitData.SFTPDownloader) {
+          console.log('Usando datos de SFTP Downloader ya incluidos en la unidad:', unitData.SFTPDownloader);
+          setUnitDetails({
+            type: 'sftp_download',
+            name: unitData.SFTPDownloader.name || 'Descarga SFTP',
+            description: 'Descarga archivos desde un servidor SFTP remoto',
+            details: unitData.SFTPDownloader
+          });
+          setIsLoading2(false);
+          return;
+        } else {
+          // Si no, hacemos la consulta
+          console.log('Consultando SFTP Downloader porque no está incluido en la unidad');
+          query = SFTP_DOWNLOADER_QUERY;
+          variables = { id: unitData.sftp_downloader_id };
+        }
       } else if (unitData.sftp_uploader_id) {
-        query = SFTP_UPLOADER_QUERY;
-        variables = { id: unitData.sftp_uploader_id };
+        // Si tenemos los datos del SFTP Uploader en la unidad, los usamos directamente
+        if (unitData.SFTPUploader) {
+          console.log('Usando datos de SFTP Uploader ya incluidos en la unidad:', unitData.SFTPUploader);
+          setUnitDetails({
+            type: 'sftp_upload',
+            name: unitData.SFTPUploader.name || 'Subida SFTP',
+            description: 'Sube archivos a un servidor SFTP remoto',
+            details: unitData.SFTPUploader
+          });
+          setIsLoading2(false);
+          return;
+        } else {
+          // Si no, hacemos la consulta
+          console.log('Consultando SFTP Uploader porque no está incluido en la unidad');
+          query = SFTP_UPLOADER_QUERY;
+          variables = { id: unitData.sftp_uploader_id };
+        }
       } else if (unitData.zip_id) {
         query = ZIP_QUERY;
         variables = { id: unitData.zip_id };
