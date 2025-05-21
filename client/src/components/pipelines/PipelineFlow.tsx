@@ -70,41 +70,81 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
         query = QUERY_QUEUE_QUERY;
         variables = { id: unitData.query_queue_id };
       } else if (unitData.sftp_downloader_id) {
-        // Si tenemos los datos del SFTP Downloader en la unidad, los usamos directamente
-        if (unitData.SFTPDownloader) {
-          console.log('Usando datos de SFTP Downloader ya incluidos en la unidad:', unitData.SFTPDownloader);
+        // Para los SFTP Downloaders, siempre consultamos los detalles para asegurar datos actualizados
+        console.log('Obteniendo datos completos del SFTP Downloader:', unitData.sftp_downloader_id);
+        
+        // Hacer la consulta para obtener datos SFTP completos
+        const result = await executeQuery(SFTP_DOWNLOADER_QUERY, { id: unitData.sftp_downloader_id });
+        
+        if (result.data && result.data.merlin_agent_SFTPDownloader && result.data.merlin_agent_SFTPDownloader.length > 0) {
+          const sftpData = result.data.merlin_agent_SFTPDownloader[0];
+          console.log('Datos SFTP Downloader obtenidos:', sftpData);
+          
+          // Si tenemos SFTPLink, perfecto
+          if (sftpData.SFTPLink) {
+            console.log('SFTPLink incluido en respuesta:', sftpData.SFTPLink);
+          } 
+          // Si no, pero tenemos sftp_link_id, consultamos específicamente la info del link
+          else if (sftpData.sftp_link_id) {
+            console.log('Obteniendo datos del enlace SFTP...');
+            const linkResult = await executeQuery(SFTP_LINK_QUERY, { id: sftpData.sftp_link_id });
+            if (linkResult.data && linkResult.data.merlin_agent_SFTPLink && linkResult.data.merlin_agent_SFTPLink.length > 0) {
+              sftpData.SFTPLink = linkResult.data.merlin_agent_SFTPLink[0];
+              console.log('Datos del enlace SFTP obtenidos:', sftpData.SFTPLink);
+            }
+          }
+          
           setUnitDetails({
             type: 'sftp_download',
-            name: unitData.SFTPDownloader.name || 'Descarga SFTP',
+            name: sftpData.name || 'Descarga SFTP',
             description: 'Descarga archivos desde un servidor SFTP remoto',
-            details: unitData.SFTPDownloader
+            details: sftpData
           });
           setIsLoading2(false);
           return;
-        } else {
-          // Si no, hacemos la consulta
-          console.log('Consultando SFTP Downloader porque no está incluido en la unidad');
-          query = SFTP_DOWNLOADER_QUERY;
-          variables = { id: unitData.sftp_downloader_id };
         }
+        
+        // Si la consulta falló, usar los datos que tengamos disponibles
+        query = SFTP_DOWNLOADER_QUERY;
+        variables = { id: unitData.sftp_downloader_id };
       } else if (unitData.sftp_uploader_id) {
-        // Si tenemos los datos del SFTP Uploader en la unidad, los usamos directamente
-        if (unitData.SFTPUploader) {
-          console.log('Usando datos de SFTP Uploader ya incluidos en la unidad:', unitData.SFTPUploader);
+        // Para los SFTP Uploaders, siempre consultamos los detalles para asegurar datos actualizados
+        console.log('Obteniendo datos completos del SFTP Uploader:', unitData.sftp_uploader_id);
+        
+        // Hacer la consulta para obtener datos SFTP completos
+        const result = await executeQuery(SFTP_UPLOADER_QUERY, { id: unitData.sftp_uploader_id });
+        
+        if (result.data && result.data.merlin_agent_SFTPUploader && result.data.merlin_agent_SFTPUploader.length > 0) {
+          const sftpData = result.data.merlin_agent_SFTPUploader[0];
+          console.log('Datos SFTP Uploader obtenidos:', sftpData);
+          
+          // Si tenemos SFTPLink, perfecto
+          if (sftpData.SFTPLink) {
+            console.log('SFTPLink incluido en respuesta:', sftpData.SFTPLink);
+          } 
+          // Si no, pero tenemos sftp_link_id, consultamos específicamente la info del link
+          else if (sftpData.sftp_link_id) {
+            console.log('Obteniendo datos del enlace SFTP...');
+            const linkResult = await executeQuery(SFTP_LINK_QUERY, { id: sftpData.sftp_link_id });
+            if (linkResult.data && linkResult.data.merlin_agent_SFTPLink && linkResult.data.merlin_agent_SFTPLink.length > 0) {
+              sftpData.SFTPLink = linkResult.data.merlin_agent_SFTPLink[0];
+              console.log('Datos del enlace SFTP obtenidos:', sftpData.SFTPLink);
+            }
+          }
+          
           setUnitDetails({
             type: 'sftp_upload',
-            name: unitData.SFTPUploader.name || 'Subida SFTP',
+            name: sftpData.name || 'Subida SFTP',
             description: 'Sube archivos a un servidor SFTP remoto',
-            details: unitData.SFTPUploader
+            details: sftpData
           });
           setIsLoading2(false);
           return;
-        } else {
-          // Si no, hacemos la consulta
-          console.log('Consultando SFTP Uploader porque no está incluido en la unidad');
-          query = SFTP_UPLOADER_QUERY;
-          variables = { id: unitData.sftp_uploader_id };
         }
+        
+        // Si la consulta falló, usar los datos que tengamos disponibles
+        query = SFTP_UPLOADER_QUERY;
+        variables = { id: unitData.sftp_uploader_id };
       } else if (unitData.zip_id) {
         query = ZIP_QUERY;
         variables = { id: unitData.zip_id };
