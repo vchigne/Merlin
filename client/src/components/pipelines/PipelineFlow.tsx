@@ -723,39 +723,43 @@ export default function PipelineFlow({ pipelineUnits, pipelineJobs, isLoading }:
                         <div>
                           <h4 className="text-md font-medium mb-2">Subida SFTP</h4>
                           
-                          {/* Mostramos solo el output como lo más importante */}
+                          {/* Origen de datos - Input siempre existe según la interfaz */}
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP (output)</p>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
-                              <p className="text-sm font-mono">{unitDetails.details.output || 'No especificado'}</p>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Origen de datos</p>
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-2 rounded-md">
+                              <p className="text-sm font-mono">{unitDetails.details.input || 'No especificado'}</p>
                             </div>
                           </div>
+                          
+                          {/* Destino en servidor SFTP (output) - Verificamos si existe */}
+                          {'output' in unitDetails.details && (
+                            <div className="mb-3">
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Destino en servidor SFTP</p>
+                              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-2 rounded-md">
+                                <p className="text-sm font-mono">{unitDetails.details.output || 'No especificado'}</p>
+                              </div>
+                            </div>
+                          )}
                           
                           {/* Datos de conexión SFTP */}
                           {unitDetails.details.SFTPLink && (
                             <div className="mb-3">
                               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Conexión SFTP</p>
                               <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-md">
-                                <p className="text-sm"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink.server || 'N/A'}</p>
-                                <p className="text-sm"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink.port || '22'}</p>
+                                <p className="text-sm mb-1"><span className="font-medium">Nombre:</span> {unitDetails.details.SFTPLink.name || 'N/A'}</p>
+                                <p className="text-sm mb-1"><span className="font-medium">Servidor:</span> {unitDetails.details.SFTPLink.server || 'N/A'}</p>
+                                <p className="text-sm mb-1"><span className="font-medium">Puerto:</span> {unitDetails.details.SFTPLink.port || '22'}</p>
                                 <p className="text-sm"><span className="font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user || 'N/A'}</p>
                               </div>
                             </div>
                           )}
                           
-                          {/* Información de diagnóstico */}
+                          {/* Información diagnóstica más completa */}
                           <details className="mt-3 text-xs">
                             <summary className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">
-                              Información técnica completa
+                              Información técnica
                             </summary>
                             <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800 overflow-auto max-h-[200px]">
-                              <p className="mb-2 font-medium">Campos disponibles:</p>
-                              <ul className="list-disc pl-4 mb-2">
-                                {Object.keys(unitDetails.details).map(key => (
-                                  <li key={key}>{key}: {typeof unitDetails.details[key] === 'object' ? '[objeto]' : String(unitDetails.details[key])}</li>
-                                ))}
-                              </ul>
-                              <p className="mb-1 font-medium">JSON completo:</p>
                               <pre className="whitespace-pre-wrap">{JSON.stringify(unitDetails.details, null, 2)}</pre>
                             </div>
                           </details>
