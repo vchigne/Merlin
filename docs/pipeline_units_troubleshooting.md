@@ -282,6 +282,74 @@ El código C# nos confirmó que los nombres de las relaciones en GraphQL son:
 - ✅ `SFTPUploader` (no `merlin_agent_SFTPUploader`)
 - ✅ `SFTPLink` (relación anidada dentro de SFTPDownloader/SFTPUploader)
 
+## DESCUBRIMIENTO: Operaciones de Escritura (Mutaciones)
+
+### Código C# de Mutaciones
+El análisis del código fuente reveló que el agente NO es solo de lectura. Realiza operaciones de escritura:
+
+```csharp
+public class UpsertAgentPassportPingResponse
+{
+    [JsonPropertyName("insert_merlin_agent_AgentPassportPing")]
+    public InsertMerlinAgentAgentPassportPing InsertMerlinAgentAgentPassportPing { get; set; }
+}
+
+public class InsertMerlinAgentAgentPassportPing
+{
+    [JsonPropertyName("affected_rows")]
+    public int AffectedRows { get; set; }
+}
+```
+
+### Operaciones de Escritura Permitidas
+Basándose en el código oficial del agente, identificamos estas operaciones de escritura legítimas:
+
+1. **Actualización de Pings de Agente**: El agente actualiza constantemente su estado de vida
+2. **Creación de Agentes**: Para instalación de nuevos clientes Merlin
+3. **Creación de Pipelines**: Para diseño de nuevos flujos de trabajo
+4. **Actualización de Estado de Salud**: Para monitoreo en tiempo real
+
+### Mutaciones GraphQL Implementadas
+
+```typescript
+// En shared/hasura-service.ts
+export const HASURA_MUTATIONS = {
+  UPSERT_AGENT_PING: `
+    mutation UpsertAgentPing($agentId: uuid!, $pingData: merlin_agent_AgentPassportPing_insert_input!) {
+      insert_merlin_agent_AgentPassportPing(
+        objects: [$pingData]
+        on_conflict: {
+          constraint: merlin_agent_AgentPassportPing_agent_passport_id_key
+          update_columns: [hostname, ips, agent_local_time, current_directory, os_version, agent_version_from_source_code, last_ping_at]
+        }
+      ) {
+        affected_rows
+      }
+    }
+  `,
+  
+  INSERT_AGENT: `...`,
+  INSERT_PIPELINE: `...`,
+  UPDATE_AGENT_HEALTH: `...`,
+  UPDATE_AGENT_STATUS: `...`
+}
+```
+
+### Diferencias en Tipos de Datos
+El código C# reveló correcciones importantes en nuestros modelos TypeScript:
+
+```typescript
+// ANTES (incorrecto)
+export interface AgentPassportPing {
+  agent_local_time: string; // ❌ Era string
+}
+
+// DESPUÉS (correcto, basado en C#)
+export interface AgentPassportPing {
+  agent_local_time: Date; // ✅ DateTime en C# = Date en TypeScript
+}
+```
+
 ### Configuración de Relaciones en Hasura
 Para resolver las relaciones SFTP en el futuro:
 1. Verificar que las foreign keys estén configuradas correctamente

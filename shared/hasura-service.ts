@@ -463,6 +463,99 @@ export const HASURA_QUERIES = {
   `
 };
 
+// ===== MUTACIONES GRAPHQL CENTRALIZADAS =====
+
+export const HASURA_MUTATIONS = {
+  // Basado en el código C# oficial del agente
+  UPSERT_AGENT_PING: `
+    mutation UpsertAgentPing($agentId: uuid!, $pingData: merlin_agent_AgentPassportPing_insert_input!) {
+      insert_merlin_agent_AgentPassportPing(
+        objects: [$pingData]
+        on_conflict: {
+          constraint: merlin_agent_AgentPassportPing_agent_passport_id_key
+          update_columns: [
+            hostname, 
+            ips, 
+            agent_local_time, 
+            current_directory, 
+            os_version, 
+            agent_version_from_source_code,
+            last_ping_at
+          ]
+        }
+      ) {
+        affected_rows
+      }
+    }
+  `,
+
+  // Crear nuevo agente (para la funcionalidad permitida)
+  INSERT_AGENT: `
+    mutation InsertAgent($agentData: merlin_agent_AgentPassport_insert_input!) {
+      insert_merlin_agent_AgentPassport(objects: [$agentData]) {
+        affected_rows
+        returning {
+          id
+          name
+          description
+          is_testing
+          enabled
+          is_healthy
+          created_at
+        }
+      }
+    }
+  `,
+
+  // Crear nuevo pipeline (para la funcionalidad permitida)
+  INSERT_PIPELINE: `
+    mutation InsertPipeline($pipelineData: merlin_agent_Pipeline_insert_input!) {
+      insert_merlin_agent_Pipeline(objects: [$pipelineData]) {
+        affected_rows
+        returning {
+          id
+          name
+          description
+          abort_on_error
+          agent_passport_id
+          disposable
+          created_at
+        }
+      }
+    }
+  `,
+
+  // Actualizar estado de salud del agente
+  UPDATE_AGENT_HEALTH: `
+    mutation UpdateAgentHealth($agentId: uuid!, $isHealthy: Boolean!) {
+      update_merlin_agent_AgentPassport_by_pk(
+        pk_columns: {id: $agentId}
+        _set: {is_healthy: $isHealthy}
+      ) {
+        id
+        name
+        is_healthy
+        updated_at
+      }
+    }
+  `,
+
+  // Habilitar/deshabilitar agente
+  UPDATE_AGENT_STATUS: `
+    mutation UpdateAgentStatus($agentId: uuid!, $enabled: Boolean!) {
+      update_merlin_agent_AgentPassport_by_pk(
+        pk_columns: {id: $agentId}
+        _set: {enabled: $enabled}
+      ) {
+        id
+        name
+        enabled
+        updated_at
+      }
+    }
+  `
+};
+
 // ===== CLASE DE SERVICIO =====
 
 export class HasuraService {
@@ -670,6 +763,48 @@ export class HasuraService {
       runningJobs: result.data?.runningJobs?.aggregate?.count || 0,
       completedJobs: result.data?.completedJobs?.aggregate?.count || 0,
     };
+  }
+
+  // ===== MÉTODOS DE MUTACIONES =====
+
+  async upsertAgentPing(agentId: string, pingData: AgentPassportPingInput): Promise<number> {
+    const result = await this.executeQuery<UpsertAgentPingResponse>(
+      HASURA_MUTATIONS.UPSERT_AGENT_PING,
+      { agentId, pingData }
+    );
+    return result.data?.insert_merlin_agent_AgentPassportPing?.affected_rows || 0;
+  }
+
+  async insertAgent(agentData: AgentPassportInput): Promise<AgentPassport | null> {
+    const result = await this.executeQuery<InsertAgentResponse>(
+      HASURA_MUTATIONS.INSERT_AGENT,
+      { agentData }
+    );
+    return result.data?.insert_merlin_agent_AgentPassport?.returning?.[0] || null;
+  }
+
+  async insertPipeline(pipelineData: PipelineInput): Promise<Pipeline | null> {
+    const result = await this.executeQuery<InsertPipelineResponse>(
+      HASURA_MUTATIONS.INSERT_PIPELINE,
+      { pipelineData }
+    );
+    return result.data?.insert_merlin_agent_Pipeline?.returning?.[0] || null;
+  }
+
+  async updateAgentHealth(agentId: string, isHealthy: boolean): Promise<AgentPassport | null> {
+    const result = await this.executeQuery<{ update_merlin_agent_AgentPassport_by_pk: AgentPassport }>(
+      HASURA_MUTATIONS.UPDATE_AGENT_HEALTH,
+      { agentId, isHealthy }
+    );
+    return result.data?.update_merlin_agent_AgentPassport_by_pk || null;
+  }
+
+  async updateAgentStatus(agentId: string, enabled: boolean): Promise<AgentPassport | null> {
+    const result = await this.executeQuery<{ update_merlin_agent_AgentPassport_by_pk: AgentPassport }>(
+      HASURA_MUTATIONS.UPDATE_AGENT_STATUS,
+      { agentId, enabled }
+    );
+    return result.data?.update_merlin_agent_AgentPassport_by_pk || null;
   }
 }
 
