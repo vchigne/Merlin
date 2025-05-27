@@ -225,3 +225,207 @@ mutation UpdateAgentAutoUpdate($agentId: uuid!, $autoCleanUpdate: Boolean!) {
 - **En progreso**: Log intermedio durante el proceso
 
 Este sistema proporciona un control completo y auditable del proceso de actualización de agentes, garantizando la integridad y trazabilidad de todas las operaciones.
+
+---
+
+# Sistema de Logging de Ejecución de Pipelines - Merlin
+
+## Descripción General
+
+El sistema de logging de ejecución proporciona rastreo en tiempo real y detallado de todos los jobs de pipeline que se ejecutan en los agentes. Utiliza una arquitectura de dos capas para capturar tanto metadatos de rendimiento como contenido detallado de logs.
+
+## Arquitectura de Logging de Dos Capas
+
+### 1. Capa de Metadatos (PipelineJobLogV2)
+
+```typescript
+interface PipelineJobLog {
+  pipeline_job_queue_id: string;  // ID del job ejecutándose
+  pipeline_unit_id: string;       // Unidad específica en ejecución
+  log_order: number;              // Orden secuencial del log
+  milliseconds: number;           // Tiempo de ejecución en milisegundos
+}
+```
+
+**Propósito:**
+- Tracking de performance y timing
+- Orden secuencial de ejecución
+- Métricas de rendimiento por unidad
+
+### 2. Capa de Contenido (PipelineJobLogV2Body)
+
+```typescript
+interface PipelineJobLogV2Body {
+  id: number;
+  pipeline_job_id: string;
+  pipeline_unit_id: string;
+  pipeline_unit_context_id: string;
+  date: string;
+  level: string;                   // INFO, WARN, ERROR, DEBUG
+  message: string;                 // Mensaje de log
+  callsite: string;                // Ubicación en código
+  exception: string;               // Tipo de excepción
+  exception_message: string;       // Mensaje de error
+  exception_stack_trace: string;   // Stack trace completo
+  created_at: string;
+}
+```
+
+**Propósito:**
+- Logging estructurado con niveles
+- Rastreo completo de excepciones
+- Debugging avanzado con call sites
+- Contexto de ejecución detallado
+
+## Niveles de Log
+
+### **INFO**
+- Progreso normal de ejecución
+- Inicio y finalización de unidades
+- Resultados exitosos
+
+### **WARN** 
+- Situaciones que requieren atención
+- No detienen la ejecución
+- Condiciones potencialmente problemáticas
+
+### **ERROR**
+- Errores que pueden causar fallos
+- Excepciones capturadas
+- Problemas de conectividad o recursos
+
+### **DEBUG**
+- Información técnica detallada
+- Variables y estados internos
+- Información de troubleshooting
+
+## Flujo de Ejecución y Logging
+
+### 1. **Inicio del Job**
+```
+Pipeline Job Queue → Estado: running
+↓
+PipelineJobLogV2 → log_order: 1, milliseconds: 0
+↓  
+PipelineJobLogV2Body → level: INFO, message: "Iniciando pipeline"
+```
+
+### 2. **Ejecución de Unidades**
+```
+Para cada Pipeline Unit:
+├── PipelineJobLogV2 → timing y orden
+├── PipelineJobLogV2Body → logs detallados
+├── Si hay error → exception info completa
+└── Continúa o aborta según configuración
+```
+
+### 3. **Finalización**
+```
+PipelineJobLogV2Body → level: INFO, message: "Pipeline completado"
+↓
+Pipeline Job Queue → Estado: completed/aborted
+↓
+Mutación: CompletePipelineJobResponse
+```
+
+## Operaciones de Logging
+
+### Insertar Log de Timing
+```typescript
+const logData: PipelineJobLogInput = {
+  pipeline_job_queue_id: jobId,
+  pipeline_unit_id: unitId,
+  log_order: sequenceNumber,
+  milliseconds: executionTime
+};
+
+await insertPipelineJobLog(logData);
+```
+
+### Insertar Log de Contenido
+```typescript
+const logBodyData: PipelineJobLogBodyInput = {
+  pipeline_job_id: jobId,
+  pipeline_unit_id: unitId,
+  pipeline_unit_context_id: contextId,
+  date: new Date(),
+  level: "ERROR",
+  message: "Falló la conexión SFTP",
+  callsite: "SFTPUploader.Execute()",
+  exception: "System.Net.Sockets.SocketException",
+  exception_message: "No connection could be made",
+  exception_stack_trace: "..."
+};
+
+await insertPipelineJobLogBody(logBodyData);
+```
+
+### Completar Job
+```typescript
+await completePipelineJob(jobId);
+// Actualiza estado a 'completed' en PipelineJobQueue
+```
+
+## GraphQL Mutations para Logging
+
+### Insertar Log de Timing
+```graphql
+mutation InsertPipelineJobLog($logData: merlin_agent_PipelineJobLogV2_insert_input!) {
+  insert_merlin_agent_PipelineJobLogV2(objects: [$logData]) {
+    affected_rows
+  }
+}
+```
+
+### Insertar Log de Contenido
+```graphql
+mutation InsertPipelineJobLogBody($logBodyData: merlin_agent_PipelineJobLogV2Body_insert_input!) {
+  insert_merlin_agent_PipelineJobLogV2Body(objects: [$logBodyData]) {
+    affected_rows
+  }
+}
+```
+
+### Completar Job
+```graphql
+mutation CompletePipelineJob($jobId: uuid!) {
+  update_merlin_agent_PipelineJobQueue_by_pk(
+    pk_columns: {id: $jobId}
+    _set: {completed: true, running: false}
+  ) {
+    id
+  }
+}
+```
+
+## Casos de Uso para Dashboards
+
+### 1. **Monitoreo en Tiempo Real**
+- Jobs actualmente ejecutándose
+- Progreso de cada unidad del pipeline
+- Tiempo de ejecución acumulado
+
+### 2. **Análisis de Performance**
+- Tiempo promedio por tipo de unidad
+- Identificación de cuellos de botella
+- Trending de rendimiento histórico
+
+### 3. **Debugging y Troubleshooting**
+- Logs completos con stack traces
+- Filtrado por nivel de severidad
+- Rastreo de call sites para ubicar problemas
+
+### 4. **Alertas y Notificaciones**
+- Jobs que exceden tiempo esperado
+- Acumulación de errores o warnings
+- Patrones de fallo recurrentes
+
+## Métricas Clave
+
+- **Tiempo de ejecución promedio** por tipo de unidad
+- **Tasa de éxito/fallo** por pipeline
+- **Distribución de niveles de log** (INFO/WARN/ERROR)
+- **Jobs más lentos** y análisis de causas
+- **Patrones de excepciones** más comunes
+
+Este sistema de logging dual proporciona tanto la granularidad necesaria para debugging como las métricas de performance para optimización continua del sistema Merlin.

@@ -300,6 +300,35 @@ export interface PipelineJobLogV2Body {
   created_at: string;
 }
 
+// Sistema de logging de ejecución de pipelines (basado en código C#)
+export interface PipelineJobLog {
+  pipeline_job_queue_id: string;
+  pipeline_unit_id: string;
+  log_order: number;
+  milliseconds: number;
+}
+
+// Input para insertar logs de ejecución
+export interface PipelineJobLogInput {
+  pipeline_job_queue_id: string;
+  pipeline_unit_id: string;
+  log_order: number;
+  milliseconds: number;
+}
+
+export interface PipelineJobLogBodyInput {
+  pipeline_job_id: string;
+  pipeline_unit_id: string;
+  pipeline_unit_context_id: string;
+  date: Date;
+  level: string;
+  message: string;
+  callsite: string;
+  exception: string;
+  exception_message: string;
+  exception_stack_trace: string;
+}
+
 // ===== RESPUESTAS DE HASURA =====
 
 export interface HasuraResponse<T> {
@@ -382,6 +411,24 @@ export interface InsertAgentUpdateLogResponse {
   };
   update_merlin_agent_AgentPassport: {
     affected_rows: number;
+  };
+}
+
+export interface InsertPipelineJobLogResponse {
+  insert_merlin_agent_PipelineJobLogV2: {
+    affected_rows: number;
+  };
+}
+
+export interface InsertPipelineJobLogBodyResponse {
+  insert_merlin_agent_PipelineJobLogV2Body: {
+    affected_rows: number;
+  };
+}
+
+export interface CompletePipelineJobResponse {
+  update_merlin_agent_PipelineJobQueue_by_pk: {
+    id: string;
   };
 }
 
