@@ -1,0 +1,179 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using dotenv.net;
+using merlin_agent.Engine.Shared;
+using merlin_agent.Engine.AutoUpdate;
+using System;
+using CommandLine;
+using System.IO;
+using merlin_agent.Engine.Orchestation.Runners;
+
+namespace merlin_agent
+{
+    public class Program
+    {
+        internal interface ICommand
+        {
+            void Execute(string[] args);
+        }
+
+        internal class InitOptions {
+
+            public void Setup(string contentRoot) {
+                if (contentRoot != null && contentRoot.Length > 0)
+                {
+                    SetCurrentWorkingDirectory(contentRoot);
+                }
+                else {
+                    Console.WriteLine("Usando el directorio actual");
+                }
+
+                System.Collections.Generic.IDictionary<string, string> envVars = DotEnv.Fluent()
+                .WithEnvFiles(envFilePaths: new[] { ".env", "merlin.env" })
+                .Read();
+
+                if (envVars.ContainsKey("PASSPORT")) {
+                    Config.PASSPORT = envVars["PASSPORT"];
+                }
+                else {
+                    Console.WriteLine("No se encontro variable de entorno PASSPORT. Puede ser que el archivo .env o merlin.env no existan no sean accesibles");
+                    Environment.Exit(0);
+                }
+
+            }
+
+            public void SetCurrentWorkingDirectory(string contentRoot)
+            {
+                try
+                {
+                    Console.WriteLine($"Intentando iniciar el servicio en [{contentRoot}]");
+                    Directory.SetCurrentDirectory(contentRoot);
+                    Console.WriteLine($"Se ha cambiado el directorio de trabajo a [{contentRoot}]");
+                }
+                catch (DirectoryNotFoundException e)
+                {
+                    Console.WriteLine("The specified directory does not exist. {0}", e);
+                    // Salir sin reinciar el servicio
+                    Environment.Exit(0);
+                }
+            }
+        }
+
+        [Verb("normal", HelpText = "[Por defecto] Ejecuta merlin-agent en modo normal. Permanece buscando jobs en Hasura. Se puede usar junto con pm2 o para depurar tareas")]
+        internal class NormalCommand : InitOptions, ICommand
+        {
+            [Option('c', "contentRoot", Required = false, HelpText = "Directorio desde el que se ejecuta")]
+            public string CcontentRoot { get; set; }
+            public void Execute(string[] args)
+            {
+                Setup(CcontentRoot);
+                Console.WriteLine("Ejecutando en modo normal");
+                Config.RUN_ONE_TIME = false;
+                Config.OUTPUT_CONSOLE = true;
+
+                AutoClean autoClean = new AutoClean();
+                autoClean.CleanLocalBackups();
+                CreateHostBuilder(args).Build().Run();
+            }
+        }
+
+        [Verb("onetime", HelpText = "Ejecuta merlin-agent una sola vez. Se puede utilizar en los casos donde solo se pueda contar con el programador de tareas de windows")]
+        internal class OneTimeCommand : InitOptions, ICommand
+        {
+            [Option('c', "contentRoot", Required = false, HelpText = "Directorio desde el que se ejecuta")]
+            public string CcontentRoot { get; set; }
+            public void Execute(string[] args)
+            {
+                Setup(CcontentRoot);
+                Console.WriteLine("Ejecutando una sola vez");
+                Config.RUN_ONE_TIME = true;
+                Config.OUTPUT_CONSOLE = true;
+
+                AutoClean autoClean = new AutoClean();
+                autoClean.CleanLocalBackups();
+                CreateHostBuilder(args).Build().Run();
+            }
+        }
+
+        [Verb("winservice", HelpText = "Ejecuta merlin-agent en modo servicio de windows. Se debe configurar con sc.exe. Ver mas en https://learn.microsoft.com/en-us/dotnet/core/extensions/windows-service")]
+        internal class WinServiceCommand : InitOptions, ICommand
+        {
+            [Option('c', "contentRoot", Required = false, HelpText = "Directorio desde el que se ejecuta")]
+            public string CcontentRoot { get; set; }
+            //[Option('c', "contentRoot", Required = false, HelpText = "Directorio desde el que se ejecuta")]
+            //public string CcontentRoot { get; set; }
+            public void Execute(string[] args)
+            {
+                Setup(CcontentRoot);
+                Console.WriteLine("Ejecutando como servicio de Windows");
+                Config.RUN_ONE_TIME = false;
+                Config.OUTPUT_CONSOLE = false;
+
+                AutoClean autoClean = new AutoClean();
+                autoClean.CleanLocalBackups();
+                CreateHostBuilderWindowsService(args).Build().Run();
+            }
+        }
+        [Verb("linuxservice", HelpText = "Ejecuta merlin-agent en modo servicio de linux. Se debe configurar con systemd. Ver mas en https://devblogs.microsoft.com/dotnet/net-core-and-systemd/")]
+        internal class LinuxServiceCommand : InitOptions, ICommand
+        {
+            [Option('c', "contentRoot", Required = false, HelpText = "Directorio desde el que se ejecuta")]
+            public string CcontentRoot { get; set; }
+            public void Execute(string[] args)
+            {
+                Setup(CcontentRoot);
+                Config.RUN_ONE_TIME = false;
+                Config.OUTPUT_CONSOLE = false;
+
+                Console.WriteLine("LinuxServiceCommand no implementado, saliendo");
+                Environment.Exit(0);
+            }
+        }
+
+
+
+        public static void Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                NormalCommand nc = new NormalCommand();
+                nc.Execute(args);
+            }
+            else
+            {
+                Parser.Default.ParseArguments<NormalCommand, OneTimeCommand, WinServiceCommand>(args).WithParsed<ICommand>(t => t.Execute(args));
+            }
+        }
+
+        public static IHostBuilder CreateHostBuilderWindowsService(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseWindowsService(options => {
+                    options.ServiceName = "Merlin Agent";
+                })
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedService<Worker>();
+                    services.AddHostedService<PingWorker>();
+                    services.AddHostedService<MemoryLogWorker>();
+                    services.AddHostedService<QueueWorker>();
+                });
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedService<Worker>();
+                    services.AddHostedService<PingWorker>();
+                    services.AddHostedService<MemoryLogWorker>();
+                    services.AddHostedService<QueueWorker>();
+                    
+                    //if (Config.RUN_ONE_TIME)
+                    //{
+                    //    Console.WriteLine("Corriendo una sola vez. Ignorando el Ping");
+                    //}
+                    //else {
+                    //    services.AddHostedService<PingWorker>();
+                    //}
+                });
+    }
+}

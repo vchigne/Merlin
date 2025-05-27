@@ -2,7 +2,100 @@
 
 ## Descripción General
 
-El agente Merlin es un sistema distribuido que ejecuta pipelines de automatización complejos. Cada agente opera de forma autónoma, reportando su estado a Hasura y procesando jobs asignados a través de un sistema de colas.
+El agente Merlin es un sistema distribuido que ejecuta pipelines de automatización complejos con **4 workers paralelos** especializados. Cada agente opera de forma autónoma, reportando su estado a Hasura y procesando jobs asignados a través de un sistema de colas robusto.
+
+## 🏗️ Arquitectura Multi-Worker
+
+### **Inicialización del Sistema**
+```csharp
+// 4 Workers ejecutándose simultáneamente
+services.AddHostedService<Worker>();        // Worker principal - lógica de negocio
+services.AddHostedService<PingWorker>();    // Sistema de heartbeat cada ~60s
+services.AddHostedService<MemoryLogWorker>(); // Buffer de logs en memoria
+services.AddHostedService<QueueWorker>();   // Procesador de pipeline jobs
+```
+
+### **1. Worker Principal**
+- **Coordinación general** del agente
+- **Verificación de actualizaciones** automáticas
+- **Gestión del ciclo de vida** del sistema
+- **Lógica de negocio** central
+
+### **2. PingWorker - Sistema de Heartbeat**
+- **Pings regulares** cada ~60 segundos a Hasura
+- **Reporte de estado** (is_healthy = true/false)
+- **Detección automática** de agentes offline
+- **Actualización** de `last_ping_at` timestamp
+
+### **3. MemoryLogWorker - Gestión de Logs**
+- **Buffer en memoria** para logs de alta frecuencia
+- **Flush periódico** a base de datos por lotes
+- **Optimización** de escritura masiva
+- **Prevención** de pérdida de logs durante ejecución
+
+### **4. QueueWorker - Procesador de Jobs**
+- **Polling continuo** de `PipelineJobQueue`
+- **Ejecución** de pipeline units con runners
+- **Invocación** de runners especializados
+- **Actualización** de estados de jobs
+
+## 🔧 Configuración y Despliegue
+
+### **Variables de Entorno Críticas**
+```bash
+# Archivo: .env o merlin.env (obligatorio)
+PASSPORT=uuid-del-agente-passport  # ID único del AgentPassport en Hasura
+```
+
+**⚠️ Crítico**: Sin la variable `PASSPORT`, el agente no puede iniciar.
+
+### **Modos de Ejecución Flexibles**
+
+#### **1. Modo Normal (Desarrollo/Debug)**
+```bash
+merlin-agent normal --contentRoot "C:\path\to\agent"
+merlin-agent normal  # Usa directorio actual
+```
+- **Ejecución continua** con 4 workers activos
+- **Logging visible** en consola
+- **Ideal** para desarrollo y debugging
+- **Compatible** con PM2 para gestión de procesos
+
+#### **2. Modo One-Time (Task Scheduler)**
+```bash
+merlin-agent onetime --contentRoot "C:\path\to\agent"
+```
+- **Ejecución única** y salida controlada
+- **Perfecto** para Windows Task Scheduler
+- **Útil** para entornos con restricciones de servicios persistentes
+- **Sin logging en consola**
+
+#### **3. Modo Windows Service**
+```bash
+merlin-agent winservice --contentRoot "C:\path\to\agent"
+```
+- **Servicio de Windows** nativo
+- **Configuración** con `sc.exe create "Merlin Agent"`
+- **Auto-start** y recuperación automática
+- **Logging** solo a archivos/Hasura
+
+#### **4. Modo Linux Service (Futuro)**
+```bash
+merlin-agent linuxservice --contentRoot "/path/to/agent"
+```
+- **Systemd integration** (pendiente implementación)
+- **Daemon mode** para distribuciones Linux
+
+### **Sistema de Auto-Limpieza**
+```csharp
+AutoClean autoClean = new AutoClean();
+autoClean.CleanLocalBackups();  // Ejecuta al iniciar cualquier modo
+```
+
+**Funciones de limpieza:**
+- Eliminación de archivos temporales de ejecuciones anteriores
+- Limpieza de logs antiguos
+- Remoción de instaladores de updates usados
 
 ## Componentes Principales del Agente
 
