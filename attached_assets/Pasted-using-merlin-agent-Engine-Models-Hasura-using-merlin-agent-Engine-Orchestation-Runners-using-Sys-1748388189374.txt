@@ -1,0 +1,275 @@
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Orchestation.Runners;
+using System;
+using System.Collections.Generic;
+using NLog;
+using merlin_agent.Engine.Shared;
+using System.IO;
+
+namespace merlin_agent.Engine.Orchestation
+{
+    public class Runner
+    {
+        private string _jobId;
+        private Logger _logger = MerlinLogger.NLogger;
+        public Runner(string jobId) {
+            _jobId = jobId;
+        }
+        //public RunnerOutput RunWithRetry(PipelineUnit unit, RunnerOutput currentRunOutput = null, RunnerOutput _lastOutput = null, int tryCount = 0) {
+        public RunnerOutput RunWithRetry(PipelineUnit unit, RunnerOutput _lastOutput = null, int tryCount = 0) {
+            // ! Agregar abortOnError
+            // ! Agregar continueOnError
+            // Esos se agregan en el chain que los llama
+
+            // * Corre por primera vez
+            var _elogger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unit.Id),
+                    new KeyValuePair<string, object>("PipelineJobId", _jobId),
+                }
+            );
+
+            try
+            {
+                var runResult = Run(unit, _lastOutput);
+                if (runResult.HasErrors)
+                {
+                    if (tryCount + 1 <= unit.RetryCount)
+                    {
+                        System.Threading.Thread.Sleep(unit.RetryAfterMilliseconds);
+                        _elogger.Error($"Intento #{tryCount} de {unit.RetryCount}. Ejecucion con errores. Reintentando en [{unit.RetryAfterMilliseconds}] milisegundos");
+                        return RunWithRetry(unit, _lastOutput: _lastOutput, tryCount: tryCount + 1);
+                    }
+                    _elogger.Fatal($"Se ha sobrepasado el limite de reintentos: unit.RetryCount: [{unit.RetryCount}] de {unit.RetryCount}, unit.RetryAfterMilliseconds: [{unit.RetryAfterMilliseconds}]");
+                    return null;
+                }
+                return runResult;
+            }
+            catch (Exception ex)
+            {
+                _elogger.Debug(ex.ToString());
+                _elogger.Fatal(ex, "Esta tarea no ha podido ejecutarse");
+                return null;
+            }
+        }
+        public RunnerOutput Run(PipelineUnit unit, RunnerOutput _lastOutput = null)
+        {
+            if (unit.Command != null)
+            {
+                // Por ahora no recibe nada del runner anterior
+                return RunCommand(unit: unit);
+            }
+            else if (unit.QueryQueue != null)
+            {
+                // Por ahora no recibe nada del runner anterior
+                return RunQueryQueue(unit: unit);
+            }
+            else if (unit.SFTPDownloader != null)
+            {
+                return RunSFTPDownloader(unit: unit, _lastOutput: _lastOutput);
+            }
+            else if (unit.SFTPUploader != null)
+            {
+                return RunSFTPUploader(unit: unit, _lastOutput: _lastOutput);
+            }
+            else if (unit.Unzip != null)
+            {
+                return RunUnzip(unit: unit, _lastOutput: _lastOutput);
+            }
+            else if (unit.Zip != null)
+            {
+                return RunZip(unit: unit, _lastOutput: _lastOutput);
+            }
+            else if (unit.CallPipeline != null) {
+                return RunCallPipeline(unit: unit);
+            }
+            else
+            {
+                Console.WriteLine($"[ERROR] (RunnerOutput.Run). Unit no tiene asociado un comando conocido. unit.Id: {unit.Id}");
+            }
+
+            return null;
+        }
+
+        private RunnerOutput RunCallPipeline (PipelineUnit unit) {
+            Console.WriteLine("Running Call Pipeline");
+            PipelineCallRunner pipelineCallRunner = new PipelineCallRunner(jobId: _jobId, unitId: unit.Id);
+            //bool hasErrors = !pipelineCallRunner.CallPipeline(unit).GetAwaiter().GetResult();
+
+            var unitWaiter = pipelineCallRunner.CallPipeline(unit);
+            unitWaiter.Wait(unit.TimeoutMilliseconds);
+            bool hasErrors = !unitWaiter.Result;
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.CallPipeline,
+                FromOutput = new List<string>(),
+                FromAditionalOutput = new List<string>(),
+                HasErrors = hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: commandRunner.Log, warnings: commandRunner.Warnings, errors: commandRunner.Errors)
+            };
+        }
+
+
+        private RunnerOutput RunCommand(PipelineUnit unit , RunnerOutput _lastOutput = null) {
+            Console.WriteLine("Running Command");
+            CommandRunner commandRunner = new CommandRunner(jobId: _jobId, unitId: unit.Id);
+            bool hasErrors = !commandRunner.RunCommand(unit);
+
+            var commandOutput = new List<string>();
+            if (unit.Command.ReturnOutput && unit.Command.ReturnOutputType == "PATHS") {
+                for (int i = 0; i < commandRunner.Output.Count; i++) {
+                    if (File.Exists(commandRunner.Output[i])) {
+                        commandOutput.Add(commandRunner.Output[i]);
+                    }
+                }
+            }
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.Command,
+                FromOutput = commandOutput,
+                FromAditionalOutput = new List<string>(),
+                HasErrors = hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: commandRunner.Log, warnings: commandRunner.Warnings, errors: commandRunner.Errors)
+            };
+        }
+
+        private RunnerOutput RunQueryQueue(PipelineUnit unit, RunnerOutput _lastOutput = null) {
+            Console.WriteLine("Running QueryQueue");
+            QueryQueueRunner queryQueueRunner = new QueryQueueRunner(jobId: _jobId, unitId: unit.Id);
+            bool hasErrors = !queryQueueRunner.run(unit.QueryQueue);
+            
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.QueryQueue,
+                FromOutput = queryQueueRunner.Output,
+                FromAditionalOutput = new List<string>(),
+                HasErrors= hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: queryQueueRunner.Log, warnings: queryQueueRunner.Warnings, errors: queryQueueRunner.Errors)
+            };
+        }
+
+        private RunnerOutput RunSFTPDownloader(PipelineUnit unit, RunnerOutput _lastOutput = null) {
+            Console.WriteLine("Running SFTPDownloader");
+
+            List<FileStreamSftpDownloader> downloadList = new List<FileStreamSftpDownloader>();
+            if (unit.SFTPDownloader.Input != null && unit.SFTPDownloader.Input.Trim().Length > 0)
+            {
+                downloadList.Add(new FileStreamSftpDownloader() {
+                    Input = unit.SFTPDownloader.Input,
+                    Output = unit.SFTPDownloader.Output,
+                    ReturnOutput = unit.SFTPDownloader.ReturnOutput
+                });
+            };
+            downloadList.AddRange(unit.SFTPDownloader.FileStreamSftpDownloaders);
+            SFTPRunner sftpRunner = new SFTPRunner(unit.SFTPDownloader.SFTPLink, jobId: _jobId, unitId: unit.Id, fsUploader: null, fsDownloader: downloadList);
+            bool hasErrors = !sftpRunner.DownloadFileStream();
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.SFTPDownloader,
+                FromOutput = sftpRunner.Output,
+                FromAditionalOutput = new List<string>(),
+                HasErrors= hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: sftpRunner.Log, warnings: sftpRunner.Warnings, errors: sftpRunner.Errors)
+            };
+        }
+
+        private RunnerOutput RunSFTPUploader(PipelineUnit unit, RunnerOutput _lastOutput = null) {
+            Console.WriteLine("Running SFTUploader");
+            List<FileStreamSftpUploader> uploadList = new List<FileStreamSftpUploader>();
+
+            if (_lastOutput != null && _lastOutput.FromOutput.Count > 0) {
+                uploadList.Add(new FileStreamSftpUploader() {
+                    Input = _lastOutput.FromOutput[0],
+                    Output = unit.SFTPUploader.Output,
+                    ReturnOutput = unit.SFTPUploader.ReturnOutput
+                });
+            }
+            uploadList.AddRange(unit.SFTPUploader.FileStreamSftpUploaders);
+
+            SFTPRunner sftpRunner = new SFTPRunner(unit.SFTPUploader.SFTPLink, jobId: _jobId, unitId: unit.Id, fsUploader: uploadList, fsDownloader: null);
+            bool hasErrors = !sftpRunner.UploadFileStream();
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.SFTPUploader,
+                FromOutput = sftpRunner.Output,
+                FromAditionalOutput = new List<string>(),
+                HasErrors = hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: sftpRunner.Log, warnings: sftpRunner.Warnings, errors: sftpRunner.Errors)
+            };
+        }
+
+        private RunnerOutput RunUnzip(PipelineUnit unit, RunnerOutput _lastOutput = null)
+        {
+            Console.WriteLine("Running UNZIP");
+            List<FileStreamUnzip> unzipList = new List<FileStreamUnzip>();
+            if (_lastOutput != null && _lastOutput.FromOutput.Count >= 1) {
+                unzipList.Add(new FileStreamUnzip() {
+                    Input = _lastOutput.FromOutput[0],
+                    Output = unit.Unzip.Output,
+                    ReturnOutput = unit.Unzip.ReturnOutput
+                });
+            }
+            unzipList.AddRange(unit.Unzip.FileStreamUnzips);
+
+            ZipRunner zipRunner = new ZipRunner(jobId: _jobId, unitId: unit.Id);
+            bool hasErrors = !zipRunner.Decompress(unzipList);
+            
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.Unzip,
+                FromOutput = zipRunner.Output,
+                FromAditionalOutput = new List<string>(),
+                HasErrors = hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: zipRunner.Log, warnings: zipRunner.Warnings, errors: zipRunner.Errors)
+            };
+        }
+
+        private RunnerOutput RunZip(PipelineUnit unit, RunnerOutput _lastOutput = null)
+        {
+            Console.WriteLine("Running ZIP");
+            List<FileStreamZip> zipList = new List<FileStreamZip>();
+            if (_lastOutput != null && _lastOutput.FromOutput.Count > 0)
+            {
+                for (int i = 0; i < _lastOutput.FromOutput.Count; i++)
+                {
+                    zipList.Add(new FileStreamZip()
+                    {
+                        Input = _lastOutput.FromOutput[i],
+                        ReturnOutput = unit.Zip.ReturnOutput,
+                    });
+                }
+            }
+            zipList.AddRange(unit.Zip.FileStreamZips);
+
+            ZipRunner zipRunner = new ZipRunner(jobId: _jobId, unitId: unit.Id);
+            bool hasErrors = !zipRunner.Compress(unit.Zip.Output, zipList);
+
+            return new RunnerOutput()
+            {
+                RunnerType = RunnerType.Zip,
+                FromOutput = zipRunner.Output,
+                FromAditionalOutput = new List<string>(),
+                HasErrors = hasErrors,
+                //Logger = BaseRunnerLogger.generateRunnerLogger(log: zipRunner.Log, warnings: zipRunner.Warnings, errors: zipRunner.Errors)
+            };
+        }
+    }
+
+    public enum RunnerType {
+        Command,
+        QueryQueue,
+        SFTPDownloader,
+        SFTPUploader,
+        Unzip,
+        Zip,
+        CallPipeline
+    }
+
+    public class RunnerOutput {
+        public RunnerType RunnerType { get; set; }
+        public List<string> FromOutput { get; set; }
+        public List<string> FromAditionalOutput { get; set; }
+        public bool HasErrors { get; set; }
+        //public BaseRunnerLogger Logger { get; set; }
+    }
+}

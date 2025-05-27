@@ -237,21 +237,197 @@ private void executeChain(PipelineUnitChain chain, string jobId, RunnerOutput la
 1. **GetMerlinAgentVersion**: Consultar por actualizaciones
 2. **GetMerlinAgentPipelineJob**: Obtener próximo job a ejecutar
 
+## Sistema de Ejecución de Unidades (Runner)
+
+### **Tipos de Unidades Soportadas**
+
+```csharp
+public enum RunnerType {
+    Command,         // Ejecuta comandos shell/batch
+    QueryQueue,      // Ejecuta consultas SQL  
+    SFTPDownloader,  // Descarga archivos desde SFTP
+    SFTPUploader,    // Sube archivos a SFTP
+    Unzip,           // Descomprime archivos
+    Zip,             // Comprime archivos
+    CallPipeline     // Llama a otro pipeline (recursivo)
+}
+```
+
+### **Sistema de Reintentos**
+
+```csharp
+public RunnerOutput RunWithRetry(PipelineUnit unit, RunnerOutput _lastOutput = null, int tryCount = 0) {
+    var runResult = Run(unit, _lastOutput);
+    if (runResult.HasErrors) {
+        if (tryCount + 1 <= unit.RetryCount) {
+            // Esperar antes del reintento
+            System.Threading.Thread.Sleep(unit.RetryAfterMilliseconds);
+            return RunWithRetry(unit, _lastOutput: _lastOutput, tryCount: tryCount + 1);
+        }
+        // Falló después de todos los reintentos
+        return null;
+    }
+    return runResult;
+}
+```
+
+**Configuración por unidad:**
+- `RetryCount`: Número máximo de reintentos
+- `RetryAfterMilliseconds`: Tiempo de espera entre reintentos
+- `TimeoutMilliseconds`: Timeout para la operación
+- `ContinueOnError`: Si continúa aunque falle
+- `AbortOnTimeout`: Si aborta el pipeline por timeout
+
+### **Flujo de Datos Entre Unidades**
+
+#### **RunnerOutput Structure**
+```csharp
+public class RunnerOutput {
+    public RunnerType RunnerType { get; set; }
+    public List<string> FromOutput { get; set; }           // Archivos/paths generados
+    public List<string> FromAditionalOutput { get; set; }  // Output adicional
+    public bool HasErrors { get; set; }                    // Estado de error
+}
+```
+
+#### **Cadenas de Procesamiento de Archivos**
+```
+Command (genera archivo) → SFTP Uploader → SFTP Downloader → Unzip
+    ↓ FromOutput              ↓ _lastOutput    ↓ FromOutput     ↓ _lastOutput
+["/temp/data.csv"]        Input: data.csv   ["/remote/proc.zip"] Input: proc.zip
+```
+
+#### **Ejemplo: SFTP Uploader usando output anterior**
+```csharp
+private RunnerOutput RunSFTPUploader(PipelineUnit unit, RunnerOutput _lastOutput = null) {
+    List<FileStreamSftpUploader> uploadList = new List<FileStreamSftpUploader>();
+
+    // Usar archivo generado por unidad anterior
+    if (_lastOutput != null && _lastOutput.FromOutput.Count > 0) {
+        uploadList.Add(new FileStreamSftpUploader() {
+            Input = _lastOutput.FromOutput[0],  // 👈 Archivo de unidad anterior
+            Output = unit.SFTPUploader.Output,
+            ReturnOutput = unit.SFTPUploader.ReturnOutput
+        });
+    }
+    
+    // Agregar archivos adicionales configurados
+    uploadList.AddRange(unit.SFTPUploader.FileStreamSftpUploaders);
+    
+    SFTPRunner sftpRunner = new SFTPRunner(...);
+    bool hasErrors = !sftpRunner.UploadFileStream();
+    
+    return new RunnerOutput() {
+        RunnerType = RunnerType.SFTPUploader,
+        FromOutput = sftpRunner.Output,
+        HasErrors = hasErrors
+    };
+}
+```
+
+### **Detección de Tipo de Unidad**
+
+El Runner determina automáticamente qué ejecutar basado en qué campo **no es null**:
+
+```csharp
+public RunnerOutput Run(PipelineUnit unit, RunnerOutput _lastOutput = null) {
+    if (unit.Command != null)
+        return RunCommand(unit: unit);
+    else if (unit.QueryQueue != null)
+        return RunQueryQueue(unit: unit);
+    else if (unit.SFTPDownloader != null)
+        return RunSFTPDownloader(unit: unit, _lastOutput: _lastOutput);
+    else if (unit.SFTPUploader != null)
+        return RunSFTPUploader(unit: unit, _lastOutput: _lastOutput);
+    else if (unit.Unzip != null)
+        return RunUnzip(unit: unit, _lastOutput: _lastOutput);
+    else if (unit.Zip != null)
+        return RunZip(unit: unit, _lastOutput: _lastOutput);
+    else if (unit.CallPipeline != null)
+        return RunCallPipeline(unit: unit);
+}
+```
+
+### **Casos de Uso por Tipo de Runner**
+
+#### **1. Command Runner**
+- Ejecuta comandos del sistema operativo
+- Puede generar archivos como output
+- Útil para procesamiento de datos, conversiones, validaciones
+
+```csharp
+// Ejemplo: Convertir CSV a Excel
+if (unit.Command.ReturnOutput && unit.Command.ReturnOutputType == "PATHS") {
+    // Solo incluye archivos que realmente existen
+    for (int i = 0; i < commandRunner.Output.Count; i++) {
+        if (File.Exists(commandRunner.Output[i])) {
+            commandOutput.Add(commandRunner.Output[i]);
+        }
+    }
+}
+```
+
+#### **2. QueryQueue Runner**
+- Ejecuta consultas SQL
+- Retorna resultados como datos estructurados
+- Útil para extracciones de base de datos
+
+#### **3. SFTP Runners**
+- **Downloader**: Descarga archivos desde servidor remoto
+- **Uploader**: Sube archivos a servidor remoto
+- Ambos pueden usar archivos de unidades anteriores
+
+#### **4. Zip Runners**
+- **Zip**: Comprime múltiples archivos
+- **Unzip**: Descomprime archivos
+- Útiles para empaquetado y distribución
+
+#### **5. CallPipeline Runner**
+- Ejecuta otro pipeline completo
+- Permite reutilización y modularidad
+- Soporta timeouts configurables
+
+```csharp
+private RunnerOutput RunCallPipeline (PipelineUnit unit) {
+    PipelineCallRunner pipelineCallRunner = new PipelineCallRunner(jobId: _jobId, unitId: unit.Id);
+    
+    var unitWaiter = pipelineCallRunner.CallPipeline(unit);
+    unitWaiter.Wait(unit.TimeoutMilliseconds);  // 👈 Timeout configurable
+    bool hasErrors = !unitWaiter.Result;
+    
+    return new RunnerOutput() {
+        RunnerType = RunnerType.CallPipeline,
+        HasErrors = hasErrors
+    };
+}
+```
+
 ## Consideraciones de Arquitectura
 
 ### **Escalabilidad**
 - Cada agente opera de forma independiente
 - No hay coordinación entre agentes
 - Hasura actúa como coordinador central
+- Pipelines pueden llamar otros pipelines recursivamente
 
 ### **Confiabilidad**
 - Heartbeat continuo para detección de fallos
 - Reintentos automáticos en operaciones críticas
 - Logging completo para debugging
+- Timeouts configurables por unidad
+- Manejo de errores granular (continue-on-error, abort-on-error)
 
 ### **Mantenibilidad**
 - Actualización automática sin intervención manual
 - Logging estructurado con contexto
 - Configuración centralizada en Hasura
+- Flujo de datos explícito entre unidades
+- Detección automática de tipos de unidades
 
-Esta arquitectura permite que Merlin escale horizontalmente agregando más agentes y mantenga alta disponibilidad através de redundancia y recuperación automática.
+### **Flexibilidad**
+- 7 tipos diferentes de runners
+- Cadenas de procesamiento complejas
+- Reutilización de pipelines vía CallPipeline
+- Configuración granular de reintentos y timeouts
+
+Esta arquitectura permite que Merlin escale horizontalmente agregando más agentes y mantenga alta disponibilidad através de redundancia y recuperación automática, mientras ejecuta flujos de trabajo complejos con múltiples tipos de operaciones.
