@@ -20,7 +20,13 @@ import type {
   PipelineJobLogV2Body,
   SFTPLink,
   SQLConn,
-  Command
+  Command,
+  UpsertAgentPingResponse,
+  InsertPipelineResponse,
+  InsertAgentResponse,
+  AgentPassportPingInput,
+  PipelineInput,
+  AgentPassportInput
 } from './hasura-models';
 
 // ===== CONSULTAS GRAPHQL CENTRALIZADAS =====

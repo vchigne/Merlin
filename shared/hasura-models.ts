@@ -34,7 +34,7 @@ export interface AgentPassportPing extends BaseEntity {
   hostname: string;
   ips: string;
   last_ping_at: string;
-  agent_local_time: string;
+  agent_local_time: Date; // DateTime en C#, Date en TypeScript
   current_directory: string;
   os_version: string;
   agent_version_from_source_code: string;
@@ -331,6 +331,62 @@ export interface SQLConnectionsResponse {
 
 export interface CommandsResponse {
   merlin_agent_Command: Command[];
+}
+
+// ===== RESPUESTAS DE MUTACIONES =====
+
+export interface UpsertAgentPingResponse {
+  insert_merlin_agent_AgentPassportPing: {
+    affected_rows: number;
+  };
+}
+
+export interface InsertPipelineResponse {
+  insert_merlin_agent_Pipeline: {
+    affected_rows: number;
+    returning: Pipeline[];
+  };
+}
+
+export interface InsertAgentResponse {
+  insert_merlin_agent_AgentPassport: {
+    affected_rows: number;
+    returning: AgentPassport[];
+  };
+}
+
+// Input types para mutaciones
+export interface AgentPassportPingInput {
+  agent_passport_id: string;
+  hostname: string;
+  ips: string;
+  agent_local_time: Date;
+  current_directory: string;
+  os_version: string;
+  agent_version_from_source_code: string;
+}
+
+export interface PipelineInput {
+  name: string;
+  description: string;
+  abort_on_error: boolean;
+  agent_passport_id: string;
+  disposable: boolean;
+  notify_on_abort_email_id?: string;
+  notify_on_abort_webhook_id?: string;
+}
+
+export interface AgentPassportInput {
+  name: string;
+  description: string;
+  is_testing: boolean;
+  enabled: boolean;
+  fabric_x_data_note_id?: string;
+  watch: boolean;
+  agent_version_id: string;
+  check_agent_update: boolean;
+  is_healthy: boolean;
+  auto_clean_update: boolean;
 }
 
 // ===== UTILIDADES DE TIPO =====
