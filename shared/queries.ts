@@ -89,38 +89,6 @@ export const PIPELINE_UNITS_QUERY = `
       posx
       posy
       call_pipeline
-      
-      # Incluir detalles del SFTP Uploader directamente
-      SFTPUploader {
-        id
-        name
-        input
-        return_output
-        sftp_link_id
-        SFTPLink {
-          id
-          name
-          server
-          port
-          user
-        }
-      }
-      
-      # Incluir detalles del SFTP Downloader directamente
-      SFTPDownloader {
-        id
-        name
-        output
-        return_output
-        sftp_link_id
-        SFTPLink {
-          id
-          name
-          server
-          port
-          user
-        }
-      }
     }
   }
 `;
