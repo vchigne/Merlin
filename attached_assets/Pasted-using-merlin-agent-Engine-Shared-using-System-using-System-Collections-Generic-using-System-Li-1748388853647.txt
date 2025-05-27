@@ -1,0 +1,63 @@
+using merlin_agent.Engine.Shared;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NLog;
+using System.Reactive;
+using merlin_agent.Engine.Models.Hasura;
+using GraphQL.Client.Abstractions;
+using merlin_agent.Engine.MGraphQL;
+using GraphQL;
+using GraphQL.Client.Http;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    public class PipelineCallRunner : BaseRunner
+    {
+        private readonly Logger _logger;
+        public PipelineCallRunner(string jobId, string unitId)
+        {
+            this._output = new List<string>();
+            _logger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId),
+                }
+            );
+        }
+
+        public async Task<bool> CallPipeline(PipelineUnit unit) {
+            _logger.Info($"unit.CallPipeline: {unit.CallPipeline}");
+
+            try {
+                GQLCallPipeline call = new GQLCallPipeline();
+                var graphQLResponse = await HasuraClient.graphQLClient.SendMutationAsync<InsertMerlinAgentPipelineJobQueueResponse>(call.callPipeline(unit.CallPipeline));
+                if (graphQLResponse.Errors != null && graphQLResponse.Errors.Length > 0)
+                {
+                    foreach (var e in graphQLResponse.Errors)
+                    {
+                        _logger.Error(e.Message);
+                    }
+                    return false;
+                }
+                else
+                {
+                    if (graphQLResponse.Data.insertMerlinAgentPipelineJobQueue.AffectedRows > 0)
+                    {
+                        _logger.Info("Pipeline enviado");
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            } catch (Exception ex) {
+                _logger.Info(ex, $"Error enviando llamada al pipeline {unit.CallPipeline}");
+                return false;
+            }
+        }
+    }
+}

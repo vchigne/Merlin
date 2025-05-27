@@ -1,0 +1,180 @@
+using Renci.SshNet;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Shared;
+using NLog;
+using Renci.SshNet.Common;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    public class SFTPRunner : BaseRunner
+    {
+        private readonly SFTPLink sftpLink;
+        private List<FileStreamSftpUploader> fsUploader = new List<FileStreamSftpUploader>();
+        private List<FileStreamSftpDownloader> fsDownloader = new List<FileStreamSftpDownloader>();
+        private readonly Logger _logger;
+
+        public SFTPRunner(SFTPLink config, string jobId, string unitId, List<FileStreamSftpUploader> fsUploader = null, List<FileStreamSftpDownloader> fsDownloader = null) {
+            System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            sftpLink = config;
+            if (fsUploader != null) {
+                this.fsUploader = fsUploader;
+            }
+            if (fsDownloader != null) {
+                this.fsDownloader = fsDownloader;
+            }
+            this._output = new List<string>();
+
+            _logger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId)
+                }
+            );
+        }
+
+        public bool UploadFileStream() {
+            using (var client = new SftpClient(sftpLink.Server, sftpLink.Port == 0 ? 22 : sftpLink.Port, sftpLink.User, sftpLink.Password)) {
+                //client.HostKeyReceived += (sender, e) => {
+                //    e.CanTrust = true;
+                //};
+
+                client.HostKeyReceived += delegate (object sender, HostKeyEventArgs e)
+                {
+                    //hostKeyValidated = true;
+
+                    //if (e.FingerPrint.SequenceEqual(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
+                    //{
+                    //    e.CanTrust = true;
+                    //}
+                    //else
+                    //{
+                    //    e.CanTrust = false;
+                    //}
+                    e.CanTrust = true;
+                };
+
+                try {
+                    client.Connect();
+                    _logger.Debug($"fsUploader.Count: {fsUploader.Count}");
+
+                    int filesCounter = 0;
+                    foreach (var f in fsUploader) {
+                        _logger.Debug($"SFTP Input: {f.Input} | Output: {f.Output}");
+                        try {
+                            _logger.Info($"Subiendo el archivo [{f.Input}] a [{f.Output}]");
+                            using (var s = File.OpenRead(f.Input)) {
+                                client.UploadFile(s, f.Output);
+                                if (f.ReturnOutput) {
+                                    _output.Add(f.Output);
+                                }
+                            }
+                            _logger.Info($"Se termino de subir el archivo [{f.Input}] a [{f.Output}]");
+                            filesCounter++;
+                        }
+                        catch (Exception ex) {
+                            Console.WriteLine(ex.ToString());
+                            _logger.Error(ex, $"Fallo la subida del archivo [{f.Input}] a [{f.Output}]");
+                        }
+                    }
+
+                    int remainingFiles = fsUploader.Count - filesCounter;
+                    if (remainingFiles == 0) {
+                        // Todos los archivos se subieron
+                        _logger.Info($"Se subieron todos los archivos");
+                    } else if (remainingFiles > 0) {
+                        if (remainingFiles == fsUploader.Count) {
+                            // No se subio ningun archivo
+                            _logger.Fatal($"No se subio ningun archivo");
+                            return false;
+                        } else {
+                            // Existen {remaining} de {fsUploader.Count} archivos que no se subieron
+                            _logger.Warn($"Faltaron {remainingFiles} de {fsUploader.Count} archivos");
+                        }
+                    }
+
+                }
+                catch (Exception ex) {
+                    Console.WriteLine(ex.ToString());
+                    _logger.Fatal(ex, $"No se pudo conectar al servidor");
+                    return false;
+                }
+                finally {
+                    client.Disconnect();
+                }
+                return true;
+            }
+        }
+
+        public bool DownloadFileStream() {
+            using (var client = new SftpClient(sftpLink.Server, sftpLink.Port == 0 ? 22 : sftpLink.Port, sftpLink.User, sftpLink.Password)) {
+                //client.HostKeyReceived += (sender, e) => {
+                //    e.CanTrust = true;
+                //};
+
+                client.HostKeyReceived += delegate (object sender, HostKeyEventArgs e)
+                {
+                    //hostKeyValidated = true;
+
+                    //if (e.FingerPrint.SequenceEqual(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
+                    //{
+                    //    e.CanTrust = true;
+                    //}
+                    //else
+                    //{
+                    //    e.CanTrust = false;
+                    //}
+                    e.CanTrust = true;
+                };
+
+                try {
+                    client.Connect();
+                    int filesCounter = 0;
+                    foreach (var f in fsDownloader) {
+                        try {
+                            _logger.Info($"Descargando archivo desde [{f.Input}] a [{f.Output}]");
+                            using (Stream fileStream = File.OpenWrite(f.Output)) {
+                                client.DownloadFile(f.Input, fileStream);
+                            }
+                            if (f.ReturnOutput) {
+                                _output.Add(f.Output);
+                            }
+                            _logger.Info($"Se termino de bajar el archivo desde [{f.Input}] a [{f.Output}]");
+                            filesCounter++;
+                        }
+                        catch (Exception ex) {
+                            _logger.Error(ex, $"Fallo en la descarga del archivo [{f.Input}] a [{f.Output}]");
+                        }
+                    }
+
+                    int remainingFiles = fsDownloader.Count - filesCounter;
+                    if (remainingFiles == 0) {
+                        // Todos los archivos se subieron
+                        _logger.Info($"Se bajaron todos los archivos");
+                    }
+                    else if (remainingFiles > 0) {
+                        if (remainingFiles == fsDownloader.Count) {
+                            // No se subio ningun archivo
+                            _logger.Fatal($"No se descargo ningun archivo");
+                            return false;
+                        }
+                        else {
+                            // Existen {remaining} de {fsDownloader.Count} archivos que no se subieron
+                            _logger.Warn($"Faltaron {remainingFiles} de {fsDownloader.Count} archivos");
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    _logger.Fatal(ex, $"No se pudo conectar al servidor. {ex.Message}");
+                    return false;
+                }
+                finally {
+                    client.Disconnect();
+                }
+                return true;
+            }
+        }
+    }
+}

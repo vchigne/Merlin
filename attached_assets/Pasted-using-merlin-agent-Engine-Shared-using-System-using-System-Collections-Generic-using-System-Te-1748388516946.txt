@@ -1,0 +1,84 @@
+using merlin_agent.Engine.Shared;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    public class BaseRunnerLogger
+    {
+        private StringBuilder _log = new StringBuilder();
+        private StringBuilder _warnings = new StringBuilder();
+        private StringBuilder _errors = new StringBuilder();
+
+        public StringBuilder Log { get => _log; }
+        public StringBuilder Warnings { get => _warnings; }
+        public StringBuilder Errors { get => _errors; }
+        public bool HasErrors { get => _errors.Length > 0; }
+
+        public void ErrorsToWarnings() {
+            _warnings.Append(_errors);
+            _errors.Clear();
+        }
+
+        public static BaseRunnerLogger generateRunnerLogger (StringBuilder log, StringBuilder warnings, StringBuilder errors)
+        {
+            BaseRunnerLogger result = new BaseRunnerLogger ();
+            result.setLogs(log);
+            result.setWarnings(warnings);
+            result.setErrors(errors);
+            return result;
+        }
+
+        private string appendWithMetadata(string text, string logLevel = "LOG")
+        {
+            //string now_time_of = DateTime.Now.ToString("yyyy-MM-dd : HH:mm:ss");
+            //var q = DateTime.Now;
+            //string now_time = $"{q.Year}-{q.Month}-{q.Day} : {q.Hour}:{q.Minute}:{q.Second}";
+            string result = $"[{logLevel}] [{Utils.GetNowTime_a()}] => {text}";
+            if (Config.OUTPUT_CONSOLE)
+            {
+                Console.WriteLine(result);
+            }
+            return result;
+        }
+
+        public string AppendLog(string text)
+        {
+            string result = appendWithMetadata(text, "LOG");
+            _log.AppendLine(result);
+            return result;
+        }
+
+        public string AppendWarning(string text)
+        {
+            string result = appendWithMetadata(text, "WARN");
+            _log.AppendLine(result);
+            _warnings.AppendLine(result);
+            return result;
+        }
+
+        public string AppendError(string text)
+        {
+            string result = appendWithMetadata(text, "ERROR");
+            _log.AppendLine(result);
+            _errors.AppendLine(result);
+            return result;
+        }
+
+        protected void setLogs(StringBuilder source)
+        {
+            _log = source;
+        }
+
+        protected void setWarnings(StringBuilder source)
+        {
+            _warnings = source;
+        }
+
+        protected void setErrors(StringBuilder source)
+        {
+            _errors = source;
+        }
+    }
+}

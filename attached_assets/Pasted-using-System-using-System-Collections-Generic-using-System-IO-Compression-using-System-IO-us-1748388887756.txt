@@ -1,0 +1,127 @@
+using System;
+using System.Collections.Generic;
+using System.IO.Compression;
+using System.IO;
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Shared;
+using NLog;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    public class ZipRunner : BaseRunner
+    {
+        private readonly Logger _logger;
+        public ZipRunner(string jobId, string unitId) {
+            _logger = MerlinLogger.NLogger.WithProperties(
+            new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId)
+                }
+            );
+        }
+        public bool Compress(string zipName, List<FileStreamZip> fileStreamZip) {
+            try {
+                if (File.Exists(zipName))
+                {
+                    try
+                    {
+                        _logger.Info($"Eliminando archivo {zipName}");
+                        File.Delete(zipName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, $"(Compress.delete) Archivo [{zipName}] no se pudo borrar.");
+                    }
+                }
+
+                // Asegurarse de que la ruta al archivo exista
+                Utils.EnsureFileDirectoryExists(zipName);
+
+                //_logger.Info($"Comprimiendo {fileStreamZip.Count} archivo(s)");
+
+                using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
+                {
+                    int counter = 0;
+                    _output.Add(zipName);
+                    foreach (var fStream in fileStreamZip)
+                    {
+                        if (Directory.Exists(fStream.Input) && fStream.WildcardExp != null && fStream.WildcardExp.Trim().Length > 0)
+                        {
+                            _logger.Info($"Comprimiendo los archivos dentro de: {fStream.Input} con wildcard {fStream.WildcardExp}");
+                            string[] wfiles = Directory.GetFiles(fStream.Input, fStream.WildcardExp);
+                            foreach (string wfile in wfiles)
+                            {
+                                doCompress(zip, wfile);
+                                counter++;
+                            }
+                        }
+
+                        if (File.Exists(fStream.Input))
+                        {
+                            doCompress(zip, fStream.Input);
+                            counter++;
+                        }
+
+                        if (counter == 0)
+                        {
+                            _logger.Error($"Archivo o carpeta [{fStream.Input}] no se puede comprimir");
+                        }
+                    }
+                    _logger.Info($"Se comprimieron {counter} archivos(s)");
+                }
+                return true;
+            } catch (Exception ex) {
+                _logger.Fatal(ex, "No se pudo comprimir");
+                return false;
+            }
+        }
+
+        private void doCompress(ZipArchive zip, string fileName) {
+            try
+            {
+                _logger.Info($"Comprimiendo: {fileName}");
+                zip.CreateEntryFromFile(fileName, Path.GetFileName(fileName), CompressionLevel.Optimal);
+                //if (returnOutput)
+                //{
+                //    // La lista de fileStreamZip, en teoria solo debe retornar el archivo ZIP creado asi que se repetira tantas veces como elementos de entrada tenga 
+                //    _output.Add(zipName);
+                //}
+                _logger.Info($"Archivo {fileName} listo");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"(Compress) Archivo [{fileName}] no se puede comprimir");
+            }
+        }
+
+        // Unzip
+        public bool Decompress(List<FileStreamUnzip> fileStreamUnzip) {
+            try {
+                foreach (var fStream in fileStreamUnzip)
+                {
+                    try
+                    {
+                        // Asegurarse de que la ruta al archivo exista
+                        Utils.EnsureDirectoryExists(fStream.Output);
+
+                        _logger.Info($"Descomprimiendo {fStream.Input} en {fStream.Output}");
+                        ZipFile.ExtractToDirectory(fStream.Input, fStream.Output, true);
+                        if (fStream.ReturnOutput)
+                        {
+                            _output.Add(fStream.Output);
+                        }
+                        _logger.Info($"Descompresion de {fStream.Input} en {fStream.Output} lista");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, $"(Decompress) Archivo [{fStream.Input}] en [{fStream.Output}]");
+                    }
+                }
+                return true;
+            } catch (Exception ex) {
+                _logger.Fatal(ex, "No se pudo comprimir");
+                return false;
+            }
+        }
+    }
+}

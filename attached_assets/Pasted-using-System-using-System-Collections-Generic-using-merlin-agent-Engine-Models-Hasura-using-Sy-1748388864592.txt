@@ -1,0 +1,158 @@
+using System;
+using System.Collections.Generic;
+using merlin_agent.Engine.Models.Hasura;
+using System.Linq;
+using merlin_agent.Engine.Orchestation.Runners.QueryExecutor;
+using merlin_agent.Engine.Shared;
+using NLog;
+using merlin_agent.Engine.Orchestation.Runners;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    public class QueryExecutionResult
+    {
+        public bool HasErrors { set; get; }
+        public List<string> Output { set; get; }
+    }
+    public class QueryQueueRunner : BaseRunner
+    {
+        private readonly Logger _logger;
+        private readonly string _jobId;
+        private readonly string _unitId;
+        public QueryQueueRunner (string jobId, string unitId) {
+            this._output = new List<string>();
+
+            this._jobId = jobId;
+            this._unitId= unitId;
+            _logger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId),
+                }
+            );
+        }
+
+        // ! NOTA: La cola de consultas tiene incluye funcion de reintentos
+        public bool run (QueryQueue queryQueue) {
+            _logger.Debug($"queryQueue.Id: {queryQueue.Id}");
+            _logger.Debug($"queryQueue.Queries.Count: {queryQueue.Queries.Count}");
+            _logger.Debug("");
+
+            var sortedQueries = queryQueue.Queries.OrderBy(q => q.Order);
+            foreach (var query in sortedQueries) {
+                QueryExecutionResult _runQueryWithRetryResult = _runQueryWithRetry(query: query, tryCount: 0);
+                // * Aqui salen los nombres de archivos
+                if (query.ReturnOutput && _runQueryWithRetryResult.Output != null && _runQueryWithRetryResult.Output.Count > 0)
+                {
+                    _output.AddRange(_runQueryWithRetryResult.Output);
+                }
+            }
+            return true;
+        }
+
+        private QueryExecutionResult _runQueryWithRetry(Query query, int tryCount = 0) {
+
+            var _elogger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", _unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", _jobId),
+                    new KeyValuePair<string, object>("PipelineUnitContextId", $"query_id:{query.Id}"),
+                }
+            );
+
+            try {
+                var runResult = _runQuery(query);
+                if (runResult.HasErrors)
+                {
+                    if (tryCount + 1 <= query.RetryCount)
+                    {
+                        System.Threading.Thread.Sleep(query.RetryAfterMilliseconds);
+                        _elogger.Error($"(_runQueryWithRetry) Intento #{tryCount}. Ejecucion con errores. Reintentando en [{query.RetryAfterMilliseconds}] milisegundos");
+                        return _runQueryWithRetry(query, tryCount: tryCount + 1);
+                    }
+                    _elogger.Fatal($"(_runQueryWithRetry) Se ha sobrepasado el limite de reintentos: query.RetryCount: [{query.RetryCount}], query.RetryAfterMilliseconds: [{query.RetryAfterMilliseconds}]");
+                    return new QueryExecutionResult()
+                    {
+                        HasErrors = true,
+                        Output = new List<string>()
+                    };
+                }
+                return runResult;
+            } catch(Exception ex) {
+                _elogger.Debug(ex, ex.ToString());
+                _elogger.Fatal(ex, "No se ha podido ejecutar consulta");
+                return new QueryExecutionResult() {
+                    HasErrors = true,
+                    Output = new List<string>()
+                };
+            }
+        }
+
+        private QueryExecutionResult _runQuery(Query query) {
+            _logger.Debug($"query.Id: {query.Id}");
+            _logger.Debug($"query.Order: {query.Order}");
+            _logger.Debug($"query.ReturnOutput: {query.ReturnOutput}");
+            _logger.Debug($"query.Path: {query.Path}");
+            _logger.Debug($"query.Chunks: {query.Chunks}");
+            _logger.Debug($"query.DateFormat: {query.DateFormat}");
+            _logger.Debug($"query.PrintHeaders: {query.PrintHeaders}");
+            _logger.Debug($"query.Separator: {query.Separator}");
+            _logger.Debug($"query.TargetEncoding: {query.TargetEncoding}");
+            _logger.Debug("");
+
+            var _elogger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", _unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", _jobId),
+                    new KeyValuePair<string, object>("PipelineUnitContextId", $"query_id:{query.Id}"),
+                }
+            );
+
+            if (query.SQLConn.Driver == "MSSQL") {
+                MSSQLQuery mssqlQuery = new MSSQLQuery(query, jobId: _jobId, unitId: _unitId);
+                try {
+                    mssqlQuery.Execute();
+                    return new QueryExecutionResult()
+                    {
+                        HasErrors = false,
+                        Output = mssqlQuery.Output
+                    };
+                }
+                catch (Exception ex) {
+                    _elogger.Error(ex, ex.Message);
+                    return new QueryExecutionResult()
+                    {
+                        HasErrors = true,
+                        Output = mssqlQuery.Output
+                    };
+                }
+            }
+            else if (query.SQLConn.Driver == "ODBC") {
+                ODBCQuery odbcQuery = new ODBCQuery(query, jobId: _jobId, unitId: _unitId);
+                try {
+                    odbcQuery.Execute();
+                    return new QueryExecutionResult() {
+                        HasErrors = false,
+                        Output = odbcQuery.Output
+                    };
+                }
+                catch (Exception ex) {
+                    _elogger.Error(ex, ex.Message);
+                    return new QueryExecutionResult()
+                    {
+                        HasErrors = true,
+                        Output = odbcQuery.Output
+                    };
+                }
+            }
+            else {
+                _elogger.Error($"Driver desconocido: {query.SQLConn.Driver}");
+                return new QueryExecutionResult()
+                {
+                    HasErrors = true,
+                    Output = new List<string>()
+                };
+            }
+        }        
+    }
+}

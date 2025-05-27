@@ -1,0 +1,174 @@
+using System.Collections.Generic;
+using System.IO;
+using System;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
+using System.Linq;
+
+namespace merlin_agent.Engine.Orchestation.Runners.QueryExecutor
+{
+    public class MSSQL_GO_QueryParserResult {
+        public List<string> Errors { set; get; }
+        public List<string> ScriptsList { set; get; }
+    }
+    public class MSSQL_GO_QueryParser
+    {
+        public static MSSQL_GO_QueryParserResult ValidateQueries(string sql, string sqlVersion) {
+            string[] errors;
+            List<string> scriptsList = new List<string>();
+
+            SqlVersion resolvedSqlVersion = resolverSqlCompatLevel(sqlVersion);
+            var scriptFragment = Parse(sql, resolvedSqlVersion, true, out errors);
+            if (errors != null) {
+                if (errors.Length > 0) {
+                    return new MSSQL_GO_QueryParserResult
+                    {
+                        Errors = errors.ToList(),
+                        ScriptsList = scriptsList
+                    };
+                }
+            }
+
+            TSqlScript tsqlScriptFragment = scriptFragment as TSqlScript;
+            if (tsqlScriptFragment == null)
+                throw new Exception($"(MSSQL_GO_QueryParserResult.Run) tsqlScriptFragment es null");
+
+            var options = new SqlScriptGeneratorOptions {
+                SqlVersion = resolvedSqlVersion,
+                KeywordCasing = KeywordCasing.PascalCase
+            };
+
+            foreach (TSqlBatch batch in tsqlScriptFragment.Batches)
+            {
+                string batchText = ToScript(batch, options);
+                scriptsList.Add(batchText);
+            }
+            return new MSSQL_GO_QueryParserResult {
+                Errors = errors == null ? new List<string>() : errors.ToList(),
+                ScriptsList  = scriptsList
+            };
+        }
+
+        private static SqlVersion resolverSqlCompatLevel(string sqlVersion) {
+            switch (sqlVersion) {
+                case "80":
+                    return SqlVersion.Sql80;
+                case "90":
+                    return SqlVersion.Sql90;
+                case "100":
+                    return SqlVersion.Sql100;
+                case "110":
+                    return SqlVersion.Sql110;
+                case "120":
+                    return SqlVersion.Sql120;
+                case "130":
+                    return SqlVersion.Sql130;
+                case "140":
+                    return SqlVersion.Sql140;
+                case "150":
+                    return SqlVersion.Sql150;
+                case "160":
+                    return SqlVersion.Sql160;
+                default:
+                    throw new ArgumentOutOfRangeException("(resolverSqlCompatLevel) Sql Server level no identificado");
+            }
+        }
+
+        private static TSqlParser GetParser(SqlVersion level, bool quotedIdentifiers)
+        {
+            switch (level)
+            {
+                case SqlVersion.Sql80:
+                    return new TSql80Parser(quotedIdentifiers);
+                case SqlVersion.Sql90:
+                    return new TSql90Parser(quotedIdentifiers);
+                case SqlVersion.Sql100:
+                    return new TSql100Parser(quotedIdentifiers);
+                case SqlVersion.Sql110:
+                    return new TSql110Parser(quotedIdentifiers);
+                case SqlVersion.Sql120:
+                    return new TSql120Parser(quotedIdentifiers);
+                case SqlVersion.Sql130:
+                    return new TSql130Parser(quotedIdentifiers);
+                case SqlVersion.Sql140:
+                    return new TSql140Parser(quotedIdentifiers);
+                case SqlVersion.Sql150:
+                    return new TSql150Parser(quotedIdentifiers);
+                case SqlVersion.Sql160:
+                    return new TSql160Parser(quotedIdentifiers);
+                default:
+                    throw new ArgumentOutOfRangeException("(GetParser) Sql Server level no identificado");
+            }
+        }
+
+        private static TSqlFragment Parse(string sql, SqlVersion level, bool quotedIndentifiers, out string[] errors)
+        {
+            errors = null;
+            if (string.IsNullOrWhiteSpace(sql)) return null;
+            sql = sql.Trim();
+            TSqlFragment scriptFragment;
+            IList<ParseError> errorlist;
+            using (var sr = new StringReader(sql))
+            {
+                scriptFragment = GetParser(level, quotedIndentifiers).Parse(sr, out errorlist);
+            }
+            if (errorlist != null && errorlist.Count > 0)
+            {
+                errors = errorlist.Select(e => string.Format("Column {0}, Number {1}, Line {2}, Offset {3}",
+                                                                e.Column, e.Number, e.Line, e.Offset) +
+                                                    Environment.NewLine + e.Message).ToArray();
+                return null;
+            }
+            return scriptFragment;
+        }
+
+        private static SqlScriptGenerator GetScripter(SqlScriptGeneratorOptions options)
+        {
+            if (options == null) return null;
+            SqlScriptGenerator generator;
+            switch (options.SqlVersion)
+            {
+                case SqlVersion.Sql80:
+                    generator = new Sql80ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql90:
+                    generator = new Sql90ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql100:
+                    generator = new Sql100ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql110:
+                    generator = new Sql110ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql120:
+                    generator = new Sql120ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql130:
+                    generator = new Sql130ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql140:
+                    generator = new Sql140ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql150:
+                    generator = new Sql150ScriptGenerator(options);
+                    break;
+                case SqlVersion.Sql160:
+                    generator = new Sql160ScriptGenerator(options);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("(GetScripter) scripter no identificado");
+            }
+            return generator;
+        }
+
+
+        private static string ToScript(TSqlFragment scriptFragment, SqlScriptGeneratorOptions options)
+        {
+            var scripter = GetScripter(options);
+            if (scripter == null) return string.Empty;
+            string script;
+            scripter.GenerateScript(scriptFragment, out script);
+            return script;
+        }
+
+    }
+}

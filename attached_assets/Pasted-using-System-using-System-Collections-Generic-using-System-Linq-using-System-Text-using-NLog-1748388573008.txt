@@ -1,0 +1,153 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using NLog;
+
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Shared;
+using System.Data.Odbc;
+using System.IO;
+
+namespace merlin_agent.Engine.Orchestation.Runners.QueryExecutor
+{
+    public class ODBCQuery : BaseRunner {
+        private Query query;
+        private readonly Logger _logger;
+        public ODBCQuery(Query query, string jobId, string unitId) {
+            this.query = query;
+            _logger = MerlinLogger.NLogger.WithProperties(
+            new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId),
+                    new KeyValuePair<string, object>("PipelineUnitContextId", $"query_id:{query.Id}"),
+                }
+            );
+        }
+
+        public bool Execute() {
+            int lines = 0;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            using (OdbcConnection sqlConnection = new OdbcConnection(query.SQLConn.Connstring)) {
+                _logger.Info("Abriendo conexion con ODBC");
+                sqlConnection.Open();
+                _logger.Info("Conectado a ODBC");
+
+                if (query.Path == null || query.Path.Trim().Length == 0) {
+                    _logger.Info("No se encontró valor para el atributo [file]. Ejecutando consulta sin salida de archivo");
+                    try {
+                        _logger.Info("Ejecutando consulta");
+                        using OdbcCommand command = new OdbcCommand(this.query.QueryString, sqlConnection);
+                        command.CommandTimeout = this.query.Timeout;
+                        command.ExecuteNonQuery();
+                        _logger.Info("Consulta terminada");
+                        return true;
+                    }
+                    catch (Exception ex) {
+                        _logger.Error(ex, $"[ERROR] La consulta no pudo completarse. {ex.Message}");
+                        return false;
+                    }
+                }
+                else {
+                    using (OdbcCommand command = new OdbcCommand(query.QueryString, sqlConnection)) {
+                        command.CommandTimeout = query.Timeout;
+                        // Encoding TARGET_ENCONDING = Encoding.GetEncoding("ISO-8859-1");
+                        Encoding targetEnconding = Encoding.GetEncoding(query.TargetEncoding);
+                        try {
+                            targetEnconding = Encoding.GetEncoding(query.TargetEncoding);
+                        }
+                        catch (Exception ex) {
+                            _logger.Warn(ex, $"[ERROR] No se pudo encontrar encoding {query.TargetEncoding}. Utilizando UTF8: {ex.Message}");
+                            targetEnconding = Encoding.UTF8;
+                        }
+
+                        // Asegurarse de que la ruta exista antes de crear el archivo
+                        Utils.EnsureFileDirectoryExists(query.Path);
+                        using (OdbcDataReader reader = command.ExecuteReader())
+                        using (StreamWriter streamWriter = new StreamWriter(query.Path, false, targetEnconding)) {
+                            streamWriter.AutoFlush = true;
+                            StringBuilder sb = new StringBuilder();
+                            _logger.Info($"Leyendo desde DataReader. Escribiendo consulta {query.Chunks} veces");
+
+                            var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
+
+                            if (query.PrintHeaders) {
+                                sb.AppendLine(String.Join(query.Separator, columns));
+                            }
+                            while (reader.Read()) {
+                                lines++;
+                                sb.AppendLine(ReaderToString(reader));
+                                if (lines % query.Chunks == 0) {
+                                    _logger.Info($"Escribiendo {query.Chunks} lineas en {query.Path}. Lineas hasta ahora: {lines}");
+                                    streamWriter.Write(sb.ToString());
+                                    sb.Clear();
+                                }
+                            }
+                            _logger.Info($"Ultima escritura en el archivo {query.Path}. Lineas en total: {lines}");
+                            streamWriter.Write(sb.ToString());
+                            if (query.ReturnOutput) {
+                                //this._output = query.Path;
+                                _output.Add(query.Path);
+                            }
+
+                            sb.Clear();
+                        }
+                    }
+                }
+            }
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            if (lines > 0) {
+                _logger.Info($"Se escribio {lines} lineas en el archivo {query.Path} en {elapsedMs}ms / {elapsedMs / 1000} segs");
+            }
+            else {
+                if (query.Path.Trim().Length > 0) {
+                    _logger.Info($"Eliminando archivo {query.Path}. La consulta no tiene datos");
+                    try {
+                        File.Delete(query.Path);
+                    }
+                    catch (Exception ex) {
+                        _logger.Warn(ex, $"El archivo {query.Path} no se pudo borrar. Mensaje: {ex.Message}");
+                    }
+                }
+            }
+            return true;
+        }
+
+        private string ReaderToString(OdbcDataReader reader) {
+            string[] fields = new string[reader.FieldCount];
+            for (int i = 0; i < reader.FieldCount; i++) {
+                string value = reader.GetValue(i).ToString();
+                if (query.TrimColumns) {
+                    value = value.Trim();
+                }
+
+                if (query.ForceDotDecimalSeparator && (reader.GetFieldType(i) == typeof(decimal) || reader.GetFieldType(i) == typeof(float) || reader.GetFieldType(i) == typeof(double)))
+                {
+                    value = value.Replace(",", ".");
+                }
+
+                if (reader.GetFieldType(i) == typeof(DateTime)) {
+                    DateTime dateTime;
+                    if (DateTime.TryParse(value, out dateTime)) {
+                        fields[i] = dateTime.ToString(query.DateFormat);
+                    }
+                    else {
+                        fields[i] = value
+                            .Replace(query.Separator, "")
+                            .Replace("\"", "")
+                            .Replace("'", "");
+                    }
+                }
+                else {
+                    fields[i] = value
+                        .Replace(query.Separator, "")
+                        .Replace("\"", "")
+                        .Replace("'", "");
+                }
+            }
+            return string.Join(query.Separator, fields);
+        }
+    }
+}

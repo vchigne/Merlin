@@ -1,0 +1,236 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Shared;
+using NLog;
+
+namespace merlin_agent.Engine.Orchestation.Runners
+{
+    // TODO: Para correr aplicaciones con GUI en windows https://tocalai.medium.com/how-to-make-windows-service-interactivity-with-desktop-application-c36f3b5761fb
+    public class CommandRunner : BaseRunner
+    {
+        private readonly Logger _logger;
+        public CommandRunner(string jobId, string unitId)
+        {
+            this._output = new List<string>();
+            _logger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId),
+                }
+            );
+        }
+
+        public bool RunCommand(PipelineUnit unit) {
+            _logger.Info($"unit.Command.Target: {unit.Command.Target}");
+            _logger.Info($"unit.Command.Argst: {unit.Command.Args}");
+            _logger.Info($"unit.Command.WorkingDirectory: {unit.Command.WorkingDirectory}");
+            _logger.Info($"unit.TimeoutMilliseconds: {unit.TimeoutMilliseconds}");
+
+            try {
+                var startInfo = new ProcessStartInfo
+                {
+                    //FileName = "node",
+                    //Arguments = "app.js",
+                    //WorkingDirectory = @"D:/merlin-tools/example-nodejs-app",
+                    FileName = unit.Command.Target,
+                    Arguments = unit.Command.Args,
+                    WorkingDirectory = unit.Command.WorkingDirectory,
+                    RedirectStandardInput = false,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = false
+                };
+                if (unit.Command.RawScript != null && unit.Command.RawScript.Trim().Length > 0)
+                {
+                    _logger.Info("Running Script");
+                    return runCommandWithRawScript(startInfo: startInfo, unit: unit);
+                }
+                else {
+                    if (unit.Command.Instant) {
+                        _logger.Info("Running Instant command");
+                        return runInstantCommand(startInfo: startInfo, unit: unit);
+                    }
+                    else {
+                        _logger.Info("Running Normal command");
+                        return runNormalCommand(startInfo: startInfo, unit: unit);
+                    }
+                }
+                
+            } catch (Exception ex) {
+                _logger.Error(ex, $"(RunCommand). No se pudo iniciar el proceso. FileName: [{unit.Command.Target}] | Arguments: [{unit.Command.Args}] | WorkingDirectory: [{unit.Command.WorkingDirectory}]");
+                return false;
+            }
+        }
+
+        private bool runInstantCommand(ProcessStartInfo startInfo, PipelineUnit unit) {
+            using Process proc = Process.Start(startInfo);
+            WaitProcessToFinish(process: proc, unit: unit, timeOut: unit.TimeoutMilliseconds);
+            
+            using StreamReader reader = proc.StandardOutput;
+            try
+            {
+                _output.AddRange(reader.ReadToEnd().Split(new char[] { '\r', }));
+                //_output.Add(reader.ReadToEnd());
+            }
+            catch (Exception ex) {
+                if (unit.Command.ReturnOutput) {
+                    _logger.Error(ex, "No se pudo leer la salida del comando instantaneo");
+                } else {
+                    _logger.Warn(ex, "No se pudo leer la salida del comando instantaneo");
+                }
+            }
+
+            try
+            {
+                //_output.Add(proc.StandardError.ReadToEnd());
+                _logger.Warn(proc.StandardError.ReadToEnd());
+            }
+            catch (Exception ex) {
+                if (unit.Command.ReturnOutput) {
+                    _logger.Error(ex, "No se pudo leer la salida de errores del comando instantaneo");
+                } else {
+                    _logger.Warn(ex, "No se pudo leer la salida de errores del comando instantaneo");
+                }
+                
+            }
+
+            _logger.Info(_output.ToString());
+            return true;
+        }
+
+        private bool runCommandWithRawScript(ProcessStartInfo startInfo, PipelineUnit unit) {
+            // ! TODO: Corregir, podria quedarse atorado cuando cuando abre el standarinput
+            StringBuilder output = new StringBuilder();
+            startInfo.RedirectStandardInput = true;
+            using Process proc = Process.Start(startInfo);
+            // WaitProcessToFinish(process: proc, unit: unit, timeOut: unit.TimeoutMilliseconds);
+            proc.Start();
+            using (var sw = proc.StandardInput)
+            {
+                if (sw.BaseStream.CanWrite)
+                {
+                    foreach (string line in unit.Command.RawScript.Split("\n"))
+                    {
+                        if (line.Trim().Length > 0)
+                        {
+                            sw.WriteLine(line);
+                        }
+                    }
+                }
+            }
+
+            while (!proc.StandardOutput.EndOfStream)
+            {
+                var line = proc.StandardOutput.ReadLine();
+                _output.Add(line);
+                output.AppendLine(line);
+            }
+            WaitProcessToFinish(process: proc, unit: unit, timeOut: unit.TimeoutMilliseconds);
+            _logger.Info(output.ToString());
+            return true;
+        }
+
+        private bool runNormalCommand(ProcessStartInfo startInfo, PipelineUnit unit) {
+            StringBuilder output = new StringBuilder();
+            using Process proc = new Process();
+            proc.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
+            {
+                if (!String.IsNullOrEmpty(e.Data))
+                {
+                    output.AppendLine($"[Command LOG] {e.Data}");
+                    _output.Add(e.Data);
+                }
+            });
+            proc.ErrorDataReceived += new DataReceivedEventHandler((sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    output.AppendLine($"[Command ERROR] {e.Data}");
+                    _output.Add(e.Data);
+                }
+            });
+            proc.StartInfo = startInfo;
+            proc.Start();
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
+            WaitProcessToFinish(process: proc, unit: unit, timeOut: unit.TimeoutMilliseconds);
+            _logger.Info(output.ToString());
+            return true;
+        }
+
+        private void forceClose(Process process) {
+            try
+            {
+                process.Kill(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Error en Kill(true): {ex.Message}");
+            }
+
+            try
+            {
+                process.Kill();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Error en Kill(): {ex.Message}");
+            }
+
+            try
+            {
+                process.Close();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Error en Close(): {ex.Message}");
+            }
+
+            try
+            {
+                process.CloseMainWindow();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Error en CloseMainWindow(): {ex.Message}");
+            }
+        }
+        private void WaitProcessToFinish(Process process, PipelineUnit unit, int timeOut = 0) {
+            if (timeOut == 0) {
+                try {
+                    process.WaitForExit();
+                }
+                catch (Exception ex) {
+                    _logger.Error($"(WaitProcessToFinish). No se pudo iniciar el proceso. PipelineUnitId: {unit.Id}. Mensaje: {ex.Message}");
+                }
+            }
+            else {
+                process.WaitForExit(timeOut);
+                if (process.HasExited == false) {
+                    _logger.Warn("La aplicacion o el comando sigue en proceso");
+                    if (process.Responding)
+                    {
+                        _logger.Warn("El proceso esta respondiendo. Forzando cierre");
+                        forceClose(process);
+                    }
+                    else {
+                        _logger.Warn("El proceso NO esta respondiendo. Forzando cierre");
+                        forceClose(process);
+                    }
+                }
+                else {
+                    _logger.Warn("El proceso no responde. Forzando cierre");
+                    forceClose(process);
+                }
+            }
+        }
+    }
+}

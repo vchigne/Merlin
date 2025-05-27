@@ -1,0 +1,176 @@
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Text;
+using NLog;
+
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Shared;
+
+namespace merlin_agent.Engine.Orchestation.Runners.QueryExecutor
+{
+    public class MSSQLQuery : BaseRunner
+    {
+        private Query query;
+        private readonly Logger _logger;
+        public MSSQLQuery(Query query, string jobId, string unitId)
+        {
+            this.query = query;
+            _logger = MerlinLogger.NLogger.WithProperties(
+                new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unitId),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId),
+                    new KeyValuePair<string, object>("PipelineUnitContextId", $"query_id:{query.Id}"),
+                }
+            );
+        }
+
+        public bool Execute() {
+            int lines = 0;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            using (SqlConnection sqlConnection = new SqlConnection(query.SQLConn.Connstring)) {
+                _logger.Info("Iniciando consulta. Abriendo conexion con SQL Server");
+                sqlConnection.Open();
+                _logger.Info("Conectado a SQL Server");
+
+                if (query.Path == null || query.Path.Trim().Length == 0) {
+                    _logger.Info("No se encontró valor para el atributo [file]. Ejecutando consulta sin salida de archivo");
+                    try {
+                        _logger.Info($"Validando consulta con nivel de compatibilidad: {query.SqlCompatibilityLevel}");
+                        var queriesResponse = MSSQL_GO_QueryParser.ValidateQueries(sql: query.QueryString, sqlVersion: query.SqlCompatibilityLevel);
+                        _logger.Info("Validacion completa. Verificando errores");
+
+                        if (queriesResponse != null) {
+                            if (queriesResponse.Errors.Count == 0) {
+                                _logger.Info($"Validacion sin errores. Ejecutando {queriesResponse.ScriptsList.Count} consultas");
+                                foreach (string queryScript in queriesResponse.ScriptsList) {
+                                    _logger.Info(queryScript);
+                                    using SqlCommand command = new SqlCommand(queryScript, sqlConnection);
+                                    command.CommandTimeout = this.query.Timeout;
+                                    command.ExecuteNonQuery();
+                                }
+                                _logger.Info($"Se ejecutaron {queriesResponse.ScriptsList.Count} consultas");
+                                return true;
+                            }
+                            else {
+                                _logger.Error($"[ERROR] La validacion de consulta devolvio {queriesResponse.Errors.Count} errores. Cancelando consulta");
+                                foreach (string error in queriesResponse.Errors) {
+                                    _logger.Error($"[ERROR] Motivo: {error}");
+                                }
+                                return false;
+                            }
+                        }
+                        else {
+                            _logger.Error($"[ERROR] No se puede realizar consulta porque la validacion devolvio NULL");
+                            return false;
+                        }
+                    }
+                    catch (Exception ex) {
+                        _logger.Error(ex, $"[ERROR] La consulta no pudo completarse por una excepcion.");
+                        return false;
+                    }
+                }
+                else {
+                    using (SqlCommand command = new SqlCommand(query.QueryString, sqlConnection)) {
+                        command.CommandTimeout = query.Timeout;
+                        Encoding targetEnconding = Encoding.GetEncoding(query.TargetEncoding);
+                        try {
+                            targetEnconding = Encoding.GetEncoding(query.TargetEncoding);
+                        }
+                        catch (Exception ex) {
+                            _logger.Warn(ex, $"[ERROR] No se pudo encontrar encoding {query.TargetEncoding}. Utilizando UTF8: {ex.Message}");
+                            targetEnconding = Encoding.UTF8;
+                        }
+
+                        // Asegurarse de que la ruta exista antes de crear el archivo
+                        Utils.EnsureFileDirectoryExists(query.Path);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        using (StreamWriter streamWriter = new StreamWriter(query.Path, false, targetEnconding)) {
+                            streamWriter.AutoFlush = true;
+                            StringBuilder sb = new StringBuilder();
+                            _logger.Info($"Leyendo desde DataReader. Escribiendo consulta {query.Chunks} veces");
+
+                            var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
+
+                            if (query.PrintHeaders) {
+                                sb.AppendLine(String.Join(query.Separator, columns));
+                            }
+                            while (reader.Read()) {
+                                lines++;
+                                sb.AppendLine(ReaderToString(reader));
+                                if (lines % query.Chunks == 0) {
+                                    _logger.Info($"Escribiendo {query.Chunks} lineas en {query.Path}. Lineas hasta ahora: {lines}");
+                                    streamWriter.Write(sb.ToString());
+                                    sb.Clear();
+                                }
+                            }
+                            _logger.Info($"Ultima escritura en el archivo {query.Path}. Lineas en total: {lines}");
+                            streamWriter.Write(sb.ToString());
+                            if (query.ReturnOutput) {
+                                //this._output = query.Path;
+                                _output.Add(query.Path);
+                            }
+
+                            sb.Clear();
+                        }
+                    }
+                }
+            }
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            if (lines > 0) {
+                _logger.Info($"Se escribio {lines} lineas en el archivo {query.Path} en {elapsedMs}ms / {elapsedMs / 1000} segs");
+            }
+            else {
+                if (query.Path.Trim().Length > 0) {
+                    _logger.Info($"Eliminando archivo {query.Path}. La consulta no tiene datos");
+                    try {
+                        File.Delete(query.Path);
+                    }
+                    catch (Exception ex) {
+                        _logger.Warn(ex, $"El archivo {query.Path} no se pudo borrar. Mensaje: {ex.Message}");
+                    }
+                }
+            }
+            _logger.Info("Consulta terminada");
+            return true;
+        }
+
+        private string ReaderToString(SqlDataReader reader) {
+            string[] fields = new string[reader.FieldCount];
+            for (int i = 0; i < reader.FieldCount; i++) {
+                string value = reader.GetValue(i).ToString();
+                if (query.TrimColumns) {
+                    value = value.Trim();
+                }
+
+                if (query.ForceDotDecimalSeparator && (reader.GetFieldType(i) == typeof(decimal) || reader.GetFieldType(i) == typeof(float) || reader.GetFieldType(i) == typeof(double))) {
+                    value = value.Replace(",", ".");
+                }
+
+                if (reader.GetFieldType(i) == typeof(DateTime)) {
+                    DateTime dateTime;
+                    if (DateTime.TryParse(value, out dateTime)) {
+                        fields[i] = dateTime.ToString(query.DateFormat);
+                    }
+                    else {
+                        fields[i] = value
+                            .Replace(query.Separator, "")
+                            .Replace("\"", "")
+                            .Replace("'", "");
+                    }
+                }
+                else {
+                    fields[i] = value
+                        .Replace(query.Separator, "")
+                        .Replace("\"", "")
+                        .Replace("'", "");
+                }
+            }
+            return string.Join(query.Separator, fields);
+        }
+    }
+}
