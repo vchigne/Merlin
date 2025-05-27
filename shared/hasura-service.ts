@@ -104,6 +104,62 @@ export const HASURA_QUERIES = {
     }
   `,
 
+  // Sistema de versiones y actualizaciones (basado en código C#)
+  AGENT_VERSION_QUERY: `
+    query GetAgentVersions {
+      merlin_agent_AgentPassport {
+        id
+        name
+        auto_clean_update
+        agent_version_id
+        AgentVersion {
+          version
+          url
+          url2
+          url3
+          created_at
+          updated_at
+        }
+      }
+    }
+  `,
+
+  AGENT_UPDATE_LOGS_QUERY: `
+    query GetAgentUpdateLogs($agentId: uuid!, $limit: Int = 20) {
+      merlin_agent_AgentUpdateLog(
+        where: {agent_passport_id: {_eq: $agentId}}
+        order_by: {created_at: desc}
+        limit: $limit
+      ) {
+        id
+        agent_passport_id
+        logs
+        warnings
+        errors
+        checked_by_notificator
+        created_at
+        updated_at
+      }
+    }
+  `,
+
+  RECENT_UPDATE_LOGS_QUERY: `
+    query GetRecentUpdateLogs {
+      merlin_agent_AgentUpdateLog(
+        limit: 20
+        order_by: {created_at: desc}
+      ) {
+        id
+        agent_passport_id
+        logs
+        warnings
+        errors
+        checked_by_notificator
+        created_at
+      }
+    }
+  `,
+
   // Pipelines
   PIPELINE_QUERY: `
     query GetPipelines($limit: Int, $offset: Int) {

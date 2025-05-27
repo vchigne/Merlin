@@ -43,10 +43,23 @@ export interface AgentPassportPing extends BaseEntity {
 export interface AgentVersion {
   version: string;
   url: string;
-  created_at: string;
-  updated_at: string;
   url2: string;
   url3: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentUpdateLog extends BaseEntity {
+  agent_passport_id: string;
+  logs: string;
+  warnings: string;
+  errors: string;
+  checked_by_notificator: boolean;
+}
+
+// Agente con información de versión (para actualizaciones)
+export interface AgentPassportWithVersion extends AgentPassport {
+  AgentVersion?: AgentVersion;
 }
 
 // ===== PIPELINES =====
@@ -333,6 +346,14 @@ export interface CommandsResponse {
   merlin_agent_Command: Command[];
 }
 
+export interface AgentVersionResponse {
+  merlin_agent_AgentPassport: (AgentPassport & { AgentVersion?: AgentVersion })[];
+}
+
+export interface AgentUpdateLogsResponse {
+  merlin_agent_AgentUpdateLog: AgentUpdateLog[];
+}
+
 // ===== RESPUESTAS DE MUTACIONES =====
 
 export interface UpsertAgentPingResponse {
@@ -352,6 +373,15 @@ export interface InsertAgentResponse {
   insert_merlin_agent_AgentPassport: {
     affected_rows: number;
     returning: AgentPassport[];
+  };
+}
+
+export interface InsertAgentUpdateLogResponse {
+  insert_merlin_agent_AgentUpdateLog: {
+    affected_rows: number;
+  };
+  update_merlin_agent_AgentPassport: {
+    affected_rows: number;
   };
 }
 
