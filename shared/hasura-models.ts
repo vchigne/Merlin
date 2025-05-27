@@ -329,6 +329,15 @@ export interface PipelineJobLogBodyInput {
   exception_stack_trace: string;
 }
 
+// Input para enviar nuevos pipeline jobs
+export interface PipelineJobQueueInput {
+  pipeline_id: string;
+  started_by_agent: string;
+  completed?: boolean;
+  running?: boolean;
+  aborted?: boolean;
+}
+
 // ===== RESPUESTAS DE HASURA =====
 
 export interface HasuraResponse<T> {
@@ -429,6 +438,12 @@ export interface InsertPipelineJobLogBodyResponse {
 export interface CompletePipelineJobResponse {
   update_merlin_agent_PipelineJobQueue_by_pk: {
     id: string;
+  };
+}
+
+export interface InsertPipelineJobQueueResponse {
+  insert_merlin_agent_PipelineJobQueue: {
+    affected_rows: number;
   };
 }
 

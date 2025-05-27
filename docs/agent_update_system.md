@@ -299,9 +299,18 @@ interface PipelineJobLogV2Body {
 - Variables y estados internos
 - Información de troubleshooting
 
-## Flujo de Ejecución y Logging
+## Flujo Completo de Pipeline Jobs
 
-### 1. **Inicio del Job**
+### 1. **Envío del Job**
+```
+Dashboard/Agente → Mutación: InsertPipelineJobQueue
+↓
+PipelineJobQueue → Estado: running: true, completed: false
+↓
+Job agregado a la cola de ejecución
+```
+
+### 2. **Inicio del Job**
 ```
 Pipeline Job Queue → Estado: running
 ↓
@@ -381,6 +390,15 @@ mutation InsertPipelineJobLog($logData: merlin_agent_PipelineJobLogV2_insert_inp
 ```graphql
 mutation InsertPipelineJobLogBody($logBodyData: merlin_agent_PipelineJobLogV2Body_insert_input!) {
   insert_merlin_agent_PipelineJobLogV2Body(objects: [$logBodyData]) {
+    affected_rows
+  }
+}
+```
+
+### Enviar Nuevo Pipeline Job
+```graphql
+mutation InsertPipelineJobQueue($jobData: merlin_agent_PipelineJobQueue_insert_input!) {
+  insert_merlin_agent_PipelineJobQueue(objects: [$jobData]) {
     affected_rows
   }
 }
