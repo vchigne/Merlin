@@ -1,0 +1,177 @@
+using merlin_agent.Engine.AutoUpdate;
+using merlin_agent.Engine.MGraphQL;
+using merlin_agent.Engine.Models.Hasura;
+using merlin_agent.Engine.Orchestation;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using merlin_agent.Engine.Shared;
+using System.Diagnostics;
+using System.Reactive;
+
+namespace merlin_agent.Engine
+{
+    internal class MerlinAgent
+    {
+        private int logOrder;
+        private List<PipelineJobLog> pipelineJobLogs = new List<PipelineJobLog>();
+        public static List<string> VERSION = new List<string>() { "4.2.a" };
+        //private MerlinLogger merlogger = new MerlinLogger();
+
+        public MerlinAgent() {
+            //this.passport = Config.PASSPORT;
+            this.pipelineJobLogs = new List<PipelineJobLog>();
+            this.logOrder = 0;
+        }
+
+        public async Task CheckUpdates() {
+            HasuraClient hasura = new HasuraClient(Config.PASSPORT);
+            (MerlinAgentAgentPassportUpdate, bool) merlinAgentUpdateTuple = await hasura.GetMerlinAgentVersion();
+            MerlinAgentAgentPassportUpdate merlinAgentUpdate = merlinAgentUpdateTuple.Item1;
+            bool isOk = merlinAgentUpdateTuple.Item2;
+
+            if (merlinAgentUpdate == null && isOk == false)
+            {
+                MerlinLogger.NLogger.Error("Error procesando la actualizacion. Manteniendo version actual");
+                //_logger.LogError($"Error procesando la actualizacion. Manteniendo version actual");
+            }
+
+            if (merlinAgentUpdate != null && isOk) {
+                MerlinUpdater updater = new MerlinUpdater(agentVersion: merlinAgentUpdate.AgentVersion);
+                bool successUpdate = await updater.PerformUpdate();
+                if (successUpdate && merlinAgentUpdate.AutoCleanUpdate)
+                {
+                    AutoClean autoClean = new AutoClean();
+                    autoClean.Clean();
+                    updater.Log.Append(autoClean.Log);
+                    updater.Warnings.Append(autoClean.Warnings);
+                    updater.Errors.Append(autoClean.Errors);
+                }
+
+                // Informar a Hasura el estado de la actualizacion
+                await hasura.InformAgentUpdateResult(log: new MerlinAgentUpdateLog()
+                {
+                    Logs = updater.Log.ToString(),
+                    Errors = updater.Errors.ToString(),
+                    Warnings = updater.Warnings.ToString()
+                });
+
+                if (successUpdate)
+                {
+                    // Cuando sea RUN_ONE_TIME no reiniciará la aplicación porque esta se reiniciará en la siguiente vuelta
+                    if (Config.RUN_ONE_TIME == false) {
+                        // Termina la aplicacion con SIGTERM=1 para que el mandejador del servicio reinicie el agente
+                        Environment.Exit(1);
+                    }
+                }
+            }
+        }
+
+        public async Task Ping() {
+            HasuraClient hasura = new HasuraClient(Config.PASSPORT);
+            await hasura.AgentPassportPing();
+        }
+        
+        public async Task ProcessPipelineJob ()
+        {
+            HasuraClient hasura = new HasuraClient(Config.PASSPORT);
+            MerlinAgentPipelineJobQueue job = await hasura.GetMerlinAgentPipelineJob();
+
+            if (job != null) {
+                var _logger = MerlinLogger.NLogger.WithProperty("PipelineJobId", job.Id);
+                await hasura.SetRunningStateJob(job.Id);
+                MerlinLogger.setMemoryRule(memoryRuleEnabled: true, clearMemoryLogBeforeEnable: true);
+                _logger.Info($"Procesando COLA: {job.Id}");
+                _logger.Info($"Procesando JOB: {job.Pipeline.Id}");
+                _logger.Info($"AbortOnError: {job.Pipeline.AbortOnError}");
+                _logger.Info($"PipelineUnits: {job.Pipeline.PipelineUnits.Count}");
+                Console.WriteLine();
+
+                _logger.Info("Contruyendo cadena de ejecucion");
+                var pipelineUnitsChain = Orchestator.DefinePipelineUnitsChain(job.Pipeline.PipelineUnits);
+                _logger.Info("Cadena de ejecucion construida");
+                Console.WriteLine();
+
+                foreach (var chain in pipelineUnitsChain) {
+                    executeChain(chain: chain, jobId: job.Id);
+                }
+                _logger.Info("Cadena de ejecucion terminada. Enviando logs");
+                await hasura.InformPipelineJobResults(pipelineJobLogs);
+                await hasura.CompletePipelineJob(job.Id);
+                await MemoryLogQueue.SendLogs();
+                MerlinLogger.setMemoryRule(memoryRuleEnabled: false, clearMemoryLogBeforeEnable: true);
+            }
+
+            // Terminar el programa en caso este configurado para correr una sola vez
+            if (Config.RUN_ONE_TIME)
+            {
+                Environment.Exit(0);
+            }
+        }
+
+        private void executeChain(PipelineUnitChain chain, string jobId, RunnerOutput lastOutput = null) {
+            this.logOrder++;
+            var unit = chain.Unit;
+
+            var _logger = MerlinLogger.NLogger.WithProperties(
+            new[] {
+                    new KeyValuePair<string, object>("PipelineUnitId", unit.Id),
+                    new KeyValuePair<string, object>("PipelineJobId", jobId)
+                }
+            );
+            _logger.Debug($"Id: {unit.Id}");
+            _logger.Debug($"AbortOnTimeout: {unit.AbortOnTimeout}");
+            _logger.Debug($"ContinueOnError: {unit.ContinueOnError}");
+            _logger.Debug($"RetryAfterMilliseconds: {unit.RetryAfterMilliseconds}");
+            _logger.Debug($"RetryCount: {unit.RetryCount}");
+            _logger.Debug($"TimeoutMilliseconds: {unit.TimeoutMilliseconds}");
+            _logger.Debug("");
+
+            Runner runner = new Runner(jobId: jobId);
+            var watch = Stopwatch.StartNew();
+            
+            RunnerOutput output = runner.RunWithRetry(
+                unit: unit,
+                //currentRunOutput: null,
+                _lastOutput: lastOutput,
+                tryCount: 0
+            );
+
+            watch.Stop();
+
+            int milliSeconds = int.MaxValue;
+            try {
+                milliSeconds = Convert.ToInt32(watch.ElapsedMilliseconds);
+            } catch (Exception ex) {
+                _logger.Warn("El tiempo de ejecucion no pudo convertirse a integer. Utilizando maximo posible");
+                _logger.Warn(ex.Message);
+            }
+            //if (output != null) {
+            //    pipelineJobLogs.Add(new PipelineJobLog()
+            //    {
+            //        PipelineUnitId = unit.Id,
+            //        PipelineJobQueueId = jobId,
+            //        //Errors = output.Logger.Errors.ToString(),
+            //        //Warnings = output.Logger.Warnings.ToString(),
+            //        //Logs = output.Logger.Log.ToString(),
+            //        LogOrder = this.logOrder,
+            //        MilliSeconds = milliSeconds
+            //    });
+            //} else {
+            //    _logger.Error($"El unitId. No tiene output");
+            //}
+
+            pipelineJobLogs.Add(new PipelineJobLog()
+            {
+                PipelineUnitId = unit.Id,
+                PipelineJobQueueId = jobId,
+                LogOrder = this.logOrder,
+                MilliSeconds = milliSeconds
+            });
+
+            foreach (var nChain in chain.Children) {
+                executeChain(chain: nChain, jobId: jobId, lastOutput: output);
+            }
+        }
+    }
+}
