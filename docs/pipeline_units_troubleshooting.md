@@ -162,34 +162,125 @@ function determineUnitType(unit) {
 
 ## Consideraciones para el Futuro
 
-### Si Necesitas Información Detallada de SFTP
-Para obtener detalles específicos de los nodos SFTP, usa consultas separadas:
+## ACTUALIZACIÓN CRÍTICA: Estructura Real Descubierta
 
-```graphql
-# Para SFTP Uploader
-query GetSFTPUploader($id: uuid!) {
-  merlin_agent_SFTPUploader_by_pk(id: $id) {
-    id
-    name
-    input
-    return_output
-    sftp_link_id
-    # Aquí agregar la relación correcta cuando esté configurada
-  }
-}
+### Código Fuente del Agente C# como Referencia
+Al analizar el código C# del agente oficial de Merlin, descubrimos la estructura **exacta** que Hasura debe retornar:
 
-# Para SFTP Downloader
-query GetSFTPDownloader($id: uuid!) {
-  merlin_agent_SFTPDownloader_by_pk(id: $id) {
-    id
-    name
-    output
-    return_output
-    sftp_link_id
-    # Aquí agregar la relación correcta cuando esté configurada
-  }
+```csharp
+public class PipelineUnit
+{
+    [JsonPropertyName("Command")]
+    public Command Command { get; set; }
+    
+    [JsonPropertyName("QueryQueue")]
+    public QueryQueue QueryQueue { get; set; }
+    
+    [JsonPropertyName("SFTPDownloader")]
+    public SFTPDownloader SFTPDownloader { get; set; }
+    
+    [JsonPropertyName("SFTPUploader")]
+    public SFTPUploader SFTPUploader { get; set; }
+    
+    [JsonPropertyName("Unzip")]
+    public Unzip Unzip { get; set; }
+    
+    [JsonPropertyName("Zip")]
+    public Zip Zip { get; set; }
 }
 ```
+
+### Consulta GraphQL Correcta (Basada en Código C#)
+```graphql
+export const PIPELINE_UNITS_QUERY_COMPLETE = `
+  query GetPipelineUnits($pipelineId: uuid!) {
+    merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
+      id
+      pipeline_unit_id
+      abort_on_timeout
+      continue_on_error
+      retry_count
+      timeout_milliseconds
+      retry_after_milliseconds
+      call_pipeline
+      
+      Command {
+        id
+        target
+        args
+        working_directory
+        instant
+        raw_script
+        return_output
+        return_output_type
+      }
+      
+      QueryQueue {
+        id
+        Queries {
+          id
+          order
+          path
+          query_string
+          return_output
+          SQLConn {
+            id
+            driver
+            connstring
+          }
+        }
+      }
+      
+      SFTPDownloader {
+        id
+        input
+        output
+        return_output
+        SFTPLink {
+          id
+          server
+          port
+          user
+          password
+        }
+      }
+      
+      SFTPUploader {
+        id
+        output
+        return_output
+        SFTPLink {
+          id
+          server
+          port
+          user
+          password
+        }
+      }
+      
+      Zip {
+        id
+        output
+        return_output
+      }
+      
+      Unzip {
+        id
+        output
+        return_output
+      }
+    }
+  }
+`;
+```
+
+### Nombres de Relaciones Correctos
+El código C# nos confirmó que los nombres de las relaciones en GraphQL son:
+- ✅ `Command` (no `command`)
+- ✅ `QueryQueue` (no `query_queue`)  
+- ✅ `SFTPDownloader` (no `merlin_agent_SFTPDownloader`)
+- ✅ `SFTPUploader` (no `merlin_agent_SFTPUploader`)
+- ✅ `SFTPLink` (relación anidada dentro de SFTPDownloader/SFTPUploader)
 
 ### Configuración de Relaciones en Hasura
 Para resolver las relaciones SFTP en el futuro:

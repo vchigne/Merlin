@@ -1,0 +1,329 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json.Serialization;
+//using GraphQL.Client.Serializer.Newtonsoft;
+
+namespace merlin_agent.Engine.Models.Hasura
+{
+    public class PipelineJobResponse
+    {
+        [JsonPropertyName("merlin_agent_PipelineJobQueue")]
+        public List<MerlinAgentPipelineJobQueue> MerlinAgentPipelineJobQueue { get; set; }
+    }
+
+    public class Command
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("target")]
+        public string Target { get; set; }
+
+        [JsonPropertyName("args")]
+        public string Args { get; set; }
+
+        [JsonPropertyName("working_directory")]
+        public string WorkingDirectory { get; set; }
+
+        [JsonPropertyName("instant")]
+        public bool Instant { get; set; }
+
+        [JsonPropertyName("raw_script")]
+        public string RawScript { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+
+        [JsonPropertyName("return_output_type")]
+        public string ReturnOutputType { get; set; }
+    }
+
+    public class FileStreamSftpDownloader
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class FileStreamSftpUploader
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class FileStreamUnzip
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class FileStreamZip
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+        [JsonPropertyName("wildcard_exp")]
+        public string WildcardExp { get; set; }
+    }
+
+    public class MerlinAgentPipelineJobQueue
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("Pipeline")]
+        public Pipeline Pipeline { get; set; }
+    }
+
+    public class Pipeline
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("abort_on_error")]
+        public bool AbortOnError { get; set; }
+
+        [JsonPropertyName("PipelineUnits")]
+        public List<PipelineUnit> PipelineUnits { get; set; }
+    }
+
+    public class PipelineUnit
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("pipeline_unit_id")]
+        public string PipelineUnitId { get; set; }
+
+        [JsonPropertyName("abort_on_timeout")]
+        public bool AbortOnTimeout { get; set; }
+
+        [JsonPropertyName("continue_on_error")]
+        public bool ContinueOnError { get; set; }
+
+        [JsonPropertyName("retry_count")]
+        public int RetryCount { get; set; }
+
+        [JsonPropertyName("timeout_milliseconds")]
+        public int TimeoutMilliseconds { get; set; }
+
+        [JsonPropertyName("retry_after_milliseconds")]
+        public int RetryAfterMilliseconds { get; set; }
+
+        [JsonPropertyName("Command")]
+        public Command Command { get; set; }
+
+        [JsonPropertyName("QueryQueue")]
+        public QueryQueue QueryQueue { get; set; }
+
+        [JsonPropertyName("SFTPDownloader")]
+        public SFTPDownloader SFTPDownloader { get; set; }
+
+        [JsonPropertyName("SFTPUploader")]
+        public SFTPUploader SFTPUploader { get; set; }
+
+        [JsonPropertyName("Unzip")]
+        public Unzip Unzip { get; set; }
+
+        [JsonPropertyName("Zip")]
+        public Zip Zip { get; set; }
+
+        [JsonPropertyName("call_pipeline")]
+        public string CallPipeline { get; set; }
+    }
+
+    public class Query
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("SQLConn")]
+        public SQLConn SQLConn { get; set; }
+
+        [JsonPropertyName("chunks")]
+        public int Chunks { get; set; }
+
+        [JsonPropertyName("date_format")]
+        public string DateFormat { get; set; }
+
+        [JsonPropertyName("order")]
+        public int Order { get; set; }
+
+        [JsonPropertyName("path")]
+        public string Path { get; set; }
+
+        [JsonPropertyName("print_headers")]
+        public bool PrintHeaders { get; set; }
+
+        [JsonPropertyName("query_string")]
+        public string QueryString { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+
+        [JsonPropertyName("separator")]
+        public string Separator { get; set; }
+
+        [JsonPropertyName("target_encoding")]
+        public string TargetEncoding { get; set; }
+
+        [JsonPropertyName("timeout")]
+        public int Timeout { get; set; }
+
+        [JsonPropertyName("mssql_compatibility_level")]
+        public string SqlCompatibilityLevel { get; set; }
+
+        [JsonPropertyName("retry_count")]
+        public int RetryCount { get; set; }
+
+        [JsonPropertyName("retry_after_milliseconds")]
+        public int RetryAfterMilliseconds { get; set; }
+
+        [JsonPropertyName("trim_columns")]
+        public bool TrimColumns { get; set; }
+
+        [JsonPropertyName("force_dot_decimal_separator")]
+        public bool ForceDotDecimalSeparator { get; set; }
+    }
+
+    public class QueryQueue
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("Queries")]
+        public List<Query> Queries { get; set; }
+    }
+
+    public class SFTPDownloader
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("SFTPLink")]
+        public SFTPLink SFTPLink { get; set; }
+
+        [JsonPropertyName("FileStreamSftpDownloaders")]
+        public List<FileStreamSftpDownloader> FileStreamSftpDownloaders { get; set; }
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class SFTPLink
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("server")]
+        public string Server { get; set; }
+
+        [JsonPropertyName("port")]
+        public int Port { get; set; }
+
+        [JsonPropertyName("user")]
+        public string User { get; set; }
+
+        [JsonPropertyName("password")]
+        public string Password { get; set; }
+    }
+
+    public class SFTPUploader
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("SFTPLink")]
+        public SFTPLink SFTPLink { get; set; }
+
+        [JsonPropertyName("FileStreamSftpUploaders")]
+        public List<FileStreamSftpUploader> FileStreamSftpUploaders { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class SQLConn
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("connstring")]
+        public string Connstring { get; set; }
+
+        [JsonPropertyName("driver")]
+        public string Driver { get; set; }
+    }
+
+    public class Unzip
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("FileStreamUnzips")]
+        public List<FileStreamUnzip> FileStreamUnzips { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+    public class Zip
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("FileStreamZips")]
+        public List<FileStreamZip> FileStreamZips { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; }
+
+        [JsonPropertyName("return_output")]
+        public bool ReturnOutput { get; set; }
+    }
+
+}
