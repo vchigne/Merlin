@@ -6,6 +6,8 @@
 import type {
   HasuraResponse,
   AgentPassportResponse,
+  AgentVersionResponse,
+  AgentUpdateLogsResponse,
   PipelineResponse,
   PipelineUnitsResponse,
   PipelineJobsResponse,
@@ -15,6 +17,8 @@ import type {
   CommandsResponse,
   PipelineUnit,
   AgentPassport,
+  AgentVersion,
+  AgentUpdateLog,
   Pipeline,
   PipelineJobQueue,
   PipelineJobLogV2Body,
@@ -24,6 +28,7 @@ import type {
   UpsertAgentPingResponse,
   InsertPipelineResponse,
   InsertAgentResponse,
+  InsertAgentUpdateLogResponse,
   AgentPassportPingInput,
   PipelineInput,
   AgentPassportInput
@@ -609,6 +614,36 @@ export const HASURA_MUTATIONS = {
         updated_at
       }
     }
+  `,
+
+  // Sistema de actualizaciones (basado en código C#)
+  INSERT_AGENT_UPDATE_LOG: `
+    mutation InsertAgentUpdateLog($agentId: uuid!, $logData: merlin_agent_AgentUpdateLog_insert_input!) {
+      insert_merlin_agent_AgentUpdateLog(objects: [$logData]) {
+        affected_rows
+      }
+      update_merlin_agent_AgentPassport_by_pk(
+        pk_columns: {id: $agentId}
+        _set: {is_healthy: true}
+      ) {
+        affected_rows
+      }
+    }
+  `,
+
+  // Actualizar configuración de auto-actualización
+  UPDATE_AGENT_AUTO_UPDATE: `
+    mutation UpdateAgentAutoUpdate($agentId: uuid!, $autoCleanUpdate: Boolean!) {
+      update_merlin_agent_AgentPassport_by_pk(
+        pk_columns: {id: $agentId}
+        _set: {auto_clean_update: $autoCleanUpdate}
+      ) {
+        id
+        name
+        auto_clean_update
+        updated_at
+      }
+    }
   `
 };
 
@@ -859,6 +894,51 @@ export class HasuraService {
     const result = await this.executeQuery<{ update_merlin_agent_AgentPassport_by_pk: AgentPassport }>(
       HASURA_MUTATIONS.UPDATE_AGENT_STATUS,
       { agentId, enabled }
+    );
+    return result.data?.update_merlin_agent_AgentPassport_by_pk || null;
+  }
+
+  // ===== MÉTODOS DEL SISTEMA DE ACTUALIZACIONES =====
+
+  async getAgentVersions(): Promise<(AgentPassport & { AgentVersion?: AgentVersion })[]> {
+    const result = await this.executeQuery<AgentVersionResponse>(
+      HASURA_QUERIES.AGENT_VERSION_QUERY
+    );
+    return result.data?.merlin_agent_AgentPassport || [];
+  }
+
+  async getAgentUpdateLogs(agentId: string, limit = 20): Promise<AgentUpdateLog[]> {
+    const result = await this.executeQuery<AgentUpdateLogsResponse>(
+      HASURA_QUERIES.AGENT_UPDATE_LOGS_QUERY,
+      { agentId, limit }
+    );
+    return result.data?.merlin_agent_AgentUpdateLog || [];
+  }
+
+  async getRecentUpdateLogs(): Promise<AgentUpdateLog[]> {
+    const result = await this.executeQuery<AgentUpdateLogsResponse>(
+      HASURA_QUERIES.RECENT_UPDATE_LOGS_QUERY
+    );
+    return result.data?.merlin_agent_AgentUpdateLog || [];
+  }
+
+  async insertAgentUpdateLog(agentId: string, logData: {
+    agent_passport_id: string;
+    logs: string;
+    warnings: string;
+    errors: string;
+  }): Promise<number> {
+    const result = await this.executeQuery<InsertAgentUpdateLogResponse>(
+      HASURA_MUTATIONS.INSERT_AGENT_UPDATE_LOG,
+      { agentId, logData }
+    );
+    return result.data?.insert_merlin_agent_AgentUpdateLog?.affected_rows || 0;
+  }
+
+  async updateAgentAutoUpdate(agentId: string, autoCleanUpdate: boolean): Promise<AgentPassport | null> {
+    const result = await this.executeQuery<{ update_merlin_agent_AgentPassport_by_pk: AgentPassport }>(
+      HASURA_MUTATIONS.UPDATE_AGENT_AUTO_UPDATE,
+      { agentId, autoCleanUpdate }
     );
     return result.data?.update_merlin_agent_AgentPassport_by_pk || null;
   }

@@ -1,0 +1,83 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json.Serialization;
+
+namespace merlin_agent.Engine.Models.Hasura
+{
+    public class PipelineJobLog
+    {
+        
+        [JsonPropertyName("pipeline_job_queue_id")]
+        public string PipelineJobQueueId { get; set; }
+
+        [JsonPropertyName("pipeline_unit_id")]
+        public string PipelineUnitId { get; set; }
+
+        //[JsonPropertyName("logs")]
+        //public string Logs { get; set; }
+
+        //[JsonPropertyName("warnings")]
+        //public string Warnings { get; set; }
+
+        //[JsonPropertyName("errors")]
+        //public string Errors { get; set; }
+
+        [JsonPropertyName("log_order")]
+        public int LogOrder { get; set; }
+
+        [JsonPropertyName("milliseconds")]
+        public int MilliSeconds { get; set; }
+    }
+
+    //public class PipelineJobLog
+    //{
+
+    //    [JsonPropertyName("pipeline_job_queue_id")]
+    //    public string PipelineJobQueueId { get; set; }
+
+    //    [JsonPropertyName("pipeline_unit_id")]
+    //    public string PipelineUnitId { get; set; }
+
+    //    [JsonPropertyName("logs")]
+    //    public string Logs { get; set; }
+
+    //    [JsonPropertyName("warnings")]
+    //    public string Warnings { get; set; }
+
+    //    [JsonPropertyName("errors")]
+    //    public string Errors { get; set; }
+
+    //    [JsonPropertyName("log_order")]
+    //    public int LogOrder { get; set; }
+
+    //    [JsonPropertyName("milliseconds")]
+    //    public int MilliSeconds { get; set; }
+    //}
+
+    public class InsertPipelineJobLogResponse
+    {
+        //[JsonPropertyName("insert_merlin_agent_PipelineJobLog")]
+        [JsonPropertyName("insert_merlin_agent_PipelineJobLogV2")]
+        public InsertMerlinAgentPipelineJobLog InsertMerlinAgentPipelineJobLog { get; set; }
+    }
+
+    public class InsertMerlinAgentPipelineJobLog
+    {
+        [JsonPropertyName("affected_rows")]
+        public int AffectedRows { get; set; }
+    }
+
+    // Para completar el job
+    public class CompletePipelineJobResponse
+    {
+        [JsonPropertyName("update_merlin_agent_PipelineJobQueue_by_pk")]
+        public CompleteMerlinAgentPipelineJob CompleteMerlinAgentPipelineJob { get; set; }
+    }
+
+    public class CompleteMerlinAgentPipelineJob
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+    }
+}
