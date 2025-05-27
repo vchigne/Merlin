@@ -89,36 +89,6 @@ export const PIPELINE_UNITS_QUERY = `
       posx
       posy
       call_pipeline
-      
-      merlin_agent_SFTPUploader {
-        id
-        name
-        input
-        return_output
-        sftp_link_id
-        merlin_agent_SFTPLink {
-          id
-          name
-          server
-          port
-          user
-        }
-      }
-      
-      merlin_agent_SFTPDownloader {
-        id
-        name
-        output
-        return_output
-        sftp_link_id
-        merlin_agent_SFTPLink {
-          id
-          name
-          server
-          port
-          user
-        }
-      }
     }
   }
 `;
