@@ -1,0 +1,112 @@
+using NLog;
+using NLog.Targets;
+using NLog.Targets.Wrappers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using GraphQL;
+using GraphQL.NewtonsoftJson;
+
+namespace merlin_agent.Engine.Shared
+{
+    public class MerlinLogger
+    {
+        public static readonly Logger NLogger = LogManager.GetCurrentClassLogger();
+        public static MemoryTarget memoryTarget = new MemoryTarget("memoryTarget");
+        public static void Setup(bool enableConsole = true) {
+            var config = new NLog.Config.LoggingConfiguration();
+            string fileLayout = "${longdate:universalTime=false}|${level:uppercase=true}|${callsite}|${message}|${exception:format=type}|${exception:format=message}|${exception:format=stacktrace}";
+            string consoleLayout = "${longdate:universalTime=false} [${level:uppercase=true}] [${callsite}] ${message}\t${exception:format=type}\t${exception:format=message}\t${exception:format=stacktrace}";
+
+            var logfile = new FileTarget("logfile") {
+                FileName = "log_merlin-agent.txt",
+                MaxArchiveFiles = 5,
+                ArchiveAboveSize = 5 * 1024 * 1024, // 5 mb
+                ArchiveNumbering = ArchiveNumberingMode.Rolling,
+                ConcurrentWrites = true,
+                Layout = fileLayout
+            };
+
+            var batchLogFile = new AsyncTargetWrapper("batchLogFile", logfile) {
+                BatchSize = 1000,
+                OverflowAction = AsyncTargetWrapperOverflowAction.Discard
+            };
+
+            // Rules for mapping loggers to targets
+            if (enableConsole) {
+                var logconsole = new ConsoleTarget("logconsole") {
+                    Layout = consoleLayout
+                };
+                config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+            }
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, batchLogFile);
+
+            var jsonLayout = new NLog.Layouts.JsonLayout() {
+                Attributes = {
+                    new NLog.Layouts.JsonAttribute("pipeline_job_id", "${event-properties:PipelineJobId}"),
+                    new NLog.Layouts.JsonAttribute("pipeline_unit_id", "${event-properties:PipelineUnitId}"),
+                    new NLog.Layouts.JsonAttribute("pipeline_unit_context_id", "${event-properties:PipelineUnitContextId}"),
+                    new NLog.Layouts.JsonAttribute("date", "${longdate:universalTime=true}+00:00"),
+                    new NLog.Layouts.JsonAttribute("level", "${level:uppercase=true}"),
+                    new NLog.Layouts.JsonAttribute("message", "${message}."),
+                    new NLog.Layouts.JsonAttribute("callsite", "${callsite}"),
+                    new NLog.Layouts.JsonAttribute("exception", "${exception:format=type}"),
+                    new NLog.Layouts.JsonAttribute("exception_message", "${exception:format=message}"),
+                    new NLog.Layouts.JsonAttribute("exception_stack_trace", "${exception:format=stacktrace}")
+                }
+            };
+
+            memoryTarget.Layout = jsonLayout;
+            config.AddRule(LogLevel.Fatal, LogLevel.Fatal, memoryTarget);
+
+            foreach (var lr in config.LoggingRules) {
+                foreach (var t in lr.Targets) {
+                    if (t.Name == "memoryTarget") {
+                        lr.RuleName = "RULE_MEM";
+                    }
+                }
+            }
+            LogManager.Configuration = config;
+        }
+
+        public static void setMemoryRule (bool memoryRuleEnabled, bool clearMemoryLogBeforeEnable = true) {
+            var ruleMem = LogManager.Configuration.FindRuleByName("RULE_MEM");
+            if (memoryRuleEnabled) {
+                if (clearMemoryLogBeforeEnable)
+                {
+                    memoryTarget.Logs.Clear();
+                }
+                ruleMem.EnableLoggingForLevels(LogLevel.Info, LogLevel.Fatal);
+                Console.WriteLine("RULE_MEM habilitado");
+            }
+            else {
+                ruleMem.DisableLoggingForLevels(LogLevel.Info, LogLevel.Fatal);
+                Console.WriteLine("RULE_MEM deshabilitado");
+            }
+            LogManager.Configuration = LogManager.Configuration.Reload();
+        }
+        public static Inputs collectMemoryLog () {
+            List<string> copyArr = memoryTarget.Logs.ToList();
+            if (copyArr.Count > 0) {
+                memoryTarget.Logs.Clear();
+                Inputs request;
+                string bodyData = $"[{string.Join(",", copyArr)}]";
+                string trick = "{\"data\":" + bodyData + "}";
+                //Console.WriteLine(trick);
+
+                try {
+                    request = new GraphQLSerializer().Deserialize<Inputs>(trick);
+                    //Console.WriteLine(request);
+                    return request;
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(trick);
+                }
+                
+                //request = new GraphQLSerializer().Deserialize<Inputs>($"[{string.Join(",", copyArr)}]");
+                return null;
+            }
+            return null;   
+        }
+    }
+}
