@@ -29,7 +29,7 @@ export default function UnifiedPipelineUnitDialog({
     if (unit.zip_id) return 'Zip Files';
     if (unit.unzip_id) return 'Unzip Files';
     if (unit.call_pipeline) return 'Call Pipeline';
-    return unitType || 'Unit';
+    return 'Unit';
   };
 
   // Función para obtener los detalles de la unidad
@@ -47,65 +47,57 @@ export default function UnifiedPipelineUnitDialog({
       if (unit.command_id) {
         query = COMMAND_QUERY;
         variables = { id: unit.command_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_Command?.[0];
       } else if (unit.query_queue_id) {
         query = QUERY_QUEUE_QUERY;
         variables = { id: unit.query_queue_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_QueryQueue?.[0];
+        
+        // Si hay un QueryQueue, cargar las queries asociadas
+        if (data) {
+          try {
+            const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unit.query_queue_id });
+            if (queriesResult.data?.merlin_agent_Query) {
+              data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
+            }
+          } catch (error) {
+            console.error("Error fetching SQL queries:", error);
+          }
+        }
       } else if (unit.sftp_downloader_id) {
         query = SFTP_DOWNLOADER_QUERY;
         variables = { id: unit.sftp_downloader_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_SFTPDownloader?.[0];
       } else if (unit.sftp_uploader_id) {
         query = SFTP_UPLOADER_QUERY;
         variables = { id: unit.sftp_uploader_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_SFTPUploader?.[0];
       } else if (unit.zip_id) {
         query = ZIP_QUERY;
         variables = { id: unit.zip_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_Zip?.[0];
       } else if (unit.unzip_id) {
         query = UNZIP_QUERY;
         variables = { id: unit.unzip_id };
-      }
-
-      if (query) {
         const result = await executeQuery(query, variables);
-        
-        if (result.data) {
-          // Extraer los datos según el tipo de consulta
-          if (unit.command_id) {
-            data = result.data.merlin_agent_Command?.[0];
-          } else if (unit.query_queue_id) {
-            data = result.data.merlin_agent_QueryQueue?.[0];
-            // Para las consultas SQL, obtenemos detalles adicionales
-            if (data) {
-              try {
-                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unit.query_queue_id });
-                if (queriesResult.data?.merlin_agent_Query) {
-                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
-                }
-              } catch (error) {
-                console.error("Error fetching SQL queries:", error);
-              }
-            }
-          } else if (unit.sftp_downloader_id) {
-            data = result.data.merlin_agent_SFTPDownloader?.[0];
-          } else if (unit.sftp_uploader_id) {
-            data = result.data.merlin_agent_SFTPUploader?.[0];
-          } else if (unit.zip_id) {
-            data = result.data.merlin_agent_Zip?.[0];
-          } else if (unit.unzip_id) {
-            data = result.data.merlin_agent_UnZip?.[0];
-          }
-          
-          setUnitDetails({
-            type,
-            name: data?.name || type,
-            description: data?.description || '',
-            details: data
-          });
-        }
+        data = result.data.merlin_agent_UnZip?.[0];
       }
+      
+      setUnitDetails({
+        type,
+        name: data?.name || type,
+        description: data?.description || '',
+        details: data
+      });
     } catch (error) {
       console.error("Error fetching unit details:", error);
       setUnitDetails({
-        type: unitType || 'Error',
+        type: determineUnitType(unit) || 'Error',
         name: 'Error',
         description: 'No se pudieron cargar los detalles',
         details: null
@@ -117,185 +109,227 @@ export default function UnifiedPipelineUnitDialog({
 
   // Efecto para cargar los detalles cuando se abre el diálogo
   useEffect(() => {
-    if (open && unitId) {
+    if (open && unit) {
+      fetchUnitDetails(unit);
+    } else {
       setUnitDetails(null);
-      
-      // Crear un objeto unit mock para usar con la función existente
-      const mockUnit: any = {};
-      
-      // Determinar qué campo ID establecer basado en el tipo
-      if (unitType === 'Command') {
-        mockUnit.command_id = unitId;
-      } else if (unitType === 'SQL Query') {
-        mockUnit.query_queue_id = unitId;
-      } else if (unitType === 'SFTP Download') {
-        mockUnit.sftp_downloader_id = unitId;
-      } else if (unitType === 'SFTP Upload') {
-        mockUnit.sftp_uploader_id = unitId;
-      } else if (unitType === 'Zip Files') {
-        mockUnit.zip_id = unitId;
-      } else if (unitType === 'Unzip Files') {
-        mockUnit.unzip_id = unitId;
-      }
-      
-      fetchUnitDetails(mockUnit);
     }
-  }, [open, unitId, unitType]);
+  }, [open, unit]);
+
+  // Función para renderizar el contenido específico por tipo
+  const renderUnitContent = () => {
+    if (!unitDetails?.details) return null;
+
+    const { details, type } = unitDetails;
+
+    switch (type) {
+      case 'Command':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Configuración del Comando</h4>
+              <div className="space-y-2 text-sm">
+                <div><span className="font-medium">Target:</span> {details.target}</div>
+                {details.args && <div><span className="font-medium">Argumentos:</span> {details.args}</div>}
+                {details.working_directory && <div><span className="font-medium">Directorio:</span> {details.working_directory}</div>}
+                <div><span className="font-medium">Modo:</span> {details.instant ? 'Instantáneo' : 'Streaming'}</div>
+                <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
+                {details.return_output && details.return_output_type && (
+                  <div><span className="font-medium">Tipo de Output:</span> {details.return_output_type}</div>
+                )}
+              </div>
+              {details.raw_script && (
+                <div className="mt-4">
+                  <h5 className="font-medium mb-2">Script:</h5>
+                  <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs max-h-48 overflow-y-auto">
+                    {details.raw_script}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'SQL Query':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Queries SQL</h4>
+              {details.Queries?.length > 0 ? (
+                <div className="space-y-3">
+                  {details.Queries.map((query: any, index: number) => (
+                    <div key={query.id} className="border rounded p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-sm">Query {query.order}</span>
+                        <span className="text-xs text-gray-500">{query.SQLConn?.name}</span>
+                      </div>
+                      <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs max-h-32 overflow-y-auto">
+                        {query.statement}
+                      </pre>
+                      <div className="text-xs text-gray-600 mt-2">
+                        <span>Archivo: {query.path}</span>
+                        {query.separator && <span> | Separador: {query.separator}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay queries disponibles</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'SFTP Upload':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Configuración SFTP Upload</h4>
+              {details.SFTPLink && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded mb-3">
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Servidor:</span> {details.SFTPLink.server}:{details.SFTPLink.port}</div>
+                    <div><span className="font-medium">Usuario:</span> {details.SFTPLink.user}</div>
+                    <div><span className="font-medium">Conexión:</span> {details.SFTPLink.name}</div>
+                  </div>
+                </div>
+              )}
+              {details.FileStreamSftpUploaders?.length > 0 ? (
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Archivos a Subir:</h5>
+                  {details.FileStreamSftpUploaders.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm">
+                      <div><span className="font-medium">Origen:</span> {stream.input}</div>
+                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
+                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay archivos configurados</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'SFTP Download':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Configuración SFTP Download</h4>
+              {details.SFTPLink && (
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded mb-3">
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Servidor:</span> {details.SFTPLink.server}:{details.SFTPLink.port}</div>
+                    <div><span className="font-medium">Usuario:</span> {details.SFTPLink.user}</div>
+                    <div><span className="font-medium">Conexión:</span> {details.SFTPLink.name}</div>
+                  </div>
+                </div>
+              )}
+              {details.FileStreamSftpDownloaders?.length > 0 ? (
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Archivos a Descargar:</h5>
+                  {details.FileStreamSftpDownloaders.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm">
+                      <div><span className="font-medium">Origen:</span> {stream.input}</div>
+                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
+                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay archivos configurados</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'Zip Files':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Configuración de Compresión</h4>
+              <div className="text-sm mb-3">
+                <div><span className="font-medium">Archivo ZIP:</span> {details.zip_name}</div>
+              </div>
+              {details.FileStreamZips?.length > 0 ? (
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Archivos a Comprimir:</h5>
+                  {details.FileStreamZips.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm">
+                      <div><span className="font-medium">Entrada:</span> {stream.input}</div>
+                      {stream.wildcard_exp && <div><span className="font-medium">Patrón:</span> {stream.wildcard_exp}</div>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay archivos configurados</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'Unzip Files':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Configuración de Descompresión</h4>
+              {details.FileStreamUnzips?.length > 0 ? (
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Archivos a Descomprimir:</h5>
+                  {details.FileStreamUnzips.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm">
+                      <div><span className="font-medium">Archivo ZIP:</span> {stream.input}</div>
+                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
+                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay archivos configurados</p>
+              )}
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-center text-gray-500">
+            <AlertCircle className="mx-auto mb-2" size={24} />
+            <p>Tipo de unidad no reconocido</p>
+          </div>
+        );
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        {loading ? (
-          <div className="py-8 space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        ) : unitDetails ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>
-                {unitDetails.name}
-                <span className="text-xs ml-2 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                  {unitDetails.type}
-                </span>
-              </DialogTitle>
-              {unitDetails.description && (
-                <DialogDescription>
-                  {unitDetails.description}
-                </DialogDescription>
-              )}
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              {/* SFTP Download */}
-              {unitDetails.type === 'SFTP Download' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles de Descarga SFTP</h4>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                    <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de destino:</span> {unitDetails.details.output || 'N/A'}</div>
-                    {unitDetails.details.SFTPLink ? (
-                      <div className="space-y-1">
-                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
-                        {unitDetails.details.SFTPLink.server && (
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
-                        )}
-                        {unitDetails.details.SFTPLink.user && (
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* SFTP Upload */}
-              {unitDetails.type === 'SFTP Upload' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles de Subida SFTP</h4>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                    <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de origen:</span> {unitDetails.details.input || 'N/A'}</div>
-                    {unitDetails.details.SFTPLink ? (
-                      <div className="space-y-1">
-                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
-                        {unitDetails.details.SFTPLink.server && (
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
-                        )}
-                        {unitDetails.details.SFTPLink.user && (
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
-                    )}
-                  </div>
-                </div>
-              )}
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {unitDetails?.name || 'Cargando...'}
+          </DialogTitle>
+          <DialogDescription>
+            {unitDetails?.description || 'Detalles de la unidad del pipeline'}
+          </DialogDescription>
+        </DialogHeader>
 
-              {/* Command */}
-              {unitDetails.type === 'Command' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles del Comando</h4>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                    <div><span className="text-sky-600 dark:text-sky-400">Objetivo:</span> {unitDetails.details.target || 'N/A'}</div>
-                    <div><span className="text-sky-600 dark:text-sky-400">Directorio:</span> {unitDetails.details.working_directory || 'N/A'}</div>
-                    <div><span className="text-sky-600 dark:text-sky-400">Argumentos:</span> {unitDetails.details.args || 'N/A'}</div>
-                    {unitDetails.details.raw_script && (
-                      <div className="mt-2">
-                        <div className="text-sky-600 dark:text-sky-400">Script:</div>
-                        <pre className="overflow-x-auto overflow-y-auto max-h-48 p-2 mt-1 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
-                          {unitDetails.details.raw_script}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* SQL Query */}
-              {unitDetails.type === 'SQL Query' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles de Consulta SQL</h4>
-                  {unitDetails.details.Queries ? (
-                    <div className="space-y-3">
-                      {unitDetails.details.Queries.map((query: any) => (
-                        <div key={query.id} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3">
-                          <div className="text-xs mb-1">
-                            <span className="font-medium">{query.name}</span> 
-                            {query.order && <span className="text-slate-500 ml-2">Orden: {query.order}</span>}
-                          </div>
-                          <pre className="overflow-x-auto overflow-y-auto max-h-48 text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
-                            {query.query_string}
-                          </pre>
-                          {query.path && (
-                            <div className="mt-1 text-xs text-slate-500">
-                              Ruta de salida: {query.path}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-24 bg-slate-50 dark:bg-slate-800 rounded-md">
-                      <div className="text-slate-500 dark:text-slate-400 text-sm flex items-center">
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        No se pudieron cargar los detalles de las consultas
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Zip Files */}
-              {unitDetails.type === 'Zip Files' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles de Compresión</h4>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                    <div><span className="text-sky-600 dark:text-sky-400 font-medium">Archivo de salida:</span> {unitDetails.details.output || 'N/A'}</div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Unzip Files */}
-              {unitDetails.type === 'Unzip Files' && unitDetails.details && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Detalles de Descompresión</h4>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                    <div><span className="text-sky-600 dark:text-sky-400 font-medium">Archivo de entrada:</span> {unitDetails.details.input || 'N/A'}</div>
-                    <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de salida:</span> {unitDetails.details.output || 'N/A'}</div>
-                  </div>
-                </div>
-              )}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-20 w-full" />
             </div>
-          </>
-        ) : (
-          <div className="py-8 text-center">
-            <AlertCircle className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-            <p className="text-slate-500">No se pudieron cargar los detalles de la unidad</p>
-          </div>
-        )}
+          ) : unitDetails ? (
+            renderUnitContent()
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              <AlertCircle className="mx-auto mb-2" size={24} />
+              <p>No se pudieron cargar los detalles de la unidad</p>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
