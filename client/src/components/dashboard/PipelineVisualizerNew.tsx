@@ -178,51 +178,23 @@ export default function PipelineVisualizerNew() {
     };
   };
 
-  // Sistema de construcción de conexiones jerárquicas
-  const buildHierarchicalConnections = (units: any[]) => {
+  // Sistema de conexiones secuenciales simples
+  const buildSequentialConnections = (units: any[]) => {
     const connections = [];
-    const unitMap = new Map(units.map(unit => [unit.id, unit]));
     
-    // Crear conexiones basadas en pipeline_unit_id (el campo correcto)
-    units.forEach(unit => {
-      if (unit.pipeline_unit_id && unitMap.has(unit.pipeline_unit_id)) {
-        const parentUnit = unitMap.get(unit.pipeline_unit_id);
-        const connectionStyle = getConnectionStyle(parentUnit, unit);
-        
-        connections.push({
-          id: `conn-${parentUnit.id}-${unit.id}`,
-          source: parentUnit,
-          target: unit,
-          type: 'hierarchical',
-          style: connectionStyle
-        });
-      }
-    });
-    
-    // Si no hay suficientes conexiones jerárquicas, crear conexiones por orden lógico
-    if (connections.length < units.length - 1) {
-      const unconnectedUnits = units.filter(unit => 
-        !connections.some(conn => conn.target.id === unit.id)
-      );
+    // Crear conexiones secuenciales de arriba hacia abajo
+    for (let i = 0; i < units.length - 1; i++) {
+      const source = units[i];
+      const target = units[i + 1];
+      const connectionStyle = getConnectionStyle(source, target);
       
-      for (let i = 0; i < unconnectedUnits.length - 1; i++) {
-        const source = unconnectedUnits[i];
-        const target = unconnectedUnits[i + 1];
-        const connectionStyle = getConnectionStyle(source, target);
-        
-        // Solo agregar si no existe ya una conexión
-        if (!connections.some(conn => 
-          conn.source.id === source.id && conn.target.id === target.id
-        )) {
-          connections.push({
-            id: `conn-${source.id}-${target.id}`,
-            source,
-            target,
-            type: 'sequential',
-            style: connectionStyle
-          });
-        }
-      }
+      connections.push({
+        id: `conn-${source.id}-${target.id}`,
+        source,
+        target,
+        type: 'sequential',
+        style: connectionStyle
+      });
     }
     
     return connections;
