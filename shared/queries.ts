@@ -240,7 +240,7 @@ export const QUERY_DETAILS_QUERY = `
       id
       order
       name
-      query_string
+      statement
       path
       print_headers
       created_at
@@ -261,6 +261,12 @@ export const QUERY_DETAILS_QUERY = `
       trim_columns
       labels
       force_dot_decimal_separator
+      SQLConn {
+        id
+        name
+        driver
+        connection_string
+      }
     }
   }
 `;
@@ -306,10 +312,6 @@ export const SFTP_UPLOADER_QUERY = `
   query GetSFTPUploader($id: uuid!) {
     merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
       id
-      name
-      input
-      output
-      return_output
       sftp_link_id
       created_at
       updated_at
@@ -321,6 +323,12 @@ export const SFTP_UPLOADER_QUERY = `
         user
         created_at
         updated_at
+      }
+      FileStreamSftpUploaders {
+        id
+        input
+        output
+        return_output
       }
     }
   }
