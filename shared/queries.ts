@@ -233,7 +233,7 @@ export const QUERY_QUEUE_QUERY = `
       Queries {
         id
         order
-        statement
+        query_string
         path
         return_output
         print_headers
@@ -244,15 +244,10 @@ export const QUERY_QUEUE_QUERY = `
         date_format
         target_encoding
         sqlconn_id
-        SQLConnection {
+        SQLConn {
           id
           name
-          server
-          database_name
-          port
-          username
-          created_at
-          updated_at
+          driver
         }
       }
     }
@@ -312,9 +307,12 @@ export const SFTP_DOWNLOADER_QUERY = `
         server
         port
         user
-        password
-        created_at
-        updated_at
+      }
+      FileStreamSftpDownloaders {
+        id
+        input
+        output
+        return_output
       }
     }
   }
@@ -339,7 +337,6 @@ export const SFTP_UPLOADER_QUERY = `
     merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
       id
       name
-      input
       output
       return_output
       sftp_link_id
@@ -351,9 +348,12 @@ export const SFTP_UPLOADER_QUERY = `
         server
         port
         user
-        password
-        created_at
-        updated_at
+      }
+      FileStreamSftpUploaders {
+        id
+        input
+        output
+        return_output
       }
     }
   }

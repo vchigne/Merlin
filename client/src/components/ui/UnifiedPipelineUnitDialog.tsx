@@ -161,10 +161,10 @@ export default function UnifiedPipelineUnitDialog({
                     <div key={query.id} className="border rounded p-3">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium text-sm">Query {query.order}</span>
-                        <span className="text-xs text-gray-500">{query.SQLConnection?.name}</span>
+                        <span className="text-xs text-gray-500">{query.SQLConn?.name}</span>
                       </div>
                       <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs max-h-32 overflow-y-auto">
-                        {query.statement}
+                        {query.query_string}
                       </pre>
                       <div className="text-xs text-gray-600 mt-2">
                         <span>Archivo: {query.path}</span>
@@ -195,10 +195,21 @@ export default function UnifiedPipelineUnitDialog({
                 </div>
               )}
               <div className="text-sm space-y-1">
-                <div><span className="font-medium">Entrada:</span> {details.input || 'No especificado'}</div>
                 <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
                 <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
               </div>
+              {details.FileStreamSftpUploaders?.length > 0 && (
+                <div className="mt-3">
+                  <h5 className="font-medium text-sm mb-2">Archivos a Subir:</h5>
+                  {details.FileStreamSftpUploaders.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm mb-2">
+                      <div><span className="font-medium">Entrada:</span> {stream.input}</div>
+                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
+                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
