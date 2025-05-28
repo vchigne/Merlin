@@ -426,31 +426,32 @@ export default function PipelineVisualizerNew() {
                         const source = conn.source;
                         const target = conn.target;
                         
-                        // Coordenadas correctas para las conexiones
-                        // Salir del lado derecho del nodo fuente (ancho del nodo: 176px en sm)
-                        const sourceX = source.posX + 176; // Salir del borde derecho
-                        const sourceY = source.posY + 48; // Centro vertical del nodo (altura: 96px)
-                        // Llegar al lado izquierdo del nodo destino
-                        const targetX = target.posX; // Llegar al borde izquierdo
-                        const targetY = target.posY + 48; // Centro vertical del nodo
+                        // Coordenadas dinámicas basadas en la posición real de cada nodo
+                        // Punto de salida: lado derecho del componente fuente
+                        const sourceX = source.posX + 176; // Ancho del componente (w-44 = 176px)
+                        const sourceY = source.posY + 48; // Centro vertical (h-24 = 96px, centro = 48px)
+                        
+                        // Punto de llegada: lado izquierdo del componente destino
+                        const targetX = target.posX; // Borde izquierdo del siguiente componente  
+                        const targetY = target.posY + 48; // Centro vertical del componente destino
                         
                         // Ruta de la curva Bezier
                         const dx = targetX - sourceX;
                         const path = `M ${sourceX},${sourceY} C ${sourceX + dx/2},${sourceY} ${targetX - dx/2},${targetY} ${targetX},${targetY}`;
                         
-                        // Usar el estilo diferenciado basado en los tipos de unidades
-                        const connectionStyle = conn.style || getConnectionStyle(source, target);
+                        // Estilo simple para las conexiones secuenciales
+                        const connectionStyle = {
+                          color: '#10b981', // Verde para flujo principal
+                          width: 2,
+                          strokeDasharray: 'none'
+                        };
                         
                         // Estado de la conexión basado en el estado de los nodos
                         const sourceStatus = getUnitStatus(source, source.index);
                         const isActive = sourceStatus !== 'pending';
-                        const isCompleted = sourceStatus === 'completed';
                         
-                        // Determinar el identificador del marcador
-                        const markerId = connectionStyle.color === '#10b981' ? 'arrow-standard' :
-                                        connectionStyle.color === '#f97316' ? 'arrow-filestream' :
-                                        connectionStyle.color === '#3b82f6' ? 'arrow-mixed' :
-                                        'arrow-auxiliary';
+                        // Usar flecha estándar verde
+                        const markerId = 'arrow-standard';
                         
                         return (
                           <g key={conn.id}>
