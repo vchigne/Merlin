@@ -100,10 +100,10 @@ export default function PipelineVisualizerNew() {
     const connections = [];
     const unitMap = new Map(units.map(unit => [unit.id, unit]));
     
-    // Crear conexiones basadas en parent_id
+    // Crear conexiones basadas en pipeline_unit_id (el campo correcto)
     units.forEach(unit => {
-      if (unit.parent_id && unitMap.has(unit.parent_id)) {
-        const parentUnit = unitMap.get(unit.parent_id);
+      if (unit.pipeline_unit_id && unitMap.has(unit.pipeline_unit_id)) {
+        const parentUnit = unitMap.get(unit.pipeline_unit_id);
         const connectionStyle = getConnectionStyle(parentUnit, unit);
         
         connections.push({
@@ -143,6 +143,43 @@ export default function PipelineVisualizerNew() {
     }
     
     return connections;
+  };
+
+  // Función para ordenar unidades según jerarquía
+  const sortUnitsByHierarchy = (units: any[]) => {
+    const unitMap = new Map(units.map(unit => [unit.id, unit]));
+    const visited = new Set();
+    const result = [];
+    
+    // Función recursiva para construir orden jerárquico
+    const buildHierarchy = (unitId: string, depth = 0) => {
+      if (visited.has(unitId) || !unitMap.has(unitId)) return;
+      
+      const unit = unitMap.get(unitId);
+      visited.add(unitId);
+      unit.hierarchyDepth = depth;
+      result.push(unit);
+      
+      // Buscar hijos de esta unidad
+      const children = units.filter(u => u.pipeline_unit_id === unitId);
+      children.forEach(child => buildHierarchy(child.id, depth + 1));
+    };
+    
+    // Encontrar unidades raíz (sin parent)
+    const rootUnits = units.filter(unit => !unit.pipeline_unit_id);
+    
+    // Construir jerarquía desde cada raíz
+    rootUnits.forEach(root => buildHierarchy(root.id, 0));
+    
+    // Agregar unidades sin jerarquía al final
+    units.forEach(unit => {
+      if (!visited.has(unit.id)) {
+        unit.hierarchyDepth = 999;
+        result.push(unit);
+      }
+    });
+    
+    return result;
   };
 
   // Algoritmo mejorado de posicionamiento y procesamiento
