@@ -388,8 +388,31 @@ export default function PipelineVisualizerNew() {
               {(() => {
                 const { nodes, connections } = processUnits(pipelineUnits);
                 
-                // NUEVO: Calcular conexiones CSS
-                const cssConnections = calculateCSSConnections(nodes);
+                // NUEVO: Calcular conexiones CSS simples
+                const cssConnections = [];
+                for (let i = 0; i < nodes.length - 1; i++) {
+                  const currentNode = nodes[i];
+                  const nextNode = nodes[i + 1];
+                  
+                  // Usar las posiciones directas de los nodos
+                  const startX = currentNode.posX + 100; // Centro de la caja
+                  const startY = currentNode.posY + 80;  // Bottom de la caja
+                  const endX = nextNode.posX + 100;      // Centro de la siguiente caja
+                  const endY = nextNode.posY;            // Top de la siguiente caja
+                  
+                  // Calcular distancia y ángulo
+                  const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                  const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                  
+                  cssConnections.push({
+                    id: `css-line-${i}`,
+                    left: startX,
+                    top: startY,
+                    width: distance,
+                    rotation: angle,
+                    color: getUnitTypeColor(currentNode.type)
+                  });
+                }
                 
                 return (
                   <>
