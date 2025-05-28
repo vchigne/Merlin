@@ -281,7 +281,7 @@ export default function PipelineVisualizerNew() {
     const orderedUnits = sortUnitsByHierarchy(unitsWithTypes);
     
     // 3. Posicionamiento jerárquico horizontal
-    const SPACING_X = window.innerWidth < 640 ? 150 : 180;
+    const SPACING_X = window.innerWidth < 640 ? 200 : 220; // Más espacio para las conexiones
     const SPACING_Y = 50;
     
     // Posicionar todas las unidades en orden jerárquico horizontal
@@ -418,11 +418,13 @@ export default function PipelineVisualizerNew() {
                         const source = conn.source;
                         const target = conn.target;
                         
-                        // Coordenadas del centro de los nodos
-                        const sourceX = source.posX + 80; // Ancho aproximado del nodo / 2
-                        const sourceY = source.posY + 32; // Alto aproximado del nodo / 2
-                        const targetX = target.posX + 20; // Pequeño offset para que la flecha apunte al borde
-                        const targetY = target.posY + 32; // Alto aproximado del nodo / 2
+                        // Coordenadas correctas para las conexiones
+                        // Salir del lado derecho del nodo fuente (ancho del nodo: 176px en sm)
+                        const sourceX = source.posX + 176; // Salir del borde derecho
+                        const sourceY = source.posY + 48; // Centro vertical del nodo (altura: 96px)
+                        // Llegar al lado izquierdo del nodo destino
+                        const targetX = target.posX; // Llegar al borde izquierdo
+                        const targetY = target.posY + 48; // Centro vertical del nodo
                         
                         // Ruta de la curva Bezier
                         const dx = targetX - sourceX;
