@@ -89,6 +89,7 @@ export const PIPELINE_UNITS_QUERY = `
       posx
       posy
       call_pipeline
+      index
     }
   }
 `;
@@ -619,6 +620,77 @@ export const COMMAND_USAGE_QUERY = `
         description
         agent_passport_id
       }
+    }
+  }
+`;
+
+// Queries para obtener datos específicos de entidades por ID
+export const COMMAND_BY_ID_QUERY = `
+  query GetCommandById($id: uuid!) {
+    merlin_agent_Command_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const QUERY_QUEUE_BY_ID_QUERY = `
+  query GetQueryQueueById($id: uuid!) {
+    merlin_agent_QueryQueue_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const SFTP_DOWNLOADER_BY_ID_QUERY = `
+  query GetSFTPDownloaderById($id: uuid!) {
+    merlin_agent_SFTPDownloader_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const SFTP_UPLOADER_BY_ID_QUERY = `
+  query GetSFTPUploaderById($id: uuid!) {
+    merlin_agent_SFTPUploader_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const ZIP_BY_ID_QUERY = `
+  query GetZipById($id: uuid!) {
+    merlin_agent_Zip_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const UNZIP_BY_ID_QUERY = `
+  query GetUnzipById($id: uuid!) {
+    merlin_agent_Unzip_by_pk(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const PIPELINE_BY_ID_QUERY = `
+  query GetPipelineById($id: uuid!) {
+    merlin_agent_Pipeline_by_pk(id: $id) {
+      id
+      name
+      description
     }
   }
 `;

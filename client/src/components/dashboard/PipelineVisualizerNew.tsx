@@ -129,27 +129,126 @@ export default function PipelineVisualizerNew({
     return { type: 'Unknown', category: 'unknown' };
   };
 
+  // Hook para obtener datos de entidades
+  const [entityData, setEntityData] = useState<{ [key: string]: any }>({});
+
+  // Función para obtener datos de entidad por ID y tipo
+  const fetchEntityData = async (id: string, type: string) => {
+    const cacheKey = `${type}_${id}`;
+    if (entityData[cacheKey]) return entityData[cacheKey];
+
+    let query = '';
+    let queryName = '';
+    
+    switch (type) {
+      case 'Command':
+        query = 'query GetCommandById($id: uuid!) { merlin_agent_Command_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_Command_by_pk';
+        break;
+      case 'QueryQueue':
+        query = 'query GetQueryQueueById($id: uuid!) { merlin_agent_QueryQueue_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_QueryQueue_by_pk';
+        break;
+      case 'SFTPDownloader':
+        query = 'query GetSFTPDownloaderById($id: uuid!) { merlin_agent_SFTPDownloader_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_SFTPDownloader_by_pk';
+        break;
+      case 'SFTPUploader':
+        query = 'query GetSFTPUploaderById($id: uuid!) { merlin_agent_SFTPUploader_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_SFTPUploader_by_pk';
+        break;
+      case 'Zip':
+        query = 'query GetZipById($id: uuid!) { merlin_agent_Zip_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_Zip_by_pk';
+        break;
+      case 'Unzip':
+        query = 'query GetUnzipById($id: uuid!) { merlin_agent_Unzip_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_Unzip_by_pk';
+        break;
+      case 'Pipeline':
+        query = 'query GetPipelineById($id: uuid!) { merlin_agent_Pipeline_by_pk(id: $id) { id name description } }';
+        queryName = 'merlin_agent_Pipeline_by_pk';
+        break;
+      default:
+        return null;
+    }
+
+    try {
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { id } })
+      });
+      const result = await response.json();
+      const data = result.data?.[queryName];
+      
+      setEntityData(prev => ({ ...prev, [cacheKey]: data }));
+      return data;
+    } catch (error) {
+      console.error(`Error fetching ${type} data:`, error);
+      return null;
+    }
+  };
+
   // Función para obtener el nombre para mostrar
   const getDisplayName = (unit: any) => {
     const type = detectUnitType(unit);
     
     if (unit.command_id) {
+      const cacheKey = `Command_${unit.command_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Comando ${unit.id?.slice(-4) || 'CMD'}`;
+      
+      fetchEntityData(unit.command_id, 'Command');
       return `Comando ${unit.id?.slice(-4) || 'CMD'}`;
     }
     if (unit.query_queue_id) {
+      const cacheKey = `QueryQueue_${unit.query_queue_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
+      
+      fetchEntityData(unit.query_queue_id, 'QueryQueue');
       return `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
     }
     if (unit.sftp_downloader_id) {
+      const cacheKey = `SFTPDownloader_${unit.sftp_downloader_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
+      
+      fetchEntityData(unit.sftp_downloader_id, 'SFTPDownloader');
       return `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
     }
     if (unit.sftp_uploader_id) {
+      const cacheKey = `SFTPUploader_${unit.sftp_uploader_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
+      
+      fetchEntityData(unit.sftp_uploader_id, 'SFTPUploader');
       return `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
     }
     if (unit.zip_id) {
+      const cacheKey = `Zip_${unit.zip_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
+      
+      fetchEntityData(unit.zip_id, 'Zip');
       return `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
     }
     if (unit.unzip_id) {
+      const cacheKey = `Unzip_${unit.unzip_id}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
+      
+      fetchEntityData(unit.unzip_id, 'Unzip');
       return `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
+    }
+    if (unit.call_pipeline) {
+      const cacheKey = `Pipeline_${unit.call_pipeline}`;
+      const cached = entityData[cacheKey];
+      if (cached) return cached.name || `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
+      
+      fetchEntityData(unit.call_pipeline, 'Pipeline');
+      return `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
     }
     if (unit.call_pipeline_id) {
       return `Pipeline llamado ${unit.id?.slice(-4) || 'CALL'}`;
