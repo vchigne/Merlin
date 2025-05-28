@@ -15,17 +15,31 @@ export default function PipelineVisualizerNew() {
   const [unitDetails, setUnitDetails] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Función para determinar el tipo de unidad
+  // Función mejorada para detectar el tipo y categoría de unidad
+  const detectUnitType = (unit: any) => {
+    if (!unit) return { type: 'Unknown', category: 'unknown' };
+    
+    // SFTP Estándar
+    if (unit.sftp_downloader_id) return { type: 'SFTP Download', category: 'standard' };
+    if (unit.sftp_uploader_id) return { type: 'SFTP Upload', category: 'standard' };
+    
+    // SFTP FileStream (las unidades problemáticas)
+    if (unit.file_stream_sftp_downloader_id) return { type: 'SFTP Download', category: 'filestream' };
+    if (unit.file_stream_sftp_uploader_id) return { type: 'SFTP Upload', category: 'filestream' };
+    
+    // Otros tipos estándar
+    if (unit.command_id) return { type: 'Command', category: 'standard' };
+    if (unit.query_queue_id) return { type: 'SQL Query', category: 'standard' };
+    if (unit.zip_id) return { type: 'Zip Files', category: 'standard' };
+    if (unit.unzip_id) return { type: 'Unzip Files', category: 'standard' };
+    if (unit.call_pipeline) return { type: 'Call Pipeline', category: 'standard' };
+    
+    return { type: 'Unit', category: 'unknown' };
+  };
+
+  // Función de compatibilidad con el código existente
   const getUnitType = (unit: any) => {
-    if (!unit) return 'Unknown';
-    if (unit.command_id) return 'Command';
-    if (unit.query_queue_id) return 'SQL Query';
-    if (unit.sftp_downloader_id) return 'SFTP Download';
-    if (unit.sftp_uploader_id) return 'SFTP Upload';
-    if (unit.zip_id) return 'Zip Files';
-    if (unit.unzip_id) return 'Unzip Files';
-    if (unit.call_pipeline) return 'Call Pipeline';
-    return 'Unit';
+    return detectUnitType(unit).type;
   };
   
   // Función para determinar el estado de la unidad (simulado)
@@ -37,63 +51,167 @@ export default function PipelineVisualizerNew() {
     return 'pending';
   };
   
-  // Función para ordenar y crear conexiones automáticas entre unidades
-  const processUnits = (units: any[]) => {
-    if (!units || units.length === 0) return { nodes: [], connections: [] };
+  // Sistema de estilos diferenciados para conexiones
+  const getConnectionStyle = (sourceUnit: any, targetUnit: any) => {
+    const sourceType = detectUnitType(sourceUnit);
+    const targetType = detectUnitType(targetUnit);
     
-    // Ordenar unidades por tipo y luego por ID
-    const sortedUnits = [...units].sort((a, b) => {
-      const typeA = getUnitType(a);
-      const typeB = getUnitType(b);
-      
-      if (typeA !== typeB) {
-        return typeA.localeCompare(typeB);
-      }
-      
-      return a.id.localeCompare(b.id);
-    });
-    
-    // Crear nodos con posiciones adecuadas
-    const nodes = sortedUnits.map((unit, index) => {
-      // Determinar la posición usando un layout automático si es necesario
-      let x, y;
-      
-      if (!unit.posx && !unit.posy) {
-        // Disposición automática responsiva para el dashboard
-        const columnCount = window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 4;
-        const spacing = window.innerWidth < 640 ? 150 : 180;
-        
-        x = (index % columnCount) * spacing + 10;
-        y = Math.floor(index / columnCount) * 100 + 10;
-      } else {
-        // Usar coordenadas existentes con ajustes responsivos
-        const spacing = window.innerWidth < 640 ? 150 : 180;
-        
-        x = unit.posx * spacing + 10;
-        y = unit.posy * 100 + 10;
-      }
-      
-      return {
-        ...unit,
-        posX: x,
-        posY: y,
-        index
+    // Conexiones principales (verde continuo) - flujo estándar
+    if (sourceType.category === 'standard' && targetType.category === 'standard') {
+      return { 
+        color: '#10b981', 
+        style: 'solid', 
+        width: 2,
+        strokeDasharray: 'none'
       };
+    }
+    
+    // Conexiones FileStream (naranja continuo)
+    if (sourceType.category === 'filestream' || targetType.category === 'filestream') {
+      return { 
+        color: '#f97316', 
+        style: 'solid', 
+        width: 2,
+        strokeDasharray: 'none'
+      };
+    }
+    
+    // Conexiones mixtas (azul continuo)
+    if (sourceType.category !== targetType.category) {
+      return { 
+        color: '#3b82f6', 
+        style: 'solid', 
+        width: 2,
+        strokeDasharray: 'none'
+      };
+    }
+    
+    // Conexiones auxiliares (gris discontinuo) - por defecto
+    return { 
+      color: '#6b7280', 
+      style: 'dashed', 
+      width: 1,
+      strokeDasharray: '5,5'
+    };
+  };
+
+  // Sistema de construcción de conexiones jerárquicas
+  const buildHierarchicalConnections = (units: any[]) => {
+    const connections = [];
+    const unitMap = new Map(units.map(unit => [unit.id, unit]));
+    
+    // Crear conexiones basadas en parent_id
+    units.forEach(unit => {
+      if (unit.parent_id && unitMap.has(unit.parent_id)) {
+        const parentUnit = unitMap.get(unit.parent_id);
+        const connectionStyle = getConnectionStyle(parentUnit, unit);
+        
+        connections.push({
+          id: `conn-${parentUnit.id}-${unit.id}`,
+          source: parentUnit,
+          target: unit,
+          type: 'hierarchical',
+          style: connectionStyle
+        });
+      }
     });
     
-    // Crear conexiones automáticas entre nodos consecutivos
-    const connections = [];
-    if (nodes.length > 1) {
-      for (let i = 0; i < nodes.length - 1; i++) {
-        connections.push({
-          id: `conn-${nodes[i].id}-${nodes[i + 1].id}`,
-          source: nodes[i],
-          target: nodes[i + 1]
-        });
+    // Si no hay suficientes conexiones jerárquicas, crear conexiones por orden lógico
+    if (connections.length < units.length - 1) {
+      const unconnectedUnits = units.filter(unit => 
+        !connections.some(conn => conn.target.id === unit.id)
+      );
+      
+      for (let i = 0; i < unconnectedUnits.length - 1; i++) {
+        const source = unconnectedUnits[i];
+        const target = unconnectedUnits[i + 1];
+        const connectionStyle = getConnectionStyle(source, target);
+        
+        // Solo agregar si no existe ya una conexión
+        if (!connections.some(conn => 
+          conn.source.id === source.id && conn.target.id === target.id
+        )) {
+          connections.push({
+            id: `conn-${source.id}-${target.id}`,
+            source,
+            target,
+            type: 'sequential',
+            style: connectionStyle
+          });
+        }
       }
     }
     
-    return { nodes, connections };
+    return connections;
+  };
+
+  // Algoritmo mejorado de posicionamiento y procesamiento
+  const processUnits = (units: any[]) => {
+    if (!units || units.length === 0) return { nodes: [], connections: [] };
+    
+    // 1. Detectar tipos y categorías de todas las unidades
+    const unitsWithTypes = units.map(unit => ({
+      ...unit,
+      unitType: detectUnitType(unit),
+      displayType: getUnitType(unit),
+      status: getUnitStatus(unit, units.indexOf(unit))
+    }));
+    
+    // 2. Agrupar por categorías para mejor posicionamiento
+    const standardUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'standard');
+    const filestreamUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'filestream');
+    const unknownUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'unknown');
+    
+    // 3. Posicionamiento inteligente por categorías
+    const SPACING_X = window.innerWidth < 640 ? 150 : 180;
+    const SPACING_Y = 100;
+    const CATEGORY_OFFSET_Y = 120;
+    
+    let allNodes = [];
+    let yOffset = 10;
+    
+    // Posicionar unidades estándar primero
+    if (standardUnits.length > 0) {
+      const standardNodes = standardUnits.map((unit, index) => ({
+        ...unit,
+        posX: index * SPACING_X + 10,
+        posY: yOffset,
+        type: unit.displayType,
+        index: allNodes.length + index
+      }));
+      allNodes = [...allNodes, ...standardNodes];
+      yOffset += CATEGORY_OFFSET_Y;
+    }
+    
+    // Posicionar unidades FileStream
+    if (filestreamUnits.length > 0) {
+      const filestreamNodes = filestreamUnits.map((unit, index) => ({
+        ...unit,
+        posX: index * SPACING_X + 10,
+        posY: yOffset,
+        type: unit.displayType,
+        index: allNodes.length + index
+      }));
+      allNodes = [...allNodes, ...filestreamNodes];
+      yOffset += CATEGORY_OFFSET_Y;
+    }
+    
+    // Posicionar unidades desconocidas
+    if (unknownUnits.length > 0) {
+      const unknownNodes = unknownUnits.map((unit, index) => ({
+        ...unit,
+        posX: index * SPACING_X + 10,
+        posY: yOffset,
+        type: unit.displayType,
+        index: allNodes.length + index
+      }));
+      allNodes = [...allNodes, ...unknownNodes];
+    }
+    
+    // 4. Construir conexiones jerárquicas
+    const connections = buildHierarchicalConnections(allNodes);
+    
+    return { nodes: allNodes, connections };
   };
   
   // Consulta para obtener la lista de pipelines
