@@ -1,0 +1,184 @@
+/* Estilos para el componente PipelineFlowEnhanced */
+.pipeline-flow-enhanced {
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 0.75rem;
+  min-height: 200px;
+}
+
+.pipeline-unit-container {
+  position: relative;
+}
+
+.pipeline-unit-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.pipeline-unit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.pipeline-connection {
+  position: relative;
+  z-index: 1;
+}
+
+.pipeline-connection::before {
+  content: '';
+  position: absolute;
+  left: 1.5rem;
+  top: -0.5rem;
+  width: 1px;
+  height: calc(100% + 1rem);
+  background: linear-gradient(180deg, 
+    rgba(148, 163, 184, 0.8) 0%, 
+    rgba(148, 163, 184, 0.4) 50%, 
+    transparent 100%);
+  z-index: -1;
+}
+
+/* Animaciones sutiles para los badges */
+.pipeline-unit-card .badge {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Estilo para el estado de carga */
+.pipeline-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.pipeline-loading .spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .pipeline-flow-enhanced {
+    padding: 0.75rem;
+  }
+  
+  .pipeline-unit-container {
+    margin-left: 0 !important;
+  }
+  
+  .pipeline-connection::before {
+    display: none;
+  }
+}
+
+/* Estilos para el diálogo de detalles */
+.unit-details-section {
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.unit-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.unit-details-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.unit-details-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.unit-details-value {
+  font-size: 0.875rem;
+  color: #6b7280;
+  word-break: break-all;
+}
+
+/* Estilo para código SQL */
+.sql-query-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-x: auto;
+  border-left: 3px solid #3b82f6;
+}
+
+.sql-query-block .output-path {
+  color: #10b981;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Efectos de hover mejorados */
+.pipeline-unit-card:hover .card-header {
+  background: rgba(59, 130, 246, 0.02);
+}
+
+/* Indicadores de estado */
+.status-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.healthy {
+  background-color: #10b981;
+}
+
+.status-indicator.warning {
+  background-color: #f59e0b;
+}
+
+.status-indicator.critical {
+  background-color: #ef4444;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
