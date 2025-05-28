@@ -237,56 +237,57 @@ export default function PipelineVisualizerNew() {
     return result;
   };
 
-  // Algoritmo N8N - Simple y democrático (todos los nodos son iguales)
+  // Algoritmo Zapier - Ultra simple: nodo[0] → nodo[1] → nodo[2]
   const processUnits = (units: any[]) => {
     if (!units || units.length === 0) return { nodes: [], connections: [] };
     
-    // 1. Detectar tipos de todas las unidades (sin categorías complejas)
-    const unitsWithTypes = units.map(unit => ({
+    // 1. Simplemente ordenar por order (sin jerarquías complejas)
+    const sortedUnits = [...units].sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    // 2. Detectar tipos
+    const unitsWithTypes = sortedUnits.map(unit => ({
       ...unit,
       unitType: detectUnitType(unit),
       displayType: getUnitType(unit),
-      status: getUnitStatus(unit, units.indexOf(unit))
+      status: getUnitStatus(unit, sortedUnits.indexOf(unit))
     }));
     
-    // 2. N8N Style: Layout vertical simple, sin jerarquías
-    const SPACING_Y = 140; // Espaciado vertical entre nodos
-    const FIXED_X = 50;    // Posición X fija para todos (columna única)
+    // 3. Zapier Style: Layout vertical simple
+    const SPACING_Y = 140;
+    const FIXED_X = 50;
     
-    // Posicionar todos los nodos en una columna vertical simple
     const allNodes = unitsWithTypes.map((unit, index) => ({
       ...unit,
       posX: FIXED_X,
-      posY: index * SPACING_Y + 50, // Posición Y secuencial simple
+      posY: index * SPACING_Y + 50,
       type: unit.displayType,
       index
     }));
     
-    // 3. N8N Style: Conexiones súper simples con puntos de conexión
-    const nodeWidth = 176; // w-44 = 176px
-    const nodeHeight = 96; // h-24 = 96px
+    // 4. Zapier Style: Conexiones por índice secuencial simple
+    const nodeWidth = 176;
+    const nodeHeight = 96;
     
     const connections = [];
+    // FORZAR conexiones para TODOS los nodos consecutivos
     for (let i = 0; i < allNodes.length - 1; i++) {
-      const sourceNode = allNodes[i];
-      const targetNode = allNodes[i + 1];
-      
       connections.push({
-        id: `conn-${i}`,
-        source: sourceNode,
-        target: targetNode,
+        id: `zapier-conn-${i}`,
+        source: allNodes[i],
+        target: allNodes[i + 1],
         sourcePoint: {
-          x: sourceNode.posX + nodeWidth / 2,  // Centro horizontal
-          y: sourceNode.posY + nodeHeight      // Parte inferior
+          x: allNodes[i].posX + nodeWidth / 2,
+          y: allNodes[i].posY + nodeHeight
         },
         targetPoint: {
-          x: targetNode.posX + nodeWidth / 2,  // Centro horizontal
-          y: targetNode.posY                   // Parte superior
+          x: allNodes[i + 1].posX + nodeWidth / 2,
+          y: allNodes[i + 1].posY
         },
-        type: 'sequential'
+        type: 'zapier-sequential'
       });
     }
     
+    console.log('🔥 Zapier connections:', connections.length, 'for', allNodes.length, 'nodes');
     return { nodes: allNodes, connections };
   };
   
