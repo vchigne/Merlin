@@ -232,6 +232,18 @@ export default function UnifiedPipelineUnitDialog({
                 <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
                 <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
               </div>
+              {details.FileStreamSftpDownloaders?.length > 0 && (
+                <div className="mt-3">
+                  <h5 className="font-medium text-sm mb-2">Archivos a Descargar:</h5>
+                  {details.FileStreamSftpDownloaders.map((stream: any, index: number) => (
+                    <div key={stream.id} className="border rounded p-2 text-sm mb-2">
+                      <div><span className="font-medium">Archivo Remoto:</span> {stream.input}</div>
+                      <div><span className="font-medium">Destino Local:</span> {stream.output}</div>
+                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
