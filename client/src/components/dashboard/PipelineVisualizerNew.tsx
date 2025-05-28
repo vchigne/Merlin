@@ -414,13 +414,12 @@ export default function PipelineVisualizerNew() {
             </div>
           ) : (
             <div className="relative w-full min-w-[400px] md:min-w-[600px] lg:min-w-[800px] h-full">
-              {/* Procesamos las unidades para posicionarlas y crear las conexiones */}
               {(() => {
                 const { nodes, connections } = processUnits(pipelineUnits);
                 
                 return (
                   <>
-                    {/* Dibujamos primero las conexiones (flechas) con estilos diferenciados */}
+                    {/* Dibujamos primero las conexiones (flechas) */}
                     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       {connections.map((conn) => {
                         const source = conn.source;
@@ -589,9 +588,9 @@ export default function PipelineVisualizerNew() {
                       );
                     })}
                   </>
-                </div>
-              );
-            })()}
+                );
+              })()}
+            </div>
           )}
         </div>
       </CardContent>
