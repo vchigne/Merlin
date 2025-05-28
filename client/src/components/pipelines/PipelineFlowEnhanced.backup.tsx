@@ -101,7 +101,7 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
       <div key={unit.id} className="pipeline-unit-container" style={{ marginLeft: `${level * 40}px` }}>
         {/* Unidad principal */}
         <Card 
-          className="pipeline-unit-card mb-4 cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 relative"
+          className="pipeline-unit-card mb-4 cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4"
           style={{ borderLeftColor: config.color }}
           onClick={() => {
             setSelectedUnit(unit);
@@ -109,50 +109,46 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
           }}
         >
           <CardHeader className="pb-3">
-            {/* Tipo de unidad en la esquina superior izquierda */}
-            <div className="absolute top-2 left-2">
-              <Badge 
-                className="text-xs font-medium px-2 py-1"
-                style={{ 
-                  backgroundColor: config.color,
-                  color: 'white',
-                  border: 'none'
-                }}
-              >
-                {config.label}
-              </Badge>
-            </div>
-            
-            {/* Badges de configuración en la esquina superior derecha */}
-            <div className="absolute top-2 right-2 flex items-center gap-1">
-              {unit.retry_count > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  {unit.retry_count}
-                </Badge>
-              )}
-              {unit.timeout_milliseconds > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {Math.floor(unit.timeout_milliseconds / 1000)}s
-                </Badge>
-              )}
-              {unit.abort_on_error && (
-                <Badge variant="destructive" className="text-xs">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Crítico
-                </Badge>
-              )}
-            </div>
-
-            {/* Contenido principal: nombre y descripción */}
-            <div className="mt-6 text-center">
-              <CardTitle className="text-base font-semibold mb-2">
-                {pipelineManager.getUnitName(unit) || config.label}
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                {pipelineManager.getUnitDescription(unit) || pipelineManager.getUnitTooltipInfo(unit)}
-              </CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: `${config.color}20` }}
+                >
+                  <IconComponent 
+                    className="h-5 w-5" 
+                    style={{ color: config.color }}
+                  />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-medium">
+                    {config.label}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {pipelineManager.getUnitTooltipInfo(unit)}
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {unit.retry_count > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    {unit.retry_count}
+                  </Badge>
+                )}
+                {unit.timeout_milliseconds > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {Math.floor(unit.timeout_milliseconds / 1000)}s
+                  </Badge>
+                )}
+                {unit.abort_on_error && (
+                  <Badge variant="destructive" className="text-xs">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Crítico
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>

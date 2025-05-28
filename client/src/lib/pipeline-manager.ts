@@ -371,6 +371,79 @@ export class PipelineManager {
   }
 
   /**
+   * Obtiene el nombre real de una unidad de pipeline
+   */
+  public getUnitName(unit: PipelineUnit): string {
+    const runnerType = this.detectRunnerType(unit);
+    
+    switch(runnerType) {
+      case "Command":
+        const cmd = unit.Command;
+        return cmd?.target || "Command";
+      case "QueryQueue":
+        const queue = unit.QueryQueue;
+        return queue?.Queries?.[0]?.SQLConn?.name || "Query Queue";
+      case "SFTPDownloader":
+        const downloader = unit.SFTPDownloader;
+        return downloader?.SFTPLink?.name || "SFTP Download";
+      case "SFTPUploader":
+        const uploader = unit.SFTPUploader;
+        return uploader?.SFTPLink?.name || "SFTP Upload";
+      case "Zip":
+        const zip = unit.Zip;
+        return zip?.zip_name || "Zip Files";
+      case "Unzip":
+        const unzip = unit.Unzip;
+        return unzip?.FileStreamUnzips?.[0]?.input || "Unzip Files";
+      case "CallPipeline":
+        const pipeline = unit.CallPipeline;
+        return pipeline?.Pipeline?.name || "Pipeline Call";
+      default:
+        return "Unit";
+    }
+  }
+
+  /**
+   * Obtiene la descripción real de una unidad de pipeline
+   */
+  public getUnitDescription(unit: PipelineUnit): string {
+    const runnerType = this.detectRunnerType(unit);
+    
+    switch(runnerType) {
+      case "Command":
+        const cmd = unit.Command;
+        if (cmd?.args) return `${cmd.args}`;
+        if (cmd?.working_directory) return `Working dir: ${cmd.working_directory}`;
+        return "Ejecuta comandos del sistema";
+      case "QueryQueue":
+        const queue = unit.QueryQueue;
+        const queryCount = queue?.Queries?.length || 0;
+        return queryCount > 0 ? `${queryCount} consulta${queryCount > 1 ? 's' : ''} SQL` : "Cola de consultas SQL";
+      case "SFTPDownloader":
+        const downloader = unit.SFTPDownloader;
+        const downloadCount = downloader?.FileStreamSftpDownloaders?.length || 0;
+        return downloadCount > 0 ? `${downloadCount} archivo${downloadCount > 1 ? 's' : ''} para descargar` : "Descarga archivos SFTP";
+      case "SFTPUploader":
+        const uploader = unit.SFTPUploader;
+        const uploadCount = uploader?.FileStreamSftpUploaders?.length || 0;
+        return uploadCount > 0 ? `${uploadCount} archivo${uploadCount > 1 ? 's' : ''} para subir` : "Sube archivos SFTP";
+      case "Zip":
+        const zip = unit.Zip;
+        const zipCount = zip?.FileStreamZips?.length || 0;
+        return zipCount > 0 ? `Comprime ${zipCount} archivo${zipCount > 1 ? 's' : ''}` : "Comprime archivos";
+      case "Unzip":
+        const unzip = unit.Unzip;
+        const unzipCount = unzip?.FileStreamUnzips?.length || 0;
+        return unzipCount > 0 ? `Extrae ${unzipCount} archivo${unzipCount > 1 ? 's' : ''}` : "Extrae archivos";
+      case "CallPipeline":
+        const pipeline = unit.CallPipeline;
+        return pipeline?.Pipeline?.description || "Llama a otro pipeline";
+      default:
+        return "Unidad de pipeline";
+    }
+  }
+
+  /**
    * Obtiene información detallada de tooltip para una unidad
    */
   public getUnitTooltipInfo(unit: PipelineUnit): string {
