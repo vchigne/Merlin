@@ -418,10 +418,27 @@ export default function PipelineVisualizerNew() {
                             setDialogOpen(true);
                           }}
                         >
-                          <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          {/* Tipo de unidad arriba a la derecha con color */}
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1"></div>
+                            <span 
+                              className="text-xs font-semibold px-2 py-1 rounded"
+                              style={{ 
+                                backgroundColor: getUnitTypeColor(node.type) + '20',
+                                color: getUnitTypeColor(node.type)
+                              }}
+                            >
+                              {node.type}
+                            </span>
+                          </div>
+                          
+                          {/* Nombre principal de la unidad */}
+                          <div className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-1">
                             {node.displayName}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          
+                          {/* Descripción/subtipo de la unidad */}
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
                             {node.type}
                           </div>
                         </div>
