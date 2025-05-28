@@ -333,11 +333,12 @@ export const ZIP_QUERY = `
   query GetZip($id: uuid!) {
     merlin_agent_Zip(where: {id: {_eq: $id}}) {
       id
-      name
-      output
-      return_output
-      created_at
-      updated_at
+      zip_name
+      file_streams {
+        id
+        input
+        wildcard_exp
+      }
     }
   }
 `;
@@ -346,12 +347,12 @@ export const UNZIP_QUERY = `
   query GetUnzip($id: uuid!) {
     merlin_agent_UnZip(where: {id: {_eq: $id}}) {
       id
-      name
-      input
-      output
-      return_output
-      created_at
-      updated_at
+      file_streams {
+        id
+        input
+        output
+        return_output
+      }
     }
   }
 `;

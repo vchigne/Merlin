@@ -252,10 +252,10 @@ export default function UnifiedPipelineUnitDialog({
               <div className="text-sm mb-3">
                 <div><span className="font-medium">Archivo ZIP:</span> {details.zip_name}</div>
               </div>
-              {details.FileStreamZips?.length > 0 ? (
+              {details.file_streams?.length > 0 ? (
                 <div className="space-y-2">
                   <h5 className="font-medium text-sm">Archivos a Comprimir:</h5>
-                  {details.FileStreamZips.map((stream: any, index: number) => (
+                  {details.file_streams.map((stream: any, index: number) => (
                     <div key={stream.id} className="border rounded p-2 text-sm">
                       <div><span className="font-medium">Entrada:</span> {stream.input}</div>
                       {stream.wildcard_exp && <div><span className="font-medium">Patrón:</span> {stream.wildcard_exp}</div>}
@@ -274,10 +274,10 @@ export default function UnifiedPipelineUnitDialog({
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-2">Configuración de Descompresión</h4>
-              {details.FileStreamUnzips?.length > 0 ? (
+              {details.file_streams?.length > 0 ? (
                 <div className="space-y-2">
                   <h5 className="font-medium text-sm">Archivos a Descomprimir:</h5>
-                  {details.FileStreamUnzips.map((stream: any, index: number) => (
+                  {details.file_streams.map((stream: any, index: number) => (
                     <div key={stream.id} className="border rounded p-2 text-sm">
                       <div><span className="font-medium">Archivo ZIP:</span> {stream.input}</div>
                       <div><span className="font-medium">Destino:</span> {stream.output}</div>
