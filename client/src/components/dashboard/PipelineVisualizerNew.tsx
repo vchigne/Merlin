@@ -245,31 +245,24 @@ export default function PipelineVisualizerNew({
   // Función para obtener la descripción para mostrar
   const getDisplayDescription = (unit: any) => {
     if (unit.command_id && unit.Command) {
-      console.log('Command description data:', unit.Command);
       return unit.Command.description || 'Ejecución de comando de sistema';
     }
     if (unit.query_queue_id && unit.QueryQueue) {
-      console.log('QueryQueue description data:', unit.QueryQueue);
       return unit.QueryQueue.description || 'Procesa consultas SQL en secuencia';
     }
     if (unit.sftp_downloader_id && unit.SFTPDownloader) {
-      console.log('SFTPDownloader description data:', unit.SFTPDownloader);
       return unit.SFTPDownloader.description || 'Descarga archivos via SFTP';
     }
     if (unit.sftp_uploader_id && unit.SFTPUploader) {
-      console.log('SFTPUploader description data:', unit.SFTPUploader);
       return unit.SFTPUploader.description || 'Sube archivos via SFTP';
     }
     if (unit.zip_id && unit.Zip) {
-      console.log('Zip description data:', unit.Zip);
       return unit.Zip.description || 'Comprime archivos en ZIP';
     }
     if (unit.unzip_id && unit.Unzip) {
-      console.log('Unzip description data:', unit.Unzip);
       return unit.Unzip.description || 'Extrae archivos de ZIP';
     }
     if (unit.call_pipeline && unit.Pipeline) {
-      console.log('Pipeline description data:', unit.Pipeline);
       return unit.Pipeline.description || 'Ejecuta otro pipeline';
     }
     
