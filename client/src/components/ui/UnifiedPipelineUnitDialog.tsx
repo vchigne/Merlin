@@ -194,10 +194,10 @@ export default function UnifiedPipelineUnitDialog({
                   </div>
                 </div>
               )}
-              {details.FileStreamSftpUploaders?.length > 0 ? (
+              {details.file_streams?.length > 0 ? (
                 <div className="space-y-2">
                   <h5 className="font-medium text-sm">Archivos a Subir:</h5>
-                  {details.FileStreamSftpUploaders.map((stream: any, index: number) => (
+                  {details.file_streams.map((stream: any, index: number) => (
                     <div key={stream.id} className="border rounded p-2 text-sm">
                       <div><span className="font-medium">Origen:</span> {stream.input}</div>
                       <div><span className="font-medium">Destino:</span> {stream.output}</div>
@@ -226,10 +226,10 @@ export default function UnifiedPipelineUnitDialog({
                   </div>
                 </div>
               )}
-              {details.FileStreamSftpDownloaders?.length > 0 ? (
+              {details.file_streams?.length > 0 ? (
                 <div className="space-y-2">
                   <h5 className="font-medium text-sm">Archivos a Descargar:</h5>
-                  {details.FileStreamSftpDownloaders.map((stream: any, index: number) => (
+                  {details.file_streams.map((stream: any, index: number) => (
                     <div key={stream.id} className="border rounded p-2 text-sm">
                       <div><span className="font-medium">Origen:</span> {stream.input}</div>
                       <div><span className="font-medium">Destino:</span> {stream.output}</div>

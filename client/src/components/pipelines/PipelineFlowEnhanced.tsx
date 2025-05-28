@@ -238,9 +238,7 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
         case "SFTPUploader":
         case "SFTPDownloader":
           const sftpUnit = runnerType === "SFTPUploader" ? unit.SFTPUploader : unit.SFTPDownloader;
-          const streams = runnerType === "SFTPUploader" 
-            ? sftpUnit?.FileStreamSftpUploaders 
-            : sftpUnit?.FileStreamSftpDownloaders;
+          const streams = sftpUnit?.file_streams;
           
           return sftpUnit ? (
             <div className="space-y-3">

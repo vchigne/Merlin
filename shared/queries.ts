@@ -275,20 +275,19 @@ export const SFTP_DOWNLOADER_QUERY = `
   query GetSFTPDownloader($id: uuid!) {
     merlin_agent_SFTPDownloader(where: {id: {_eq: $id}}) {
       id
-      name
-      output
-      return_output
       sftp_link_id
-      created_at
-      updated_at
       SFTPLink {
         id
         name
         server
         port
         user
-        created_at
-        updated_at
+      }
+      file_streams {
+        id
+        input
+        output
+        return_output
       }
     }
   }
@@ -313,18 +312,14 @@ export const SFTP_UPLOADER_QUERY = `
     merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
       id
       sftp_link_id
-      created_at
-      updated_at
       SFTPLink {
         id
         name
         server
         port
         user
-        created_at
-        updated_at
       }
-      FileStreamSftpUploaders {
+      file_streams {
         id
         input
         output
