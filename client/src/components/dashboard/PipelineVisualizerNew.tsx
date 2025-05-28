@@ -110,7 +110,7 @@ export default function PipelineVisualizerNew() {
     if (unit.sftp_uploader_id) return { type: 'SFTP Upload', category: 'standard' };
     if (unit.zip_id) return { type: 'Zip Files', category: 'standard' };
     if (unit.unzip_id) return { type: 'Unzip Files', category: 'standard' };
-    if (unit.pipeline_call_id) return { type: 'Pipeline Call', category: 'standard' };
+    if (unit.call_pipeline) return { type: 'Pipeline Call', category: 'standard' };
     return { type: 'Unknown', category: 'unknown' };
   };
 
@@ -163,7 +163,7 @@ export default function PipelineVisualizerNew() {
     if (unit.unzip_id) {
       return 'Extrae archivos de ZIP';
     }
-    if (unit.call_pipeline_id) {
+    if (unit.call_pipeline) {
       return 'Ejecuta otro pipeline';
     }
     

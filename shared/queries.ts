@@ -74,7 +74,6 @@ export const PIPELINE_UNITS_QUERY = `
       unzip_id
       pipeline_id
       pipeline_unit_id
-      call_pipeline_id
       created_at
       updated_at
       comment
