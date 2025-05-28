@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY } from "@shared/queries";
@@ -12,6 +12,78 @@ export default function PipelineVisualizerNew() {
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // NUEVO: Referencias y posiciones para conexiones CSS
+  const containerRef = useRef<HTMLDivElement>(null);
+  const nodeRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [nodePositions, setNodePositions] = useState<{ [key: string]: { x: number, y: number, width: number, height: number } }>({});
+
+  // NUEVO: Función para calcular posiciones reales del DOM
+  const updateNodePositions = () => {
+    if (!containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newPositions: { [key: string]: { x: number, y: number, width: number, height: number } } = {};
+    
+    Object.entries(nodeRefs.current).forEach(([nodeId, nodeElement]) => {
+      if (nodeElement) {
+        const rect = nodeElement.getBoundingClientRect();
+        newPositions[nodeId] = {
+          x: rect.left - containerRect.left,
+          y: rect.top - containerRect.top,
+          width: rect.width,
+          height: rect.height
+        };
+      }
+    });
+    
+    setNodePositions(newPositions);
+  };
+
+  // NUEVO: Función para calcular conexiones CSS entre nodos
+  const calculateCSSConnections = (nodes: any[]) => {
+    const connections = [];
+    
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const currentNode = nodes[i];
+      const nextNode = nodes[i + 1];
+      
+      const currentPos = nodePositions[currentNode.id];
+      const nextPos = nodePositions[nextNode.id];
+      
+      if (currentPos && nextPos) {
+        // Calcular centro de cada nodo
+        const startX = currentPos.x + currentPos.width / 2;
+        const startY = currentPos.y + currentPos.height;
+        const endX = nextPos.x + nextPos.width / 2;
+        const endY = nextPos.y;
+        
+        // Calcular distancia y ángulo
+        const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+        
+        connections.push({
+          id: `css-line-${i}`,
+          left: startX,
+          top: startY,
+          width: distance,
+          rotation: angle,
+          color: `hsl(${i * 40}, 70%, 50%)` // Color único por conexión
+        });
+      }
+    }
+    
+    return connections;
+  };
+
+  // NUEVO: Effect para actualizar posiciones cuando cambie el pipeline
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateNodePositions();
+    }, 100); // Pequeño delay para asegurar que el DOM esté renderizado
+    
+    return () => clearTimeout(timer);
+  }, [selectedPipeline]);
 
   // Función para obtener el color del tipo de unidad
   const getUnitTypeColor = (unitType: string): string => {
