@@ -161,7 +161,7 @@ export default function UnifiedPipelineUnitDialog({
                     <div key={query.id} className="border rounded p-3">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium text-sm">Query {query.order}</span>
-                        <span className="text-xs text-gray-500">{query.SQLConn?.name}</span>
+                        <span className="text-xs text-gray-500">{query.SQLConnection?.name}</span>
                       </div>
                       <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs max-h-32 overflow-y-auto">
                         {query.statement}

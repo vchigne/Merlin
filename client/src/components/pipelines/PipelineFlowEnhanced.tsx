@@ -250,23 +250,24 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
                   </p>
                 </div>
               )}
-              {streams && streams.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium">Archivos ({streams.length}):</label>
-                  <div className="space-y-1 mt-2">
-                    {streams.slice(0, 3).map((stream: any, index: number) => (
-                      <div key={index} className="text-xs text-muted-foreground">
-                        {stream.input} → {stream.output}
-                      </div>
-                    ))}
-                    {streams.length > 3 && (
-                      <p className="text-xs text-muted-foreground">
-                        +{streams.length - 3} archivos más...
-                      </p>
-                    )}
+              <div>
+                <label className="text-sm font-medium">Configuración:</label>
+                <div className="space-y-1 mt-2">
+                  {runnerType === "SFTPUploader" && sftpUnit.input && (
+                    <div className="text-xs text-muted-foreground">
+                      Entrada: {sftpUnit.input}
+                    </div>
+                  )}
+                  {sftpUnit.output && (
+                    <div className="text-xs text-muted-foreground">
+                      Salida: {sftpUnit.output}
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Retorna output: {sftpUnit.return_output ? 'Sí' : 'No'}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : null;
 

@@ -251,6 +251,8 @@ export const QUERY_QUEUE_QUERY = `
           database_name
           port
           username
+          created_at
+          updated_at
         }
       }
     }
@@ -310,6 +312,7 @@ export const SFTP_DOWNLOADER_QUERY = `
         server
         port
         user
+        password
         created_at
         updated_at
       }
@@ -348,6 +351,7 @@ export const SFTP_UPLOADER_QUERY = `
         server
         port
         user
+        password
         created_at
         updated_at
       }
