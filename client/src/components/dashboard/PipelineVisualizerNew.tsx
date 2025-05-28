@@ -116,68 +116,58 @@ export default function PipelineVisualizerNew() {
 
   // Función para obtener el nombre para mostrar
   const getDisplayName = (unit: any) => {
-    // Usar el name del pipeline unit si existe
-    if (unit.name) {
-      return unit.name;
-    }
-    
     const type = detectUnitType(unit);
     
-    if (unit.command_id && unit.command) {
-      return unit.command.name || unit.command.command || 'Comando sin definir';
+    if (unit.command_id) {
+      return `Comando ${unit.id?.slice(-4) || 'CMD'}`;
     }
-    if (unit.query_queue_id && unit.query_queue) {
-      return unit.query_queue.name || unit.query_queue.query || 'Consulta sin definir';
+    if (unit.query_queue_id) {
+      return `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
     }
-    if (unit.sftp_downloader_id && unit.sftp_downloader) {
-      return unit.sftp_downloader.name || `Descargar: ${unit.sftp_downloader.remote_path || 'Ruta no definida'}`;
+    if (unit.sftp_downloader_id) {
+      return `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
     }
-    if (unit.sftp_uploader_id && unit.sftp_uploader) {
-      return unit.sftp_uploader.name || `Subir: ${unit.sftp_uploader.remote_path || 'Ruta no definida'}`;
+    if (unit.sftp_uploader_id) {
+      return `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
     }
-    if (unit.zip_id && unit.zip) {
-      return unit.zip.name || `Comprimir: ${unit.zip.path || 'Ruta no definida'}`;
+    if (unit.zip_id) {
+      return `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
     }
-    if (unit.unzip_id && unit.unzip) {
-      return unit.unzip.name || `Descomprimir: ${unit.unzip.path || 'Ruta no definida'}`;
+    if (unit.unzip_id) {
+      return `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
     }
-    if (unit.pipeline_call_id && unit.pipeline_call) {
-      return unit.pipeline_call.name || `Pipeline: ${unit.pipeline_call.call_pipeline || 'Pipeline no definido'}`;
+    if (unit.call_pipeline_id) {
+      return `Pipeline llamado ${unit.id?.slice(-4) || 'CALL'}`;
     }
     
-    return `${type.type} #${unit.index || 'N/A'}`;
+    return `${type.type} #${unit.id?.slice(-4) || 'N/A'}`;
   };
 
   // Función para obtener la descripción para mostrar
   const getDisplayDescription = (unit: any) => {
-    // Usar la description del pipeline unit si existe
-    if (unit.description) {
-      return unit.description;
+    if (unit.command_id) {
+      return 'Ejecución de comando de sistema';
+    }
+    if (unit.query_queue_id) {
+      return 'Procesa consultas SQL en secuencia';
+    }
+    if (unit.sftp_downloader_id) {
+      return 'Descarga archivos via SFTP';
+    }
+    if (unit.sftp_uploader_id) {
+      return 'Sube archivos via SFTP';
+    }
+    if (unit.zip_id) {
+      return 'Comprime archivos en ZIP';
+    }
+    if (unit.unzip_id) {
+      return 'Extrae archivos de ZIP';
+    }
+    if (unit.call_pipeline_id) {
+      return 'Ejecuta otro pipeline';
     }
     
-    if (unit.command_id && unit.command) {
-      return unit.command.description || unit.command.command || 'Sin descripción';
-    }
-    if (unit.query_queue_id && unit.query_queue) {
-      return unit.query_queue.description || unit.query_queue.query || 'Sin descripción';
-    }
-    if (unit.sftp_downloader_id && unit.sftp_downloader) {
-      return unit.sftp_downloader.description || unit.sftp_downloader.remote_path || 'Sin descripción';
-    }
-    if (unit.sftp_uploader_id && unit.sftp_uploader) {
-      return unit.sftp_uploader.description || unit.sftp_uploader.remote_path || 'Sin descripción';
-    }
-    if (unit.zip_id && unit.zip) {
-      return unit.zip.description || unit.zip.path || 'Sin descripción';
-    }
-    if (unit.unzip_id && unit.unzip) {
-      return unit.unzip.description || unit.unzip.path || 'Sin descripción';
-    }
-    if (unit.pipeline_call_id && unit.pipeline_call) {
-      return unit.pipeline_call.description || unit.pipeline_call.call_pipeline || 'Sin descripción';
-    }
-    
-    return 'Sin descripción disponible';
+    return 'Tipo de unidad desconocido';
   };
 
   // Función principal para procesar las unidades y crear nodos y conexiones
