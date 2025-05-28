@@ -611,7 +611,7 @@ export default function PipelineVisualizerNew() {
 
       {/* Modal de detalles de la unidad */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {unitDetails ? (
             <>
               <DialogHeader>
@@ -660,7 +660,7 @@ export default function PipelineVisualizerNew() {
                               <span className="font-medium">{query.name}</span> 
                               {query.order && <span className="text-slate-500 ml-2">Orden: {query.order}</span>}
                             </div>
-                            <pre className="overflow-x-auto text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
+                            <pre className="overflow-x-auto overflow-y-auto max-h-48 text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
                               {query.query_string}
                             </pre>
                             {query.path && (
