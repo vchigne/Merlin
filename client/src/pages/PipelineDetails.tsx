@@ -28,6 +28,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PipelineFlow from "@/components/pipelines/PipelineFlow";
+import PipelineFlowEnhanced from "@/components/pipelines/PipelineFlowEnhanced";
+import "@/styles/pipeline-flow-enhanced.css";
 import JobItem from "@/components/jobs/JobItem";
 import LogEntry from "@/components/logs/LogEntry";
 import { Link } from "wouter";
@@ -749,9 +751,8 @@ export default function PipelineDetails() {
               
               {/* Overview Tab */}
               <TabsContent value="overview" className="mt-6">
-                <PipelineFlow
+                <PipelineFlowEnhanced
                   pipelineUnits={pipelineUnits || []}
-                  pipelineJobs={jobs || []}
                   isLoading={isPipelineLoading || isUnitsLoading}
                 />
               </TabsContent>
