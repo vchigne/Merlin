@@ -280,22 +280,26 @@ export default function PipelineVisualizerNew() {
     // 2. Ordenar por jerarquía en lugar de por categorías
     const orderedUnits = sortUnitsByHierarchy(unitsWithTypes);
     
-    // 3. Posicionamiento en bloques (filas de 3 componentes)
-    const SPACING_X = window.innerWidth < 640 ? 200 : 220;
-    const SPACING_Y = 120; // Espaciado vertical entre filas
-    const COMPONENTS_PER_ROW = 3;
+    // 3. Posicionamiento respetando la jerarquía
+    const SPACING_X = 250; // Espaciado horizontal fijo
+    const SPACING_Y = 120; // Espaciado vertical entre niveles jerárquicos
     
-    // Posicionar las unidades en bloques de 3 por fila
+    // Posicionar las unidades respetando la jerarquía y profundidad
     const allNodes = orderedUnits.map((unit, index) => {
-      const row = Math.floor(index / COMPONENTS_PER_ROW);
-      const col = index % COMPONENTS_PER_ROW;
+      // Usar la profundidad jerárquica para la posición X
+      const depth = unit.hierarchyDepth || 0;
+      
+      // Para unidades del mismo nivel jerárquico, espaciarlas verticalmente
+      const sameDepthUnits = orderedUnits.filter(u => (u.hierarchyDepth || 0) === depth);
+      const depthIndex = sameDepthUnits.findIndex(u => u.id === unit.id);
       
       return {
         ...unit,
-        posX: col * SPACING_X + 20,
-        posY: row * SPACING_Y + 20,
+        posX: depth * SPACING_X + 20,
+        posY: index * SPACING_Y + 20, // Posición Y secuencial respetando orden jerárquico
         type: unit.displayType,
-        index
+        index,
+        depth
       };
     });
     
