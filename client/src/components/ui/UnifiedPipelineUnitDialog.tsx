@@ -146,7 +146,7 @@ export default function UnifiedPipelineUnitDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         {loading ? (
           <div className="py-8 space-y-4">
             <Skeleton className="h-8 w-3/4" />
