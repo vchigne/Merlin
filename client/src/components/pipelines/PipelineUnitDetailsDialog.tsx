@@ -130,16 +130,22 @@ export function PipelineUnitDetailsDialog({ unit }: PipelineUnitDetailsDialogPro
             <div className="border-b pb-3">
               <h4 className="text-sm font-semibold text-primary mb-2">Descarga SFTP</h4>
               {downloader.SFTPLink && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold text-primary">Servidor:</label>
-                    <p className="text-sm bg-muted p-2 rounded font-mono">
-                      {downloader.SFTPLink.server}:{downloader.SFTPLink.port}
-                    </p>
+                    <label className="text-xs font-semibold text-primary">Conector SFTP:</label>
+                    <p className="text-lg font-semibold text-primary">{downloader.SFTPLink.name}</p>
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-primary">Usuario:</label>
-                    <p className="text-sm bg-muted p-2 rounded font-mono">{downloader.SFTPLink.user}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-primary">Servidor:</label>
+                      <p className="text-sm bg-muted p-2 rounded font-mono">
+                        {downloader.SFTPLink.server}:{downloader.SFTPLink.port}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-primary">Usuario:</label>
+                      <p className="text-sm bg-muted p-2 rounded font-mono">{downloader.SFTPLink.user}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -174,16 +180,22 @@ export function PipelineUnitDetailsDialog({ unit }: PipelineUnitDetailsDialogPro
             <div className="border-b pb-3">
               <h4 className="text-sm font-semibold text-primary mb-2">Subida SFTP</h4>
               {uploader.SFTPLink && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold text-primary">Servidor:</label>
-                    <p className="text-sm bg-muted p-2 rounded font-mono">
-                      {uploader.SFTPLink.server}:{uploader.SFTPLink.port}
-                    </p>
+                    <label className="text-xs font-semibold text-primary">Conector SFTP:</label>
+                    <p className="text-lg font-semibold text-primary">{uploader.SFTPLink.name}</p>
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-primary">Usuario:</label>
-                    <p className="text-sm bg-muted p-2 rounded font-mono">{uploader.SFTPLink.user}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-primary">Servidor:</label>
+                      <p className="text-sm bg-muted p-2 rounded font-mono">
+                        {uploader.SFTPLink.server}:{uploader.SFTPLink.port}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-primary">Usuario:</label>
+                      <p className="text-sm bg-muted p-2 rounded font-mono">{uploader.SFTPLink.user}</p>
+                    </div>
                   </div>
                 </div>
               )}
