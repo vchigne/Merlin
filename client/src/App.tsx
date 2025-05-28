@@ -51,6 +51,8 @@ function Router() {
         <Route path="/pipelines/:id" component={PipelineDetails} />
         <Route path="/pipeline-studio" component={PipelineStudio} />
         <Route path="/pipeline-studio/:id" component={PipelineStudio} />
+        <Route path="/studio" component={PipelineStudio} />
+        <Route path="/studio/:id" component={PipelineStudio} />
         <Route path="/jobs" component={Jobs} />
         <Route path="/jobs/:id" component={PipelineDetails} />
         <Route path="/logs" component={Logs} />
