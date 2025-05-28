@@ -194,64 +194,49 @@ export default function PipelineVisualizerNew({
   const getDisplayName = (unit: any) => {
     const type = detectUnitType(unit);
     
+    if (unit.command_id && unit.Command) {
+      return unit.Command.name || `Comando ${unit.id?.slice(-4) || 'CMD'}`;
+    }
+    if (unit.query_queue_id && unit.QueryQueue) {
+      return unit.QueryQueue.name || `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
+    }
+    if (unit.sftp_downloader_id && unit.SFTPDownloader) {
+      return unit.SFTPDownloader.name || `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
+    }
+    if (unit.sftp_uploader_id && unit.SFTPUploader) {
+      return unit.SFTPUploader.name || `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
+    }
+    if (unit.zip_id && unit.Zip) {
+      return unit.Zip.name || `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
+    }
+    if (unit.unzip_id && unit.Unzip) {
+      return unit.Unzip.name || `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
+    }
+    if (unit.call_pipeline && unit.Pipeline) {
+      return unit.Pipeline.name || `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
+    }
+    
+    // Fallback para casos donde no hay relación disponible
     if (unit.command_id) {
-      const cacheKey = `Command_${unit.command_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Comando ${unit.id?.slice(-4) || 'CMD'}`;
-      
-      fetchEntityData(unit.command_id, 'Command');
       return `Comando ${unit.id?.slice(-4) || 'CMD'}`;
     }
     if (unit.query_queue_id) {
-      const cacheKey = `QueryQueue_${unit.query_queue_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
-      
-      fetchEntityData(unit.query_queue_id, 'QueryQueue');
       return `Cola de consultas ${unit.id?.slice(-4) || 'SQL'}`;
     }
     if (unit.sftp_downloader_id) {
-      const cacheKey = `SFTPDownloader_${unit.sftp_downloader_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
-      
-      fetchEntityData(unit.sftp_downloader_id, 'SFTPDownloader');
       return `Descarga SFTP ${unit.id?.slice(-4) || 'DWN'}`;
     }
     if (unit.sftp_uploader_id) {
-      const cacheKey = `SFTPUploader_${unit.sftp_uploader_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
-      
-      fetchEntityData(unit.sftp_uploader_id, 'SFTPUploader');
       return `Subida SFTP ${unit.id?.slice(-4) || 'UPL'}`;
     }
     if (unit.zip_id) {
-      const cacheKey = `Zip_${unit.zip_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
-      
-      fetchEntityData(unit.zip_id, 'Zip');
       return `Compresión ZIP ${unit.id?.slice(-4) || 'ZIP'}`;
     }
     if (unit.unzip_id) {
-      const cacheKey = `Unzip_${unit.unzip_id}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
-      
-      fetchEntityData(unit.unzip_id, 'Unzip');
       return `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
     }
     if (unit.call_pipeline) {
-      const cacheKey = `Pipeline_${unit.call_pipeline}`;
-      const cached = entityData[cacheKey];
-      if (cached) return cached.name || `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
-      
-      fetchEntityData(unit.call_pipeline, 'Pipeline');
       return `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
-    }
-    if (unit.call_pipeline_id) {
-      return `Pipeline llamado ${unit.id?.slice(-4) || 'CALL'}`;
     }
     
     return `${type.type} #${unit.id?.slice(-4) || 'N/A'}`;
