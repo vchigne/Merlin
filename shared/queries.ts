@@ -386,6 +386,20 @@ export const UNZIP_QUERY = `
   }
 `;
 
+export const PIPELINE_CALL_QUERY = `
+  query GetPipelineCall($id: uuid!) {
+    merlin_agent_PipelineCall(where: {id: {_eq: $id}}) {
+      id
+      pipeline_id
+      Pipeline {
+        id
+        name
+        description
+      }
+    }
+  }
+`;
+
 export const STATS_OVERVIEW_QUERY = `
   query GetStatsOverview {
     activeAgents: merlin_agent_AgentPassport_aggregate(where: {is_healthy: {_eq: true}, enabled: {_eq: true}}) {

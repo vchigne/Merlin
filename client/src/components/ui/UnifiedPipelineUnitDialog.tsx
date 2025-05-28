@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { executeQuery } from "@/lib/hasura-client";
-import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
+import { COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY, PIPELINE_CALL_QUERY } from "@shared/queries";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
@@ -28,7 +28,7 @@ export default function UnifiedPipelineUnitDialog({
     if (unit.sftp_uploader_id) return 'SFTP Upload';
     if (unit.zip_id) return 'Zip Files';
     if (unit.unzip_id) return 'Unzip Files';
-    if (unit.call_pipeline) return 'Call Pipeline';
+    if (unit.pipeline_call_id) return 'Pipeline Call';
     return 'Unit';
   };
 
@@ -86,6 +86,11 @@ export default function UnifiedPipelineUnitDialog({
         variables = { id: unit.unzip_id };
         const result = await executeQuery(query, variables);
         data = result.data.merlin_agent_UnZip?.[0];
+      } else if (unit.pipeline_call_id) {
+        query = PIPELINE_CALL_QUERY;
+        variables = { id: unit.pipeline_call_id };
+        const result = await executeQuery(query, variables);
+        data = result.data.merlin_agent_PipelineCall?.[0];
       }
       
       setUnitDetails({
