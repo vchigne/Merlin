@@ -312,10 +312,16 @@ export default function PipelineVisualizerNew() {
       
       if (query) {
         const result = await executeQuery(query, variables);
+        // Determinar el tipo para mostrar en la interfaz
+        const type = getUnitType(unit);
+        let unitInfo = {
+          type,
+          name: unit.comment || `${type} Unit`,
+          description: unit.comment || `Unidad de tipo ${type}`,
+          details: unit
+        };
+
         if (result.data && !result.errors) {
-          // Determinar el tipo para mostrar en la interfaz
-          const type = getUnitType(unit);
-          
           // Obtener los datos relevantes según el tipo
           let data;
           if (unit.command_id) {
@@ -339,19 +345,33 @@ export default function PipelineVisualizerNew() {
             data = result.data.merlin_agent_SFTPDownloader[0];
           } else if (unit.sftp_uploader_id) {
             data = result.data.merlin_agent_SFTPUploader[0];
+          } else if (unit.file_stream_sftp_downloader_id) {
+            // Para FileStream, los datos podrían estar en un campo diferente
+            data = result.data.merlin_agent_SFTPDownloader[0] || result.data.merlin_agent_FileStreamSftpDownloader?.[0];
+          } else if (unit.file_stream_sftp_uploader_id) {
+            // Para FileStream, los datos podrían estar en un campo diferente
+            data = result.data.merlin_agent_SFTPUploader[0] || result.data.merlin_agent_FileStreamSftpUploader?.[0];
           } else if (unit.zip_id) {
             data = result.data.merlin_agent_Zip[0];
           } else if (unit.unzip_id) {
             data = result.data.merlin_agent_UnZip[0];
           }
           
-          setUnitDetails({
-            type,
-            name: data?.name || type,
-            description: data?.description || '',
-            details: data
-          });
+          if (data) {
+            unitInfo = {
+              type,
+              name: data.name || data.comment || unit.comment || `${type} Unit`,
+              description: data.description || data.comment || unit.comment || `Unidad de tipo ${type}`,
+              details: data
+            };
+          }
+        } else if (result.errors) {
+          console.error("Error en consulta GraphQL:", result.errors);
+          // Mostrar información básica aunque la consulta falle
+          unitInfo.description = `${type} - ${unit.comment || 'Información detallada no disponible temporalmente'}`;
         }
+        
+        setUnitDetails(unitInfo);
       }
     } catch (error) {
       console.error("Error fetching unit details:", error);
