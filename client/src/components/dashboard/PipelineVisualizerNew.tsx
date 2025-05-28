@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
-import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY, COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
+import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
@@ -36,9 +36,18 @@ export default function PipelineVisualizerNew() {
     return { type: 'Unit', category: 'unknown' };
   };
 
-  // Función de compatibilidad con el código existente
+  // Función para obtener el tipo de unidad para el UnifiedPipelineUnitDialog
   const getUnitType = (unit: any) => {
-    return detectUnitType(unit).type;
+    if (unit.command_id) return 'Command';
+    if (unit.query_queue_id) return 'QueryQueue';
+    if (unit.sftp_downloader_id) return 'SFTPDownloader';
+    if (unit.sftp_uploader_id) return 'SFTPUploader';
+    if (unit.file_stream_sftp_downloader_id) return 'FileStreamSftpDownloader';
+    if (unit.file_stream_sftp_uploader_id) return 'FileStreamSftpUploader';
+    if (unit.zip_id) return 'Zip';
+    if (unit.unzip_id) return 'Unzip';
+    if (unit.pipeline_call_id) return 'PipelineCall';
+    return 'Unknown';
   };
   
   // Función para determinar el estado de la unidad (simulado)
@@ -259,131 +268,7 @@ export default function PipelineVisualizerNew() {
     setSelectedPipeline(value);
   };
   
-  // Función para obtener los detalles de una unidad específica
-  const fetchUnitDetails = async (unit: any) => {
-    if (!unit) return;
-    
-    setSelectedUnit(unit);
-    setDialogOpen(true);
-    
-    try {
-      let query = '';
-      let variables = {};
-      
-      // Determinar qué tipo de unidad es y obtener los detalles correspondientes
-      if (unit.command_id) {
-        query = COMMAND_QUERY;
-        variables = { id: unit.command_id };
-      } else if (unit.query_queue_id) {
-        query = QUERY_QUEUE_QUERY;
-        variables = { id: unit.query_queue_id };
-      } else if (unit.sftp_downloader_id) {
-        query = SFTP_DOWNLOADER_QUERY;
-        variables = { id: unit.sftp_downloader_id };
-      } else if (unit.sftp_uploader_id) {
-        query = SFTP_UPLOADER_QUERY;
-        variables = { id: unit.sftp_uploader_id };
-      } else if (unit.file_stream_sftp_downloader_id) {
-        // Manejar FileStream SFTP Downloader
-        query = SFTP_DOWNLOADER_QUERY; // Usar la misma query por ahora
-        variables = { id: unit.file_stream_sftp_downloader_id };
-      } else if (unit.file_stream_sftp_uploader_id) {
-        // Manejar FileStream SFTP Uploader
-        query = SFTP_UPLOADER_QUERY; // Usar la misma query por ahora
-        variables = { id: unit.file_stream_sftp_uploader_id };
-      } else if (unit.zip_id) {
-        query = ZIP_QUERY;
-        variables = { id: unit.zip_id };
-      } else if (unit.unzip_id) {
-        query = UNZIP_QUERY;
-        variables = { id: unit.unzip_id };
-      } else if (unit.call_pipeline) {
-        // En caso de llamada a otro pipeline
-        const result = await executeQuery(PIPELINE_QUERY, { id: unit.call_pipeline });
-        if (result.data && !result.errors) {
-          setUnitDetails({
-            type: 'Call Pipeline',
-            name: result.data.merlin_agent_Pipeline[0]?.name || 'Pipeline',
-            description: result.data.merlin_agent_Pipeline[0]?.description || 'Llamada a otro pipeline',
-            details: result.data.merlin_agent_Pipeline[0]
-          });
-        }
-        return;
-      }
-      
-      if (query) {
-        const result = await executeQuery(query, variables);
-        // Determinar el tipo para mostrar en la interfaz
-        const type = getUnitType(unit);
-        let unitInfo = {
-          type,
-          name: unit.comment || `${type} Unit`,
-          description: unit.comment || `Unidad de tipo ${type}`,
-          details: unit
-        };
 
-        if (result.data && !result.errors) {
-          // Obtener los datos relevantes según el tipo
-          let data;
-          if (unit.command_id) {
-            data = result.data.merlin_agent_Command[0];
-          } else if (unit.query_queue_id) {
-            data = result.data.merlin_agent_QueryQueue[0];
-            
-            if (data) {
-              // Para las consultas SQL, obtenemos detalles adicionales
-              try {
-                const queriesResult = await executeQuery(QUERY_DETAILS_QUERY, { id: unit.query_queue_id });
-                if (queriesResult.data && queriesResult.data.merlin_agent_Query) {
-                  // Agregamos las consultas al objeto de datos 
-                  data.Queries = queriesResult.data.merlin_agent_Query.sort((a: any, b: any) => a.order - b.order);
-                }
-              } catch (error) {
-                console.error("Error fetching SQL queries:", error);
-              }
-            }
-          } else if (unit.sftp_downloader_id) {
-            data = result.data.merlin_agent_SFTPDownloader[0];
-          } else if (unit.sftp_uploader_id) {
-            data = result.data.merlin_agent_SFTPUploader[0];
-          } else if (unit.file_stream_sftp_downloader_id) {
-            // Para FileStream, los datos podrían estar en un campo diferente
-            data = result.data.merlin_agent_SFTPDownloader[0] || result.data.merlin_agent_FileStreamSftpDownloader?.[0];
-          } else if (unit.file_stream_sftp_uploader_id) {
-            // Para FileStream, los datos podrían estar en un campo diferente
-            data = result.data.merlin_agent_SFTPUploader[0] || result.data.merlin_agent_FileStreamSftpUploader?.[0];
-          } else if (unit.zip_id) {
-            data = result.data.merlin_agent_Zip[0];
-          } else if (unit.unzip_id) {
-            data = result.data.merlin_agent_UnZip[0];
-          }
-          
-          if (data) {
-            unitInfo = {
-              type,
-              name: data.name || data.comment || unit.comment || `${type} Unit`,
-              description: data.description || data.comment || unit.comment || `Unidad de tipo ${type}`,
-              details: data
-            };
-          }
-        } else if (result.errors) {
-          console.error("Error en consulta GraphQL:", result.errors);
-          // Mostrar información básica aunque la consulta falle
-          unitInfo.description = `${type} - ${unit.comment || 'Información detallada no disponible temporalmente'}`;
-        }
-        
-        setUnitDetails(unitInfo);
-      }
-    } catch (error) {
-      console.error("Error fetching unit details:", error);
-      setUnitDetails({
-        type: getUnitType(unit),
-        name: 'Error',
-        description: 'No se pudieron cargar los detalles',
-        details: null
-      });
-    }
-  };
   
   // Estado de carga
   if (isPipelinesLoading) {
@@ -614,8 +499,8 @@ export default function PipelineVisualizerNew() {
 
       {/* Diálogo unificado para detalles de unidades */}
       <UnifiedPipelineUnitDialog
-        isOpen={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
         unitId={selectedUnitId}
         unitType={selectedUnitType}
       />
