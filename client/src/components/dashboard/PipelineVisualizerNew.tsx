@@ -237,11 +237,11 @@ export default function PipelineVisualizerNew() {
     return result;
   };
 
-  // Algoritmo mejorado de posicionamiento y procesamiento
+  // Algoritmo N8N - Simple y democrático (todos los nodos son iguales)
   const processUnits = (units: any[]) => {
     if (!units || units.length === 0) return { nodes: [], connections: [] };
     
-    // 1. Detectar tipos y categorías de todas las unidades
+    // 1. Detectar tipos de todas las unidades (sin categorías complejas)
     const unitsWithTypes = units.map(unit => ({
       ...unit,
       unitType: detectUnitType(unit),
@@ -249,66 +249,26 @@ export default function PipelineVisualizerNew() {
       status: getUnitStatus(unit, units.indexOf(unit))
     }));
     
-    // 2. Ordenar por jerarquía en lugar de por categorías
-    const orderedUnits = sortUnitsByHierarchy(unitsWithTypes);
+    // 2. N8N Style: Layout vertical simple, sin jerarquías
+    const SPACING_Y = 140; // Espaciado vertical entre nodos
+    const FIXED_X = 50;    // Posición X fija para todos (columna única)
     
-    // 3. Posicionamiento respetando la jerarquía
-    const SPACING_X = 250; // Espaciado horizontal fijo
-    const SPACING_Y = 120; // Espaciado vertical entre niveles jerárquicos
+    // Posicionar todos los nodos en una columna vertical simple
+    const allNodes = unitsWithTypes.map((unit, index) => ({
+      ...unit,
+      posX: FIXED_X,
+      posY: index * SPACING_Y + 50, // Posición Y secuencial simple
+      type: unit.displayType,
+      index
+    }));
     
-    // Posicionar las unidades respetando la jerarquía y profundidad
-    const allNodes = orderedUnits.map((unit, index) => {
-      // Usar la profundidad jerárquica para la posición X
-      const depth = unit.hierarchyDepth || 0;
-      
-      // Para unidades del mismo nivel jerárquico, espaciarlas verticalmente
-      const sameDepthUnits = orderedUnits.filter(u => (u.hierarchyDepth || 0) === depth);
-      const depthIndex = sameDepthUnits.findIndex(u => u.id === unit.id);
-      
-      return {
-        ...unit,
-        posX: depth * SPACING_X + 20,
-        posY: index * SPACING_Y + 20, // Posición Y secuencial respetando orden jerárquico
-        type: unit.displayType,
-        index,
-        depth
-      };
-    });
-    
-    // 4. Definir puntos de entrada y salida para cada nodo
-    const getNodeConnectionPoints = (node: any) => {
-      const nodeWidth = 176; // w-44 = 176px
-      const nodeHeight = 96; // h-24 = 96px
-      
-      return {
-        // Punto de salida (lado derecho, centro vertical)
-        exit: {
-          x: node.posX + nodeWidth,
-          y: node.posY + nodeHeight / 2
-        },
-        // Punto de entrada (lado izquierdo, centro vertical)  
-        entry: {
-          x: node.posX,
-          y: node.posY + nodeHeight / 2
-        }
-      };
-    };
-
-    // 5. Construir conexiones secuenciales inteligentes
+    // 3. N8N Style: Conexiones súper simples (nodo a nodo secuencialmente)
     const connections = [];
     for (let i = 0; i < allNodes.length - 1; i++) {
-      const sourceNode = allNodes[i];
-      const targetNode = allNodes[i + 1];
-      
-      const sourcePoints = getNodeConnectionPoints(sourceNode);
-      const targetPoints = getNodeConnectionPoints(targetNode);
-      
       connections.push({
         id: `conn-${i}`,
-        source: sourceNode,
-        target: targetNode,
-        sourcePoint: sourcePoints.exit,
-        targetPoint: targetPoints.entry,
+        source: allNodes[i],
+        target: allNodes[i + 1],
         type: 'sequential'
       });
     }
