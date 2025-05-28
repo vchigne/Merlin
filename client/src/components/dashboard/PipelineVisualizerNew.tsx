@@ -194,56 +194,21 @@ export default function PipelineVisualizerNew() {
       status: getUnitStatus(unit, units.indexOf(unit))
     }));
     
-    // 2. Agrupar por categorías para mejor posicionamiento
-    const standardUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'standard');
-    const filestreamUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'filestream');
-    const unknownUnits = unitsWithTypes.filter(unit => unit.unitType.category === 'unknown');
+    // 2. Ordenar por jerarquía en lugar de por categorías
+    const orderedUnits = sortUnitsByHierarchy(unitsWithTypes);
     
-    // 3. Posicionamiento inteligente por categorías
+    // 3. Posicionamiento jerárquico horizontal
     const SPACING_X = window.innerWidth < 640 ? 150 : 180;
-    const SPACING_Y = 100;
-    const CATEGORY_OFFSET_Y = 120;
+    const SPACING_Y = 50;
     
-    let allNodes = [];
-    let yOffset = 10;
-    
-    // Posicionar unidades estándar primero
-    if (standardUnits.length > 0) {
-      const standardNodes = standardUnits.map((unit, index) => ({
-        ...unit,
-        posX: index * SPACING_X + 10,
-        posY: yOffset,
-        type: unit.displayType,
-        index: allNodes.length + index
-      }));
-      allNodes = [...allNodes, ...standardNodes];
-      yOffset += CATEGORY_OFFSET_Y;
-    }
-    
-    // Posicionar unidades FileStream
-    if (filestreamUnits.length > 0) {
-      const filestreamNodes = filestreamUnits.map((unit, index) => ({
-        ...unit,
-        posX: index * SPACING_X + 10,
-        posY: yOffset,
-        type: unit.displayType,
-        index: allNodes.length + index
-      }));
-      allNodes = [...allNodes, ...filestreamNodes];
-      yOffset += CATEGORY_OFFSET_Y;
-    }
-    
-    // Posicionar unidades desconocidas
-    if (unknownUnits.length > 0) {
-      const unknownNodes = unknownUnits.map((unit, index) => ({
-        ...unit,
-        posX: index * SPACING_X + 10,
-        posY: yOffset,
-        type: unit.displayType,
-        index: allNodes.length + index
-      }));
-      allNodes = [...allNodes, ...unknownNodes];
-    }
+    // Posicionar todas las unidades en orden jerárquico horizontal
+    const allNodes = orderedUnits.map((unit, index) => ({
+      ...unit,
+      posX: index * SPACING_X + 10,
+      posY: 50, // Una sola fila horizontal para mostrar el flujo secuencial
+      type: unit.displayType,
+      index
+    }));
     
     // 4. Construir conexiones jerárquicas
     const connections = buildHierarchicalConnections(allNodes);
