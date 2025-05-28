@@ -282,6 +282,14 @@ export default function PipelineVisualizerNew() {
       } else if (unit.sftp_uploader_id) {
         query = SFTP_UPLOADER_QUERY;
         variables = { id: unit.sftp_uploader_id };
+      } else if (unit.file_stream_sftp_downloader_id) {
+        // Manejar FileStream SFTP Downloader
+        query = SFTP_DOWNLOADER_QUERY; // Usar la misma query por ahora
+        variables = { id: unit.file_stream_sftp_downloader_id };
+      } else if (unit.file_stream_sftp_uploader_id) {
+        // Manejar FileStream SFTP Uploader
+        query = SFTP_UPLOADER_QUERY; // Usar la misma query por ahora
+        variables = { id: unit.file_stream_sftp_uploader_id };
       } else if (unit.zip_id) {
         query = ZIP_QUERY;
         variables = { id: unit.zip_id };
@@ -423,7 +431,7 @@ export default function PipelineVisualizerNew() {
                 
                 return (
                   <>
-                    {/* Dibujamos primero las conexiones (flechas) */}
+                    {/* Dibujamos primero las conexiones (flechas) con estilos diferenciados */}
                     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       {connections.map((conn) => {
                         const source = conn.source;
@@ -439,44 +447,41 @@ export default function PipelineVisualizerNew() {
                         const dx = targetX - sourceX;
                         const path = `M ${sourceX},${sourceY} C ${sourceX + dx/2},${sourceY} ${targetX - dx/2},${targetY} ${targetX},${targetY}`;
                         
+                        // Usar el estilo diferenciado basado en los tipos de unidades
+                        const connectionStyle = conn.style || getConnectionStyle(source, target);
+                        
                         // Estado de la conexión basado en el estado de los nodos
                         const sourceStatus = getUnitStatus(source, source.index);
-                        const targetStatus = getUnitStatus(target, target.index);
-                        
-                        // La conexión está activa si ambos nodos están activos (no pendientes)
                         const isActive = sourceStatus !== 'pending';
                         const isCompleted = sourceStatus === 'completed';
                         
+                        // Determinar el identificador del marcador
+                        const markerId = connectionStyle.color === '#10b981' ? 'arrow-standard' :
+                                        connectionStyle.color === '#f97316' ? 'arrow-filestream' :
+                                        connectionStyle.color === '#3b82f6' ? 'arrow-mixed' :
+                                        'arrow-auxiliary';
+                        
                         return (
                           <g key={conn.id}>
-                            {/* Curva principal */}
+                            {/* Curva principal con estilos diferenciados */}
                             <path 
                               d={path} 
                               fill="none" 
-                              strokeWidth={2} 
-                              stroke={isCompleted ? '#10b981' : (isActive ? '#60a5fa' : '#9ca3af')}
-                              strokeDasharray={isActive ? 'none' : '5,5'} 
-                              markerEnd={`url(#arrow-${isCompleted ? 'completed' : (isActive ? 'active' : 'inactive')})`} 
+                              strokeWidth={connectionStyle.width} 
+                              stroke={connectionStyle.color}
+                              strokeDasharray={connectionStyle.strokeDasharray} 
+                              markerEnd={`url(#${markerId})`}
+                              opacity={isActive ? 1 : 0.6}
                             />
                           </g>
                         );
                       })}
                       
-                      {/* Definición de los marcadores de flecha */}
+                      {/* Definición de los marcadores de flecha diferenciados */}
                       <defs>
+                        {/* Flecha para conexiones estándar (verde) */}
                         <marker 
-                          id="arrow-active" 
-                          viewBox="0 0 10 10" 
-                          refX="5" 
-                          refY="5"
-                          markerWidth="4" 
-                          markerHeight="4" 
-                          orient="auto-start-reverse"
-                        >
-                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
-                        </marker>
-                        <marker 
-                          id="arrow-completed" 
+                          id="arrow-standard" 
                           viewBox="0 0 10 10" 
                           refX="5" 
                           refY="5"
@@ -486,8 +491,10 @@ export default function PipelineVisualizerNew() {
                         >
                           <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
                         </marker>
+                        
+                        {/* Flecha para conexiones FileStream (naranja) */}
                         <marker 
-                          id="arrow-inactive" 
+                          id="arrow-filestream" 
                           viewBox="0 0 10 10" 
                           refX="5" 
                           refY="5"
@@ -495,24 +502,66 @@ export default function PipelineVisualizerNew() {
                           markerHeight="4" 
                           orient="auto-start-reverse"
                         >
-                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af" />
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316" />
+                        </marker>
+                        
+                        {/* Flecha para conexiones mixtas (azul) */}
+                        <marker 
+                          id="arrow-mixed" 
+                          viewBox="0 0 10 10" 
+                          refX="5" 
+                          refY="5"
+                          markerWidth="4" 
+                          markerHeight="4" 
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                        </marker>
+                        
+                        {/* Flecha para conexiones auxiliares (gris) */}
+                        <marker 
+                          id="arrow-auxiliary" 
+                          viewBox="0 0 10 10" 
+                          refX="5" 
+                          refY="5"
+                          markerWidth="4" 
+                          markerHeight="4" 
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280" />
                         </marker>
                       </defs>
                     </svg>
                     
-                    {/* Dibujamos los nodos (unidades) */}
+                    {/* Dibujamos los nodos (unidades) con estilos diferenciados */}
                     {nodes.map((unit) => {
                       const unitType = getUnitType(unit);
+                      const unitTypeInfo = detectUnitType(unit);
                       const status = getUnitStatus(unit, unit.index);
+                      
+                      // Determinar el color del borde basado en el tipo de unidad
+                      let borderColor = '';
+                      if (status === 'completed') {
+                        borderColor = 'border-green-500 dark:border-green-400';
+                      } else if (status === 'running') {
+                        borderColor = 'border-amber-500 dark:border-amber-400';
+                      } else {
+                        // Bordes específicos por tipo cuando no están en ejecución
+                        if (unitTypeInfo.type === 'SFTP Download' || unitTypeInfo.type === 'SFTP Upload') {
+                          borderColor = 'border-orange-500 dark:border-orange-400'; // Naranja para todas las unidades SFTP
+                        } else if (unitTypeInfo.type === 'Command') {
+                          borderColor = 'border-green-500 dark:border-green-400'; // Verde para comandos
+                        } else if (unitTypeInfo.type === 'SQL Query') {
+                          borderColor = 'border-blue-500 dark:border-blue-400'; // Azul para SQL
+                        } else {
+                          borderColor = 'border-slate-300 dark:border-slate-600'; // Gris por defecto
+                        }
+                      }
                       
                       return (
                         <div 
                           key={unit.id}
-                          className={`absolute w-32 xs:w-36 sm:w-40 h-14 sm:h-16 bg-slate-100 dark:bg-slate-700 border-2 ${
-                            status === 'completed' ? 'border-green-500 dark:border-green-400' :
-                            status === 'running' ? 'border-amber-500 dark:border-amber-400' :
-                            'border-slate-300 dark:border-slate-600'
-                          } rounded-md shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer text-xs sm:text-sm`}
+                          className={`absolute w-32 xs:w-36 sm:w-40 h-14 sm:h-16 bg-slate-100 dark:bg-slate-700 border-2 ${borderColor} rounded-md shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer text-xs sm:text-sm`}
                           style={{ 
                             left: `${unit.posX}px`, 
                             top: `${unit.posY}px` 
