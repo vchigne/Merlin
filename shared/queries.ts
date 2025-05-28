@@ -275,15 +275,22 @@ export const SFTP_DOWNLOADER_QUERY = `
   query GetSFTPDownloader($id: uuid!) {
     merlin_agent_SFTPDownloader(where: {id: {_eq: $id}}) {
       id
+      name
+      output
+      return_output
       sftp_link_id
+      created_at
+      updated_at
       SFTPLink {
         id
         name
         server
         port
         user
+        created_at
+        updated_at
       }
-      file_streams {
+      FileStreamSftpDownloaders {
         id
         input
         output
@@ -311,15 +318,23 @@ export const SFTP_UPLOADER_QUERY = `
   query GetSFTPUploader($id: uuid!) {
     merlin_agent_SFTPUploader(where: {id: {_eq: $id}}) {
       id
+      name
+      input
+      output
+      return_output
       sftp_link_id
+      created_at
+      updated_at
       SFTPLink {
         id
         name
         server
         port
         user
+        created_at
+        updated_at
       }
-      file_streams {
+      FileStreamSftpUploaders {
         id
         input
         output
@@ -333,8 +348,12 @@ export const ZIP_QUERY = `
   query GetZip($id: uuid!) {
     merlin_agent_Zip(where: {id: {_eq: $id}}) {
       id
-      zip_name
-      file_streams {
+      name
+      output
+      return_output
+      created_at
+      updated_at
+      FileStreamZips {
         id
         input
         wildcard_exp
@@ -347,7 +366,13 @@ export const UNZIP_QUERY = `
   query GetUnzip($id: uuid!) {
     merlin_agent_UnZip(where: {id: {_eq: $id}}) {
       id
-      file_streams {
+      name
+      input
+      output
+      return_output
+      created_at
+      updated_at
+      FileStreamUnzips {
         id
         input
         output
