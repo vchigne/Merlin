@@ -262,13 +262,27 @@ export default function PipelineVisualizerNew() {
       index
     }));
     
-    // 3. N8N Style: Conexiones súper simples (nodo a nodo secuencialmente)
+    // 3. N8N Style: Conexiones súper simples con puntos de conexión
+    const nodeWidth = 176; // w-44 = 176px
+    const nodeHeight = 96; // h-24 = 96px
+    
     const connections = [];
     for (let i = 0; i < allNodes.length - 1; i++) {
+      const sourceNode = allNodes[i];
+      const targetNode = allNodes[i + 1];
+      
       connections.push({
         id: `conn-${i}`,
-        source: allNodes[i],
-        target: allNodes[i + 1],
+        source: sourceNode,
+        target: targetNode,
+        sourcePoint: {
+          x: sourceNode.posX + nodeWidth / 2,  // Centro horizontal
+          y: sourceNode.posY + nodeHeight      // Parte inferior
+        },
+        targetPoint: {
+          x: targetNode.posX + nodeWidth / 2,  // Centro horizontal
+          y: targetNode.posY                   // Parte superior
+        },
         type: 'sequential'
       });
     }
