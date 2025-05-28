@@ -22,42 +22,15 @@ import {
   Clock,
   RefreshCw
 } from "lucide-react";
+import { 
+  pipelineManager, 
+  type PipelineUnit, 
+  type PipelineUnitChain, 
+  type RunnerType 
+} from "@/lib/pipeline-manager";
+import { PipelineUnitDetailsDialog } from "./PipelineUnitDetailsDialog";
 
-// Interfaces basadas en nuestra documentación completa
-interface PipelineUnit {
-  id: string;
-  pipeline_id: string;
-  pipeline_unit_id?: string;
-  retry_count: number;
-  retry_after_milliseconds: number;
-  timeout_milliseconds: number;
-  continue_on_error: boolean;
-  abort_on_error: boolean;
-  abort_on_timeout: boolean;
-  
-  // Solo uno será no-null (define el tipo de runner)
-  command_id?: string;
-  query_queue_id?: string;
-  sftp_downloader_id?: string;
-  sftp_uploader_id?: string;
-  zip_id?: string;
-  unzip_id?: string;
-  call_pipeline_id?: string;
-  
-  // Relaciones cargadas desde Hasura
-  Command?: any;
-  QueryQueue?: any;
-  SFTPDownloader?: any;
-  SFTPUploader?: any;
-  Zip?: any;
-  Unzip?: any;
-  CallPipeline?: any;
-}
-
-interface PipelineUnitChain {
-  Unit: PipelineUnit;
-  Children: PipelineUnitChain[];
-}
+// Usando interfaces del PipelineManager centralizado
 
 interface PipelineFlowEnhancedProps {
   pipelineUnits: PipelineUnit[];
@@ -115,74 +88,12 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
   const [selectedUnit, setSelectedUnit] = useState<PipelineUnit | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Detecta el tipo de runner basado en nuestra documentación
-  const detectRunnerType = (unit: PipelineUnit): keyof typeof runnerConfig => {
-    if (unit.command_id) return "Command";
-    if (unit.query_queue_id) return "QueryQueue";
-    if (unit.sftp_downloader_id) return "SFTPDownloader";
-    if (unit.sftp_uploader_id) return "SFTPUploader";
-    if (unit.zip_id) return "Zip";
-    if (unit.unzip_id) return "Unzip";
-    if (unit.call_pipeline_id) return "CallPipeline";
-    throw new Error("Unknown runner type");
-  };
-
-  // Construye la cadena de dependencias (algoritmo del Orchestator)
-  const buildPipelineChain = (units: PipelineUnit[]): PipelineUnitChain[] => {
-    // 1. Encontrar unidades raíz (pipeline_unit_id === null)
-    const roots = units.filter(unit => unit.pipeline_unit_id === null);
-    
-    // 2. Para cada raíz, construir recursivamente sus hijos
-    return roots.map(root => ({
-      Unit: root,
-      Children: getChildren(root.id, units)
-    }));
-  };
-
-  const getChildren = (parentId: string, allUnits: PipelineUnit[]): PipelineUnitChain[] => {
-    const children = allUnits.filter(unit => unit.pipeline_unit_id === parentId);
-    
-    return children.map(child => ({
-      Unit: child,
-      Children: getChildren(child.id, allUnits) // Recursivo
-    }));
-  };
-
-  // Obtiene información detallada para el tooltip
-  const getUnitTooltipInfo = (unit: PipelineUnit): string => {
-    const runnerType = detectRunnerType(unit);
-    
-    switch(runnerType) {
-      case "Command":
-        const cmd = unit.Command;
-        return cmd ? `${cmd.target} ${cmd.args || ''}` : "Comando del sistema";
-      case "QueryQueue":
-        const queue = unit.QueryQueue;
-        return queue?.Queries ? `${queue.Queries.length} consultas SQL` : "Cola de consultas";
-      case "SFTPDownloader":
-        const downloader = unit.SFTPDownloader;
-        return downloader?.SFTPLink ? `Descargar desde ${downloader.SFTPLink.server}` : "Descarga SFTP";
-      case "SFTPUploader":
-        const uploader = unit.SFTPUploader;
-        return uploader?.SFTPLink ? `Subir a ${uploader.SFTPLink.server}` : "Subida SFTP";
-      case "Zip":
-        const zip = unit.Zip;
-        return zip ? `Comprimir a ${zip.zip_name}` : "Compresión";
-      case "Unzip":
-        const unzip = unit.Unzip;
-        return unzip?.FileStreamUnzips ? `Descomprimir ${unzip.FileStreamUnzips.length} archivos` : "Descompresión";
-      case "CallPipeline":
-        const pipeline = unit.CallPipeline;
-        return pipeline?.Pipeline ? `Llamar: ${pipeline.Pipeline.name}` : "Llamada a pipeline";
-      default:
-        return "Unidad de pipeline";
-    }
-  };
+  // Usar funciones del PipelineManager centralizado
 
   // Renderiza una unidad individual
   const renderUnit = (chain: PipelineUnitChain, level: number = 0) => {
     const { Unit: unit } = chain;
-    const runnerType = detectRunnerType(unit);
+    const runnerType = pipelineManager.detectRunnerType(unit);
     const config = runnerConfig[runnerType];
     const IconComponent = config.icon;
 
@@ -214,7 +125,7 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
                     {config.label}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    {getUnitTooltipInfo(unit)}
+                    {pipelineManager.getUnitTooltipInfo(unit)}
                   </CardDescription>
                 </div>
               </div>
@@ -260,7 +171,7 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
 
   // Renderiza el detalle de la unidad en el diálogo
   const renderUnitDetails = (unit: PipelineUnit) => {
-    const runnerType = detectRunnerType(unit);
+    const runnerType = pipelineManager.detectRunnerType(unit);
     const config = runnerConfig[runnerType];
 
     const renderSpecificDetails = () => {
@@ -457,7 +368,7 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
 
   useEffect(() => {
     if (pipelineUnits && pipelineUnits.length > 0) {
-      const chain = buildPipelineChain(pipelineUnits);
+      const chain = pipelineManager.buildPipelineChain(pipelineUnits);
       setPipelineChain(chain);
     }
   }, [pipelineUnits]);
@@ -490,18 +401,28 @@ export default function PipelineFlowEnhanced({ pipelineUnits, isLoading }: Pipel
         {pipelineChain.map(chain => renderUnit(chain))}
       </div>
 
-      {/* Diálogo de detalles */}
+      {/* Diálogo de detalles específicos por tipo */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedUnit && runnerConfig[detectRunnerType(selectedUnit)].label}
+            <DialogTitle className="flex items-center gap-2">
+              {selectedUnit && (() => {
+                const runnerType = pipelineManager.detectRunnerType(selectedUnit);
+                const config = runnerConfig[runnerType];
+                const IconComponent = config.icon;
+                return (
+                  <>
+                    <IconComponent className="h-5 w-5" style={{ color: config.color }} />
+                    {config.label} - {selectedUnit.id.substring(0, 8)}...
+                  </>
+                );
+              })()}
             </DialogTitle>
             <DialogDescription>
-              Detalles de la unidad del pipeline
+              Configuración detallada de la unidad de pipeline
             </DialogDescription>
           </DialogHeader>
-          {selectedUnit && renderUnitDetails(selectedUnit)}
+          {selectedUnit && <PipelineUnitDetailsDialog unit={selectedUnit} />}
         </DialogContent>
       </Dialog>
     </div>
