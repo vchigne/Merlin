@@ -217,20 +217,10 @@ export default function UnifiedPipelineUnitDialog({
                   </div>
                 </div>
               )}
-              {details.FileStreamSftpDownloaders?.length > 0 ? (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Archivos a Descargar:</h5>
-                  {details.FileStreamSftpDownloaders.map((stream: any, index: number) => (
-                    <div key={stream.id} className="border rounded p-2 text-sm">
-                      <div><span className="font-medium">Origen:</span> {stream.input}</div>
-                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
-                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay archivos configurados</p>
-              )}
+              <div className="text-sm space-y-1">
+                <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
+                <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
+              </div>
             </div>
           </div>
         );
@@ -240,22 +230,11 @@ export default function UnifiedPipelineUnitDialog({
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-2">Configuración de Compresión</h4>
-              <div className="text-sm mb-3">
-                <div><span className="font-medium">Archivo ZIP:</span> {details.zip_name}</div>
+              <div className="text-sm space-y-1">
+                <div><span className="font-medium">Nombre:</span> {details.name || 'No especificado'}</div>
+                <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
+                <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
               </div>
-              {details.FileStreamZips?.length > 0 ? (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Archivos a Comprimir:</h5>
-                  {details.FileStreamZips.map((stream: any, index: number) => (
-                    <div key={stream.id} className="border rounded p-2 text-sm">
-                      <div><span className="font-medium">Entrada:</span> {stream.input}</div>
-                      {stream.wildcard_exp && <div><span className="font-medium">Patrón:</span> {stream.wildcard_exp}</div>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay archivos configurados</p>
-              )}
             </div>
           </div>
         );
@@ -265,20 +244,12 @@ export default function UnifiedPipelineUnitDialog({
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-2">Configuración de Descompresión</h4>
-              {details.FileStreamUnzips?.length > 0 ? (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Archivos a Descomprimir:</h5>
-                  {details.FileStreamUnzips.map((stream: any, index: number) => (
-                    <div key={stream.id} className="border rounded p-2 text-sm">
-                      <div><span className="font-medium">Archivo ZIP:</span> {stream.input}</div>
-                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
-                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay archivos configurados</p>
-              )}
+              <div className="text-sm space-y-1">
+                <div><span className="font-medium">Nombre:</span> {details.name || 'No especificado'}</div>
+                <div><span className="font-medium">Entrada:</span> {details.input || 'No especificado'}</div>
+                <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
+                <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
+              </div>
             </div>
           </div>
         );
