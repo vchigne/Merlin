@@ -156,18 +156,26 @@ export default function PipelineVisualizerNew() {
       type: detectUnitType(u)
     })));
 
-    // Crear nodos con posiciones secuenciales verticales
+    // Crear nodos en bloques de 3 columnas
     const nodes = sortedUnits.map((unit, index) => {
       const type = detectUnitType(unit);
-      const yPosition = 50 + (index * 140); // Espaciado vertical de 140px
+      
+      // Calcular posición en grid de 3 columnas
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      
+      const xPosition = 50 + (col * 220); // Espaciado horizontal de 220px
+      const yPosition = 50 + (row * 140); // Espaciado vertical de 140px
       
       return {
         id: unit.id,
         type: type.type,
         displayName: getDisplayName(unit),
-        posX: 50,
+        posX: xPosition,
         posY: yPosition,
         index,
+        row,
+        col,
         data: unit
       };
     });
@@ -178,23 +186,20 @@ export default function PipelineVisualizerNew() {
       pos: `${n.posX},${n.posY}`
     })));
 
-    // Crear conexiones secuenciales
+    // Crear conexiones secuenciales adaptadas al grid 3x3
     const connections: any[] = [];
-    console.log('🔗 Creando conexiones para', nodes.length, 'nodos...');
+    console.log('🔗 Creando conexiones para', nodes.length, 'nodos en grid 3x3...');
     
     for (let i = 0; i < nodes.length - 1; i++) {
       const sourceNode = nodes[i];
       const targetNode = nodes[i + 1];
       
-      const connectionId = `zapier-conn-${i}`;
-      const fromPos = `${sourceNode.posX + 88},${sourceNode.posY + 96}`;
-      const toPos = `${targetNode.posX + 88},${targetNode.posY}`;
-      
+      const connectionId = `grid-conn-${i}`;
       console.log(`🔗 Conexión ${i}:`, {
-        from: sourceNode.type,
-        to: targetNode.type,
-        fromPos,
-        toPos
+        from: `${sourceNode.type} (${sourceNode.row},${sourceNode.col})`,
+        to: `${targetNode.type} (${targetNode.row},${targetNode.col})`,
+        fromPos: `${sourceNode.posX + 100},${sourceNode.posY + 48}`,
+        toPos: `${targetNode.posX + 100},${targetNode.posY + 48}`
       });
       
       connections.push({
@@ -202,12 +207,12 @@ export default function PipelineVisualizerNew() {
         source: sourceNode,
         target: targetNode,
         sourcePoint: {
-          x: sourceNode.posX + 88,
-          y: sourceNode.posY + 96
+          x: sourceNode.posX + 100, // Centro del nodo
+          y: sourceNode.posY + 48   // Centro vertical del nodo
         },
         targetPoint: {
-          x: targetNode.posX + 88,
-          y: targetNode.posY
+          x: targetNode.posX + 100, // Centro del nodo
+          y: targetNode.posY + 48   // Centro vertical del nodo
         }
       });
     }
