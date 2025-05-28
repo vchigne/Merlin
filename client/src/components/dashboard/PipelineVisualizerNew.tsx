@@ -10,8 +10,7 @@ import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog
 
 export default function PipelineVisualizerNew() {
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
-  const [selectedUnitType, setSelectedUnitType] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Función mejorada para detectar el tipo y categoría de unidad
@@ -473,8 +472,7 @@ export default function PipelineVisualizerNew() {
                             top: `${unit.posY}px` 
                           }}
                           onClick={() => {
-                            setSelectedUnitId(unit.id);
-                            setSelectedUnitType(getUnitType(unit));
+                            setSelectedUnit(unit);
                             setDialogOpen(true);
                           }}
                         >
@@ -501,8 +499,7 @@ export default function PipelineVisualizerNew() {
       <UnifiedPipelineUnitDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        unitId={selectedUnitId}
-        unitType={selectedUnitType}
+        unit={selectedUnit}
       />
     </Card>
   );

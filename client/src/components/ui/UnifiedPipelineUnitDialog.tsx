@@ -8,15 +8,13 @@ import { AlertCircle } from "lucide-react";
 interface UnifiedPipelineUnitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  unitId: string | null;
-  unitType: string | null;
+  unit: any;
 }
 
 export default function UnifiedPipelineUnitDialog({ 
   open, 
   onOpenChange, 
-  unitId, 
-  unitType 
+  unit 
 }: UnifiedPipelineUnitDialogProps) {
   const [unitDetails, setUnitDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
