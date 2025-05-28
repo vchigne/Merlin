@@ -237,12 +237,18 @@ export default function PipelineVisualizerNew() {
     return result;
   };
 
-  // Algoritmo Zapier - Ultra simple: nodo[0] → nodo[1] → nodo[2]
+  // Algoritmo Zapier con DEBUGGING MASIVO
   const processUnits = (units: any[]) => {
-    if (!units || units.length === 0) return { nodes: [], connections: [] };
+    console.log('🚀 INICIO processUnits - datos recibidos:', units);
+    
+    if (!units || units.length === 0) {
+      console.log('❌ Sin unidades - retornando vacío');
+      return { nodes: [], connections: [] };
+    }
     
     // 1. Simplemente ordenar por order (sin jerarquías complejas)
     const sortedUnits = [...units].sort((a, b) => (a.order || 0) - (b.order || 0));
+    console.log('📊 Unidades ordenadas:', sortedUnits.map(u => ({ id: u.id, order: u.order, type: detectUnitType(u) })));
     
     // 2. Detectar tipos
     const unitsWithTypes = sortedUnits.map(unit => ({
@@ -264,30 +270,53 @@ export default function PipelineVisualizerNew() {
       index
     }));
     
-    // 4. Zapier Style: Conexiones por índice secuencial simple
+    console.log('🎯 Nodos creados:', allNodes.length, allNodes.map(n => ({ 
+      id: n.id, 
+      type: n.type, 
+      pos: `${n.posX},${n.posY}` 
+    })));
+    
+    // 4. Zapier Style: Conexiones FORZADAS
     const nodeWidth = 176;
     const nodeHeight = 96;
     
     const connections = [];
-    // FORZAR conexiones para TODOS los nodos consecutivos
+    console.log('🔗 Creando conexiones para', allNodes.length, 'nodos...');
+    
     for (let i = 0; i < allNodes.length - 1; i++) {
-      connections.push({
+      const sourceNode = allNodes[i];
+      const targetNode = allNodes[i + 1];
+      
+      const connection = {
         id: `zapier-conn-${i}`,
-        source: allNodes[i],
-        target: allNodes[i + 1],
+        source: sourceNode,
+        target: targetNode,
         sourcePoint: {
-          x: allNodes[i].posX + nodeWidth / 2,
-          y: allNodes[i].posY + nodeHeight
+          x: sourceNode.posX + nodeWidth / 2,
+          y: sourceNode.posY + nodeHeight
         },
         targetPoint: {
-          x: allNodes[i + 1].posX + nodeWidth / 2,
-          y: allNodes[i + 1].posY
+          x: targetNode.posX + nodeWidth / 2,
+          y: targetNode.posY
         },
         type: 'zapier-sequential'
+      };
+      
+      connections.push(connection);
+      console.log(`🔗 Conexión ${i}:`, {
+        from: sourceNode.type,
+        to: targetNode.type,
+        fromPos: `${connection.sourcePoint.x},${connection.sourcePoint.y}`,
+        toPos: `${connection.targetPoint.x},${connection.targetPoint.y}`
       });
     }
     
-    console.log('🔥 Zapier connections:', connections.length, 'for', allNodes.length, 'nodes');
+    console.log('🔥 RESULTADO FINAL:', {
+      nodes: allNodes.length,
+      connections: connections.length,
+      connectionsIds: connections.map(c => c.id)
+    });
+    
     return { nodes: allNodes, connections };
   };
   
@@ -406,10 +435,17 @@ export default function PipelineVisualizerNew() {
                     {/* Dibujamos primero las conexiones (flechas) */}
                     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
                       {connections.map((conn) => {
+                        console.log('🖼️ Renderizando conexión:', conn.id);
+                        
                         const source = conn.source;
                         const target = conn.target;
                         
-                        // Usar el sistema de coordenadas inteligente con entry/exit points
+                        // VALIDAR estructura de datos antes de usar
+                        if (!conn.sourcePoint || !conn.targetPoint) {
+                          console.error('❌ Error: sourcePoint o targetPoint undefined para', conn.id);
+                          throw new Error(`Conexión ${conn.id} tiene puntos undefined`);
+                        }
+                        
                         const sourceX = conn.sourcePoint.x;
                         const sourceY = conn.sourcePoint.y;
                         const targetX = conn.targetPoint.x;
