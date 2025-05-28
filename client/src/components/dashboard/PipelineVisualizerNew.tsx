@@ -13,6 +13,82 @@ export default function PipelineVisualizerNew() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Función para obtener el color del tipo de unidad
+  const getUnitTypeColor = (unitType: string): string => {
+    switch(unitType) {
+      case 'Command': return '#10B981';
+      case 'Query Queue': 
+      case 'SQL Query': return '#3B82F6';
+      case 'SFTP Download': return '#8B5CF6';
+      case 'SFTP Upload': return '#F59E0B';
+      case 'Zip': 
+      case 'Zip Files': return '#EF4444';
+      case 'Unzip': 
+      case 'Unzip Files': return '#EC4899';
+      case 'Pipeline Call': return '#6366F1';
+      default: return '#6B7280';
+    }
+  };
+
+  // Función para obtener el nombre de la unidad
+  const getUnitName = (unit: any): string => {
+    if (unit.command_id && unit.Command) {
+      return unit.Command.target || 'Command';
+    }
+    if (unit.query_queue_id && unit.QueryQueue?.Queries?.[0]?.SQLConn) {
+      return unit.QueryQueue.Queries[0].SQLConn.name || 'Query Queue';
+    }
+    if (unit.sftp_downloader_id && unit.SFTPDownloader?.SFTPLink) {
+      return unit.SFTPDownloader.SFTPLink.name || 'SFTP Download';
+    }
+    if (unit.sftp_uploader_id && unit.SFTPUploader?.SFTPLink) {
+      return unit.SFTPUploader.SFTPLink.name || 'SFTP Upload';
+    }
+    if (unit.zip_id && unit.Zip) {
+      return unit.Zip.zip_name || 'Zip Files';
+    }
+    if (unit.unzip_id && unit.Unzip?.FileStreamUnzips?.[0]) {
+      return unit.Unzip.FileStreamUnzips[0].input || 'Unzip Files';
+    }
+    if (unit.call_pipeline && unit.CallPipeline?.Pipeline) {
+      return unit.CallPipeline.Pipeline.name || 'Pipeline Call';
+    }
+    return getUnitType(unit);
+  };
+
+  // Función para obtener la descripción de la unidad
+  const getUnitDescription = (unit: any): string => {
+    if (unit.command_id && unit.Command) {
+      if (unit.Command.args) return unit.Command.args;
+      if (unit.Command.working_directory) return `Working dir: ${unit.Command.working_directory}`;
+      return 'Ejecuta comandos del sistema';
+    }
+    if (unit.query_queue_id && unit.QueryQueue?.Queries) {
+      const queryCount = unit.QueryQueue.Queries.length;
+      return queryCount > 0 ? `${queryCount} consulta${queryCount > 1 ? 's' : ''} SQL` : 'Cola de consultas SQL';
+    }
+    if (unit.sftp_downloader_id && unit.SFTPDownloader?.FileStreamSftpDownloaders) {
+      const downloadCount = unit.SFTPDownloader.FileStreamSftpDownloaders.length;
+      return downloadCount > 0 ? `${downloadCount} archivo${downloadCount > 1 ? 's' : ''} para descargar` : 'Descarga archivos SFTP';
+    }
+    if (unit.sftp_uploader_id && unit.SFTPUploader?.FileStreamSftpUploaders) {
+      const uploadCount = unit.SFTPUploader.FileStreamSftpUploaders.length;
+      return uploadCount > 0 ? `${uploadCount} archivo${uploadCount > 1 ? 's' : ''} para subir` : 'Sube archivos SFTP';
+    }
+    if (unit.zip_id && unit.Zip?.FileStreamZips) {
+      const zipCount = unit.Zip.FileStreamZips.length;
+      return zipCount > 0 ? `Comprime ${zipCount} archivo${zipCount > 1 ? 's' : ''}` : 'Comprime archivos';
+    }
+    if (unit.unzip_id && unit.Unzip?.FileStreamUnzips) {
+      const unzipCount = unit.Unzip.FileStreamUnzips.length;
+      return unzipCount > 0 ? `Extrae ${unzipCount} archivo${unzipCount > 1 ? 's' : ''}` : 'Extrae archivos';
+    }
+    if (unit.call_pipeline && unit.CallPipeline?.Pipeline) {
+      return unit.CallPipeline.Pipeline.description || 'Llama a otro pipeline';
+    }
+    return 'Unidad de pipeline';
+  };
+
   // Función mejorada para detectar el tipo y categoría de unidad
   const detectUnitType = (unit: any) => {
     if (!unit) return { type: 'Unknown', category: 'unknown' };
@@ -466,22 +542,36 @@ export default function PipelineVisualizerNew() {
                       return (
                         <div 
                           key={unit.id}
-                          className={`absolute w-32 xs:w-36 sm:w-40 h-14 sm:h-16 bg-slate-100 dark:bg-slate-700 border-2 ${borderColor} rounded-md shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer text-xs sm:text-sm`}
+                          className="absolute w-40 sm:w-44 h-20 sm:h-24 bg-white dark:bg-slate-800 border-2 border-l-4 rounded-md shadow-sm transition-all duration-200 hover:shadow-lg cursor-pointer relative"
                           style={{ 
                             left: `${unit.posX}px`, 
-                            top: `${unit.posY}px` 
+                            top: `${unit.posY}px`,
+                            borderLeftColor: getUnitTypeColor(unitTypeInfo.type)
                           }}
                           onClick={() => {
                             setSelectedUnit(unit);
                             setDialogOpen(true);
                           }}
                         >
-                          <div className="p-2 h-full flex flex-col justify-center">
-                            <div className="font-medium text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
-                              {unitType}
+                          {/* Tipo de unidad en la esquina superior izquierda */}
+                          <div className="absolute top-1 left-1">
+                            <div 
+                              className="text-xs font-medium px-2 py-1 rounded text-white"
+                              style={{ 
+                                backgroundColor: getUnitTypeColor(unitTypeInfo.type)
+                              }}
+                            >
+                              {unitTypeInfo.type}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden text-ellipsis">
-                              {unit.comment || 'Sin descripción'}
+                          </div>
+                          
+                          {/* Contenido principal: nombre y descripción */}
+                          <div className="pt-6 px-2 pb-2 text-center h-full flex flex-col justify-center">
+                            <div className="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-1 line-clamp-1">
+                              {getUnitName(unit) || unitType}
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                              {getUnitDescription(unit) || 'Sin descripción'}
                             </div>
                           </div>
                         </div>
