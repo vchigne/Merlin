@@ -68,7 +68,7 @@ export default function PipelineVisualizerNew() {
           top: startY,
           width: distance,
           rotation: angle,
-          color: `hsl(${i * 40}, 70%, 50%)` // Color único por conexión
+          color: `hsl(${i * 40}, 80%, 45%)` // Color único por conexión con mejor contraste
         });
       }
     }
