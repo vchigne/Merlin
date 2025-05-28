@@ -403,7 +403,7 @@ export default function PipelineVisualizerNew() {
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full h-[180px] overflow-x-auto overflow-y-hidden pb-4">
+        <div className="relative w-full h-[150px] overflow-x-auto overflow-y-hidden pb-4">
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -428,11 +428,11 @@ export default function PipelineVisualizerNew() {
                         // Coordenadas dinámicas basadas en la posición real de cada nodo
                         // Punto de salida: lado derecho del componente fuente
                         const sourceX = source.posX + 176; // Ancho del componente (w-44 = 176px)
-                        const sourceY = source.posY + 48; // Centro vertical (h-24 = 96px, centro = 48px)
+                        const sourceY = 30 + 48; // Posición fija: top=30px + centro vertical (h-24/2 = 48px)
                         
                         // Punto de llegada: lado izquierdo del componente destino
                         const targetX = target.posX; // Borde izquierdo del siguiente componente  
-                        const targetY = target.posY + 48; // Centro vertical del componente destino
+                        const targetY = 30 + 48; // Posición fija: top=30px + centro vertical
                         
                         // Ruta de la curva Bezier
                         const dx = targetX - sourceX;
@@ -555,7 +555,7 @@ export default function PipelineVisualizerNew() {
                           className="absolute w-40 sm:w-44 h-20 sm:h-24 bg-white dark:bg-slate-800 border-2 border-l-4 rounded-md shadow-sm transition-all duration-200 hover:shadow-lg cursor-pointer relative"
                           style={{ 
                             left: `${unit.posX}px`, 
-                            top: `${unit.posY}px`,
+                            top: '30px', // Posición fija para todos los componentes
                             borderLeftColor: getUnitTypeColor(unitTypeInfo.type)
                           }}
                           onClick={() => {
