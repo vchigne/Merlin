@@ -277,6 +277,25 @@ export default function UnifiedPipelineUnitDialog({
           </div>
         );
 
+      case 'Pipeline Call':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Pipeline Call</h4>
+              {details.Pipeline && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded mb-3">
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Pipeline:</span> {details.Pipeline.name}</div>
+                    {details.Pipeline.description && (
+                      <div><span className="font-medium">Descripción:</span> {details.Pipeline.description}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="text-center text-gray-500">
