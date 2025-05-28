@@ -227,7 +227,7 @@ export default function UnifiedPipelineUnitDialog({
                     {unitDetails.details.raw_script && (
                       <div className="mt-2">
                         <div className="text-sky-600 dark:text-sky-400">Script:</div>
-                        <pre className="overflow-x-auto p-2 mt-1 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
+                        <pre className="overflow-x-auto overflow-y-auto max-h-48 p-2 mt-1 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
                           {unitDetails.details.raw_script}
                         </pre>
                       </div>
@@ -248,7 +248,7 @@ export default function UnifiedPipelineUnitDialog({
                             <span className="font-medium">{query.name}</span> 
                             {query.order && <span className="text-slate-500 ml-2">Orden: {query.order}</span>}
                           </div>
-                          <pre className="overflow-x-auto text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
+                          <pre className="overflow-x-auto overflow-y-auto max-h-48 text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
                             {query.query_string}
                           </pre>
                           {query.path && (
