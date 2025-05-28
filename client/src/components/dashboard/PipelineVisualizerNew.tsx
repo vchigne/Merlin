@@ -498,7 +498,19 @@ export default function PipelineVisualizerNew() {
                     <h4 className="font-medium text-sm">Detalles de Descarga SFTP</h4>
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
                       <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de destino:</span> {unitDetails.details.output || 'N/A'}</div>
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
+                      {unitDetails.details.SFTPLink ? (
+                        <div className="space-y-1">
+                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
+                          {unitDetails.details.SFTPLink.server && (
+                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
+                          )}
+                          {unitDetails.details.SFTPLink.user && (
+                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -508,7 +520,19 @@ export default function PipelineVisualizerNew() {
                     <h4 className="font-medium text-sm">Detalles de Subida SFTP</h4>
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
                       <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de origen:</span> {unitDetails.details.input || 'N/A'}</div>
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
+                      {unitDetails.details.SFTPLink ? (
+                        <div className="space-y-1">
+                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
+                          {unitDetails.details.SFTPLink.server && (
+                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
+                          )}
+                          {unitDetails.details.SFTPLink.user && (
+                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
+                      )}
                     </div>
                   </div>
                 )}
