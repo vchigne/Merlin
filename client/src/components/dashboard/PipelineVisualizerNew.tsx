@@ -456,17 +456,13 @@ export default function PipelineVisualizerNew() {
                         <div
                           key={node.id}
                           ref={el => nodeRefs.current[node.id] = el}
-                          className="absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg transition-all duration-200"
+                          className="absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-lg transition-all duration-200"
                           style={{
                             left: node.posX,
                             top: node.posY,
                             width: '200px',
                             borderLeft: `4px solid ${getUnitTypeColor(node.type)}`,
                             zIndex: 20
-                          }}
-                          onClick={() => {
-                            setSelectedUnit(unitData);
-                            setDialogOpen(true);
                           }}
                         >
                           {/* Tipo de unidad arriba a la derecha con color */}
@@ -489,8 +485,25 @@ export default function PipelineVisualizerNew() {
                           </div>
                           
                           {/* Descripción/subtipo de la unidad */}
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                             {node.displayDescription}
+                          </div>
+                          
+                          {/* Botón Details en la esquina inferior derecha */}
+                          <div className="flex justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUnit(unitData);
+                                setDialogOpen(true);
+                              }}
+                              className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-md transition-colors duration-200 flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Details
+                            </button>
                           </div>
                         </div>
                       );
