@@ -244,6 +244,29 @@ export default function PipelineVisualizerNew({
 
   // Función para obtener la descripción para mostrar
   const getDisplayDescription = (unit: any) => {
+    if (unit.command_id && unit.Command) {
+      return unit.Command.description || 'Ejecución de comando de sistema';
+    }
+    if (unit.query_queue_id && unit.QueryQueue) {
+      return unit.QueryQueue.description || 'Procesa consultas SQL en secuencia';
+    }
+    if (unit.sftp_downloader_id && unit.SFTPDownloader) {
+      return unit.SFTPDownloader.description || 'Descarga archivos via SFTP';
+    }
+    if (unit.sftp_uploader_id && unit.SFTPUploader) {
+      return unit.SFTPUploader.description || 'Sube archivos via SFTP';
+    }
+    if (unit.zip_id && unit.Zip) {
+      return unit.Zip.description || 'Comprime archivos en ZIP';
+    }
+    if (unit.unzip_id && unit.Unzip) {
+      return unit.Unzip.description || 'Extrae archivos de ZIP';
+    }
+    if (unit.call_pipeline && unit.Pipeline) {
+      return unit.Pipeline.description || 'Ejecuta otro pipeline';
+    }
+    
+    // Fallback para casos donde no hay relación disponible
     if (unit.command_id) {
       return 'Ejecución de comando de sistema';
     }
