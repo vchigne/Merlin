@@ -192,7 +192,7 @@ export default function PipelineVisualizerNew() {
       const col = index % 3;
       
       const xPosition = 50 + (col * 220); // Espaciado horizontal de 220px
-      const yPosition = 50 + (row * 140); // Espaciado vertical de 140px
+      const yPosition = 50 + (row * 180); // Espaciado vertical de 180px
       
       return {
         id: unit.id,
