@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
 import SimplePipelineLoader from "@/components/pipeline-studio/SimplePipelineLoader";
-import PipelineFlow from "@/components/pipelines/PipelineFlow";
+import PipelineVisualizerNew from "@/components/dashboard/PipelineVisualizerNew";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
@@ -694,14 +694,8 @@ export default function PipelineStudio() {
               <div className="flex flex-col space-y-4">
                 {/* Editor de pipeline visual */}
                 <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
-                  {/* Visualización estándar del pipeline usando PipelineFlow */}
-                  {pipelineData && (
-                    <PipelineFlow
-                      pipelineUnits={pipelineData.units || []}
-                      pipelineJobs={pipelineData.PipelineJobQueues || []}
-                      isLoading={isLoading}
-                    />
-                  )}
+                  {/* Visualización del pipeline usando nuestro componente oficial */}
+                  <PipelineVisualizerNew />
                 </div>
               </div>
             </TabsContent>
