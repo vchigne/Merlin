@@ -28,7 +28,7 @@ export default function UnifiedPipelineUnitDialog({
     if (unit.sftp_uploader_id) return 'SFTP Upload';
     if (unit.zip_id) return 'Zip Files';
     if (unit.unzip_id) return 'Unzip Files';
-    if (unit.pipeline_call_id) return 'Pipeline Call';
+    if (unit.call_pipeline) return 'Pipeline Call';
     return 'Unit';
   };
 
@@ -86,11 +86,22 @@ export default function UnifiedPipelineUnitDialog({
         variables = { id: unit.unzip_id };
         const result = await executeQuery(query, variables);
         data = result.data.merlin_agent_UnZip?.[0];
-      } else if (unit.pipeline_call_id) {
-        query = PIPELINE_CALL_QUERY;
-        variables = { id: unit.pipeline_call_id };
-        const result = await executeQuery(query, variables);
-        data = result.data.merlin_agent_PipelineCall?.[0];
+      } else if (unit.call_pipeline) {
+        // Para call_pipeline, necesitamos obtener la información del pipeline directamente
+        const pipelineQuery = `
+          query GetPipelineInfo($id: uuid!) {
+            merlin_agent_Pipeline(where: {id: {_eq: $id}}) {
+              id
+              name
+              description
+            }
+          }
+        `;
+        variables = { id: unit.call_pipeline };
+        const result = await executeQuery(pipelineQuery, variables);
+        data = {
+          Pipeline: result.data.merlin_agent_Pipeline?.[0]
+        };
       }
       
       setUnitDetails({
