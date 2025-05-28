@@ -696,7 +696,10 @@ export default function PipelineStudio() {
                 <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
                   {/* Visualización del pipeline para el studio */}
                   {pipelineData ? (
-                    <PipelineVisualizerNew />
+                    <PipelineVisualizerNew 
+                      pipelineId={pipelineData.id} 
+                      showSelector={false} 
+                    />
                   ) : (
                     <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
                       <div className="text-center">

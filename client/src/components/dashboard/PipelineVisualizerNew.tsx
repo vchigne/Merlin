@@ -8,8 +8,16 @@ import { AlertCircle } from "lucide-react";
 import PipelineSearch from "./PipelineSearch";
 import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog";
 
-export default function PipelineVisualizerNew() {
-  const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
+interface PipelineVisualizerNewProps {
+  pipelineId?: string; // Pipeline específico a mostrar
+  showSelector?: boolean; // Si mostrar el selector de pipeline (default: true)
+}
+
+export default function PipelineVisualizerNew({ 
+  pipelineId: propPipelineId, 
+  showSelector = true 
+}: PipelineVisualizerNewProps = {}) {
+  const [selectedPipeline, setSelectedPipeline] = useState<string | null>(propPipelineId || null);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -17,6 +25,13 @@ export default function PipelineVisualizerNew() {
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [nodePositions, setNodePositions] = useState<{ [key: string]: { x: number, y: number, width: number, height: number } }>({});
+
+  // Efecto para actualizar el pipeline seleccionado cuando cambia la prop
+  useEffect(() => {
+    if (propPipelineId) {
+      setSelectedPipeline(propPipelineId);
+    }
+  }, [propPipelineId]);
 
   // NUEVO: Función para calcular posiciones reales del DOM
   const updateNodePositions = () => {
@@ -365,12 +380,14 @@ export default function PipelineVisualizerNew() {
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
           <CardTitle>Visualización del Pipeline</CardTitle>
-          <PipelineSearch
-            pipelines={pipelinesData}
-            selectedPipelineId={selectedPipeline}
-            onSelectPipeline={handlePipelineChange}
-            isLoading={isPipelinesLoading}
-          />
+          {showSelector && (
+            <PipelineSearch
+              pipelines={pipelinesData}
+              selectedPipelineId={selectedPipeline}
+              onSelectPipeline={handlePipelineChange}
+              isLoading={isPipelinesLoading}
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">

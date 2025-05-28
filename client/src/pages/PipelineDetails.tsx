@@ -749,7 +749,10 @@ export default function PipelineDetails() {
               
               {/* Overview Tab */}
               <TabsContent value="overview" className="mt-6">
-                <PipelineVisualizerNew />
+                <PipelineVisualizerNew 
+                  pipelineId={id} 
+                  showSelector={false} 
+                />
               </TabsContent>
               
               {/* Jobs Tab */}
