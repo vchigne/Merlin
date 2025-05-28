@@ -299,13 +299,40 @@ export default function PipelineVisualizerNew() {
       };
     });
     
-    // 4. Construir conexiones secuenciales simples
+    // 4. Definir puntos de entrada y salida para cada nodo
+    const getNodeConnectionPoints = (node: any) => {
+      const nodeWidth = 176; // w-44 = 176px
+      const nodeHeight = 96; // h-24 = 96px
+      
+      return {
+        // Punto de salida (lado derecho, centro vertical)
+        exit: {
+          x: node.posX + nodeWidth,
+          y: node.posY + nodeHeight / 2
+        },
+        // Punto de entrada (lado izquierdo, centro vertical)  
+        entry: {
+          x: node.posX,
+          y: node.posY + nodeHeight / 2
+        }
+      };
+    };
+
+    // 5. Construir conexiones secuenciales inteligentes
     const connections = [];
     for (let i = 0; i < allNodes.length - 1; i++) {
+      const sourceNode = allNodes[i];
+      const targetNode = allNodes[i + 1];
+      
+      const sourcePoints = getNodeConnectionPoints(sourceNode);
+      const targetPoints = getNodeConnectionPoints(targetNode);
+      
       connections.push({
         id: `conn-${i}`,
-        source: allNodes[i],
-        target: allNodes[i + 1],
+        source: sourceNode,
+        target: targetNode,
+        sourcePoint: sourcePoints.exit,
+        targetPoint: targetPoints.entry,
         type: 'sequential'
       });
     }
@@ -431,18 +458,24 @@ export default function PipelineVisualizerNew() {
                         const source = conn.source;
                         const target = conn.target;
                         
-                        // Coordenadas dinámicas basadas en la posición real de cada nodo
-                        // Punto de salida: lado derecho del componente fuente
-                        const sourceX = source.posX + 176; // Ancho del componente (w-44 = 176px)
-                        const sourceY = source.posY + 48; // Posición dinámica: posY + centro vertical (h-24/2 = 48px)
+                        // Usar el sistema de coordenadas inteligente con entry/exit points
+                        const sourceX = conn.sourcePoint.x;
+                        const sourceY = conn.sourcePoint.y;
+                        const targetX = conn.targetPoint.x;
+                        const targetY = conn.targetPoint.y;
                         
-                        // Punto de llegada: lado izquierdo del componente destino
-                        const targetX = target.posX; // Borde izquierdo del siguiente componente  
-                        const targetY = target.posY + 48; // Posición dinámica: posY + centro vertical
-                        
-                        // Ruta de la curva Bezier
+                        // Sistema de curvas Bezier inteligentes
                         const dx = targetX - sourceX;
-                        const path = `M ${sourceX},${sourceY} C ${sourceX + dx/2},${sourceY} ${targetX - dx/2},${targetY} ${targetX},${targetY}`;
+                        const dy = targetY - sourceY;
+                        
+                        // Puntos de control adaptativos
+                        const controlDistance = Math.abs(dx) * 0.5; // Distancia del punto de control
+                        const cp1x = sourceX + controlDistance; // Control point 1
+                        const cp1y = sourceY;
+                        const cp2x = targetX - controlDistance; // Control point 2  
+                        const cp2y = targetY;
+                        
+                        const path = `M ${sourceX},${sourceY} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${targetX},${targetY}`;
                         
                         // Estilo simple para las conexiones secuenciales
                         const connectionStyle = {
