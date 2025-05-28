@@ -285,17 +285,13 @@ export default function PipelineVisualizerNew() {
     const SPACING_Y = 50;
     
     // Posicionar todas las unidades en orden jerárquico horizontal
-    const allNodes = orderedUnits.map((unit, index) => {
-      const posY = 50; // Forzar una sola fila
-      console.log(`Nodo ${index}: ${unit.id} -> posX: ${index * SPACING_X + 10}, posY: ${posY}`);
-      return {
-        ...unit,
-        posX: index * SPACING_X + 10,
-        posY: posY,
-        type: unit.displayType,
-        index
-      };
-    });
+    const allNodes = orderedUnits.map((unit, index) => ({
+      ...unit,
+      posX: index * SPACING_X + 10,
+      posY: 50, // Una sola fila horizontal para mostrar el flujo secuencial
+      type: unit.displayType,
+      index
+    }));
     
     // 4. Construir conexiones secuenciales simples
     const connections = [];
@@ -407,7 +403,7 @@ export default function PipelineVisualizerNew() {
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full h-[300px] overflow-auto pb-4">
+        <div className="relative w-full h-[180px] overflow-x-auto overflow-y-hidden pb-4">
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -593,9 +589,9 @@ export default function PipelineVisualizerNew() {
                       );
                     })}
                   </>
-                );
-              })()}
-            </div>
+                </div>
+              );
+            })()}
           )}
         </div>
       </CardContent>
