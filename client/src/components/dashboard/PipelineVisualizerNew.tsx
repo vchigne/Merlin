@@ -280,18 +280,24 @@ export default function PipelineVisualizerNew() {
     // 2. Ordenar por jerarquía en lugar de por categorías
     const orderedUnits = sortUnitsByHierarchy(unitsWithTypes);
     
-    // 3. Posicionamiento jerárquico horizontal
-    const SPACING_X = window.innerWidth < 640 ? 200 : 220; // Más espacio para las conexiones
-    const SPACING_Y = 50;
+    // 3. Posicionamiento en bloques (filas de 3 componentes)
+    const SPACING_X = window.innerWidth < 640 ? 200 : 220;
+    const SPACING_Y = 120; // Espaciado vertical entre filas
+    const COMPONENTS_PER_ROW = 3;
     
-    // Posicionar todas las unidades en orden jerárquico horizontal
-    const allNodes = orderedUnits.map((unit, index) => ({
-      ...unit,
-      posX: index * SPACING_X + 10,
-      posY: 50, // Una sola fila horizontal para mostrar el flujo secuencial
-      type: unit.displayType,
-      index
-    }));
+    // Posicionar las unidades en bloques de 3 por fila
+    const allNodes = orderedUnits.map((unit, index) => {
+      const row = Math.floor(index / COMPONENTS_PER_ROW);
+      const col = index % COMPONENTS_PER_ROW;
+      
+      return {
+        ...unit,
+        posX: col * SPACING_X + 20,
+        posY: row * SPACING_Y + 20,
+        type: unit.displayType,
+        index
+      };
+    });
     
     // 4. Construir conexiones secuenciales simples
     const connections = [];
@@ -403,7 +409,7 @@ export default function PipelineVisualizerNew() {
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full h-[150px] overflow-x-auto overflow-y-hidden pb-4">
+        <div className="relative w-full h-[400px] overflow-auto pb-4">
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -428,11 +434,11 @@ export default function PipelineVisualizerNew() {
                         // Coordenadas dinámicas basadas en la posición real de cada nodo
                         // Punto de salida: lado derecho del componente fuente
                         const sourceX = source.posX + 176; // Ancho del componente (w-44 = 176px)
-                        const sourceY = 30 + 48; // Posición fija: top=30px + centro vertical (h-24/2 = 48px)
+                        const sourceY = source.posY + 48; // Posición dinámica: posY + centro vertical (h-24/2 = 48px)
                         
                         // Punto de llegada: lado izquierdo del componente destino
                         const targetX = target.posX; // Borde izquierdo del siguiente componente  
-                        const targetY = 30 + 48; // Posición fija: top=30px + centro vertical
+                        const targetY = target.posY + 48; // Posición dinámica: posY + centro vertical
                         
                         // Ruta de la curva Bezier
                         const dx = targetX - sourceX;
@@ -555,7 +561,7 @@ export default function PipelineVisualizerNew() {
                           className="absolute w-40 sm:w-44 h-20 sm:h-24 bg-white dark:bg-slate-800 border-2 border-l-4 rounded-md shadow-sm transition-all duration-200 hover:shadow-lg cursor-pointer relative"
                           style={{ 
                             left: `${unit.posX}px`, 
-                            top: '30px', // Posición fija para todos los componentes
+                            top: `${unit.posY}px`, // Posición dinámica según el layout en bloques
                             borderLeftColor: getUnitTypeColor(unitTypeInfo.type)
                           }}
                           onClick={() => {
