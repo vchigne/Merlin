@@ -293,8 +293,16 @@ export default function PipelineVisualizerNew() {
       index
     }));
     
-    // 4. Construir conexiones jerárquicas
-    const connections = buildHierarchicalConnections(allNodes);
+    // 4. Construir conexiones secuenciales simples
+    const connections = [];
+    for (let i = 0; i < allNodes.length - 1; i++) {
+      connections.push({
+        id: `conn-${i}`,
+        source: allNodes[i],
+        target: allNodes[i + 1],
+        type: 'sequential'
+      });
+    }
     
     return { nodes: allNodes, connections };
   };
