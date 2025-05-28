@@ -4,15 +4,14 @@ import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY, COMMAND_QUERY, QUERY_QUEUE_QUERY, QUERY_DETAILS_QUERY, SFTP_DOWNLOADER_QUERY, SFTP_UPLOADER_QUERY, ZIP_QUERY, UNZIP_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import PipelineSearch from "./PipelineSearch";
+import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog";
 
 export default function PipelineVisualizerNew() {
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
-  const [selectedUnit, setSelectedUnit] = useState<any>(null);
-  const [unitDetails, setUnitDetails] = useState<any>(null);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const [selectedUnitType, setSelectedUnitType] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Función mejorada para detectar el tipo y categoría de unidad
@@ -588,7 +587,11 @@ export default function PipelineVisualizerNew() {
                             left: `${unit.posX}px`, 
                             top: `${unit.posY}px` 
                           }}
-                          onClick={() => fetchUnitDetails(unit)}
+                          onClick={() => {
+                            setSelectedUnitId(unit.id);
+                            setSelectedUnitType(getUnitType(unit));
+                            setDialogOpen(true);
+                          }}
                         >
                           <div className="p-2 h-full flex flex-col justify-center">
                             <div className="font-medium text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
@@ -609,168 +612,13 @@ export default function PipelineVisualizerNew() {
         </div>
       </CardContent>
 
-      {/* Modal de detalles de la unidad */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          {unitDetails ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>
-                  {unitDetails.name}
-                  <span className="text-xs ml-2 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                    {unitDetails.type}
-                  </span>
-                </DialogTitle>
-                {unitDetails.description && (
-                  <DialogDescription>
-                    {unitDetails.description}
-                  </DialogDescription>
-                )}
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                {/* Mostrar los detalles según el tipo de unidad */}
-                {unitDetails.type === 'Command' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles del Comando</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs font-mono">
-                      <div><span className="text-sky-600 dark:text-sky-400">Objetivo:</span> {unitDetails.details.target || 'N/A'}</div>
-                      <div><span className="text-sky-600 dark:text-sky-400">Directorio:</span> {unitDetails.details.working_directory || 'N/A'}</div>
-                      <div><span className="text-sky-600 dark:text-sky-400">Argumentos:</span> {unitDetails.details.args || 'N/A'}</div>
-                      {unitDetails.details.raw_script && (
-                        <div className="mt-2">
-                          <div className="text-sky-600 dark:text-sky-400">Script:</div>
-                          <pre className="overflow-x-auto p-2 mt-1 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
-                            {unitDetails.details.raw_script}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails.type === 'SQL Query' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Consulta SQL</h4>
-                    {unitDetails.details.Queries ? (
-                      <div className="space-y-3">
-                        {unitDetails.details.Queries.map((query: any) => (
-                          <div key={query.id} className="bg-slate-50 dark:bg-slate-800 rounded-md p-3">
-                            <div className="text-xs mb-1">
-                              <span className="font-medium">{query.name}</span> 
-                              {query.order && <span className="text-slate-500 ml-2">Orden: {query.order}</span>}
-                            </div>
-                            <pre className="overflow-x-auto overflow-y-auto max-h-48 text-xs font-mono p-2 bg-slate-100 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
-                              {query.query_string}
-                            </pre>
-                            {query.path && (
-                              <div className="mt-1 text-xs text-slate-500">
-                                Ruta de salida: {query.path}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-24 bg-slate-50 dark:bg-slate-800 rounded-md">
-                        <div className="text-slate-500 dark:text-slate-400 text-sm flex items-center">
-                          <AlertCircle className="mr-2 h-4 w-4" />
-                          No se pudieron cargar los detalles de las consultas
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {unitDetails.type === 'SFTP Download' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Descarga SFTP</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de destino:</span> {unitDetails.details.output || 'N/A'}</div>
-                      {unitDetails.details.SFTPLink ? (
-                        <div className="space-y-1">
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
-                          {unitDetails.details.SFTPLink.server && (
-                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
-                          )}
-                          {unitDetails.details.SFTPLink.user && (
-                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails.type === 'SFTP Upload' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Subida SFTP</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de origen:</span> {unitDetails.details.input || 'N/A'}</div>
-                      {unitDetails.details.SFTPLink ? (
-                        <div className="space-y-1">
-                          <div><span className="text-sky-600 dark:text-sky-400 font-medium">Servidor SFTP:</span> {unitDetails.details.SFTPLink.name || unitDetails.details.SFTPLink.server || 'Sin especificar'}</div>
-                          {unitDetails.details.SFTPLink.server && (
-                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Dirección:</span> {unitDetails.details.SFTPLink.server}:{unitDetails.details.SFTPLink.port || 22}</div>
-                          )}
-                          {unitDetails.details.SFTPLink.user && (
-                            <div><span className="text-sky-600 dark:text-sky-400 font-medium">Usuario:</span> {unitDetails.details.SFTPLink.user}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Conector SFTP:</span> {unitDetails.details.sftp_link_id || 'N/A'}</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails.type === 'Zip Files' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Compresión</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Archivo de salida:</span> {unitDetails.details.output || 'N/A'}</div>
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails.type === 'Unzip Files' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Descompresión</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Archivo de entrada:</span> {unitDetails.details.input || 'N/A'}</div>
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Carpeta de salida:</span> {unitDetails.details.output || 'N/A'}</div>
-                    </div>
-                  </div>
-                )}
-                
-                {unitDetails.type === 'Call Pipeline' && unitDetails.details && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Detalles de Llamada a Pipeline</h4>
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 text-xs">
-                      <div><span className="text-sky-600 dark:text-sky-400 font-medium">Pipeline:</span> {unitDetails.details.name || 'N/A'}</div>
-                      {unitDetails.details.description && (
-                        <div><span className="text-sky-600 dark:text-sky-400 font-medium">Descripción:</span> {unitDetails.details.description}</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <DialogFooter>
-                <Button onClick={() => setDialogOpen(false)}>Cerrar</Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-40">
-              <Skeleton className="h-8 w-3/4 mb-4" />
-              <Skeleton className="h-4 w-1/2 mb-2" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Diálogo unificado para detalles de unidades */}
+      <UnifiedPipelineUnitDialog
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        unitId={selectedUnitId}
+        unitType={selectedUnitType}
+      />
     </Card>
   );
 }
