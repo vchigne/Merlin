@@ -116,31 +116,68 @@ export default function PipelineVisualizerNew() {
 
   // Función para obtener el nombre para mostrar
   const getDisplayName = (unit: any) => {
+    // Usar el name del pipeline unit si existe
+    if (unit.name) {
+      return unit.name;
+    }
+    
     const type = detectUnitType(unit);
     
     if (unit.command_id && unit.command) {
-      return unit.command.command || 'Comando sin definir';
+      return unit.command.name || unit.command.command || 'Comando sin definir';
     }
     if (unit.query_queue_id && unit.query_queue) {
-      return unit.query_queue.query || 'Consulta sin definir';
+      return unit.query_queue.name || unit.query_queue.query || 'Consulta sin definir';
     }
     if (unit.sftp_downloader_id && unit.sftp_downloader) {
-      return `Descargar: ${unit.sftp_downloader.remote_path || 'Ruta no definida'}`;
+      return unit.sftp_downloader.name || `Descargar: ${unit.sftp_downloader.remote_path || 'Ruta no definida'}`;
     }
     if (unit.sftp_uploader_id && unit.sftp_uploader) {
-      return `Subir: ${unit.sftp_uploader.remote_path || 'Ruta no definida'}`;
+      return unit.sftp_uploader.name || `Subir: ${unit.sftp_uploader.remote_path || 'Ruta no definida'}`;
     }
     if (unit.zip_id && unit.zip) {
-      return `Comprimir: ${unit.zip.path || 'Ruta no definida'}`;
+      return unit.zip.name || `Comprimir: ${unit.zip.path || 'Ruta no definida'}`;
     }
     if (unit.unzip_id && unit.unzip) {
-      return `Descomprimir: ${unit.unzip.path || 'Ruta no definida'}`;
+      return unit.unzip.name || `Descomprimir: ${unit.unzip.path || 'Ruta no definida'}`;
     }
     if (unit.pipeline_call_id && unit.pipeline_call) {
-      return `Pipeline: ${unit.pipeline_call.call_pipeline || 'Pipeline no definido'}`;
+      return unit.pipeline_call.name || `Pipeline: ${unit.pipeline_call.call_pipeline || 'Pipeline no definido'}`;
     }
     
     return `${type.type} #${unit.index || 'N/A'}`;
+  };
+
+  // Función para obtener la descripción para mostrar
+  const getDisplayDescription = (unit: any) => {
+    // Usar la description del pipeline unit si existe
+    if (unit.description) {
+      return unit.description;
+    }
+    
+    if (unit.command_id && unit.command) {
+      return unit.command.description || unit.command.command || 'Sin descripción';
+    }
+    if (unit.query_queue_id && unit.query_queue) {
+      return unit.query_queue.description || unit.query_queue.query || 'Sin descripción';
+    }
+    if (unit.sftp_downloader_id && unit.sftp_downloader) {
+      return unit.sftp_downloader.description || unit.sftp_downloader.remote_path || 'Sin descripción';
+    }
+    if (unit.sftp_uploader_id && unit.sftp_uploader) {
+      return unit.sftp_uploader.description || unit.sftp_uploader.remote_path || 'Sin descripción';
+    }
+    if (unit.zip_id && unit.zip) {
+      return unit.zip.description || unit.zip.path || 'Sin descripción';
+    }
+    if (unit.unzip_id && unit.unzip) {
+      return unit.unzip.description || unit.unzip.path || 'Sin descripción';
+    }
+    if (unit.pipeline_call_id && unit.pipeline_call) {
+      return unit.pipeline_call.description || unit.pipeline_call.call_pipeline || 'Sin descripción';
+    }
+    
+    return 'Sin descripción disponible';
   };
 
   // Función principal para procesar las unidades y crear nodos y conexiones
@@ -171,6 +208,7 @@ export default function PipelineVisualizerNew() {
         id: unit.id,
         type: type.type,
         displayName: getDisplayName(unit),
+        displayDescription: getDisplayDescription(unit),
         posX: xPosition,
         posY: yPosition,
         index,
@@ -439,7 +477,7 @@ export default function PipelineVisualizerNew() {
                           
                           {/* Descripción/subtipo de la unidad */}
                           <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {node.type}
+                            {node.displayDescription}
                           </div>
                         </div>
                       );
