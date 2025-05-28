@@ -194,20 +194,11 @@ export default function UnifiedPipelineUnitDialog({
                   </div>
                 </div>
               )}
-              {details.FileStreamSftpUploaders?.length > 0 ? (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Archivos a Subir:</h5>
-                  {details.FileStreamSftpUploaders.map((stream: any, index: number) => (
-                    <div key={stream.id} className="border rounded p-2 text-sm">
-                      <div><span className="font-medium">Origen:</span> {stream.input}</div>
-                      <div><span className="font-medium">Destino:</span> {stream.output}</div>
-                      <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No hay archivos configurados</p>
-              )}
+              <div className="text-sm space-y-1">
+                <div><span className="font-medium">Entrada:</span> {details.input || 'No especificado'}</div>
+                <div><span className="font-medium">Salida:</span> {details.output || 'No especificado'}</div>
+                <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
+              </div>
             </div>
           </div>
         );

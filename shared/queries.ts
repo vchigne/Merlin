@@ -230,6 +230,29 @@ export const QUERY_QUEUE_QUERY = `
       description
       created_at
       updated_at
+      Queries {
+        id
+        order
+        statement
+        path
+        return_output
+        print_headers
+        separator
+        chunks
+        trim_columns
+        force_dot_decimal_separator
+        date_format
+        target_encoding
+        sqlconn_id
+        SQLConnection {
+          id
+          name
+          server
+          database_name
+          port
+          username
+        }
+      }
     }
   }
 `;
@@ -290,12 +313,6 @@ export const SFTP_DOWNLOADER_QUERY = `
         created_at
         updated_at
       }
-      FileStreamSftpDownloaders {
-        id
-        input
-        output
-        return_output
-      }
     }
   }
 `;
@@ -334,12 +351,6 @@ export const SFTP_UPLOADER_QUERY = `
         created_at
         updated_at
       }
-      FileStreamSftpUploaders {
-        id
-        input
-        output
-        return_output
-      }
     }
   }
 `;
@@ -353,11 +364,6 @@ export const ZIP_QUERY = `
       return_output
       created_at
       updated_at
-      FileStreamZips {
-        id
-        input
-        wildcard_exp
-      }
     }
   }
 `;
@@ -372,12 +378,6 @@ export const UNZIP_QUERY = `
       return_output
       created_at
       updated_at
-      FileStreamUnzips {
-        id
-        input
-        output
-        return_output
-      }
     }
   }
 `;
