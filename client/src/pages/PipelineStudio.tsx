@@ -64,6 +64,7 @@ export default function PipelineStudio() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pipelineData, setPipelineData] = useState<any>(null);
+  const [pipelineUnits, setPipelineUnits] = useState<any[]>([]);
   const [pipelineFlowData, setPipelineFlowData] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -204,10 +205,11 @@ export default function PipelineStudio() {
       const layoutManager = PipelineLayoutManager.getInstance();
       
       // Obtener las unidades del pipeline
-      const pipelineUnits = pipeline.units || [];
+      const units = pipeline.units || [];
+      setPipelineUnits(units);
       
       // Usar la función convertToFlowCoordinates para generar el flujo
-      const flow = convertToFlowCoordinates(pipelineUnits);
+      const flow = convertToFlowCoordinates(units);
       
       // Aplicar las posiciones guardadas si existen
       if (flow.nodes.length > 0) {
@@ -576,6 +578,30 @@ export default function PipelineStudio() {
       setIsLoading(false);
     }
   };
+
+  // Función para convertir YAML a pipeline
+  const handleYamlToPipelineConvert = (newPipelineData: any, newPipelineUnits: any[]) => {
+    try {
+      // Actualizar los datos del pipeline
+      setPipelineData(newPipelineData);
+      setPipelineUnits(newPipelineUnits);
+      
+      // Convertir las unidades a formato de flujo visual
+      const flow = convertToFlowCoordinates(newPipelineUnits);
+      setPipelineFlowData(flow);
+      
+      // Marcar como cambios no guardados
+      setUnsavedChanges(true);
+      
+    } catch (error) {
+      console.error('Error al convertir YAML a pipeline:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo convertir el YAML al formato de pipeline",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Renderizar el componente
   return (
@@ -713,11 +739,21 @@ export default function PipelineStudio() {
             </TabsContent>
             
             <TabsContent value="yaml" className="mt-4">
-              <PipelineYamlEditor
-                value={yamlContent}
-                onChange={handleYamlChange}
-                readOnly={editorMode === 'view'}
-              />
+              {pipelineData && pipelineUnits ? (
+                <PipelineYamlEditor
+                  pipelineData={pipelineData}
+                  pipelineUnits={pipelineUnits}
+                  onYamlToPipelineConvert={handleYamlToPipelineConvert}
+                  isReadOnly={editorMode === 'view'}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[600px] text-slate-500 dark:text-slate-400">
+                  <div className="text-center">
+                    <p className="text-lg mb-2">No hay pipeline cargado</p>
+                    <p className="text-sm">Carga un pipeline para ver su representación YAML</p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </>
