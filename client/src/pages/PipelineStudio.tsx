@@ -325,34 +325,14 @@ export default function PipelineStudio() {
     // Actualizar YAML si estamos en modo YAML
     if (yamlMode && pipelineData) {
       try {
-        const yaml = templateManager.convertFlowToYaml(flowData, {
-          name: pipelineData.name || 'Nuevo Pipeline',
-          description: pipelineData.description || '',
-          agent_passport_id: pipelineData.agent_passport_id || '',
-          abort_on_error: pipelineData.abort_on_error === true
-        });
+        const yaml = pipelineToYaml(pipelineData);
         setYamlContent(yaml);
+        setYamlErrors([]);
       } catch (error) {
         console.error("Error al convertir a YAML:", error);
+        setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
       }
     }
-  };
-  
-
-          description: "El formato YAML no es válido o contiene errores",
-          variant: "destructive"
-        });
-        return; // No cambiar de modo si hay error
-      }
-    }
-    
-    setYamlMode(!yamlMode);
-  };
-  
-  // Manejar cambios en el YAML
-  const handleYamlChange = (yaml: string) => {
-    setYamlContent(yaml);
-    setUnsavedChanges(true);
   };
   
   // Guardar pipeline
@@ -370,17 +350,13 @@ export default function PipelineStudio() {
         return;
       }
       
-      // Si estamos en modo YAML, convertir primero a estructura de flujo
+      // Si estamos en modo YAML, convertir primero a estructura de pipeline
       if (yamlMode) {
         try {
-          const { flow, pipeline } = templateManager.convertYamlToFlow(yamlContent);
-          setPipelineFlowData(flow);
+          const updatedPipeline = yamlToPipeline(yamlContent);
           setPipelineData({
             ...pipelineData,
-            name: pipeline.name || pipelineData.name,
-            description: pipeline.description || pipelineData.description || '',
-            agent_passport_id: pipeline.agent_passport_id || pipelineData.agent_passport_id || '',
-            abort_on_error: pipeline.abort_on_error !== undefined ? pipeline.abort_on_error : (pipelineData.abort_on_error === true)
+            ...updatedPipeline
           });
         } catch (error) {
           console.error("Error al convertir YAML:", error);
@@ -395,16 +371,14 @@ export default function PipelineStudio() {
       }
       
       // Construir estructura para guardar
-      const pipelineToSave = templateManager.buildPipelineFromFlow(
-        pipelineFlowData,
-        {
-          id: pipelineId,
-          name: pipelineData.name,
-          description: pipelineData.description || '',
-          agent_passport_id: pipelineData.agent_passport_id || '',
-          abort_on_error: pipelineData.abort_on_error === true
-        }
-      );
+      const pipelineToSave = {
+        id: pipelineId,
+        name: pipelineData.name,
+        description: pipelineData.description || '',
+        agent_passport_id: pipelineData.agent_passport_id || '',
+        abort_on_error: pipelineData.abort_on_error === true,
+        PipelineUnits: pipelineData.PipelineUnits || []
+      };
       
       // Llamar a la API para guardar
       const method = editorMode === 'create' ? 'POST' : 'PUT';
@@ -503,7 +477,12 @@ export default function PipelineStudio() {
       }
       
       // Generar flujo a partir de la plantilla
-      const { flow, pipeline } = templateManager.loadTemplate(templateId);
+      // Cargar plantilla simplificada
+      const templateData = {
+        name: template.name,
+        description: template.description,
+        PipelineUnits: []
+      };
       
       setPipelineFlowData(flow);
       setPipelineData({
