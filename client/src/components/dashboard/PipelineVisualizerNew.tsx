@@ -535,6 +535,27 @@ export default function PipelineVisualizerNew({
       setDynamicConnections(initialConnections);
     }
   }, [pipelineUnits, nodePositions]);
+
+  // NUEVO: Efecto para forzar el cálculo de posiciones repetidamente hasta que funcione
+  useEffect(() => {
+    if (pipelineUnits?.length) {
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      const forcePositionUpdate = () => {
+        attempts++;
+        updateNodePositions();
+        
+        // Si aún no tenemos posiciones y no hemos agotado los intentos, intentar de nuevo
+        if (Object.keys(nodePositions).length === 0 && attempts < maxAttempts) {
+          setTimeout(forcePositionUpdate, 100);
+        }
+      };
+      
+      // Iniciar el proceso de cálculo forzado
+      setTimeout(forcePositionUpdate, 50);
+    }
+  }, [pipelineUnits]);
   
   // Función para manejar el cambio de pipeline seleccionado
   const handlePipelineChange = (value: string) => {
