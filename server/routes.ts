@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get pipeline units with all relations for YAML editor
+      // Get pipeline units (safe version for YAML editor)
       const unitsResult = await hasuraClient.query(`
         query GetPipelineUnits($pipelineId: uuid!) {
           units: merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
@@ -240,7 +240,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             zip_id
             unzip_id
             call_pipeline
-            call_pipeline_id
             continue_on_error
             retry_count
             retry_after_milliseconds
@@ -254,139 +253,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             posy
             created_at
             updated_at
-            
-            Command {
-              id
-              target
-              args
-              working_directory
-              raw_script
-              return_output
-              return_output_type
-              instant
-              name
-              description
-              labels
-            }
-            
-            QueryQueue {
-              id
-              name
-              description
-              Queries {
-                id
-                order
-                statement
-                path
-                print_headers
-                return_output
-                date_format
-                separator
-                chunks
-                target_encoding
-                retry_count
-                retry_after_milliseconds
-                remove_pipes_in_columns
-                trim_columns
-                force_dot_decimal_separator
-                labels
-                SQLConn {
-                  id
-                  name
-                  driver
-                  connection_string
-                  server
-                  port
-                  database
-                  user
-                }
-              }
-            }
-            
-            SFTPDownloader {
-              id
-              name
-              input
-              output
-              return_output
-              description
-              labels
-              SFTPLink {
-                id
-                name
-                server
-                port
-                user
-              }
-              FileStreamSftpDownloaders {
-                id
-                input
-                output
-                return_output
-              }
-            }
-            
-            SFTPUploader {
-              id
-              name
-              input
-              output
-              return_output
-              description
-              labels
-              SFTPLink {
-                id
-                name
-                server
-                port
-                user
-              }
-              FileStreamSftpUploaders {
-                id
-                input
-                output
-                return_output
-              }
-            }
-            
-            Zip {
-              id
-              name
-              zip_name
-              output
-              return_output
-              description
-              labels
-              FileStreamZips {
-                id
-                input
-                wildcard_exp
-              }
-            }
-            
-            Unzip {
-              id
-              name
-              description
-              labels
-              FileStreamUnzips {
-                id
-                input
-                output
-                return_output
-              }
-            }
-            
-            CallPipeline {
-              id
-              pipeline_id
-              timeout_milliseconds
-              Pipeline {
-                id
-                name
-                description
-              }
-            }
           }
         }
       `, { pipelineId: id });

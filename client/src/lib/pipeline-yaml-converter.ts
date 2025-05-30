@@ -155,96 +155,30 @@ function getUnitConfiguration(unit: any): { [key: string]: any } {
       });
     }
     
-  } else if (unit.sftp_downloader_id && unit.SFTPDownloader) {
-    // Unidad de descarga SFTP - SFTPDownloader table con FileStreams
-    const sftp = unit.SFTPDownloader;
+  } else if (unit.sftp_downloader_id) {
+    // Unidad de descarga SFTP
     config.sftp_downloader_id = unit.sftp_downloader_id;
+    config.note = "Configuración SFTP completa disponible en la base de datos";
     
-    // Información de conexión SFTP
-    if (sftp.SFTPLink) {
-      config.sftp_connection = {
-        name: sftp.SFTPLink.name,
-        server: sftp.SFTPLink.server,
-        port: sftp.SFTPLink.port,
-        user: sftp.SFTPLink.user
-      };
-    }
-    
-    // FileStreams según documentación
-    if (sftp.FileStreamSftpDownloaders && sftp.FileStreamSftpDownloaders.length > 0) {
-      config.file_streams = sftp.FileStreamSftpDownloaders.map((stream: any) => ({
-        input: stream.input,  // Ruta remota
-        output: stream.output, // Ruta local
-        return_output: stream.return_output
-      }));
-    }
-    
-  } else if (unit.sftp_uploader_id && unit.SFTPUploader) {
-    // Unidad de carga SFTP - SFTPUploader table con FileStreams
-    const sftp = unit.SFTPUploader;
+  } else if (unit.sftp_uploader_id) {
+    // Unidad de carga SFTP
     config.sftp_uploader_id = unit.sftp_uploader_id;
+    config.note = "Configuración SFTP completa disponible en la base de datos";
     
-    // Información de conexión SFTP
-    if (sftp.SFTPLink) {
-      config.sftp_connection = {
-        name: sftp.SFTPLink.name,
-        server: sftp.SFTPLink.server,
-        port: sftp.SFTPLink.port,
-        user: sftp.SFTPLink.user
-      };
-    }
-    
-    // FileStreams según documentación
-    if (sftp.FileStreamSftpUploaders && sftp.FileStreamSftpUploaders.length > 0) {
-      config.file_streams = sftp.FileStreamSftpUploaders.map((stream: any) => ({
-        input: stream.input,   // Ruta local
-        output: stream.output, // Ruta remota
-        return_output: stream.return_output
-      }));
-    }
-    
-  } else if (unit.zip_id && unit.Zip) {
-    // Unidad de compresión - Zip table con FileStreams
-    const zip = unit.Zip;
+  } else if (unit.zip_id) {
+    // Unidad de compresión
     config.zip_id = unit.zip_id;
-    if (zip.zip_name) config.zip_name = zip.zip_name;
+    config.note = "Configuración de archivos a comprimir disponible en la base de datos";
     
-    // FileStreams según documentación
-    if (zip.FileStreamZips && zip.FileStreamZips.length > 0) {
-      config.file_streams = zip.FileStreamZips.map((stream: any) => ({
-        input: stream.input,
-        wildcard_exp: stream.wildcard_exp
-      }));
-    }
-    
-  } else if (unit.unzip_id && unit.Unzip) {
-    // Unidad de descompresión - UnZip table con FileStreams
-    const unzip = unit.Unzip;
+  } else if (unit.unzip_id) {
+    // Unidad de descompresión
     config.unzip_id = unit.unzip_id;
+    config.note = "Configuración de archivos a extraer disponible en la base de datos";
     
-    // FileStreams según documentación
-    if (unzip.FileStreamUnzips && unzip.FileStreamUnzips.length > 0) {
-      config.file_streams = unzip.FileStreamUnzips.map((stream: any) => ({
-        input: stream.input,   // Archivo ZIP a descomprimir
-        output: stream.output, // Directorio destino
-        return_output: stream.return_output
-      }));
-    }
-    
-  } else if (unit.call_pipeline_id && unit.CallPipeline) {
-    // Pipeline Call - referencia a otro pipeline según documentación
-    const callPipeline = unit.CallPipeline;
-    config.call_pipeline_id = unit.call_pipeline_id;
-    config.pipeline_id = callPipeline.pipeline_id;
-    if (callPipeline.timeout_milliseconds) {
-      config.timeout_milliseconds = callPipeline.timeout_milliseconds;
-    }
-    
-    // Agregar información del pipeline llamado si está disponible
-    if (callPipeline.Pipeline) {
-      config.pipeline_name = callPipeline.Pipeline.name;
-      config.pipeline_description = callPipeline.Pipeline.description;
-    }
+  } else if (unit.call_pipeline || unit.call_pipeline_id) {
+    // Pipeline Call
+    config.call_pipeline = unit.call_pipeline || unit.call_pipeline_id;
+    config.note = "Información del pipeline llamado disponible en la base de datos";
   }
   
   return config;
