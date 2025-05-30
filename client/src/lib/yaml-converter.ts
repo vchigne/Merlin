@@ -5,6 +5,7 @@ import * as yaml from 'yaml';
 
 // Tipos para la estructura YAML
 interface YamlPipeline {
+  id: string;
   name: string;
   description?: string;
   configuration: {
@@ -198,6 +199,7 @@ export function pipelineToYaml(pipelineData: any): string {
   // Si no tiene PipelineUnits, crear un pipeline básico
   if (!pipelineData.PipelineUnits || pipelineData.PipelineUnits.length === 0) {
     const basicYaml: YamlPipeline = {
+      id: pipelineData.id || '',
       name: pipelineData.name || 'Pipeline sin nombre',
       description: pipelineData.description || '',
       configuration: {
@@ -258,6 +260,7 @@ export function pipelineToYaml(pipelineData: any): string {
 
   // Construir el objeto YAML completo
   const yamlPipeline: YamlPipeline = {
+    id: pipelineData.id || '',
     name: pipelineData.name || 'Pipeline sin nombre',
     description: pipelineData.description || undefined,
     configuration: {
@@ -295,6 +298,7 @@ export function yamlToPipeline(yamlContent: string): any {
 
     // Construir el pipeline data compatible con Hasura
     const pipelineData = {
+      id: parsed.id,
       name: parsed.name,
       description: parsed.description,
       agent_passport_id: parsed.configuration.agent_passport_id,
