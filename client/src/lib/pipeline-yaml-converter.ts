@@ -103,26 +103,130 @@ function getUnitDescription(unit: any): string | undefined {
 function getUnitConfiguration(unit: any): { [key: string]: any } {
   const config: { [key: string]: any } = {};
   
-  if (unit.command_id) {
+  // Configuración específica por tipo de unidad
+  if (unit.command_id && unit.Command) {
+    // Unidad de comando - Command table
+    const cmd = unit.Command;
     config.command_id = unit.command_id;
-  }
-  if (unit.query_queue_id) {
+    if (cmd.target) config.target = cmd.target;
+    if (cmd.working_directory) config.working_directory = cmd.working_directory;
+    if (cmd.args) config.args = cmd.args;
+    if (cmd.raw_script) config.raw_script = cmd.raw_script;
+    if (cmd.return_output !== undefined) config.return_output = cmd.return_output;
+    if (cmd.return_output_type) config.return_output_type = cmd.return_output_type;
+    if (cmd.instant !== undefined) config.instant = cmd.instant;
+    if (cmd.labels && cmd.labels.length > 0) config.labels = cmd.labels;
+    
+  } else if (unit.query_queue_id && unit.QueryQueue) {
+    // Unidad de query queue - QueryQueue table + Query table
+    const qq = unit.QueryQueue;
     config.query_queue_id = unit.query_queue_id;
-  }
-  if (unit.sftp_downloader_id) {
+    if (qq.name) config.queue_name = qq.name;
+    if (qq.description) config.queue_description = qq.description;
+    
+    // Agregar queries si existen
+    if (qq.queries && qq.queries.length > 0) {
+      config.queries = qq.queries.map((query: any) => {
+        const queryConfig: any = {};
+        if (query.name) queryConfig.name = query.name;
+        if (query.query_string) queryConfig.query_string = query.query_string;
+        if (query.path) queryConfig.path = query.path;
+        if (query.print_headers !== undefined) queryConfig.print_headers = query.print_headers;
+        if (query.enabled !== undefined) queryConfig.enabled = query.enabled;
+        if (query.return_output !== undefined) queryConfig.return_output = query.return_output;
+        if (query.date_format) queryConfig.date_format = query.date_format;
+        if (query.separator) queryConfig.separator = query.separator;
+        if (query.chunks) queryConfig.chunks = query.chunks;
+        if (query.target_encoding) queryConfig.target_encoding = query.target_encoding;
+        if (query.timeout) queryConfig.timeout = query.timeout;
+        if (query.retry_count) queryConfig.retry_count = query.retry_count;
+        if (query.retry_after_milliseconds) queryConfig.retry_after_milliseconds = query.retry_after_milliseconds;
+        if (query.remove_pipes_in_columns !== undefined) queryConfig.remove_pipes_in_columns = query.remove_pipes_in_columns;
+        if (query.trim_columns !== undefined) queryConfig.trim_columns = query.trim_columns;
+        if (query.force_dot_decimal_separator !== undefined) queryConfig.force_dot_decimal_separator = query.force_dot_decimal_separator;
+        if (query.labels && query.labels.length > 0) queryConfig.labels = query.labels;
+        
+        // Información de conexión SQL
+        if (query.SQLConn) {
+          queryConfig.sql_connection = {
+            name: query.SQLConn.name,
+            server: query.SQLConn.server,
+            port: query.SQLConn.port,
+            database: query.SQLConn.database,
+            user: query.SQLConn.user
+          };
+        }
+        
+        return queryConfig;
+      });
+    }
+    
+  } else if (unit.sftp_downloader_id && unit.SFTPDownloader) {
+    // Unidad de descarga SFTP - SFTPDownloader table
+    const sftp = unit.SFTPDownloader;
     config.sftp_downloader_id = unit.sftp_downloader_id;
-  }
-  if (unit.sftp_uploader_id) {
+    if (sftp.input) config.input = sftp.input;
+    if (sftp.output) config.output = sftp.output;
+    if (sftp.return_output !== undefined) config.return_output = sftp.return_output;
+    if (sftp.labels && sftp.labels.length > 0) config.labels = sftp.labels;
+    
+    // Información de conexión SFTP
+    if (sftp.SFTPLink) {
+      config.sftp_connection = {
+        name: sftp.SFTPLink.name,
+        server: sftp.SFTPLink.server,
+        port: sftp.SFTPLink.port,
+        user: sftp.SFTPLink.user
+      };
+    }
+    
+  } else if (unit.sftp_uploader_id && unit.SFTPUploader) {
+    // Unidad de carga SFTP - SFTPUploader table
+    const sftp = unit.SFTPUploader;
     config.sftp_uploader_id = unit.sftp_uploader_id;
-  }
-  if (unit.zip_id) {
+    if (sftp.input) config.input = sftp.input;
+    if (sftp.output) config.output = sftp.output;
+    if (sftp.return_output !== undefined) config.return_output = sftp.return_output;
+    if (sftp.labels && sftp.labels.length > 0) config.labels = sftp.labels;
+    
+    // Información de conexión SFTP
+    if (sftp.SFTPLink) {
+      config.sftp_connection = {
+        name: sftp.SFTPLink.name,
+        server: sftp.SFTPLink.server,
+        port: sftp.SFTPLink.port,
+        user: sftp.SFTPLink.user
+      };
+    }
+    
+  } else if (unit.zip_id && unit.Zip) {
+    // Unidad de compresión - Zip table
+    const zip = unit.Zip;
     config.zip_id = unit.zip_id;
-  }
-  if (unit.unzip_id) {
+    if (zip.input) config.input = zip.input;
+    if (zip.output) config.output = zip.output;
+    if (zip.wildcard_exp) config.wildcard_exp = zip.wildcard_exp;
+    if (zip.return_output !== undefined) config.return_output = zip.return_output;
+    if (zip.labels && zip.labels.length > 0) config.labels = zip.labels;
+    
+  } else if (unit.unzip_id && unit.Unzip) {
+    // Unidad de descompresión - UnZip table
+    const unzip = unit.Unzip;
     config.unzip_id = unit.unzip_id;
-  }
-  if (unit.call_pipeline) {
+    if (unzip.input) config.input = unzip.input;
+    if (unzip.output) config.output = unzip.output;
+    if (unzip.return_output !== undefined) config.return_output = unzip.return_output;
+    if (unzip.labels && unzip.labels.length > 0) config.labels = unzip.labels;
+    
+  } else if (unit.call_pipeline) {
+    // Pipeline Call - referencia a otro pipeline
     config.call_pipeline = unit.call_pipeline;
+    
+    // Agregar información del pipeline llamado si está disponible
+    if (unit.Pipeline) {
+      config.pipeline_name = unit.Pipeline.name;
+      config.pipeline_description = unit.Pipeline.description;
+    }
   }
   
   return config;
