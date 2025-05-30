@@ -210,39 +210,31 @@ export function pipelineToYaml(pipelineData: any): string {
     });
   }
 
-  // Construir el mapa de conexiones (parent_unit_id -> children)
-  const connectionMap = new Map<string, string[]>();
+  // Simplificar: solo convertir unidades básicas con id, nombre y tipo
+  console.log("PipelineUnits recibidas:", pipelineData.PipelineUnits);
   
-  pipelineData.PipelineUnits.forEach((unit: any) => {
-    if (unit.pipeline_unit_id) {
-      if (!connectionMap.has(unit.pipeline_unit_id)) {
-        connectionMap.set(unit.pipeline_unit_id, []);
-      }
-      connectionMap.get(unit.pipeline_unit_id)?.push(unit.id);
-    }
+  const yamlUnits: YamlUnit[] = pipelineData.PipelineUnits.map((unit: any) => {
+    const runnerType = detectRunnerType(unit);
+    const displayName = getUnitDisplayName(unit);
+    
+    console.log("Procesando unidad:", {
+      unitId: unit.id,
+      runnerType,
+      displayName,
+      hasCommand: !!unit.Command,
+      hasQueryQueue: !!unit.QueryQueue,
+      hasSFTPDownloader: !!unit.SFTPDownloader,
+      hasSFTPUploader: !!unit.SFTPUploader,
+      hasZip: !!unit.Zip,
+      hasUnzip: !!unit.Unzip
+    });
+    
+    return {
+      id: unit.id,
+      name: displayName,
+      type: runnerType
+    };
   });
-
-  // Convertir las unidades
-  const yamlUnits: YamlUnit[] = pipelineData.PipelineUnits.map((unit: any) => ({
-    id: unit.id,
-    type: detectRunnerType(unit),
-    name: getUnitDisplayName(unit),
-    parent_unit_id: unit.pipeline_unit_id,
-    position: {
-      x: unit.posx || 0,
-      y: unit.posy || 0
-    },
-    execution: {
-      retry_count: unit.retry_count || 0,
-      retry_after_milliseconds: unit.retry_after_milliseconds || 0,
-      timeout_milliseconds: unit.timeout_milliseconds || 30000,
-      continue_on_error: unit.continue_on_error || false,
-      abort_on_error: unit.abort_on_error || false,
-      abort_on_timeout: unit.abort_on_timeout || false
-    },
-    configuration: extractRunnerConfiguration(unit),
-    connections: (connectionMap.get(unit.id) || []).map(childId => ({ to: childId }))
-  }));
 
   // Construir el objeto YAML completo
   const yamlPipeline: YamlPipeline = {
