@@ -3,6 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupSocketServer } from "./api";
 import { hasuraClient } from "./hasura-client";
+import { 
+  loadPipelinePositions, 
+  savePipelinePositions, 
+  loadPipelineYAML, 
+  savePipelineYAML,
+  convertHasuraToPipelineYAML,
+  isPipelineYAMLUpToDate
+} from "./yaml-manager";
 import { PipelineTemplateManager } from "../client/src/lib/pipeline-template-manager";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -386,6 +394,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rutas para manejo de archivos YAML de pipelines
+  
+  // Obtener posiciones guardadas para un pipeline
+  app.get("/api/pipeline/:id/positions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const positions = await loadPipelinePositions(id);
+      res.json({ positions });
+    } catch (error) {
+      console.error('Error loading pipeline positions:', error);
+      res.status(500).json({ error: 'Failed to load pipeline positions' });
+    }
+  });
+
+  // Guardar posiciones de un pipeline
+  app.post("/api/pipeline/:id/positions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { positions } = req.body;
+      await savePipelinePositions(id, positions);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving pipeline positions:', error);
+      res.status(500).json({ error: 'Failed to save pipeline positions' });
+    }
+  });
+
+  // Obtener YAML completo de un pipeline
+  app.get("/api/pipeline/:id/yaml", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const yamlData = await loadPipelineYAML(id);
+      res.json({ yaml: yamlData });
+    } catch (error) {
+      console.error('Error loading pipeline YAML:', error);
+      res.status(500).json({ error: 'Failed to load pipeline YAML' });
+    }
+  });
+
+  // Generar/actualizar YAML desde Hasura
+  app.post("/api/pipeline/:id/sync-yaml", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Obtener datos del pipeline desde Hasura
+      const query = `
+        query GetPipelineForYAML($id: uuid!) {
+          merlin_agent_Pipeline_by_pk(id: $id) {
+            id
+            name
+            description
+            created_at
+            updated_at
+            units: merlin_agent_PipelineUnits(order_by: {index: asc}) {
+              id
+              index
+              type
+              name
+              command
+              sql_query
+              zip_config
+              sftp_config
+            }
+          }
+        }
+      `;
+
+      const response = await hasuraClient.query(query, { id });
+      
+      if (response.errors) {
+        return res.status(400).json({ error: response.errors[0]?.message || 'GraphQL error' });
+      }
+
+      const pipelineData = response.data?.merlin_agent_Pipeline_by_pk;
+      if (!pipelineData) {
+        return res.status(404).json({ error: 'Pipeline not found' });
+      }
+
+      // Convertir a formato YAML y guardar
+      const yamlData = convertHasuraToPipelineYAML(pipelineData);
+      await savePipelineYAML(id, yamlData);
+
+      res.json({ yaml: yamlData, success: true });
+    } catch (error) {
+      console.error('Error syncing pipeline YAML:', error);
+      res.status(500).json({ error: 'Failed to sync pipeline YAML' });
+    }
+  });
+
   return httpServer;
 }
 

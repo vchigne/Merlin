@@ -1,0 +1,3 @@
+# Directory for pipeline YAML files
+# {uuid}.yaml - Pipeline configuration from Hasura
+# _{uuid}.yaml - Custom node positions
