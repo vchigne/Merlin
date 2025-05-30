@@ -227,28 +227,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get pipeline units with complete relations (per documentation)
+      // Get pipeline units
       const unitsResult = await hasuraClient.query(`
         query GetPipelineUnits($pipelineId: uuid!) {
           units: merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
             id
-            pipeline_unit_id
-            retry_count
-            retry_after_milliseconds
-            timeout_milliseconds
-            continue_on_error
-            abort_on_timeout
-            notify_on_error_email
-            notify_on_error_webhook
-            notify_on_timeout_email
-            notify_on_timeout_webhook
             comment
-            posx
-            posy
-            created_at
-            updated_at
-            
-            # IDs de runners (solo uno será no-null)
             command_id
             query_queue_id
             sftp_downloader_id
@@ -256,8 +240,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             zip_id
             unzip_id
             call_pipeline
-            
-            # Relaciones cargadas según documentación
+            continue_on_error
+            retry_count
+            retry_after_milliseconds
+            timeout_milliseconds
+            abort_on_timeout
+            posx
+            posy
+            created_at
+            updated_at
           }
         }
       `, { pipelineId: id });

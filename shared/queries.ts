@@ -66,29 +66,51 @@ export const PIPELINE_UNITS_QUERY = `
   query GetPipelineUnits($pipelineId: uuid!) {
     merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
       id
+      pipeline_id
+      posx
+      posy
       command_id
       query_queue_id
       sftp_downloader_id
       sftp_uploader_id
       zip_id
       unzip_id
-      pipeline_id
-      pipeline_unit_id
-      created_at
-      updated_at
-      comment
-      retry_after_milliseconds
-      retry_count
-      timeout_milliseconds
-      abort_on_timeout
-      continue_on_error
-      notify_on_error_email
-      notify_on_error_webhook
-      notify_on_timeout_email
-      notify_on_timeout_webhook
-      posx
-      posy
       call_pipeline
+      Command {
+        id
+        name
+        description
+      }
+      QueryQueue {
+        id
+        name
+        description
+      }
+      SFTPDownloader {
+        id
+        name
+        description
+      }
+      SFTPUploader {
+        id
+        name
+        description
+      }
+      Zip {
+        id
+        name
+        description
+      }
+      Unzip {
+        id
+        name
+        description
+      }
+      Pipeline {
+        id
+        name
+        description
+      }
     }
   }
 `;
