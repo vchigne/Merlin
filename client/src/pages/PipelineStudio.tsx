@@ -124,13 +124,6 @@ export default function PipelineStudio() {
                 
                 Command {
                   id
-                  target
-                  args
-                  working_directory
-                  instant
-                  raw_script
-                  return_output
-                  return_output_type
                   name
                   description
                 }
@@ -139,63 +132,28 @@ export default function PipelineStudio() {
                   id
                   name
                   description
-                  Queries {
-                    id
-                    order
-                    path
-                    query_string
-                    return_output
-                    SQLConn {
-                      id
-                      driver
-                      connstring
-                      name
-                    }
-                  }
                 }
                 
                 SFTPDownloader {
                   id
                   name
-                  input
-                  output
-                  return_output
-                  SFTPLink {
-                    id
-                    server
-                    port
-                    user
-                    name
-                  }
+                  description
                 }
                 
                 SFTPUploader {
                   id
                   name
-                  output
-                  return_output
-                  SFTPLink {
-                    id
-                    server
-                    port
-                    user
-                    name
-                  }
+                  description
                 }
                 
                 Zip {
                   id
-                  output
-                  return_output
                   name
                   description
                 }
                 
                 Unzip {
                   id
-                  input
-                  output
-                  return_output
                   name
                   description
                 }
