@@ -31,6 +31,8 @@ export default function PipelineVisualizerNew({
   const [draggedUnit, setDraggedUnit] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [unitPositions, setUnitPositions] = useState<{ [key: string]: { x: number, y: number } }>({});
+  // NUEVO: Estado para conexiones dinámicas que se actualiza durante el drag
+  const [connections, setConnections] = useState<any[]>([]);
 
   // Efecto para actualizar el pipeline seleccionado cuando cambia la prop
   useEffect(() => {
@@ -65,6 +67,14 @@ export default function PipelineVisualizerNew({
   useEffect(() => {
     updateNodePositions();
   }, [unitPositions]);
+
+  // NUEVO: Efecto para recalcular conexiones inmediatamente durante el drag
+  useEffect(() => {
+    if (pipelineUnits?.merlin_agent_PipelineUnit) {
+      const newConnections = calculateCSSConnections(pipelineUnits.merlin_agent_PipelineUnit);
+      setConnections(newConnections);
+    }
+  }, [nodePositions, unitPositions, pipelineUnits]);
 
   // NUEVO: Función para calcular conexiones CSS entre nodos
   const calculateCSSConnections = (nodes: any[]) => {
@@ -589,36 +599,12 @@ export default function PipelineVisualizerNew({
               {(() => {
                 const { nodes, connections } = processUnits(pipelineUnits);
                 
-                // NUEVO: Calcular conexiones CSS simples
-                const cssConnections = [];
-                for (let i = 0; i < nodes.length - 1; i++) {
-                  const currentNode = nodes[i];
-                  const nextNode = nodes[i + 1];
-                  
-                  // Usar las posiciones directas de los nodos
-                  const startX = currentNode.posX + 100; // Centro de la caja
-                  const startY = currentNode.posY + 80;  // Bottom de la caja
-                  const endX = nextNode.posX + 100;      // Centro de la siguiente caja
-                  const endY = nextNode.posY;            // Top de la siguiente caja
-                  
-                  // Calcular distancia y ángulo
-                  const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-                  const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-                  
-                  cssConnections.push({
-                    id: `css-line-${i}`,
-                    left: startX,
-                    top: startY,
-                    width: distance,
-                    rotation: angle,
-                    color: getUnitTypeColor(currentNode.type)
-                  });
-                }
+                // NUEVO: Usar conexiones dinámicas del estado que se actualiza durante el drag
                 
                 return (
                   <>
-                    {/* NUEVO: Conexiones CSS en lugar de SVG */}
-                    {cssConnections.map(conn => (
+                    {/* NUEVO: Conexiones CSS dinámicas que se actualizan durante el drag */}
+                    {connections.map(conn => (
                       <div
                         key={conn.id}
                         className="absolute border-t-2 origin-left z-10"
