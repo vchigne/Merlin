@@ -80,6 +80,13 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
+        target
+        args
+        working_directory
+        instant
+        raw_script
+        return_output
+        return_output_type
       }
       QueryQueue {
         id

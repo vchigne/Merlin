@@ -80,15 +80,18 @@ function extractRunnerConfiguration(unit: any): any {
   
   switch (runnerType) {
     case 'command':
-      return {
-        target: unit.Command?.target,
-        args: unit.Command?.args,
-        working_directory: unit.Command?.working_directory,
-        raw_script: unit.Command?.raw_script,
-        instant: unit.Command?.instant,
-        return_output: unit.Command?.return_output,
-        return_output_type: unit.Command?.return_output_type
-      };
+      if (unit.Command) {
+        return {
+          target: unit.Command.target || null,
+          args: unit.Command.args || null,
+          working_directory: unit.Command.working_directory || null,
+          raw_script: unit.Command.raw_script || null,
+          instant: unit.Command.instant || false,
+          return_output: unit.Command.return_output || false,
+          return_output_type: unit.Command.return_output_type || null
+        };
+      }
+      return {};
       
     case 'query_queue':
       return {
@@ -222,18 +225,24 @@ export function pipelineToYaml(pipelineData: any): string {
       runnerType,
       displayName,
       hasCommand: !!unit.Command,
-      hasQueryQueue: !!unit.QueryQueue,
-      hasSFTPDownloader: !!unit.SFTPDownloader,
-      hasSFTPUploader: !!unit.SFTPUploader,
-      hasZip: !!unit.Zip,
-      hasUnzip: !!unit.Unzip
+      commandData: unit.Command
     });
     
-    return {
+    const baseUnit = {
       id: unit.id,
       name: displayName,
       type: runnerType
     };
+
+    // Para unidades de tipo command, agregar configuración completa
+    if (runnerType === 'command' && unit.Command) {
+      return {
+        ...baseUnit,
+        configuration: extractRunnerConfiguration(unit)
+      };
+    }
+    
+    return baseUnit;
   });
 
   // Construir el objeto YAML completo
