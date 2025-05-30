@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 // No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
-import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
+
 import SimplePipelineLoader from "@/components/pipeline-studio/SimplePipelineLoader";
 import { pipelineToYaml, yamlToPipeline, validateYamlStructure } from '@/lib/yaml-converter';
 import PipelineVisualizerNew from "@/components/dashboard/PipelineVisualizerNew";
@@ -262,19 +262,11 @@ export default function PipelineStudio() {
       const pipeline = await response.json();
       setPipelineData(pipeline);
       
-      // Construir estructura de flujo para el editor visual
-      const layoutManager = PipelineLayoutManager.getInstance();
-      
-      // Obtener las unidades del pipeline
-      const pipelineUnits = pipeline.units || [];
+      // Construir estructura de flujo para el editor visual usando las unidades del pipeline
+      const pipelineUnits = pipeline.PipelineUnits || [];
       
       // Usar la función convertToFlowCoordinates para generar el flujo
       const flow = convertToFlowCoordinates(pipelineUnits);
-      
-      // Aplicar las posiciones guardadas si existen
-      if (flow.nodes.length > 0) {
-        flow.nodes = layoutManager.applyLayoutToNodes(pipeline.id, flow.nodes);
-      }
       
       setPipelineFlowData(flow);
       
@@ -484,13 +476,8 @@ export default function PipelineStudio() {
         PipelineUnits: []
       };
       
-      setPipelineFlowData(flow);
-      setPipelineData({
-        name: template.name,
-        description: template.description,
-        agent_passport_id: '',
-        abort_on_error: false
-      });
+      setPipelineFlowData({ nodes: [], edges: [] });
+      setPipelineData(templateData);
       
       setEditorMode('create');
       setUnsavedChanges(true);
@@ -531,8 +518,7 @@ export default function PipelineStudio() {
       const fullPipeline = await response.json();
       
       // Construir estructura de flujo para el editor visual
-      const layoutManager = new PipelineLayoutManager();
-      const flow = layoutManager.buildFlowFromPipeline(fullPipeline);
+      const flow = convertToFlowCoordinates(fullPipeline.PipelineUnits || []);
       
       // Actualizar estados
       setPipelineData({
@@ -547,15 +533,17 @@ export default function PipelineStudio() {
       // Generar YAML si estamos en modo YAML
       if (yamlMode) {
         try {
-          const yaml = templateManager.convertFlowToYaml(flow, {
-            name: `${pipeline.name} (Copia)`,
-            description: pipeline.description || '',
-            agent_passport_id: pipeline.agent_passport_id,
-            abort_on_error: pipeline.abort_on_error === true
-          });
+          const yamlData = {
+            ...fullPipeline,
+            name: `${fullPipeline.name} (Copia)`,
+            id: undefined
+          };
+          const yaml = pipelineToYaml(yamlData);
           setYamlContent(yaml);
+          setYamlErrors([]);
         } catch (error) {
           console.error("Error al convertir a YAML:", error);
+          setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
         }
       }
       
@@ -712,11 +700,52 @@ export default function PipelineStudio() {
             </TabsContent>
             
             <TabsContent value="yaml" className="mt-4">
-              <PipelineYamlEditor
-                value={yamlContent}
-                onChange={handleYamlChange}
-                readOnly={editorMode === 'view'}
-              />
+              {/* Mostrar errores de YAML si existen */}
+              {yamlErrors.length > 0 && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      <div className="font-medium">Errores en el YAML:</div>
+                      <ul className="list-disc list-inside space-y-1">
+                        {yamlErrors.map((error, index) => (
+                          <li key={index} className="text-sm">{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {/* Editor YAML simple */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={applyYamlChanges}
+                      disabled={yamlErrors.length > 0 || !yamlContent.trim() || editorMode === 'view'}
+                      size="sm"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Aplicar Cambios YAML
+                    </Button>
+                  </div>
+                </div>
+                
+                <Textarea
+                  value={yamlContent}
+                  onChange={(e) => handleYamlChange(e.target.value)}
+                  placeholder="# Pipeline YAML
+name: 'Mi Pipeline'
+description: 'Descripción del pipeline'
+configuration:
+  agent_passport_id: 'agent-id'
+  abort_on_error: true
+units: []"
+                  className="min-h-[500px] font-mono text-sm"
+                  readOnly={editorMode === 'view'}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </>
