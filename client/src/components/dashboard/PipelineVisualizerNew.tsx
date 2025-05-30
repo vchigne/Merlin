@@ -78,11 +78,15 @@ export default function PipelineVisualizerNew({
       const nextPos = nodePositions[nextNode.id];
       
       if (currentPos && nextPos) {
-        // Calcular centro de cada nodo
-        const startX = currentPos.x + currentPos.width / 2;
-        const startY = currentPos.y + currentPos.height;
-        const endX = nextPos.x + nextPos.width / 2;
-        const endY = nextPos.y;
+        // Usar posiciones dinámicas si la unidad ha sido arrastrada
+        const currentUnitPos = unitPositions[currentNode.id];
+        const nextUnitPos = unitPositions[nextNode.id];
+        
+        // Calcular centro de cada nodo usando posiciones actualizadas
+        const startX = (currentUnitPos?.x ?? currentPos.x) + currentPos.width / 2;
+        const startY = (currentUnitPos?.y ?? currentPos.y) + currentPos.height;
+        const endX = (nextUnitPos?.x ?? nextPos.x) + nextPos.width / 2;
+        const endY = (nextUnitPos?.y ?? nextPos.y);
         
         // Calcular distancia y ángulo
         const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
@@ -291,10 +295,8 @@ export default function PipelineVisualizerNew({
             [draggedUnit]: { x: newX, y: newY }
           }));
           
-          // NUEVO: Actualizar posiciones de nodos después del drag para recalcular conexiones
-          setTimeout(() => {
-            updateNodePositions();
-          }, 0);
+          // NUEVO: Forzar re-renderización inmediata de conexiones
+          // No necesitamos timeout aquí porque las conexiones se recalculan automáticamente
         }
       };
 
