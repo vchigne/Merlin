@@ -446,6 +446,12 @@ export const UNZIP_QUERY = `
       return_output
       created_at
       updated_at
+      FileStreamUnzips {
+        id
+        input
+        output
+        return_output
+      }
     }
   }
 `;

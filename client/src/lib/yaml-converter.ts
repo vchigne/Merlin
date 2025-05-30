@@ -159,13 +159,20 @@ function extractRunnerConfiguration(unit: any): any {
       return {};
       
     case 'unzip':
-      return {
-        file_streams: unit.Unzip?.FileStreamUnzips?.map((stream: any) => ({
-          input: stream.input,
-          output: stream.output,
-          return_output: stream.return_output
-        })) || []
-      };
+      if (unit.Unzip) {
+        return {
+          input: unit.Unzip.input || null,
+          output: unit.Unzip.output || null,
+          return_output: unit.Unzip.return_output || false,
+          file_streams: unit.Unzip.FileStreamUnzips?.map((stream: any) => ({
+            id: stream.id,
+            input: stream.input || null,
+            output: stream.output || null,
+            return_output: stream.return_output || false
+          })) || []
+        };
+      }
+      return {};
       
     case 'call_pipeline':
       return {
