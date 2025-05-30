@@ -84,79 +84,35 @@ export default function PipelineStudio() {
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
   
-  // Función para cargar pipeline completo con unidades
+  // Función para cargar pipeline completo con unidades (usando las queries existentes)
   const loadPipelineComplete = async (pipelineId: string) => {
     try {
       console.log("Cargando pipeline completo:", pipelineId);
       
-      // Cargar pipeline básico y sus unidades por separado
-      const response = await fetch('/api/graphql', {
+      // Usar executeQuery como el visualizador existente
+      const { executeQuery } = await import('@/lib/hasura-client');
+      const { PIPELINE_UNITS_QUERY } = await import('@shared/queries');
+      
+      // Cargar pipeline básico
+      const pipelineResponse = await fetch('/api/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           query: `
-            query GetPipelineComplete($pipelineId: uuid!) {
+            query GetPipeline($pipelineId: uuid!) {
               merlin_agent_Pipeline_by_pk(id: $pipelineId) {
                 id
                 name
                 description
                 abort_on_error
-                disposable
-                agent_passport_id
+                notify_on_abort_email_id
+                notify_on_abort_webhook_id
                 created_at
                 updated_at
-              }
-              
-              merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
-                id
-                pipeline_unit_id
-                abort_on_timeout
-                continue_on_error
-                retry_count
-                timeout_milliseconds
-                retry_after_milliseconds
-                call_pipeline
-                posx
-                posy
-                comment
-                
-                Command {
-                  id
-                  name
-                  description
-                }
-                
-                QueryQueue {
-                  id
-                  name
-                  description
-                }
-                
-                SFTPDownloader {
-                  id
-                  name
-                  description
-                }
-                
-                SFTPUploader {
-                  id
-                  name
-                  description
-                }
-                
-                Zip {
-                  id
-                  name
-                  description
-                }
-                
-                Unzip {
-                  id
-                  name
-                  description
-                }
+                agent_passport_id
+                disposable
               }
             }
           `,
@@ -164,20 +120,27 @@ export default function PipelineStudio() {
         })
       });
 
-      const result = await response.json();
+      const pipelineResult = await pipelineResponse.json();
       
-      if (result.errors) {
-        throw new Error(result.errors[0].message);
+      if (pipelineResult.errors) {
+        throw new Error(pipelineResult.errors[0].message);
       }
 
-      if (!result.data.merlin_agent_Pipeline_by_pk) {
+      if (!pipelineResult.data.merlin_agent_Pipeline_by_pk) {
         throw new Error('Pipeline no encontrado');
+      }
+
+      // Cargar unidades usando la query existente que funciona
+      const unitsResult = await executeQuery(PIPELINE_UNITS_QUERY, { pipelineId });
+      
+      if (unitsResult.errors) {
+        throw new Error(unitsResult.errors[0].message);
       }
 
       // Combinar pipeline con sus unidades
       const completePipeline = {
-        ...result.data.merlin_agent_Pipeline_by_pk,
-        PipelineUnits: result.data.merlin_agent_PipelineUnit || []
+        ...pipelineResult.data.merlin_agent_Pipeline_by_pk,
+        PipelineUnits: unitsResult.data.merlin_agent_PipelineUnit || []
       };
 
       console.log("Pipeline completo cargado:", completePipeline);
