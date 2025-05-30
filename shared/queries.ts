@@ -92,6 +92,19 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
+        Queries {
+          id
+          order
+          path
+          query_string
+          return_output
+          SQLConn {
+            id
+            driver
+            connstring
+            name
+          }
+        }
       }
       SFTPDownloader {
         id

@@ -94,32 +94,24 @@ function extractRunnerConfiguration(unit: any): any {
       return {};
       
     case 'query_queue':
-      return {
-        queries: unit.QueryQueue?.Queries?.map((query: any) => ({
-          order: query.order,
-          statement: query.statement,
-          path: query.path,
-          sql_connection: {
-            driver: query.SQLConn?.driver,
-            connection_string: query.SQLConn?.connection_string,
-            name: query.SQLConn?.name
-          },
-          output_settings: {
-            return_output: query.return_output,
-            print_headers: query.print_headers,
-            separator: query.separator,
-            chunks: query.chunks,
-            trim_columns: query.trim_columns,
-            force_dot_decimal_separator: query.force_dot_decimal_separator,
-            date_format: query.date_format,
-            target_encoding: query.target_encoding
-          },
-          retry_settings: {
-            retry_count: query.retry_count,
-            retry_after_milliseconds: query.retry_after_milliseconds
-          }
-        })) || []
-      };
+      if (unit.QueryQueue) {
+        return {
+          queries: unit.QueryQueue.Queries?.map((query: any) => ({
+            id: query.id,
+            order: query.order || 0,
+            path: query.path || null,
+            query_string: query.query_string || null,
+            return_output: query.return_output || false,
+            sql_connection: query.SQLConn ? {
+              id: query.SQLConn.id,
+              driver: query.SQLConn.driver || null,
+              connstring: query.SQLConn.connstring || null,
+              name: query.SQLConn.name || null
+            } : null
+          })) || []
+        };
+      }
+      return {};
       
     case 'sftp_downloader':
       return {
@@ -225,7 +217,8 @@ export function pipelineToYaml(pipelineData: any): string {
       runnerType,
       displayName,
       hasCommand: !!unit.Command,
-      commandData: unit.Command
+      hasQueryQueue: !!unit.QueryQueue,
+      queryQueueData: unit.QueryQueue
     });
     
     const baseUnit = {
@@ -234,8 +227,9 @@ export function pipelineToYaml(pipelineData: any): string {
       type: runnerType
     };
 
-    // Para unidades de tipo command, agregar configuración completa
-    if (runnerType === 'command' && unit.Command) {
+    // Para unidades de tipo command o query_queue, agregar configuración completa
+    if ((runnerType === 'command' && unit.Command) || 
+        (runnerType === 'query_queue' && unit.QueryQueue)) {
       return {
         ...baseUnit,
         configuration: extractRunnerConfiguration(unit)
