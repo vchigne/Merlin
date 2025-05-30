@@ -70,8 +70,8 @@ export default function PipelineVisualizerNew({
 
 
 
-  // NUEVO: Función para calcular conexiones CSS entre nodos
-  const calculateCSSConnections = (nodes: any[]) => {
+  // NUEVO: Función para calcular conexiones SVG curvas entre nodos (estilo n8n)
+  const calculateSVGConnections = (nodes: any[]) => {
     const connections = [];
     
     for (let i = 0; i < nodes.length - 1; i++) {
@@ -86,23 +86,33 @@ export default function PipelineVisualizerNew({
         const currentUnitPos = unitPositions[currentNode.id];
         const nextUnitPos = unitPositions[nextNode.id];
         
-        // Calcular centro de cada nodo usando posiciones actualizadas
+        // Calcular puntos de conexión
         const startX = (currentUnitPos?.x ?? currentPos.x) + currentPos.width / 2;
         const startY = (currentUnitPos?.y ?? currentPos.y) + currentPos.height;
         const endX = (nextUnitPos?.x ?? nextPos.x) + nextPos.width / 2;
         const endY = (nextUnitPos?.y ?? nextPos.y);
         
-        // Calcular distancia y ángulo
-        const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-        const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+        // Calcular puntos de control para la curva Bézier
+        const controlOffset = Math.abs(endY - startY) * 0.5; // Offset dinámico basado en distancia
+        const control1X = startX;
+        const control1Y = startY + controlOffset;
+        const control2X = endX;
+        const control2Y = endY - controlOffset;
+        
+        // Crear path SVG con curva suave
+        const pathData = `M ${startX} ${startY} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`;
         
         connections.push({
-          id: `css-line-${i}`,
-          left: startX,
-          top: startY,
-          width: distance,
-          rotation: angle,
-          color: `hsl(${i * 40}, 80%, 45%)` // Color único por conexión con mejor contraste
+          id: `svg-curve-${i}`,
+          pathData,
+          startX,
+          startY,
+          endX,
+          endY,
+          color: `hsl(${(i * 60) % 360}, 70%, 50%)`, // Colores más variados
+          strokeWidth: 3,
+          // Agregar marcador de flecha al final
+          hasArrow: true
         });
       }
     }
@@ -523,7 +533,7 @@ export default function PipelineVisualizerNew({
   // NUEVO: Efecto para recalcular conexiones inmediatamente durante el drag
   useEffect(() => {
     if (pipelineUnits?.length) {
-      const newConnections = calculateCSSConnections(pipelineUnits);
+      const newConnections = calculateSVGConnections(pipelineUnits);
       setDynamicConnections(newConnections);
     }
   }, [nodePositions, unitPositions, pipelineUnits]);
@@ -531,7 +541,7 @@ export default function PipelineVisualizerNew({
   // NUEVO: Efecto para calcular conexiones iniciales cuando las posiciones estén listas
   useEffect(() => {
     if (pipelineUnits?.length && Object.keys(nodePositions).length > 0) {
-      const initialConnections = calculateCSSConnections(pipelineUnits);
+      const initialConnections = calculateSVGConnections(pipelineUnits);
       setDynamicConnections(initialConnections);
     }
   }, [pipelineUnits, nodePositions]);
@@ -634,35 +644,101 @@ export default function PipelineVisualizerNew({
                 
                 return (
                   <>
-                    {/* NUEVO: Conexiones CSS dinámicas que se actualizan durante el drag */}
-                    {dynamicConnections.map(conn => (
-                      <div
-                        key={conn.id}
-                        className="absolute border-t-2 origin-left z-10"
-                        style={{
-                          left: conn.left,
-                          top: conn.top,
-                          width: conn.width,
-                          borderColor: conn.color,
-                          transform: `rotate(${conn.rotation}deg)`,
-                        }}
-                      >
-                        {/* Flecha CSS con pseudo-elemento */}
-                        <div 
-                          className="absolute right-0 top-0 w-0 h-0"
-                          style={{
-                            borderLeft: `8px solid ${conn.color}`,
-                            borderTop: '4px solid transparent',
-                            borderBottom: '4px solid transparent',
-                            transform: 'translateY(-50%)'
-                          }}
-                        />
-                      </div>
-                    ))}
+                    {/* NUEVO: Conexiones SVG curvas estilo n8n */}
+                    <svg 
+                      className="absolute inset-0 pointer-events-none z-10" 
+                      style={{ width: '100%', height: '100%' }}
+                    >
+                      {/* Definir marcadores de flecha */}
+                      <defs>
+                        <marker
+                          id="arrowhead"
+                          markerWidth="10"
+                          markerHeight="7"
+                          refX="9"
+                          refY="3.5"
+                          orient="auto"
+                        >
+                          <polygon
+                            points="0 0, 10 3.5, 0 7"
+                            fill="#4f46e5"
+                            stroke="#4f46e5"
+                            strokeWidth="1"
+                          />
+                        </marker>
+                        {/* Marcadores de flechas con colores dinámicos */}
+                        {dynamicConnections.map((conn, idx) => (
+                          <marker
+                            key={`arrow-${idx}`}
+                            id={`arrowhead-${idx}`}
+                            markerWidth="10"
+                            markerHeight="7"
+                            refX="9"
+                            refY="3.5"
+                            orient="auto"
+                          >
+                            <polygon
+                              points="0 0, 10 3.5, 0 7"
+                              fill={conn.color}
+                              stroke={conn.color}
+                              strokeWidth="1"
+                            />
+                          </marker>
+                        ))}
+                      </defs>
+                      
+                      {/* Renderizar conexiones curvas */}
+                      {dynamicConnections.map((connection, idx) => (
+                        <g key={connection.id}>
+                          {/* Sombra de la línea para mejor visibilidad */}
+                          <path
+                            d={connection.pathData}
+                            stroke="rgba(0,0,0,0.15)"
+                            strokeWidth={connection.strokeWidth + 2}
+                            fill="none"
+                            transform="translate(2,2)"
+                          />
+                          {/* Línea principal con curva */}
+                          <path
+                            d={connection.pathData}
+                            stroke={connection.color}
+                            strokeWidth={connection.strokeWidth}
+                            fill="none"
+                            markerEnd={connection.hasArrow ? `url(#arrowhead-${idx})` : undefined}
+                            className="transition-all duration-200"
+                            style={{
+                              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                            }}
+                          />
+                          
+                          {/* Punto de inicio (círculo pequeño) */}
+                          <circle
+                            cx={connection.startX}
+                            cy={connection.startY}
+                            r="3"
+                            fill={connection.color}
+                            stroke="white"
+                            strokeWidth="2"
+                            className="drop-shadow-sm"
+                          />
+                          
+                          {/* Punto final (círculo pequeño) */}
+                          <circle
+                            cx={connection.endX}
+                            cy={connection.endY}
+                            r="3"
+                            fill={connection.color}
+                            stroke="white"
+                            strokeWidth="2"
+                            className="drop-shadow-sm"
+                          />
+                        </g>
+                      ))}
+                    </svg>
                     
                     {/* Debug: Mostrar cantidad de conexiones */}
-                    <div className="absolute top-2 right-2 bg-black text-white p-2 rounded text-xs">
-                      Conexiones CSS: {dynamicConnections.length}
+                    <div className="absolute top-2 right-2 bg-black text-white p-2 rounded text-xs z-30">
+                      Conexiones SVG: {dynamicConnections.length}
                     </div>
                     
                     {/* NUEVO: Renderizar nodos con referencias para obtener posiciones */}
