@@ -183,8 +183,31 @@ function extractRunnerConfiguration(unit: any): any {
 
 // Función principal: Convertir Pipeline de Hasura a YAML
 export function pipelineToYaml(pipelineData: any): string {
-  if (!pipelineData || !pipelineData.PipelineUnits) {
+  if (!pipelineData) {
     throw new Error('Datos de pipeline inválidos');
+  }
+
+  // Si no tiene PipelineUnits, crear un pipeline básico
+  if (!pipelineData.PipelineUnits || pipelineData.PipelineUnits.length === 0) {
+    const basicYaml: YamlPipeline = {
+      name: pipelineData.name || 'Pipeline sin nombre',
+      description: pipelineData.description || '',
+      configuration: {
+        agent_passport_id: pipelineData.agent_passport_id || '',
+        abort_on_error: pipelineData.abort_on_error || false,
+        abort_on_timeout: pipelineData.abort_on_timeout || false,
+        continue_on_error: pipelineData.continue_on_error || false,
+        disposable: pipelineData.disposable || false
+      },
+      units: []
+    };
+
+    return yaml.stringify(basicYaml, {
+      indent: 2,
+      lineWidth: 120,
+      minContentWidth: 0,
+      keepUndefined: false
+    });
   }
 
   // Construir el mapa de conexiones (parent_unit_id -> children)

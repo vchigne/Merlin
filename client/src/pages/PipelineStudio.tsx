@@ -84,6 +84,192 @@ export default function PipelineStudio() {
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
   
+  // Función para cargar pipeline completo con unidades
+  const loadPipelineComplete = async (pipelineId: string) => {
+    try {
+      console.log("Cargando pipeline completo:", pipelineId);
+      
+      // Cargar pipeline básico y sus unidades por separado
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            query GetPipelineComplete($pipelineId: uuid!) {
+              merlin_agent_Pipeline_by_pk(id: $pipelineId) {
+                id
+                name
+                description
+                abort_on_error
+                abort_on_timeout
+                continue_on_error
+                disposable
+                agent_passport_id
+                created_at
+                updated_at
+              }
+              
+              merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
+                id
+                pipeline_unit_id
+                abort_on_timeout
+                continue_on_error
+                retry_count
+                timeout_milliseconds
+                retry_after_milliseconds
+                call_pipeline
+                posx
+                posy
+                comment
+                
+                Command {
+                  id
+                  target
+                  args
+                  working_directory
+                  instant
+                  raw_script
+                  return_output
+                  return_output_type
+                  name
+                  description
+                }
+                
+                QueryQueue {
+                  id
+                  name
+                  description
+                  Queries {
+                    id
+                    order
+                    path
+                    query_string
+                    return_output
+                    SQLConn {
+                      id
+                      driver
+                      connstring
+                      name
+                    }
+                  }
+                }
+                
+                SFTPDownloader {
+                  id
+                  name
+                  input
+                  output
+                  return_output
+                  SFTPLink {
+                    id
+                    server
+                    port
+                    user
+                    name
+                  }
+                }
+                
+                SFTPUploader {
+                  id
+                  name
+                  output
+                  return_output
+                  SFTPLink {
+                    id
+                    server
+                    port
+                    user
+                    name
+                  }
+                }
+                
+                Zip {
+                  id
+                  output
+                  return_output
+                  name
+                  description
+                }
+                
+                Unzip {
+                  id
+                  input
+                  output
+                  return_output
+                  name
+                  description
+                }
+              }
+            }
+          `,
+          variables: { pipelineId }
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+
+      if (!result.data.merlin_agent_Pipeline_by_pk) {
+        throw new Error('Pipeline no encontrado');
+      }
+
+      // Combinar pipeline con sus unidades
+      const completePipeline = {
+        ...result.data.merlin_agent_Pipeline_by_pk,
+        PipelineUnits: result.data.merlin_agent_PipelineUnit || []
+      };
+
+      console.log("Pipeline completo cargado:", completePipeline);
+      return completePipeline;
+      
+    } catch (error) {
+      console.error("Error al cargar pipeline completo:", error);
+      throw error;
+    }
+  };
+
+  // Función para manejar la selección de un pipeline
+  const handlePipelineSelect = async (pipeline: any) => {
+    console.log("Pipeline seleccionado:", pipeline);
+    
+    try {
+      // Cargar el pipeline completo con sus unidades
+      const completePipeline = await loadPipelineComplete(pipeline.id);
+      setPipelineData(completePipeline);
+      setUnsavedChanges(false);
+      
+      // Convertir a YAML si estamos en modo YAML
+      if (yamlMode) {
+        try {
+          const yaml = pipelineToYaml(completePipeline);
+          setYamlContent(yaml);
+          setYamlErrors([]);
+        } catch (error) {
+          console.error("Error al convertir a YAML:", error);
+          setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
+        }
+      }
+      
+      toast({
+        title: "Pipeline cargado",
+        description: `Pipeline "${completePipeline.name}" cargado con ${completePipeline.PipelineUnits.length} unidades`
+      });
+      
+    } catch (error) {
+      console.error("Error al cargar pipeline:", error);
+      toast({
+        title: "Error al cargar pipeline",
+        description: error instanceof Error ? error.message : "Error desconocido",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Función para alternar entre modo visual y YAML
   const toggleYamlMode = () => {
     if (!yamlMode && pipelineData) {

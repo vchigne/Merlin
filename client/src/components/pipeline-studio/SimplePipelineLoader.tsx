@@ -34,11 +34,28 @@ interface Pipeline {
   disposable?: boolean;
 }
 
+interface SimplePipelineLoaderProps {
+  onPipelineSelect?: (pipeline: Pipeline) => void;
+}
+
 // Componente que usa wouter para la navegación SPA
-export default function SimplePipelineLoader() {
+export default function SimplePipelineLoader({ onPipelineSelect }: SimplePipelineLoaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [, navigate] = useLocation();
+
+  // Función para manejar la selección de pipeline
+  const handlePipelineSelect = (pipeline: Pipeline) => {
+    if (onPipelineSelect) {
+      // Si se proporciona un callback, usarlo
+      onPipelineSelect(pipeline);
+      setIsOpen(false);
+    } else {
+      // Comportamiento por defecto: navegar a la página de detalles
+      navigate(`/pipeline/${pipeline.id}`);
+      setIsOpen(false);
+    }
+  };
   
   // Usar el mismo hook que el dashboard para cargar pipelines
   const { 
@@ -143,13 +160,7 @@ export default function SimplePipelineLoader() {
                       <Button 
                         size="sm" 
                         variant="default"
-                        onClick={() => {
-                          setIsOpen(false);
-                          // Navegar usando wouter pero con un pequeño retraso para permitir que el diálogo se cierre
-                          setTimeout(() => {
-                            navigate(`/pipeline-studio/${pipeline.id}`);
-                          }, 10);
-                        }}
+                        onClick={() => handlePipelineSelect(pipeline)}
                       >
                         <Edit className="mr-1 h-4 w-4" />
                         Editar
