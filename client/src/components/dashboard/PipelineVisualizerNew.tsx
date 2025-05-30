@@ -114,10 +114,15 @@ export default function PipelineVisualizerNew({
   useEffect(() => {
     const timer = setTimeout(() => {
       updateNodePositions();
+      // NUEVO: También calcular conexiones iniciales
+      if (pipelineUnits?.length) {
+        const initialConnections = calculateCSSConnections(pipelineUnits);
+        setDynamicConnections(initialConnections);
+      }
     }, 100); // Pequeño delay para asegurar que el DOM esté renderizado
     
     return () => clearTimeout(timer);
-  }, [selectedPipeline]);
+  }, [selectedPipeline, pipelineUnits]);
 
   // Función para obtener el color del tipo de unidad
   const getUnitTypeColor = (unitType: string): string => {
