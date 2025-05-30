@@ -144,13 +144,14 @@ function extractRunnerConfiguration(unit: any): any {
       };
       
     case 'zip':
-      return {
-        zip_name: unit.Zip?.zip_name,
-        file_streams: unit.Zip?.FileStreamZips?.map((stream: any) => ({
-          input: stream.input,
-          wildcard_exp: stream.wildcard_exp
-        })) || []
-      };
+      if (unit.Zip) {
+        return {
+          output_path: unit.Zip.output || null,
+          return_output: unit.Zip.return_output || false,
+          zip_name: unit.Zip.zip_name || null
+        };
+      }
+      return {};
       
     case 'unzip':
       return {
@@ -218,7 +219,8 @@ export function pipelineToYaml(pipelineData: any): string {
       displayName,
       hasCommand: !!unit.Command,
       hasQueryQueue: !!unit.QueryQueue,
-      queryQueueData: unit.QueryQueue
+      hasZip: !!unit.Zip,
+      zipData: unit.Zip
     });
     
     const baseUnit = {
@@ -227,9 +229,10 @@ export function pipelineToYaml(pipelineData: any): string {
       type: runnerType
     };
 
-    // Para unidades de tipo command o query_queue, agregar configuración completa
+    // Para unidades de tipo command, query_queue o zip, agregar configuración completa
     if ((runnerType === 'command' && unit.Command) || 
-        (runnerType === 'query_queue' && unit.QueryQueue)) {
+        (runnerType === 'query_queue' && unit.QueryQueue) ||
+        (runnerType === 'zip' && unit.Zip)) {
       return {
         ...baseUnit,
         configuration: extractRunnerConfiguration(unit)

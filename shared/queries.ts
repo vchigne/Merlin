@@ -120,6 +120,9 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
+        output
+        return_output
+        zip_name
       }
       Unzip {
         id
