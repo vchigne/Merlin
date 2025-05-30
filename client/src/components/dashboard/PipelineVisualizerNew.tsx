@@ -70,7 +70,7 @@ export default function PipelineVisualizerNew({
 
 
 
-  // NUEVO: Función para calcular conexiones CSS entre nodos
+  // NUEVO: Función para calcular conexiones CSS entre nodos con bordes inteligentes
   const calculateCSSConnections = (nodes: any[]) => {
     const connections = [];
     
@@ -86,22 +86,100 @@ export default function PipelineVisualizerNew({
         const currentUnitPos = unitPositions[currentNode.id];
         const nextUnitPos = unitPositions[nextNode.id];
         
-        // Calcular centro de cada nodo usando posiciones actualizadas
-        const startX = (currentUnitPos?.x ?? currentPos.x) + currentPos.width / 2;
-        const startY = (currentUnitPos?.y ?? currentPos.y) + currentPos.height;
-        const endX = (nextUnitPos?.x ?? nextPos.x) + nextPos.width / 2;
-        const endY = (nextUnitPos?.y ?? nextPos.y);
+        // Calcular posiciones actuales de los nodos
+        const sourceLeft = currentUnitPos?.x ?? currentPos.x;
+        const sourceTop = currentUnitPos?.y ?? currentPos.y;
+        const sourceRight = sourceLeft + currentPos.width;
+        const sourceBottom = sourceTop + currentPos.height;
+        const sourceCenterX = sourceLeft + currentPos.width / 2;
+        const sourceCenterY = sourceTop + currentPos.height / 2;
         
-        // Calcular distancia y ángulo
+        const targetLeft = nextUnitPos?.x ?? nextPos.x;
+        const targetTop = nextUnitPos?.y ?? nextPos.y;
+        const targetRight = targetLeft + nextPos.width;
+        const targetBottom = targetTop + nextPos.height;
+        const targetCenterX = targetLeft + nextPos.width / 2;
+        const targetCenterY = targetTop + nextPos.height / 2;
+        
+        // Determinar el borde más cercano para la salida y entrada
+        let startX, startY, endX, endY;
+        
+        // Calcular diferencias para determinar la dirección más directa
+        const deltaX = targetCenterX - sourceCenterX;
+        const deltaY = targetCenterY - sourceCenterY;
+        
+        // Determinar punto de salida del nodo fuente
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Conexión más horizontal
+          if (deltaX > 0) {
+            // Target está a la derecha: salir por borde derecho
+            startX = sourceRight;
+            startY = sourceCenterY;
+          } else {
+            // Target está a la izquierda: salir por borde izquierdo
+            startX = sourceLeft;
+            startY = sourceCenterY;
+          }
+        } else {
+          // Conexión más vertical
+          if (deltaY > 0) {
+            // Target está abajo: salir por borde inferior
+            startX = sourceCenterX;
+            startY = sourceBottom;
+          } else {
+            // Target está arriba: salir por borde superior
+            startX = sourceCenterX;
+            startY = sourceTop;
+          }
+        }
+        
+        // Determinar punto de entrada del nodo destino
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Conexión más horizontal
+          if (deltaX > 0) {
+            // Source está a la izquierda: entrar por borde izquierdo
+            endX = targetLeft;
+            endY = targetCenterY;
+          } else {
+            // Source está a la derecha: entrar por borde derecho
+            endX = targetRight;
+            endY = targetCenterY;
+          }
+        } else {
+          // Conexión más vertical
+          if (deltaY > 0) {
+            // Source está arriba: entrar por borde superior
+            endX = targetCenterX;
+            endY = targetTop;
+          } else {
+            // Source está abajo: entrar por borde inferior
+            endX = targetCenterX;
+            endY = targetBottom;
+          }
+        }
+        
+        // Calcular distancia y ángulo para compatibilidad CSS
         const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
         const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
         
-        // Para SVG: también calcular puntos de control para la curva
-        const controlOffset = Math.abs(endY - startY) * 0.5;
-        const control1X = startX;
-        const control1Y = startY + controlOffset;
-        const control2X = endX;
-        const control2Y = endY - controlOffset;
+        // Para SVG: calcular puntos de control para la curva suave
+        const controlOffset = Math.min(Math.abs(endY - startY) * 0.5, Math.abs(endX - startX) * 0.5, 50);
+        let control1X = startX;
+        let control1Y = startY;
+        let control2X = endX;
+        let control2Y = endY;
+        
+        // Ajustar puntos de control según la dirección de la conexión
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Conexión horizontal: offset vertical
+          control1Y = startY + (deltaY > 0 ? controlOffset : -controlOffset);
+          control2Y = endY + (deltaY > 0 ? -controlOffset : controlOffset);
+        } else {
+          // Conexión vertical: offset horizontal
+          control1X = startX + (deltaX > 0 ? controlOffset : -controlOffset);
+          control2X = endX + (deltaX > 0 ? -controlOffset : controlOffset);
+        }
+        
         const pathData = `M ${startX} ${startY} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`;
         
         connections.push({
@@ -411,7 +489,7 @@ export default function PipelineVisualizerNew({
       const col = index % 3;
       
       const xPosition = 50 + (col * 220); // Espaciado horizontal de 220px
-      const yPosition = 50 + (row * 250); // Espaciado vertical de 250px
+      const yPosition = 50 + (row * 300); // Espaciado vertical de 300px
       
       return {
         id: unit.id,
