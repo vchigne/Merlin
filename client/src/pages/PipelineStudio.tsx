@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 // No necesitamos importar Layout ya que App.tsx ya lo incluye
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
 
@@ -732,9 +733,9 @@ export default function PipelineStudio() {
                   </div>
                 </div>
                 
-                <Textarea
+                <textarea
                   value={yamlContent}
-                  onChange={(e) => handleYamlChange(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleYamlChange(e.target.value)}
                   placeholder="# Pipeline YAML
 name: 'Mi Pipeline'
 description: 'Descripción del pipeline'
@@ -742,7 +743,7 @@ configuration:
   agent_passport_id: 'agent-id'
   abort_on_error: true
 units: []"
-                  className="min-h-[500px] font-mono text-sm"
+                  className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg"
                   readOnly={editorMode === 'view'}
                 />
               </div>
