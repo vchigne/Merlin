@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Download, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { convertPipelineToYaml, convertYamlToPipeline } from '@/lib/pipeline-yaml-converter';
+import { convertPipelineToYaml } from '@/lib/pipeline-yaml-converter-new';
 import { useToast } from '@/hooks/use-toast';
 
 interface PipelineYamlEditorProps {
@@ -30,7 +30,7 @@ export default function PipelineYamlEditor({
   useEffect(() => {
     if (pipelineData && pipelineUnits) {
       try {
-        const yaml = convertPipelineToYaml(pipelineData, pipelineUnits);
+        const yaml = convertPipelineToYaml({ ...pipelineData, units: pipelineUnits });
         setYamlContent(yaml);
         setIsValidYaml(true);
         setValidationErrors([]);

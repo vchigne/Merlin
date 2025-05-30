@@ -227,12 +227,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get pipeline units (safe version for YAML editor)
+      // Get pipeline units with complete relations (per documentation)
       const unitsResult = await hasuraClient.query(`
         query GetPipelineUnits($pipelineId: uuid!) {
           units: merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
             id
+            pipeline_unit_id
+            retry_count
+            retry_after_milliseconds
+            timeout_milliseconds
+            continue_on_error
+            abort_on_timeout
+            notify_on_error_email
+            notify_on_error_webhook
+            notify_on_timeout_email
+            notify_on_timeout_webhook
             comment
+            posx
+            posy
+            created_at
+            updated_at
+            
+            # IDs de runners (solo uno será no-null)
             command_id
             query_queue_id
             sftp_downloader_id
@@ -240,19 +256,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
             zip_id
             unzip_id
             call_pipeline
-            continue_on_error
-            retry_count
-            retry_after_milliseconds
-            timeout_milliseconds
-            abort_on_timeout
-            notify_on_error_email
-            notify_on_error_webhook
-            notify_on_timeout_email
-            notify_on_timeout_webhook
-            posx
-            posy
-            created_at
-            updated_at
+            
+            # Relaciones cargadas según documentación
+            Command {
+              id
+              target
+              args
+              working_directory
+              raw_script
+              instant
+              return_output
+              return_output_type
+            }
+            
+            QueryQueue {
+              id
+              Queries {
+                id
+                order
+                statement
+                path
+                return_output
+                print_headers
+                separator
+                chunks
+                trim_columns
+                force_dot_decimal_separator
+                date_format
+                target_encoding
+                retry_count
+                retry_after_milliseconds
+                SQLConn {
+                  id
+                  driver
+                  connection_string
+                  name
+                }
+              }
+            }
+            
+            SFTPDownloader {
+              id
+              SFTPLink {
+                id
+                server
+                port
+                user
+                name
+              }
+              FileStreamSftpDownloaders {
+                id
+                input
+                output
+                return_output
+              }
+            }
+            
+            SFTPUploader {
+              id
+              SFTPLink {
+                id
+                server
+                port
+                user
+                name
+              }
+              FileStreamSftpUploaders {
+                id
+                input
+                output
+                return_output
+              }
+            }
+            
+            Zip {
+              id
+              zip_name
+              FileStreamZips {
+                id
+                input
+                wildcard_exp
+              }
+            }
+            
+            Unzip {
+              id
+              FileStreamUnzips {
+                id
+                input
+                output
+                return_output
+              }
+            }
           }
         }
       `, { pipelineId: id });
