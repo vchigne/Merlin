@@ -25,6 +25,12 @@ export default function PipelineVisualizerNew({
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [nodePositions, setNodePositions] = useState<{ [key: string]: { x: number, y: number, width: number, height: number } }>({});
+  
+  // NUEVO: Estados para drag and drop
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedUnit, setDraggedUnit] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [unitPositions, setUnitPositions] = useState<{ [key: string]: { x: number, y: number } }>({});
 
   // Efecto para actualizar el pipeline seleccionado cuando cambia la prop
   useEffect(() => {
@@ -241,6 +247,61 @@ export default function PipelineVisualizerNew({
     
     return `${type.type} #${unit.id?.slice(-4) || 'N/A'}`;
   };
+
+  // NUEVO: Funciones para drag and drop
+  const handleMouseDown = (unit: any, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    setIsDragging(true);
+    setDraggedUnit(unit.id);
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    });
+  };
+
+  const handleUnitClick = (unit: any, event: React.MouseEvent) => {
+    // Solo abrir dialog si no estamos arrastrando
+    if (!isDragging) {
+      event.stopPropagation();
+      setSelectedUnit(unit);
+      setDialogOpen(true);
+    }
+  };
+
+  // NUEVO: Efecto para manejar eventos globales de mouse durante drag
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMouseMove = (event: MouseEvent) => {
+        if (draggedUnit && containerRef.current) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const newX = event.clientX - containerRect.left - dragOffset.x;
+          const newY = event.clientY - containerRect.top - dragOffset.y;
+          
+          setUnitPositions(prev => ({
+            ...prev,
+            [draggedUnit]: { x: newX, y: newY }
+          }));
+        }
+      };
+
+      const handleGlobalMouseUp = () => {
+        setIsDragging(false);
+        setDraggedUnit(null);
+      };
+
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [isDragging, draggedUnit, dragOffset]);
 
   // Función para obtener la descripción para mostrar
   const getDisplayDescription = (unit: any) => {
@@ -580,14 +641,16 @@ export default function PipelineVisualizerNew({
                         <div
                           key={node.id}
                           ref={el => nodeRefs.current[node.id] = el}
-                          className="absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-lg transition-all duration-200"
+                          className={`absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-lg transition-all duration-200 ${isDragging && draggedUnit === node.id ? 'cursor-grabbing' : 'cursor-grab'}`}
                           style={{
-                            left: node.posX,
-                            top: node.posY,
+                            left: unitPositions[node.id]?.x ?? node.posX,
+                            top: unitPositions[node.id]?.y ?? node.posY,
                             width: '200px',
                             borderLeft: `4px solid ${getUnitTypeColor(node.type)}`,
-                            zIndex: 20
+                            zIndex: isDragging && draggedUnit === node.id ? 30 : 20,
+                            transform: isDragging && draggedUnit === node.id ? 'scale(1.05)' : 'scale(1)'
                           }}
+                          onMouseDown={(e) => handleMouseDown(unitData, e)}
                         >
                           {/* Tipo de unidad arriba a la derecha con color */}
                           <div className="flex justify-between items-start mb-2">
@@ -616,11 +679,7 @@ export default function PipelineVisualizerNew({
                           {/* Botón Details en la esquina inferior derecha */}
                           <div className="flex justify-end">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedUnit(unitData);
-                                setDialogOpen(true);
-                              }}
+                              onClick={(e) => handleUnitClick(unitData, e)}
                               className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-md transition-colors duration-200 flex items-center gap-1"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
