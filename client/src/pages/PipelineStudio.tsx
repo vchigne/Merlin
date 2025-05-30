@@ -103,8 +103,6 @@ export default function PipelineStudio() {
                 name
                 description
                 abort_on_error
-                abort_on_timeout
-                continue_on_error
                 disposable
                 agent_passport_id
                 created_at
