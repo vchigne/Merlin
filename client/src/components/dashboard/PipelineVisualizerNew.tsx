@@ -114,15 +114,10 @@ export default function PipelineVisualizerNew({
   useEffect(() => {
     const timer = setTimeout(() => {
       updateNodePositions();
-      // NUEVO: También calcular conexiones iniciales
-      if (pipelineUnits?.length) {
-        const initialConnections = calculateCSSConnections(pipelineUnits);
-        setDynamicConnections(initialConnections);
-      }
     }, 100); // Pequeño delay para asegurar que el DOM esté renderizado
     
     return () => clearTimeout(timer);
-  }, [selectedPipeline, pipelineUnits]);
+  }, [selectedPipeline]);
 
   // Función para obtener el color del tipo de unidad
   const getUnitTypeColor = (unitType: string): string => {
@@ -532,6 +527,18 @@ export default function PipelineVisualizerNew({
       setDynamicConnections(newConnections);
     }
   }, [nodePositions, unitPositions, pipelineUnits]);
+
+  // NUEVO: Efecto para calcular conexiones iniciales al cargar el pipeline
+  useEffect(() => {
+    if (pipelineUnits?.length) {
+      const timer = setTimeout(() => {
+        const initialConnections = calculateCSSConnections(pipelineUnits);
+        setDynamicConnections(initialConnections);
+      }, 200); // Delay mayor para asegurar que las posiciones están calculadas
+      
+      return () => clearTimeout(timer);
+    }
+  }, [pipelineUnits]);
   
   // Función para manejar el cambio de pipeline seleccionado
   const handlePipelineChange = (value: string) => {
