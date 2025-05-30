@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { PipelineTemplateManager } from "@/lib/pipeline-template-manager";
 import PipelineYamlEditor from "@/components/pipeline-studio/PipelineYamlEditor";
 import SimplePipelineLoader from "@/components/pipeline-studio/SimplePipelineLoader";
+import { pipelineToYaml, yamlToPipeline, validateYamlStructure } from '@/lib/yaml-converter';
 import PipelineVisualizerNew from "@/components/dashboard/PipelineVisualizerNew";
 import { 
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
@@ -73,6 +74,7 @@ export default function PipelineStudio() {
   const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
   const [yamlMode, setYamlMode] = useState<boolean>(false);
   const [yamlContent, setYamlContent] = useState<string>('');
+  const [yamlErrors, setYamlErrors] = useState<string[]>([]);
   const [showPropertiesPanel, setShowPropertiesPanel] = useState<boolean>(true);
   const [agentOptions, setAgentOptions] = useState<any[]>([]);
   const [sftpOptions, setSftpOptions] = useState<SFTPOption[]>([]);
@@ -80,6 +82,66 @@ export default function PipelineStudio() {
   
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
+  
+  // Función para alternar entre modo visual y YAML
+  const toggleYamlMode = () => {
+    if (!yamlMode && pipelineData) {
+      // Convertir a YAML al activar modo YAML
+      try {
+        const yaml = pipelineToYaml(pipelineData);
+        setYamlContent(yaml);
+        setYamlErrors([]);
+      } catch (error) {
+        console.error("Error al convertir a YAML:", error);
+        setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
+      }
+    }
+    setYamlMode(!yamlMode);
+  };
+  
+  // Función para manejar cambios en el contenido YAML
+  const handleYamlChange = (newYamlContent: string) => {
+    setYamlContent(newYamlContent);
+    setUnsavedChanges(true);
+    
+    // Validar YAML en tiempo real
+    const validation = validateYamlStructure(newYamlContent);
+    setYamlErrors(validation.errors);
+  };
+  
+  // Función para aplicar cambios del YAML al pipeline
+  const applyYamlChanges = () => {
+    try {
+      if (yamlErrors.length > 0) {
+        toast({
+          title: "Error en YAML",
+          description: "Corrige los errores antes de aplicar los cambios",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const updatedPipeline = yamlToPipeline(yamlContent);
+      setPipelineData({
+        ...pipelineData,
+        ...updatedPipeline
+      });
+      
+      toast({
+        title: "YAML aplicado",
+        description: "Los cambios del YAML se han aplicado al pipeline",
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error("Error al aplicar YAML:", error);
+      toast({
+        title: "Error al aplicar YAML",
+        description: error instanceof Error ? error.message : 'Error desconocido',
+        variant: "destructive"
+      });
+    }
+  };
   
   // Efecto para cargar los datos del pipeline en modo edición
   useEffect(() => {
@@ -219,15 +281,12 @@ export default function PipelineStudio() {
       // Generar YAML si estamos en modo YAML
       if (yamlMode) {
         try {
-          const yaml = templateManager.convertFlowToYaml(flow, {
-            name: pipeline.name,
-            description: pipeline.description || '',
-            agent_passport_id: pipeline.agent_passport_id,
-            abort_on_error: pipeline.abort_on_error === true
-          });
+          const yaml = pipelineToYaml(pipeline);
           setYamlContent(yaml);
+          setYamlErrors([]);
         } catch (error) {
           console.error("Error al convertir a YAML:", error);
+          setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
         }
       }
     } catch (error) {
@@ -279,46 +338,7 @@ export default function PipelineStudio() {
     }
   };
   
-  // Alternar entre modo visual y YAML
-  const toggleYamlMode = () => {
-    if (!yamlMode) {
-      // Pasar de modo visual a YAML
-      try {
-        if (pipelineFlowData && pipelineData) {
-          const yaml = templateManager.convertFlowToYaml(pipelineFlowData, {
-            name: pipelineData.name || 'Nuevo Pipeline',
-            description: pipelineData.description || '',
-            agent_passport_id: pipelineData.agent_passport_id || '',
-            abort_on_error: pipelineData.abort_on_error === true
-          });
-          setYamlContent(yaml);
-        }
-      } catch (error) {
-        console.error("Error al convertir a YAML:", error);
-        toast({
-          title: "Error al generar YAML",
-          description: "No se pudo convertir el pipeline a formato YAML",
-          variant: "destructive"
-        });
-      }
-    } else {
-      // Pasar de YAML a modo visual
-      try {
-        if (yamlContent) {
-          const { flow, pipeline } = templateManager.convertYamlToFlow(yamlContent);
-          setPipelineFlowData(flow);
-          setPipelineData({
-            ...pipelineData,
-            name: pipeline.name || pipelineData?.name || 'Nuevo Pipeline',
-            description: pipeline.description || pipelineData?.description || '',
-            agent_passport_id: pipeline.agent_passport_id || pipelineData?.agent_passport_id || '',
-            abort_on_error: pipeline.abort_on_error !== undefined ? pipeline.abort_on_error : (pipelineData?.abort_on_error === true)
-          });
-        }
-      } catch (error) {
-        console.error("Error al convertir de YAML:", error);
-        toast({
-          title: "Error al procesar YAML",
+
           description: "El formato YAML no es válido o contiene errores",
           variant: "destructive"
         });
