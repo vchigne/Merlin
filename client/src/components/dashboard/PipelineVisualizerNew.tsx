@@ -733,66 +733,18 @@ export default function PipelineVisualizerNew({
                       className="absolute inset-0 pointer-events-none z-10" 
                       style={{ width: '100%', height: '100%' }}
                     >
-                      {/* Definir marcadores de flecha */}
-                      <defs>
-                        <marker
-                          id="arrowhead"
-                          markerWidth="10"
-                          markerHeight="7"
-                          refX="9"
-                          refY="3.5"
-                          orient="auto"
-                        >
-                          <polygon
-                            points="0 0, 10 3.5, 0 7"
-                            fill="#4f46e5"
-                            stroke="#4f46e5"
-                            strokeWidth="1"
-                          />
-                        </marker>
-                        {/* Marcadores de flechas con colores dinámicos */}
-                        {dynamicConnections.map((conn, idx) => (
-                          <marker
-                            key={`arrow-${idx}`}
-                            id={`arrowhead-${idx}`}
-                            markerWidth="10"
-                            markerHeight="7"
-                            refX="9"
-                            refY="3.5"
-                            orient="auto"
-                          >
-                            <polygon
-                              points="0 0, 10 3.5, 0 7"
-                              fill={conn.color}
-                              stroke={conn.color}
-                              strokeWidth="1"
-                            />
-                          </marker>
-                        ))}
-                      </defs>
+
                       
                       {/* Renderizar conexiones curvas */}
                       {dynamicConnections.map((connection, idx) => (
                         <g key={connection.id}>
-                          {/* Sombra de la línea para mejor visibilidad */}
-                          <path
-                            d={connection.pathData}
-                            stroke="rgba(0,0,0,0.15)"
-                            strokeWidth={connection.strokeWidth + 2}
-                            fill="none"
-                            transform="translate(2,2)"
-                          />
                           {/* Línea principal con curva */}
                           <path
                             d={connection.pathData}
                             stroke={connection.color}
                             strokeWidth={connection.strokeWidth}
                             fill="none"
-                            markerEnd={connection.hasArrow ? `url(#arrowhead-${idx})` : undefined}
                             className="transition-all duration-200"
-                            style={{
-                              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                            }}
                           />
                           
                           {/* Punto de inicio (círculo pequeño) */}
@@ -834,7 +786,7 @@ export default function PipelineVisualizerNew({
                         <div
                           key={node.id}
                           ref={el => nodeRefs.current[node.id] = el}
-                          className={`absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-lg transition-all duration-200 ${isDragging && draggedUnit === node.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                          className={`absolute bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 transition-all duration-200 ${isDragging && draggedUnit === node.id ? 'cursor-grabbing' : 'cursor-grab'}`}
                           style={{
                             left: unitPositions[node.id]?.x ?? node.posX,
                             top: unitPositions[node.id]?.y ?? node.posY,
