@@ -64,7 +64,6 @@ export default function SimplePipelineLoader({ onPipelineSelect }: SimplePipelin
     error: queryError, 
     refetch
   } = usePipelines({
-    limit: 1000, // Límite muy alto para cargar todos los pipelines
     includeJobInfo: false // No necesitamos información de jobs aquí
   });
   

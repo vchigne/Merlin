@@ -27,7 +27,7 @@ export function usePipelines({
   ` : '';
 
   return useQuery({
-    queryKey: ['/api/pipelines', { limit, offset, agentId }],
+    queryKey: ['/api/pipelines', { agentId }],
     queryFn: async () => {
       // Determine if we need to filter by agent
       let result;
@@ -65,11 +65,9 @@ export function usePipelines({
       } else {
         // Use a query without agent filter
         result = await executeQuery(`
-          query GetPipelines($limit: Int!, $offset: Int!) {
+          query GetPipelines {
             merlin_agent_Pipeline(
               order_by: {created_at: desc}
-              limit: $limit
-              offset: $offset
             ) {
               id
               name
@@ -90,7 +88,7 @@ export function usePipelines({
               }
             }
           }
-        `, { limit, offset });
+        `, {});
       }
       
       if (result.errors) {
