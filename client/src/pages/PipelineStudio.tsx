@@ -826,7 +826,7 @@ export default function PipelineStudio() {
               {/* Dialog para seleccionar plantilla */}
               <div className="flex items-center space-x-2">
                 {/* Dialog para cargar pipeline existente */}
-                <SimplePipelineLoader />
+                <SimplePipelineLoader onPipelineSelect={handlePipelineSelect} />
                 
                 {/* Dialog para cargar plantilla */}
                 <Dialog>
