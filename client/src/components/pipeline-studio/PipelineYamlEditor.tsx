@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Download, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { convertPipelineToYaml } from '@/lib/pipeline-yaml-converter-new';
+import { convertPipelineToYaml } from '@/lib/pipeline-yaml-converter-final';
 import { useToast } from '@/hooks/use-toast';
 
 interface PipelineYamlEditorProps {
@@ -140,34 +140,11 @@ export default function PipelineYamlEditor({
 
   // Aplicar cambios YAML al pipeline
   const applyYamlChanges = () => {
-    if (!isValidYaml) {
-      toast({
-        title: "YAML inválido",
-        description: "Corrige los errores antes de aplicar los cambios",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { pipelineData: newPipelineData, pipelineUnits: newPipelineUnits } = 
-        convertYamlToPipeline(yamlContent);
-      
-      if (onYamlToPipelineConvert) {
-        onYamlToPipelineConvert(newPipelineData, newPipelineUnits);
-        toast({
-          title: "Cambios aplicados",
-          description: "El pipeline se ha actualizado desde el YAML",
-          variant: "default"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error al convertir",
-        description: "No se pudo convertir el YAML al formato de pipeline",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Solo lectura",
+      description: "El editor YAML está en modo de solo lectura para visualización",
+      variant: "default"
+    });
   };
 
   return (
