@@ -90,7 +90,7 @@ export function YamlEditor({ value, onChange, onApply, errors = [], readOnly = f
       )}
 
       {/* Editor de texto */}
-      <div className="border rounded-lg">
+      <div className="border rounded-lg dark:border-gray-700">
         <Textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -101,7 +101,7 @@ configuration:
   agent_passport_id: 'agent-id'
   abort_on_error: true
 units: []"
-          className="min-h-[500px] font-mono text-sm border-0 resize-none"
+          className="min-h-[500px] font-mono text-sm border-0 resize-none bg-background text-foreground dark:bg-gray-900 dark:text-gray-100"
           readOnly={readOnly}
         />
       </div>
