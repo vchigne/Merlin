@@ -295,59 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
-            SFTPDownloader {
-              id
-              SFTPLink {
-                id
-                server
-                port
-                user
-                name
-              }
-              FileStreamSftpDownloaders {
-                id
-                input
-                output
-                return_output
-              }
-            }
-            
-            SFTPUploader {
-              id
-              SFTPLink {
-                id
-                server
-                port
-                user
-                name
-              }
-              FileStreamSftpUploaders {
-                id
-                input
-                output
-                return_output
-              }
-            }
-            
-            Zip {
-              id
-              zip_name
-              FileStreamZips {
-                id
-                input
-                wildcard_exp
-              }
-            }
-            
-            Unzip {
-              id
-              FileStreamUnzips {
-                id
-                input
-                output
-                return_output
-              }
-            }
+
           }
         }
       `, { pipelineId: id });
