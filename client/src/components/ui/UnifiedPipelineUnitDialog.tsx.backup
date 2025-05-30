@@ -275,25 +275,6 @@ export default function UnifiedPipelineUnitDialog({
                 <div><span className="font-medium">Retornar Output:</span> {details.return_output ? 'Sí' : 'No'}</div>
               </div>
             </div>
-            
-            {details.FileStreamZips && details.FileStreamZips.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Archivos de Entrada</h4>
-                <div className="space-y-2">
-                  {details.FileStreamZips.map((stream: any, index: number) => (
-                    <div key={stream.id || index} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                      <div className="text-sm space-y-1">
-                        <div><span className="font-medium">Entrada:</span> {stream.input || 'No especificado'}</div>
-                        {stream.wildcard_exp && (
-                          <div><span className="font-medium">Expresión Comodín:</span> {stream.wildcard_exp}</div>
-                        )}
-                        <div><span className="font-medium">Retornar Output:</span> {stream.return_output ? 'Sí' : 'No'}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         );
 
