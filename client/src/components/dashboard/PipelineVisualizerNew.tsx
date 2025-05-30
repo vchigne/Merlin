@@ -32,7 +32,7 @@ export default function PipelineVisualizerNew({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [unitPositions, setUnitPositions] = useState<{ [key: string]: { x: number, y: number } }>({});
   // NUEVO: Estado para conexiones dinámicas que se actualiza durante el drag
-  const [connections, setConnections] = useState<any[]>([]);
+  const [dynamicConnections, setDynamicConnections] = useState<any[]>([]);
 
   // Efecto para actualizar el pipeline seleccionado cuando cambia la prop
   useEffect(() => {
@@ -68,13 +68,7 @@ export default function PipelineVisualizerNew({
     updateNodePositions();
   }, [unitPositions]);
 
-  // NUEVO: Efecto para recalcular conexiones inmediatamente durante el drag
-  useEffect(() => {
-    if (pipelineUnits?.merlin_agent_PipelineUnit) {
-      const newConnections = calculateCSSConnections(pipelineUnits.merlin_agent_PipelineUnit);
-      setConnections(newConnections);
-    }
-  }, [nodePositions, unitPositions, pipelineUnits]);
+
 
   // NUEVO: Función para calcular conexiones CSS entre nodos
   const calculateCSSConnections = (nodes: any[]) => {
@@ -525,6 +519,14 @@ export default function PipelineVisualizerNew({
     enabled: !!selectedPipeline,
     staleTime: 30000,
   });
+
+  // NUEVO: Efecto para recalcular conexiones inmediatamente durante el drag
+  useEffect(() => {
+    if (pipelineUnits?.length) {
+      const newConnections = calculateCSSConnections(pipelineUnits);
+      setDynamicConnections(newConnections);
+    }
+  }, [nodePositions, unitPositions, pipelineUnits]);
   
   // Función para manejar el cambio de pipeline seleccionado
   const handlePipelineChange = (value: string) => {
@@ -604,7 +606,7 @@ export default function PipelineVisualizerNew({
                 return (
                   <>
                     {/* NUEVO: Conexiones CSS dinámicas que se actualizan durante el drag */}
-                    {connections.map(conn => (
+                    {dynamicConnections.map(conn => (
                       <div
                         key={conn.id}
                         className="absolute border-t-2 origin-left z-10"
@@ -631,7 +633,7 @@ export default function PipelineVisualizerNew({
                     
                     {/* Debug: Mostrar cantidad de conexiones */}
                     <div className="absolute top-2 right-2 bg-black text-white p-2 rounded text-xs">
-                      Conexiones CSS: {cssConnections.length}
+                      Conexiones CSS: {dynamicConnections.length}
                     </div>
                     
                     {/* NUEVO: Renderizar nodos con referencias para obtener posiciones */}
