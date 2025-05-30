@@ -20,6 +20,7 @@ export default function PipelineVisualizerNew({
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(propPipelineId || null);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   
   // NUEVO: Referencias y posiciones para conexiones CSS
   const containerRef = useRef<HTMLDivElement>(null);
@@ -695,22 +696,40 @@ export default function PipelineVisualizerNew({
   }
 
   return (
-    <Card>
+    <Card className={isMaximized ? "fixed inset-4 z-50 shadow-2xl" : ""}>
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
           <CardTitle>Visualización del Pipeline</CardTitle>
-          {showSelector && (
-            <PipelineSearch
-              pipelines={pipelinesData}
-              selectedPipelineId={selectedPipeline}
-              onSelectPipeline={handlePipelineChange}
-              isLoading={isPipelinesLoading}
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {showSelector && (
+              <PipelineSearch
+                pipelines={pipelinesData}
+                selectedPipelineId={selectedPipeline}
+                onSelectPipeline={handlePipelineChange}
+                isLoading={isPipelinesLoading}
+              />
+            )}
+            {/* Botón de maximizar/minimizar */}
+            <button
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors duration-200"
+              title={isMaximized ? "Minimizar" : "Maximizar"}
+            >
+              {isMaximized ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full h-[400px] overflow-auto pb-4">
+        <div className={`relative w-full overflow-auto pb-4 ${isMaximized ? 'h-[calc(100vh-120px)]' : 'h-[400px]'}`}>
           {isUnitsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="h-full w-full rounded-lg" />
