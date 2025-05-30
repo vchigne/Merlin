@@ -72,12 +72,27 @@ export default function SimplePipelineLoader({ onPipelineSelect }: SimplePipelin
   const pipelines = pipelinesData?.pipelines || [];
   const error = queryError ? (queryError instanceof Error ? queryError.message : 'Error al cargar pipelines') : null;
 
-  // Filtrar pipelines
+  // Función para normalizar texto (quitar acentos y caracteres especiales)
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+      .replace(/[^\w\s]/g, ' ') // Reemplazar caracteres especiales con espacios
+      .replace(/\s+/g, ' ') // Normalizar espacios múltiples
+      .trim();
+  };
+
+  // Filtrar pipelines con búsqueda mejorada
   const filteredPipelines = searchTerm
-    ? pipelines.filter((p: Pipeline) => 
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? pipelines.filter((p: Pipeline) => {
+        const searchTermNormalized = normalizeText(searchTerm);
+        const nameNormalized = normalizeText(p.name || '');
+        const descriptionNormalized = normalizeText(p.description || '');
+        
+        return nameNormalized.includes(searchTermNormalized) || 
+               descriptionNormalized.includes(searchTermNormalized);
+      })
     : pipelines;
 
   // Ya no necesitamos una función de navegación separada
