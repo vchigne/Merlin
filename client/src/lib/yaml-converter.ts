@@ -131,8 +131,6 @@ function extractRunnerConfiguration(unit: any): any {
     case 'sftp_uploader':
       if (unit.SFTPUploader) {
         return {
-          source: unit.SFTPUploader.source || null,
-          target: unit.SFTPUploader.target || null,
           return_output: unit.SFTPUploader.return_output || false,
           sftp_connection: unit.SFTPUploader.SFTPLink ? {
             id: unit.SFTPUploader.SFTPLink.id,

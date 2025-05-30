@@ -115,8 +115,6 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
-        source
-        target
         return_output
         SFTPLink {
           id
