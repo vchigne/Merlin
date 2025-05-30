@@ -33,7 +33,7 @@ export interface PipelineUnitYaml {
   connections?: string[];
 }
 
-// Función para detectar el tipo de unidad
+// Función para detectar el tipo de unidad según documentación
 function detectUnitType(unit: any): string {
   if (unit.command_id) return 'command';
   if (unit.query_queue_id) return 'query_queue';
@@ -41,7 +41,7 @@ function detectUnitType(unit: any): string {
   if (unit.sftp_uploader_id) return 'sftp_uploader';
   if (unit.zip_id) return 'zip';
   if (unit.unzip_id) return 'unzip';
-  if (unit.call_pipeline) return 'pipeline_call';
+  if (unit.call_pipeline_id) return 'call_pipeline';
   return 'unknown';
 }
 
@@ -65,8 +65,8 @@ function getUnitName(unit: any): string {
   if (unit.unzip_id && unit.Unzip) {
     return unit.Unzip.name || `Extracción ${unit.id?.slice(-4) || 'UNZ'}`;
   }
-  if (unit.call_pipeline && unit.Pipeline) {
-    return unit.Pipeline.name || `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
+  if (unit.call_pipeline_id && unit.CallPipeline && unit.CallPipeline.Pipeline) {
+    return unit.CallPipeline.Pipeline.name || `Pipeline ${unit.id?.slice(-4) || 'PIP'}`;
   }
   
   return `Unidad ${unit.id?.slice(-4) || 'N/A'}`;
@@ -118,42 +118,36 @@ function getUnitConfiguration(unit: any): { [key: string]: any } {
     if (cmd.labels && cmd.labels.length > 0) config.labels = cmd.labels;
     
   } else if (unit.query_queue_id && unit.QueryQueue) {
-    // Unidad de query queue - QueryQueue table + Query table
+    // Unidad de query queue - QueryQueue table + Query table (según documentación)
     const qq = unit.QueryQueue;
     config.query_queue_id = unit.query_queue_id;
     if (qq.name) config.queue_name = qq.name;
     if (qq.description) config.queue_description = qq.description;
     
-    // Agregar queries si existen
-    if (qq.queries && qq.queries.length > 0) {
-      config.queries = qq.queries.map((query: any) => {
+    // Agregar queries siguiendo la estructura de la documentación
+    if (qq.Queries && qq.Queries.length > 0) {
+      config.queries = qq.Queries.map((query: any) => {
         const queryConfig: any = {};
-        if (query.name) queryConfig.name = query.name;
-        if (query.query_string) queryConfig.query_string = query.query_string;
+        if (query.order !== undefined) queryConfig.order = query.order;
+        if (query.statement) queryConfig.statement = query.statement; // Nombre correcto según docs
         if (query.path) queryConfig.path = query.path;
         if (query.print_headers !== undefined) queryConfig.print_headers = query.print_headers;
-        if (query.enabled !== undefined) queryConfig.enabled = query.enabled;
         if (query.return_output !== undefined) queryConfig.return_output = query.return_output;
-        if (query.date_format) queryConfig.date_format = query.date_format;
         if (query.separator) queryConfig.separator = query.separator;
         if (query.chunks) queryConfig.chunks = query.chunks;
-        if (query.target_encoding) queryConfig.target_encoding = query.target_encoding;
-        if (query.timeout) queryConfig.timeout = query.timeout;
-        if (query.retry_count) queryConfig.retry_count = query.retry_count;
-        if (query.retry_after_milliseconds) queryConfig.retry_after_milliseconds = query.retry_after_milliseconds;
-        if (query.remove_pipes_in_columns !== undefined) queryConfig.remove_pipes_in_columns = query.remove_pipes_in_columns;
         if (query.trim_columns !== undefined) queryConfig.trim_columns = query.trim_columns;
         if (query.force_dot_decimal_separator !== undefined) queryConfig.force_dot_decimal_separator = query.force_dot_decimal_separator;
-        if (query.labels && query.labels.length > 0) queryConfig.labels = query.labels;
+        if (query.date_format) queryConfig.date_format = query.date_format;
+        if (query.target_encoding) queryConfig.target_encoding = query.target_encoding;
+        if (query.retry_count) queryConfig.retry_count = query.retry_count;
+        if (query.retry_after_milliseconds) queryConfig.retry_after_milliseconds = query.retry_after_milliseconds;
         
-        // Información de conexión SQL
+        // Información de conexión SQL según estructura de documentación
         if (query.SQLConn) {
           queryConfig.sql_connection = {
             name: query.SQLConn.name,
-            server: query.SQLConn.server,
-            port: query.SQLConn.port,
-            database: query.SQLConn.database,
-            user: query.SQLConn.user
+            driver: query.SQLConn.driver,
+            connection_string: query.SQLConn.connection_string
           };
         }
         
@@ -162,13 +156,9 @@ function getUnitConfiguration(unit: any): { [key: string]: any } {
     }
     
   } else if (unit.sftp_downloader_id && unit.SFTPDownloader) {
-    // Unidad de descarga SFTP - SFTPDownloader table
+    // Unidad de descarga SFTP - SFTPDownloader table con FileStreams
     const sftp = unit.SFTPDownloader;
     config.sftp_downloader_id = unit.sftp_downloader_id;
-    if (sftp.input) config.input = sftp.input;
-    if (sftp.output) config.output = sftp.output;
-    if (sftp.return_output !== undefined) config.return_output = sftp.return_output;
-    if (sftp.labels && sftp.labels.length > 0) config.labels = sftp.labels;
     
     // Información de conexión SFTP
     if (sftp.SFTPLink) {
@@ -178,16 +168,21 @@ function getUnitConfiguration(unit: any): { [key: string]: any } {
         port: sftp.SFTPLink.port,
         user: sftp.SFTPLink.user
       };
+    }
+    
+    // FileStreams según documentación
+    if (sftp.FileStreamSftpDownloaders && sftp.FileStreamSftpDownloaders.length > 0) {
+      config.file_streams = sftp.FileStreamSftpDownloaders.map((stream: any) => ({
+        input: stream.input,  // Ruta remota
+        output: stream.output, // Ruta local
+        return_output: stream.return_output
+      }));
     }
     
   } else if (unit.sftp_uploader_id && unit.SFTPUploader) {
-    // Unidad de carga SFTP - SFTPUploader table
+    // Unidad de carga SFTP - SFTPUploader table con FileStreams
     const sftp = unit.SFTPUploader;
     config.sftp_uploader_id = unit.sftp_uploader_id;
-    if (sftp.input) config.input = sftp.input;
-    if (sftp.output) config.output = sftp.output;
-    if (sftp.return_output !== undefined) config.return_output = sftp.return_output;
-    if (sftp.labels && sftp.labels.length > 0) config.labels = sftp.labels;
     
     // Información de conexión SFTP
     if (sftp.SFTPLink) {
@@ -199,33 +194,56 @@ function getUnitConfiguration(unit: any): { [key: string]: any } {
       };
     }
     
+    // FileStreams según documentación
+    if (sftp.FileStreamSftpUploaders && sftp.FileStreamSftpUploaders.length > 0) {
+      config.file_streams = sftp.FileStreamSftpUploaders.map((stream: any) => ({
+        input: stream.input,   // Ruta local
+        output: stream.output, // Ruta remota
+        return_output: stream.return_output
+      }));
+    }
+    
   } else if (unit.zip_id && unit.Zip) {
-    // Unidad de compresión - Zip table
+    // Unidad de compresión - Zip table con FileStreams
     const zip = unit.Zip;
     config.zip_id = unit.zip_id;
-    if (zip.input) config.input = zip.input;
-    if (zip.output) config.output = zip.output;
-    if (zip.wildcard_exp) config.wildcard_exp = zip.wildcard_exp;
-    if (zip.return_output !== undefined) config.return_output = zip.return_output;
-    if (zip.labels && zip.labels.length > 0) config.labels = zip.labels;
+    if (zip.zip_name) config.zip_name = zip.zip_name;
+    
+    // FileStreams según documentación
+    if (zip.FileStreamZips && zip.FileStreamZips.length > 0) {
+      config.file_streams = zip.FileStreamZips.map((stream: any) => ({
+        input: stream.input,
+        wildcard_exp: stream.wildcard_exp
+      }));
+    }
     
   } else if (unit.unzip_id && unit.Unzip) {
-    // Unidad de descompresión - UnZip table
+    // Unidad de descompresión - UnZip table con FileStreams
     const unzip = unit.Unzip;
     config.unzip_id = unit.unzip_id;
-    if (unzip.input) config.input = unzip.input;
-    if (unzip.output) config.output = unzip.output;
-    if (unzip.return_output !== undefined) config.return_output = unzip.return_output;
-    if (unzip.labels && unzip.labels.length > 0) config.labels = unzip.labels;
     
-  } else if (unit.call_pipeline) {
-    // Pipeline Call - referencia a otro pipeline
-    config.call_pipeline = unit.call_pipeline;
+    // FileStreams según documentación
+    if (unzip.FileStreamUnzips && unzip.FileStreamUnzips.length > 0) {
+      config.file_streams = unzip.FileStreamUnzips.map((stream: any) => ({
+        input: stream.input,   // Archivo ZIP a descomprimir
+        output: stream.output, // Directorio destino
+        return_output: stream.return_output
+      }));
+    }
+    
+  } else if (unit.call_pipeline_id && unit.CallPipeline) {
+    // Pipeline Call - referencia a otro pipeline según documentación
+    const callPipeline = unit.CallPipeline;
+    config.call_pipeline_id = unit.call_pipeline_id;
+    config.pipeline_id = callPipeline.pipeline_id;
+    if (callPipeline.timeout_milliseconds) {
+      config.timeout_milliseconds = callPipeline.timeout_milliseconds;
+    }
     
     // Agregar información del pipeline llamado si está disponible
-    if (unit.Pipeline) {
-      config.pipeline_name = unit.Pipeline.name;
-      config.pipeline_description = unit.Pipeline.description;
+    if (callPipeline.Pipeline) {
+      config.pipeline_name = callPipeline.Pipeline.name;
+      config.pipeline_description = callPipeline.Pipeline.description;
     }
   }
   
