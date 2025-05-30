@@ -129,19 +129,21 @@ function extractRunnerConfiguration(unit: any): any {
       };
       
     case 'sftp_uploader':
-      return {
-        sftp_connection: {
-          server: unit.SFTPUploader?.SFTPLink?.server,
-          port: unit.SFTPUploader?.SFTPLink?.port,
-          user: unit.SFTPUploader?.SFTPLink?.user,
-          name: unit.SFTPUploader?.SFTPLink?.name
-        },
-        file_streams: unit.SFTPUploader?.FileStreamSftpUploaders?.map((stream: any) => ({
-          input: stream.input,
-          output: stream.output,
-          return_output: stream.return_output
-        })) || []
-      };
+      if (unit.SFTPUploader) {
+        return {
+          source: unit.SFTPUploader.source || null,
+          target: unit.SFTPUploader.target || null,
+          return_output: unit.SFTPUploader.return_output || false,
+          sftp_connection: unit.SFTPUploader.SFTPLink ? {
+            id: unit.SFTPUploader.SFTPLink.id,
+            server: unit.SFTPUploader.SFTPLink.server || null,
+            port: unit.SFTPUploader.SFTPLink.port || null,
+            user: unit.SFTPUploader.SFTPLink.user || null,
+            name: unit.SFTPUploader.SFTPLink.name || null
+          } : null
+        };
+      }
+      return {};
       
     case 'zip':
       if (unit.Zip) {
@@ -219,7 +221,8 @@ export function pipelineToYaml(pipelineData: any): string {
       hasCommand: !!unit.Command,
       hasQueryQueue: !!unit.QueryQueue,
       hasZip: !!unit.Zip,
-      zipData: unit.Zip
+      hasSFTPUploader: !!unit.SFTPUploader,
+      sftpUploaderData: unit.SFTPUploader
     });
     
     const baseUnit = {
@@ -228,10 +231,11 @@ export function pipelineToYaml(pipelineData: any): string {
       type: runnerType
     };
 
-    // Para unidades de tipo command, query_queue o zip, agregar configuración completa
+    // Para unidades de tipo command, query_queue, zip o sftp_uploader, agregar configuración completa
     if ((runnerType === 'command' && unit.Command) || 
         (runnerType === 'query_queue' && unit.QueryQueue) ||
-        (runnerType === 'zip' && unit.Zip)) {
+        (runnerType === 'zip' && unit.Zip) ||
+        (runnerType === 'sftp_uploader' && unit.SFTPUploader)) {
       return {
         ...baseUnit,
         configuration: extractRunnerConfiguration(unit)

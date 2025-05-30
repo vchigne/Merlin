@@ -115,6 +115,16 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
+        source
+        target
+        return_output
+        SFTPLink {
+          id
+          server
+          port
+          user
+          name
+        }
       }
       Zip {
         id
