@@ -70,8 +70,8 @@ export default function PipelineVisualizerNew({
 
 
 
-  // NUEVO: Función para calcular conexiones SVG curvas entre nodos (estilo n8n)
-  const calculateSVGConnections = (nodes: any[]) => {
+  // NUEVO: Función para calcular conexiones CSS entre nodos
+  const calculateCSSConnections = (nodes: any[]) => {
     const connections = [];
     
     for (let i = 0; i < nodes.length - 1; i++) {
@@ -86,32 +86,38 @@ export default function PipelineVisualizerNew({
         const currentUnitPos = unitPositions[currentNode.id];
         const nextUnitPos = unitPositions[nextNode.id];
         
-        // Calcular puntos de conexión
+        // Calcular centro de cada nodo usando posiciones actualizadas
         const startX = (currentUnitPos?.x ?? currentPos.x) + currentPos.width / 2;
         const startY = (currentUnitPos?.y ?? currentPos.y) + currentPos.height;
         const endX = (nextUnitPos?.x ?? nextPos.x) + nextPos.width / 2;
         const endY = (nextUnitPos?.y ?? nextPos.y);
         
-        // Calcular puntos de control para la curva Bézier
-        const controlOffset = Math.abs(endY - startY) * 0.5; // Offset dinámico basado en distancia
+        // Calcular distancia y ángulo
+        const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+        
+        // Para SVG: también calcular puntos de control para la curva
+        const controlOffset = Math.abs(endY - startY) * 0.5;
         const control1X = startX;
         const control1Y = startY + controlOffset;
         const control2X = endX;
         const control2Y = endY - controlOffset;
-        
-        // Crear path SVG con curva suave
         const pathData = `M ${startX} ${startY} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`;
         
         connections.push({
-          id: `svg-curve-${i}`,
+          id: `css-line-${i}`,
+          left: startX,
+          top: startY,
+          width: distance,
+          rotation: angle,
+          color: `hsl(${i * 40}, 80%, 45%)`,
+          // Agregar datos SVG también
           pathData,
           startX,
           startY,
           endX,
           endY,
-          color: `hsl(${(i * 60) % 360}, 70%, 50%)`, // Colores más variados
           strokeWidth: 3,
-          // Agregar marcador de flecha al final
           hasArrow: true
         });
       }
@@ -533,7 +539,7 @@ export default function PipelineVisualizerNew({
   // NUEVO: Efecto para recalcular conexiones inmediatamente durante el drag
   useEffect(() => {
     if (pipelineUnits?.length) {
-      const newConnections = calculateSVGConnections(pipelineUnits);
+      const newConnections = calculateCSSConnections(pipelineUnits);
       setDynamicConnections(newConnections);
     }
   }, [nodePositions, unitPositions, pipelineUnits]);
@@ -541,7 +547,7 @@ export default function PipelineVisualizerNew({
   // NUEVO: Efecto para calcular conexiones iniciales cuando las posiciones estén listas
   useEffect(() => {
     if (pipelineUnits?.length && Object.keys(nodePositions).length > 0) {
-      const initialConnections = calculateSVGConnections(pipelineUnits);
+      const initialConnections = calculateCSSConnections(pipelineUnits);
       setDynamicConnections(initialConnections);
     }
   }, [pipelineUnits, nodePositions]);
