@@ -121,15 +121,6 @@ function extractDetailedConfig(unit: any) {
         return_output: unit.Command.return_output,
         return_output_type: unit.Command.return_output_type
       };
-    } else {
-      // Solo tenemos el ID, necesitamos cargar los detalles
-      config.command_details = {
-        note: "Detalles del comando disponibles en la visualización completa",
-        command_reference: unit.command_id,
-        target: "Ver configuración en el visualizador del pipeline",
-        args: "Ver configuración en el visualizador del pipeline",
-        working_directory: "Ver configuración en el visualizador del pipeline"
-      };
     }
   }
   
