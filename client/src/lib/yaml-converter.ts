@@ -147,8 +147,7 @@ function extractRunnerConfiguration(unit: any): any {
       if (unit.Zip) {
         return {
           output_path: unit.Zip.output || null,
-          return_output: unit.Zip.return_output || false,
-          zip_name: unit.Zip.zip_name || null
+          return_output: unit.Zip.return_output || false
         };
       }
       return {};
