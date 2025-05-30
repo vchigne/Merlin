@@ -47,10 +47,14 @@ export function useSavePipelinePositions() {
       pipelineId: string; 
       positions: PipelinePositions;
     }) => {
-      return apiRequest(`/api/pipeline/${pipelineId}/positions`, {
+      const response = await fetch(`/api/pipeline/${pipelineId}/positions`, {
         method: 'POST',
-        body: { positions }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ positions })
       });
+      return response.json();
     },
     onSuccess: (_, { pipelineId }) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline-positions', pipelineId] });
@@ -76,9 +80,13 @@ export function useSyncPipelineYAML() {
   
   return useMutation({
     mutationFn: async (pipelineId: string) => {
-      return apiRequest(`/api/pipeline/${pipelineId}/sync-yaml`, {
-        method: 'POST'
+      const response = await fetch(`/api/pipeline/${pipelineId}/sync-yaml`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
+      return response.json();
     },
     onSuccess: (_, pipelineId) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline-yaml', pipelineId] });

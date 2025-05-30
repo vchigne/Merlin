@@ -4,9 +4,15 @@ import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Expand, X } from "lucide-react";
 import PipelineSearch from "./PipelineSearch";
 import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog";
+import { 
+  usePipelinePositions, 
+  useSavePipelinePositions, 
+  convertPositionsToNodes,
+  convertNodesToPositions 
+} from "@/hooks/use-yaml-persistence";
 
 interface PipelineVisualizerNewProps {
   pipelineId?: string; // Pipeline específico a mostrar
