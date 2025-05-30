@@ -258,44 +258,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             call_pipeline
             
             # Relaciones cargadas según documentación
-            Command {
-              id
-              target
-              args
-              working_directory
-              raw_script
-              instant
-              return_output
-              return_output_type
-            }
-            
-            QueryQueue {
-              id
-              Queries {
-                id
-                order
-                statement
-                path
-                return_output
-                print_headers
-                separator
-                chunks
-                trim_columns
-                force_dot_decimal_separator
-                date_format
-                target_encoding
-                retry_count
-                retry_after_milliseconds
-                SQLConn {
-                  id
-                  driver
-                  connection_string
-                  name
-                }
-              }
-            }
-            
-
           }
         }
       `, { pipelineId: id });
