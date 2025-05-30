@@ -61,6 +61,11 @@ export default function PipelineVisualizerNew({
     setNodePositions(newPositions);
   };
 
+  // NUEVO: Efecto para actualizar conexiones cuando cambien las posiciones de las unidades
+  useEffect(() => {
+    updateNodePositions();
+  }, [unitPositions]);
+
   // NUEVO: Función para calcular conexiones CSS entre nodos
   const calculateCSSConnections = (nodes: any[]) => {
     const connections = [];
@@ -285,12 +290,21 @@ export default function PipelineVisualizerNew({
             ...prev,
             [draggedUnit]: { x: newX, y: newY }
           }));
+          
+          // NUEVO: Actualizar posiciones de nodos después del drag para recalcular conexiones
+          setTimeout(() => {
+            updateNodePositions();
+          }, 0);
         }
       };
 
       const handleGlobalMouseUp = () => {
         setIsDragging(false);
         setDraggedUnit(null);
+        // NUEVO: Actualizar conexiones al finalizar el drag
+        setTimeout(() => {
+          updateNodePositions();
+        }, 100);
       };
 
       document.addEventListener('mousemove', handleGlobalMouseMove);
