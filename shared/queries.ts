@@ -426,6 +426,12 @@ export const ZIP_QUERY = `
       return_output
       created_at
       updated_at
+      FileStreamZips {
+        id
+        input
+        return_output
+        wildcard_exp
+      }
     }
   }
 `;
