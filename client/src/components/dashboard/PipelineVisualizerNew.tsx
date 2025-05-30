@@ -27,6 +27,10 @@ export default function PipelineVisualizerNew({
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+
+  // Hooks para persistencia YAML
+  const { data: savedPositions } = usePipelinePositions(selectedPipeline);
+  const savePipelinePositions = useSavePipelinePositions();
   
   // NUEVO: Referencias y posiciones para conexiones CSS
   const containerRef = useRef<HTMLDivElement>(null);
@@ -408,10 +412,29 @@ export default function PipelineVisualizerNew({
       const handleGlobalMouseUp = () => {
         setIsDragging(false);
         setDraggedUnit(null);
+        
         // NUEVO: Actualizar conexiones al finalizar el drag
         setTimeout(() => {
           updateNodePositions();
         }, 100);
+
+        // Guardar posiciones en YAML cuando se termine de arrastrar
+        if (selectedPipeline && draggedUnit) {
+          const currentPositions = { ...unitPositions };
+          if (currentPositions[draggedUnit]) {
+            const positions = convertNodesToPositions(
+              Object.entries(currentPositions).map(([id, pos]) => ({
+                id,
+                pos: `${pos.x},${pos.y}`
+              }))
+            );
+            
+            savePipelinePositions.mutate({
+              pipelineId: selectedPipeline,
+              positions
+            });
+          }
+        }
       };
 
       document.addEventListener('mousemove', handleGlobalMouseMove);
@@ -491,12 +514,24 @@ export default function PipelineVisualizerNew({
     const nodes = sortedUnits.map((unit, index) => {
       const type = detectUnitType(unit);
       
-      // Calcular posición en grid de 3 columnas
+      // Calcular posición en grid de 3 columnas (para row/col)
       const row = Math.floor(index / 3);
       const col = index % 3;
       
-      const xPosition = 50 + (col * 220); // Espaciado horizontal de 220px
-      const yPosition = 50 + (row * 300); // Espaciado vertical de 300px
+      // Verificar si hay posiciones guardadas para este nodo
+      const savedPosition = savedPositions && savedPositions[unit.id];
+      
+      let xPosition, yPosition;
+      
+      if (savedPosition) {
+        // Usar posición guardada
+        xPosition = savedPosition.x;
+        yPosition = savedPosition.y;
+      } else {
+        // Usar posición por defecto en grid de 3 columnas
+        xPosition = 50 + (col * 220); // Espaciado horizontal de 220px
+        yPosition = 50 + (row * 300); // Espaciado vertical de 300px
+      }
       
       return {
         id: unit.id,
@@ -505,9 +540,9 @@ export default function PipelineVisualizerNew({
         displayDescription: getDisplayDescription(unit),
         posX: xPosition,
         posY: yPosition,
-        index,
-        row,
-        col,
+        index: index,
+        row: row,
+        col: col,
         data: unit
       };
     });
