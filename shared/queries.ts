@@ -130,6 +130,12 @@ export const PIPELINE_UNITS_QUERY = `
         description
         output
         return_output
+        FileStreamZips {
+          id
+          input
+          return_output
+          wildcard_exp
+        }
       }
       Unzip {
         id

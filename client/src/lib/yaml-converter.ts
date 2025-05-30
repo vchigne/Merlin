@@ -147,7 +147,13 @@ function extractRunnerConfiguration(unit: any): any {
       if (unit.Zip) {
         return {
           output_path: unit.Zip.output || null,
-          return_output: unit.Zip.return_output || false
+          return_output: unit.Zip.return_output || false,
+          file_streams: unit.Zip.FileStreamZips?.map((stream: any) => ({
+            id: stream.id,
+            input: stream.input || null,
+            return_output: stream.return_output || false,
+            wildcard_exp: stream.wildcard_exp || null
+          })) || []
         };
       }
       return {};
