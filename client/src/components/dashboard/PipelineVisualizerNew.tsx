@@ -528,17 +528,13 @@ export default function PipelineVisualizerNew({
     }
   }, [nodePositions, unitPositions, pipelineUnits]);
 
-  // NUEVO: Efecto para calcular conexiones iniciales al cargar el pipeline
+  // NUEVO: Efecto para calcular conexiones iniciales cuando las posiciones estén listas
   useEffect(() => {
-    if (pipelineUnits?.length) {
-      const timer = setTimeout(() => {
-        const initialConnections = calculateCSSConnections(pipelineUnits);
-        setDynamicConnections(initialConnections);
-      }, 200); // Delay mayor para asegurar que las posiciones están calculadas
-      
-      return () => clearTimeout(timer);
+    if (pipelineUnits?.length && Object.keys(nodePositions).length > 0) {
+      const initialConnections = calculateCSSConnections(pipelineUnits);
+      setDynamicConnections(initialConnections);
     }
-  }, [pipelineUnits]);
+  }, [pipelineUnits, nodePositions]);
   
   // Función para manejar el cambio de pipeline seleccionado
   const handlePipelineChange = (value: string) => {
