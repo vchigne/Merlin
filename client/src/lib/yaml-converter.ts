@@ -53,23 +53,29 @@ function detectRunnerType(unit: any): string {
 
 // Función para obtener el nombre real de la unidad
 function getUnitDisplayName(unit: any): string {
+  // Primero verificar si existe el campo comment de la unidad
+  if (unit.comment) {
+    return unit.comment;
+  }
+  
   const runnerType = detectRunnerType(unit);
   
   switch (runnerType) {
     case 'command':
-      return unit.Command?.name || `Command: ${unit.Command?.target || 'Unknown'}`;
+      return unit.Command?.name || unit.Command?.description || `Command: ${unit.Command?.target || 'Unknown'}`;
     case 'query_queue':
-      return unit.QueryQueue?.name || `SQL Query (${unit.QueryQueue?.Queries?.length || 0} queries)`;
+      return unit.QueryQueue?.name || unit.QueryQueue?.description || `SQL Query (${unit.QueryQueue?.Queries?.length || 0} queries)`;
     case 'sftp_downloader':
-      return unit.SFTPDownloader?.name || `SFTP Download from ${unit.SFTPDownloader?.SFTPLink?.server || 'Unknown'}`;
+      return unit.SFTPDownloader?.name || unit.SFTPDownloader?.description || `SFTP Download from ${unit.SFTPDownloader?.SFTPLink?.server || 'Unknown'}`;
     case 'sftp_uploader':
-      return unit.SFTPUploader?.name || `SFTP Upload to ${unit.SFTPUploader?.SFTPLink?.server || 'Unknown'}`;
+      return unit.SFTPUploader?.name || unit.SFTPUploader?.description || `SFTP Upload to ${unit.SFTPUploader?.SFTPLink?.server || 'Unknown'}`;
     case 'zip':
-      return unit.Zip?.name || `Zip: ${unit.Zip?.zip_name || 'Unknown'}`;
+      return unit.Zip?.name || `Zip: ${unit.Zip?.output || 'Unknown'}`;
     case 'unzip':
-      return unit.Unzip?.name || `Unzip Files`;
+      return unit.Unzip?.name || `Unzip: ${unit.Unzip?.input || 'Files'}`;
     case 'call_pipeline':
-      return unit.CallPipeline?.Pipeline?.name || `Call Pipeline: ${unit.CallPipeline?.pipeline_id || 'Unknown'}`;
+      const calledPipeline = unit.CalledPipeline || {};
+      return calledPipeline.name || `Call Pipeline: ${unit.call_pipeline || 'Unknown'}`;
     default:
       return `Unknown Unit Type`;
   }
@@ -87,9 +93,9 @@ function extractRunnerConfiguration(unit: any): any {
           args: unit.Command.args || null,
           working_directory: unit.Command.working_directory || null,
           raw_script: unit.Command.raw_script || null,
-          instant: unit.Command.instant || false,
-          return_output: unit.Command.return_output || false,
-          return_output_type: unit.Command.return_output_type || null
+          instant: unit.Command.instant ?? true,
+          return_output: unit.Command.return_output ?? true,
+          return_output_type: unit.Command.return_output_type || 'PATHS'
         };
       }
       return {};
@@ -97,49 +103,74 @@ function extractRunnerConfiguration(unit: any): any {
     case 'query_queue':
       if (unit.QueryQueue) {
         return {
-          queries: unit.QueryQueue.Queries?.map((query: any) => ({
-            id: query.id,
-            order: query.order || 0,
+          queries: unit.QueryQueue.Queries?.map((query: any, index: number) => ({
+            order: query.order || index + 1,
+            statement: query.query_string || query.statement || null,
             path: query.path || null,
-            query_string: query.query_string || null,
-            return_output: query.return_output || false,
             sql_connection: query.SQLConn ? {
-              id: query.SQLConn.id,
-              driver: query.SQLConn.driver || null,
-              connstring: query.SQLConn.connstring || null,
+              driver: query.SQLConn.driver || 'MSSQL',
+              connection_string: query.SQLConn.connstring || query.SQLConn.connection_string || null,
               name: query.SQLConn.name || null
-            } : null
+            } : null,
+            output_settings: {
+              return_output: query.return_output ?? true,
+              print_headers: query.print_headers ?? true,
+              separator: query.separator || ',',
+              chunks: query.chunks || 1000,
+              trim_columns: query.trim_columns ?? true,
+              force_dot_decimal_separator: query.force_dot_decimal_separator ?? false,
+              date_format: query.date_format || 'yyyy-MM-dd',
+              target_encoding: query.target_encoding || 'UTF-8'
+            },
+            retry_settings: {
+              retry_count: query.retry_count || 3,
+              retry_after_milliseconds: query.retry_after_milliseconds || 5000
+            }
           })) || []
         };
       }
       return {};
       
     case 'sftp_downloader':
-      return {
-        sftp_connection: {
-          server: unit.SFTPDownloader?.SFTPLink?.server,
-          port: unit.SFTPDownloader?.SFTPLink?.port,
-          user: unit.SFTPDownloader?.SFTPLink?.user,
-          name: unit.SFTPDownloader?.SFTPLink?.name
-        },
-        file_streams: unit.SFTPDownloader?.FileStreamSftpDownloaders?.map((stream: any) => ({
-          input: stream.input,
-          output: stream.output,
-          return_output: stream.return_output
-        })) || []
-      };
+      if (unit.SFTPDownloader) {
+        return {
+          sftp_connection: {
+            server: unit.SFTPDownloader.SFTPLink?.server || null,
+            port: unit.SFTPDownloader.SFTPLink?.port || 22,
+            user: unit.SFTPDownloader.SFTPLink?.user || null,
+            name: unit.SFTPDownloader.SFTPLink?.name || null
+          },
+          file_streams: unit.SFTPDownloader.FileStreamSftpDownloaders?.map((stream: any) => ({
+            input: stream.input || null,
+            output: stream.output || null,
+            return_output: stream.return_output ?? true
+          })) || [{
+            input: unit.SFTPDownloader.input || null,
+            output: unit.SFTPDownloader.output || null,
+            return_output: unit.SFTPDownloader.return_output ?? true
+          }]
+        };
+      }
+      return {};
       
     case 'sftp_uploader':
       if (unit.SFTPUploader) {
         return {
-          return_output: unit.SFTPUploader.return_output || false,
-          sftp_connection: unit.SFTPUploader.SFTPLink ? {
-            id: unit.SFTPUploader.SFTPLink.id,
-            server: unit.SFTPUploader.SFTPLink.server || null,
-            port: unit.SFTPUploader.SFTPLink.port || null,
-            user: unit.SFTPUploader.SFTPLink.user || null,
-            name: unit.SFTPUploader.SFTPLink.name || null
-          } : null
+          sftp_connection: {
+            server: unit.SFTPUploader.SFTPLink?.server || null,
+            port: unit.SFTPUploader.SFTPLink?.port || 22,
+            user: unit.SFTPUploader.SFTPLink?.user || null,
+            name: unit.SFTPUploader.SFTPLink?.name || null
+          },
+          file_streams: unit.SFTPUploader.FileStreamSftpUploaders?.map((stream: any) => ({
+            input: stream.input || null,
+            output: stream.output || null,
+            return_output: stream.return_output ?? true
+          })) || [{
+            input: unit.SFTPUploader.input || null,
+            output: unit.SFTPUploader.output || null,
+            return_output: unit.SFTPUploader.return_output ?? true
+          }]
         };
       }
       return {};
@@ -147,12 +178,9 @@ function extractRunnerConfiguration(unit: any): any {
     case 'zip':
       if (unit.Zip) {
         return {
-          output_path: unit.Zip.output || null,
-          return_output: unit.Zip.return_output || false,
+          zip_name: unit.Zip.output || unit.Zip.zip_name || null,
           file_streams: unit.Zip.FileStreamZips?.map((stream: any) => ({
-            id: stream.id,
             input: stream.input || null,
-            return_output: stream.return_output || false,
             wildcard_exp: stream.wildcard_exp || null
           })) || []
         };
@@ -162,32 +190,45 @@ function extractRunnerConfiguration(unit: any): any {
     case 'unzip':
       if (unit.Unzip) {
         return {
-          input: unit.Unzip.input || null,
-          output: unit.Unzip.output || null,
-          return_output: unit.Unzip.return_output || false,
           file_streams: unit.Unzip.FileStreamUnzips?.map((stream: any) => ({
-            id: stream.id,
             input: stream.input || null,
             output: stream.output || null,
-            return_output: stream.return_output || false
-          })) || []
+            return_output: stream.return_output ?? true
+          })) || [{
+            input: unit.Unzip.input || null,
+            output: unit.Unzip.output || null,
+            return_output: unit.Unzip.return_output ?? true
+          }]
         };
       }
       return {};
       
     case 'call_pipeline':
-      return {
-        pipeline_reference: {
-          id: unit.CallPipeline?.pipeline_id,
-          name: unit.CallPipeline?.Pipeline?.name,
-          description: unit.CallPipeline?.Pipeline?.description
-        },
-        timeout_milliseconds: unit.CallPipeline?.timeout_milliseconds
-      };
+      if (unit.call_pipeline) {
+        // Obtener información del pipeline llamado si está disponible
+        const calledPipeline = unit.CalledPipeline || {};
+        return {
+          pipeline_reference: {
+            id: unit.call_pipeline || null,
+            name: calledPipeline.name || 'Pipeline sin nombre',
+            description: calledPipeline.description || null
+          },
+          timeout_milliseconds: unit.timeout_milliseconds || 1800000 // 30 minutos por defecto
+        };
+      }
+      return {};
       
     default:
       return {};
   }
+}
+
+// Función para encontrar las conexiones de una unidad basándose en pipeline_unit_id
+function findUnitConnections(units: any[], currentUnitId: string): string[] {
+  // Buscar todas las unidades que tienen como parent_unit_id el ID de la unidad actual
+  return units
+    .filter(u => u.pipeline_unit_id === currentUnitId)
+    .map(u => u.id);
 }
 
 // Función principal: Convertir Pipeline de Hasura a YAML
@@ -204,10 +245,10 @@ export function pipelineToYaml(pipelineData: any): string {
       description: pipelineData.description || '',
       configuration: {
         agent_passport_id: pipelineData.agent_passport_id || '',
-        abort_on_error: pipelineData.abort_on_error || false,
-        abort_on_timeout: pipelineData.abort_on_timeout || false,
-        continue_on_error: pipelineData.continue_on_error || false,
-        disposable: pipelineData.disposable || false
+        abort_on_error: pipelineData.abort_on_error ?? false,
+        abort_on_timeout: pipelineData.abort_on_timeout ?? false,
+        continue_on_error: pipelineData.continue_on_error ?? false,
+        disposable: pipelineData.disposable ?? false
       },
       units: []
     };
@@ -220,9 +261,9 @@ export function pipelineToYaml(pipelineData: any): string {
     });
   }
 
-  // Simplificar: solo convertir unidades básicas con id, nombre y tipo
   console.log("PipelineUnits recibidas:", pipelineData.PipelineUnits);
   
+  // Convertir cada unidad a formato YAML completo
   const yamlUnits: YamlUnit[] = pipelineData.PipelineUnits.map((unit: any) => {
     const runnerType = detectRunnerType(unit);
     const displayName = getUnitDisplayName(unit);
@@ -231,31 +272,36 @@ export function pipelineToYaml(pipelineData: any): string {
       unitId: unit.id,
       runnerType,
       displayName,
-      hasCommand: !!unit.Command,
-      hasQueryQueue: !!unit.QueryQueue,
-      hasZip: !!unit.Zip,
-      hasSFTPUploader: !!unit.SFTPUploader,
-      sftpUploaderData: unit.SFTPUploader
+      parentUnitId: unit.pipeline_unit_id,
+      position: { x: unit.posx, y: unit.posy }
     });
     
-    const baseUnit = {
-      id: unit.id,
-      name: displayName,
-      type: runnerType
-    };
-
-    // Para unidades de tipo command, query_queue, zip o sftp_uploader, agregar configuración completa
-    if ((runnerType === 'command' && unit.Command) || 
-        (runnerType === 'query_queue' && unit.QueryQueue) ||
-        (runnerType === 'zip' && unit.Zip) ||
-        (runnerType === 'sftp_uploader' && unit.SFTPUploader)) {
-      return {
-        ...baseUnit,
-        configuration: extractRunnerConfiguration(unit)
-      };
-    }
+    // Encontrar las conexiones de salida de esta unidad
+    const connections = findUnitConnections(pipelineData.PipelineUnits, unit.id);
     
-    return baseUnit;
+    // Construir la unidad YAML completa
+    const yamlUnit: YamlUnit = {
+      id: unit.id,
+      type: runnerType,
+      name: displayName || unit.comment || `${runnerType} unit`,
+      parent_unit_id: unit.pipeline_unit_id || null,
+      position: {
+        x: unit.posx || 50,
+        y: unit.posy || 50
+      },
+      execution: {
+        retry_count: unit.retry_count ?? 3,
+        retry_after_milliseconds: unit.retry_after_milliseconds ?? 5000,
+        timeout_milliseconds: unit.timeout_milliseconds ?? 30000,
+        continue_on_error: unit.continue_on_error ?? false,
+        abort_on_error: unit.abort_on_error ?? false,
+        abort_on_timeout: unit.abort_on_timeout ?? false
+      },
+      configuration: extractRunnerConfiguration(unit),
+      connections: connections.map(toId => ({ to: toId }))
+    };
+    
+    return yamlUnit;
   });
 
   // Construir el objeto YAML completo
@@ -265,10 +311,10 @@ export function pipelineToYaml(pipelineData: any): string {
     description: pipelineData.description || undefined,
     configuration: {
       agent_passport_id: pipelineData.agent_passport_id || '',
-      abort_on_error: pipelineData.abort_on_error || false,
-      abort_on_timeout: pipelineData.abort_on_timeout || false,
-      continue_on_error: pipelineData.continue_on_error || false,
-      disposable: pipelineData.disposable || false
+      abort_on_error: pipelineData.abort_on_error ?? false,
+      abort_on_timeout: pipelineData.abort_on_timeout ?? false,
+      continue_on_error: pipelineData.continue_on_error ?? false,
+      disposable: pipelineData.disposable ?? false
     },
     units: yamlUnits
   };
