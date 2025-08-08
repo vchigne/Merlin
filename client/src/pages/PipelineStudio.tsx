@@ -84,6 +84,7 @@ export default function PipelineStudio() {
   const [filteredSftpOptions, setFilteredSftpOptions] = useState<SFTPOption[]>([]);
   const [sqlSearchTerm, setSqlSearchTerm] = useState<string>('');
   const [sftpSearchTerm, setSftpSearchTerm] = useState<string>('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
@@ -917,7 +918,7 @@ units:`;
                 <SimplePipelineLoader onPipelineSelect={handlePipelineSelect} />
                 
                 {/* Dialog para crear nuevo pipeline */}
-                <Dialog>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <PlusCircle className="mr-2 h-4 w-4" />
@@ -945,9 +946,8 @@ units:`;
                               const name = inputElement.value.trim();
                               if (name) {
                                 handleCreateNewPipeline(name);
-                                // Cerrar el diálogo
-                                const closeButton = e.currentTarget.closest('[role="dialog"]')?.querySelector('[aria-label="Close"]') as HTMLButtonElement;
-                                closeButton?.click();
+                                setIsCreateDialogOpen(false);
+                                inputElement.value = '';
                               }
                             }
                           }}
@@ -960,9 +960,8 @@ units:`;
                           const name = input?.value?.trim();
                           if (name) {
                             handleCreateNewPipeline(name);
-                            // Cerrar el diálogo
-                            const closeButton = document.querySelector('[role="dialog"] [aria-label="Close"]') as HTMLButtonElement;
-                            closeButton?.click();
+                            setIsCreateDialogOpen(false);
+                            input.value = '';
                           } else {
                             toast({
                               title: "Nombre requerido",

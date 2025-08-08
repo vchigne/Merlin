@@ -740,7 +740,12 @@ export default function PipelineVisualizerNew({
     <Card className={isMaximized ? "fixed inset-4 z-50 shadow-2xl" : ""}>
       <CardHeader className="border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
-          <CardTitle>Visualización del Pipeline</CardTitle>
+          <CardTitle>
+            {(() => {
+              const currentPipeline = pipelinesData?.find((p: any) => p.id === selectedPipeline);
+              return currentPipeline ? `Pipeline: ${currentPipeline.name}` : 'Visualización del Pipeline';
+            })()}
+          </CardTitle>
           <div className="flex items-center gap-3">
             {showSelector && (
               <PipelineSearch
@@ -839,7 +844,7 @@ export default function PipelineVisualizerNew({
                     
                     {/* NUEVO: Renderizar nodos con referencias para obtener posiciones */}
                     {nodes.map((node, index) => {
-                      const unitData = pipelineUnits.find(u => u.id === node.id);
+                      const unitData = pipelineUnits.find((u: any) => u.id === node.id);
                       if (!unitData) return null;
                       
                       return (
