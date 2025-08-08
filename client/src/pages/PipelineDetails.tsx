@@ -335,7 +335,6 @@ export default function PipelineDetails() {
   } = useQuery({
     queryKey: ['/api/pipelines/logs', id],
     queryFn: async () => {
-      console.log('🔍 Buscando logs para pipeline:', id);
       const result = await executeQuery(`
         query GetPipelineLogs($id: uuid!) {
           merlin_agent_PipelineJobLogV2Body(
@@ -372,11 +371,8 @@ export default function PipelineDetails() {
       `, { id });
       
       if (result.errors) {
-        console.error('❌ Error al obtener logs del pipeline:', result.errors);
         throw new Error(result.errors[0].message);
       }
-      
-      console.log('📋 Logs encontrados:', result.data.merlin_agent_PipelineJobLogV2Body?.length || 0);
       
       return result.data.merlin_agent_PipelineJobLogV2Body;
     },
