@@ -54,6 +54,12 @@ interface SQLConnection {
   name: string;
 }
 
+interface AgentOption {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 // Componente principal de PipelineStudio
 export default function PipelineStudio() {
   // Hooks para la navegación y el manejo de notificaciones
@@ -82,8 +88,10 @@ export default function PipelineStudio() {
   const [sqlConnections, setSqlConnections] = useState<SQLConnection[]>([]);
   const [filteredSqlConnections, setFilteredSqlConnections] = useState<SQLConnection[]>([]);
   const [filteredSftpOptions, setFilteredSftpOptions] = useState<SFTPOption[]>([]);
+  const [filteredAgentOptions, setFilteredAgentOptions] = useState<AgentOption[]>([]);
   const [sqlSearchTerm, setSqlSearchTerm] = useState<string>('');
   const [sftpSearchTerm, setSftpSearchTerm] = useState<string>('');
+  const [agentSearchTerm, setAgentSearchTerm] = useState<string>('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   
   // Referencia al gestor de plantillas de pipeline
@@ -309,6 +317,7 @@ export default function PipelineStudio() {
       }
       const data = await response.json();
       setAgentOptions(data);
+      setFilteredAgentOptions(data);
     } catch (error) {
       console.error('Error al cargar opciones de agentes:', error);
       toast({
@@ -1100,7 +1109,11 @@ units:`;
                                       setSqlSearchTerm(search);
                                       const filtered = sqlConnections.filter(conn => 
                                         conn.name.toLowerCase().includes(search.toLowerCase()) || 
-                                        conn.id.toLowerCase().includes(search.toLowerCase())
+                                        conn.id.toLowerCase().includes(search.toLowerCase()) ||
+                                        (conn.server && conn.server.toLowerCase().includes(search.toLowerCase())) ||
+                                        (conn.database && conn.database.toLowerCase().includes(search.toLowerCase())) ||
+                                        (conn.username && conn.username.toLowerCase().includes(search.toLowerCase())) ||
+                                        (conn.description && conn.description.toLowerCase().includes(search.toLowerCase()))
                                       );
                                       setFilteredSqlConnections(filtered);
                                     }}
@@ -1209,7 +1222,11 @@ units:`;
                                       setSftpSearchTerm(search);
                                       const filtered = sftpOptions.filter(link => 
                                         link.name.toLowerCase().includes(search.toLowerCase()) || 
-                                        link.id.toLowerCase().includes(search.toLowerCase())
+                                        link.id.toLowerCase().includes(search.toLowerCase()) ||
+                                        (link.host && link.host.toLowerCase().includes(search.toLowerCase())) ||
+                                        (link.username && link.username.toLowerCase().includes(search.toLowerCase())) ||
+                                        (link.port && link.port.toString().includes(search)) ||
+                                        (link.description && link.description.toLowerCase().includes(search.toLowerCase()))
                                       );
                                       setFilteredSftpOptions(filtered);
                                     }}
@@ -1343,8 +1360,19 @@ units:`;
                             <Input 
                               placeholder="Buscar agente..."
                               className="mb-2"
+                              value={agentSearchTerm}
+                              onChange={(e) => {
+                                const search = e.target.value;
+                                setAgentSearchTerm(search);
+                                const filtered = agentOptions.filter(agent => 
+                                  agent.name.toLowerCase().includes(search.toLowerCase()) || 
+                                  agent.id.toLowerCase().includes(search.toLowerCase()) ||
+                                  (agent.description && agent.description.toLowerCase().includes(search.toLowerCase()))
+                                );
+                                setFilteredAgentOptions(filtered);
+                              }}
                             />
-                            {agentOptions.map(agent => (
+                            {filteredAgentOptions.map(agent => (
                               <div key={agent.id} className="flex items-center justify-between p-2 border rounded hover:bg-slate-50 dark:hover:bg-slate-800">
                                 <div className="flex-1">
                                   <div className="font-medium">{agent.name}</div>

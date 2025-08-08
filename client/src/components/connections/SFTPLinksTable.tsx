@@ -39,10 +39,21 @@ export default function SFTPLinksTable() {
     // Verificar que los campos existan antes de usarlos
     const linkName = link.name || '';
     const linkServer = link.server || '';
+    const linkUser = link.user || '';
+    const linkPort = link.port?.toString() || '';
     
     const nameMatch = linkName.toLowerCase().includes(nameFilter.toLowerCase());
     const serverMatch = linkServer.toLowerCase().includes(serverFilter.toLowerCase());
-    return nameMatch && serverMatch;
+    
+    // Búsqueda de texto completo en todos los campos disponibles
+    const fullTextMatch = nameFilter === '' || serverFilter === '' || 
+      linkName.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      linkServer.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      linkUser.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      linkPort.includes(nameFilter) ||
+      link.id.toLowerCase().includes(nameFilter.toLowerCase());
+    
+    return nameMatch && serverMatch && fullTextMatch;
   });
 
   if (isLoading) {

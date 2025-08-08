@@ -51,10 +51,19 @@ export default function SQLConnectionsTable() {
     // Verificar que los campos existan antes de usarlos
     const connName = conn.name || '';
     const connDriver = conn.driver || '';
+    const connString = conn.connstring || '';
     
     const nameMatch = connName.toLowerCase().includes(nameFilter.toLowerCase());
     const driverMatch = driverFilter === "all" || connDriver === driverFilter;
-    return nameMatch && driverMatch;
+    
+    // Búsqueda de texto completo en todos los campos disponibles
+    const fullTextMatch = nameFilter === '' ||
+      connName.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      connDriver.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      connString.toLowerCase().includes(nameFilter.toLowerCase()) ||
+      conn.id.toLowerCase().includes(nameFilter.toLowerCase());
+    
+    return nameMatch && driverMatch && fullTextMatch;
   });
 
   if (isLoading) {
@@ -179,7 +188,7 @@ export default function SQLConnectionsTable() {
           </Table>
         ) : (
           <p className="text-muted-foreground text-center py-4">
-            {sqlConnections?.length > 0 
+            {(sqlConnections?.length || 0) > 0 
               ? "No connections match your filters" 
               : "No SQL connections found"}
           </p>
