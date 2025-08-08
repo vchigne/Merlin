@@ -35,10 +35,12 @@ import {
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
   Download, Upload, FileArchive, File as FileIcon, ExternalLink, X, LayoutPanelLeft,
-  LayoutPanelTop, Maximize2, Minimize2, AlertCircle
+  LayoutPanelTop, Maximize2, Minimize2, AlertCircle, Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PipelineLayoutManager } from "@/lib/pipeline-layout-manager";
+import QuickCreateSQLConnection from '@/components/quick-create/QuickCreateSQLConnection';
+import QuickCreateSFTPLink from '@/components/quick-create/QuickCreateSFTPLink';
 
 // Tipo de los modos de edición
 type EditorMode = 'create' | 'edit' | 'view';
@@ -86,6 +88,7 @@ export default function PipelineStudio() {
   const [agentOptions, setAgentOptions] = useState<any[]>([]);
   const [sftpOptions, setSftpOptions] = useState<SFTPOption[]>([]);
   const [sqlConnections, setSqlConnections] = useState<SQLConnection[]>([]);
+  const [pipelineOptions, setPipelineOptions] = useState<any[]>([]);
   const [filteredSqlConnections, setFilteredSqlConnections] = useState<SQLConnection[]>([]);
   const [filteredSftpOptions, setFilteredSftpOptions] = useState<SFTPOption[]>([]);
   const [filteredAgentOptions, setFilteredAgentOptions] = useState<AgentOption[]>([]);
@@ -93,6 +96,14 @@ export default function PipelineStudio() {
   const [sftpSearchTerm, setSftpSearchTerm] = useState<string>('');
   const [agentSearchTerm, setAgentSearchTerm] = useState<string>('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
+  
+  // Estados para creación rápida
+  const [isQuickCreateSQLOpen, setIsQuickCreateSQLOpen] = useState<boolean>(false);
+  const [isQuickCreateSFTPOpen, setIsQuickCreateSFTPOpen] = useState<boolean>(false);
+  
+  // Estados para Call Pipeline
+  const [pipelineSearchTerm, setPipelineSearchTerm] = useState<string>('');
+  const [filteredPipelineOptions, setFilteredPipelineOptions] = useState<any[]>([]);
   
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
@@ -304,6 +315,9 @@ export default function PipelineStudio() {
     loadSftpOptions();
     loadSqlConnections();
     
+    // Cargar pipelines para Call Pipeline feature
+    loadPipelinesList();
+    
     // Cargar plantillas
     loadTemplates();
   }, [pipelineId]);
@@ -370,6 +384,21 @@ export default function PipelineStudio() {
       setTemplates(mockTemplates);
     } catch (error) {
       console.error('Error al cargar plantillas:', error);
+    }
+  };
+  
+  // Cargar pipelines para el selector de Call Pipeline
+  const loadPipelinesList = async () => {
+    try {
+      const response = await fetch('/api/pipelines');
+      if (!response.ok) {
+        throw new Error('Error al cargar pipelines');
+      }
+      const data = await response.json();
+      setPipelineOptions(data);
+      setFilteredPipelineOptions(data);
+    } catch (error) {
+      console.error('Error al cargar lista de pipelines:', error);
     }
   };
   
@@ -1086,12 +1115,22 @@ units:`;
                         <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
                           <div className="flex items-center justify-between mb-1">
                             <div className="font-semibold">SQL Connections:</div>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
-                                  Ver todas ({sqlConnections.length})
-                                </Button>
-                              </DialogTrigger>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-5 px-1 text-xs"
+                                onClick={() => setIsQuickCreateSQLOpen(true)}
+                                title="Crear conexión SQL rápida"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
+                                    Ver todas ({sqlConnections.length})
+                                  </Button>
+                                </DialogTrigger>
                               <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                   <DialogTitle>Conexiones SQL Disponibles</DialogTitle>
@@ -1142,7 +1181,8 @@ units:`;
                                   ))}
                                 </div>
                               </DialogContent>
-                            </Dialog>
+                              </Dialog>
+                            </div>
                           </div>
                           {sqlConnections.length > 0 ? (
                             <div className="space-y-0.5">
@@ -1199,12 +1239,22 @@ units:`;
                         <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
                           <div className="flex items-center justify-between mb-1">
                             <div className="font-semibold">SFTP Links:</div>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
-                                  Ver todos ({sftpOptions.length})
-                                </Button>
-                              </DialogTrigger>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-5 px-1 text-xs"
+                                onClick={() => setIsQuickCreateSFTPOpen(true)}
+                                title="Crear enlace SFTP rápido"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
+                                    Ver todos ({sftpOptions.length})
+                                  </Button>
+                                </DialogTrigger>
                               <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                   <DialogTitle>Enlaces SFTP Disponibles</DialogTitle>
@@ -1255,7 +1305,8 @@ units:`;
                                   ))}
                                 </div>
                               </DialogContent>
-                            </Dialog>
+                              </Dialog>
+                            </div>
                           </div>
                           {sftpOptions.length > 0 ? (
                             <div className="space-y-0.5">
@@ -1308,15 +1359,109 @@ units:`;
                         <FileArchive className="mr-2 h-3 w-3" />
                         Unzip (Descomprimir)
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('call_pipeline')}
-                      >
-                        <ExternalLink className="mr-2 h-3 w-3" />
-                        Call Pipeline
-                      </Button>
+                      <div className="space-y-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                        >
+                          <ExternalLink className="mr-2 h-3 w-3" />
+                          Call Pipeline
+                        </Button>
+                        <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="font-semibold">Pipelines:</div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
+                                  Ver todos ({pipelineOptions.length})
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Pipelines Disponibles</DialogTitle>
+                                  <DialogDescription>
+                                    Selecciona un pipeline para copiar su ID
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                  <Input 
+                                    placeholder="Buscar pipeline..."
+                                    className="mb-2"
+                                    value={pipelineSearchTerm}
+                                    onChange={(e) => {
+                                      const search = e.target.value;
+                                      setPipelineSearchTerm(search);
+                                      const filtered = pipelineOptions.filter(pipeline => 
+                                        pipeline.name.toLowerCase().includes(search.toLowerCase()) || 
+                                        pipeline.id.toLowerCase().includes(search.toLowerCase()) ||
+                                        (pipeline.description && pipeline.description.toLowerCase().includes(search.toLowerCase()))
+                                      );
+                                      setFilteredPipelineOptions(filtered);
+                                    }}
+                                  />
+                                  {filteredPipelineOptions.map(pipeline => (
+                                    <div key={pipeline.id} className="flex items-center justify-between p-2 border rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                                      <div className="flex-1">
+                                        <div className="font-medium">{pipeline.name}</div>
+                                        <div className="text-xs text-slate-500 font-mono">{pipeline.id}</div>
+                                        {pipeline.description && (
+                                          <div className="text-xs text-slate-400">{pipeline.description}</div>
+                                        )}
+                                      </div>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(pipeline.id);
+                                          toast({
+                                            title: "ID copiado",
+                                            description: `ID de ${pipeline.name} copiado al portapapeles`
+                                          });
+                                        }}
+                                      >
+                                        <Copy className="w-3 h-3 mr-1" />
+                                        Copiar ID
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                          {pipelineOptions.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {pipelineOptions.slice(0, 2).map(pipeline => (
+                                <div key={pipeline.id} className="flex items-center justify-between group">
+                                  <span className="truncate flex-1">{pipeline.name}</span>
+                                  <div className="flex items-center space-x-1">
+                                    <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{pipeline.id.slice(0, 8)}</code>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="opacity-0 group-hover:opacity-100 h-4 w-4 p-0"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(pipeline.id);
+                                        toast({
+                                          title: "ID copiado",
+                                          description: `${pipeline.name} copiado`
+                                        });
+                                      }}
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              {pipelineOptions.length > 2 && (
+                                <div className="text-slate-500 text-center">+{pipelineOptions.length - 2} más...</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">No hay pipelines</span>
+                          )}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1421,6 +1566,31 @@ units: []
           </Tabs>
         </>
       )}
+      
+      {/* Modales de creación rápida */}
+      <QuickCreateSQLConnection 
+        open={isQuickCreateSQLOpen}
+        onOpenChange={setIsQuickCreateSQLOpen}
+        onSuccess={() => {
+          loadSqlConnections();
+          toast({
+            title: "Conexión SQL creada",
+            description: "La nueva conexión SQL se ha creado exitosamente"
+          });
+        }}
+      />
+      
+      <QuickCreateSFTPLink 
+        open={isQuickCreateSFTPOpen}
+        onOpenChange={setIsQuickCreateSFTPOpen}
+        onSuccess={() => {
+          loadSftpOptions();
+          toast({
+            title: "Enlace SFTP creado",
+            description: "El nuevo enlace SFTP se ha creado exitosamente"
+          });
+        }}
+      />
     </div>
   );
 }
