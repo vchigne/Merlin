@@ -80,6 +80,10 @@ export default function PipelineStudio() {
   const [agentOptions, setAgentOptions] = useState<any[]>([]);
   const [sftpOptions, setSftpOptions] = useState<SFTPOption[]>([]);
   const [sqlConnections, setSqlConnections] = useState<SQLConnection[]>([]);
+  const [filteredSqlConnections, setFilteredSqlConnections] = useState<SQLConnection[]>([]);
+  const [filteredSftpOptions, setFilteredSftpOptions] = useState<SFTPOption[]>([]);
+  const [sqlSearchTerm, setSqlSearchTerm] = useState<string>('');
+  const [sftpSearchTerm, setSftpSearchTerm] = useState<string>('');
   
   // Referencia al gestor de plantillas de pipeline
   const templateManager = PipelineTemplateManager.getInstance();
@@ -300,6 +304,7 @@ export default function PipelineStudio() {
       }
       const data = await response.json();
       setSftpOptions(data);
+      setFilteredSftpOptions(data);
     } catch (error) {
       console.error('Error al cargar opciones de SFTP:', error);
     }
@@ -314,6 +319,7 @@ export default function PipelineStudio() {
       }
       const data = await response.json();
       setSqlConnections(data);
+      setFilteredSqlConnections(data);
     } catch (error) {
       console.error('Error al cargar conexiones SQL:', error);
     }
@@ -1047,17 +1053,88 @@ units:`;
                           Query Queue
                         </Button>
                         <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
-                          <div className="font-semibold mb-1">SQL Connections:</div>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="font-semibold">SQL Connections:</div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
+                                  Ver todas ({sqlConnections.length})
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Conexiones SQL Disponibles</DialogTitle>
+                                  <DialogDescription>
+                                    Selecciona una conexión para copiar su ID
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                  <Input 
+                                    placeholder="Buscar conexión..."
+                                    className="mb-2"
+                                    value={sqlSearchTerm}
+                                    onChange={(e) => {
+                                      const search = e.target.value;
+                                      setSqlSearchTerm(search);
+                                      const filtered = sqlConnections.filter(conn => 
+                                        conn.name.toLowerCase().includes(search.toLowerCase()) || 
+                                        conn.id.toLowerCase().includes(search.toLowerCase())
+                                      );
+                                      setFilteredSqlConnections(filtered);
+                                    }}
+                                  />
+                                  {filteredSqlConnections.map(conn => (
+                                    <div key={conn.id} className="flex items-center justify-between p-2 border rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                                      <div className="flex-1">
+                                        <div className="font-medium">{conn.name}</div>
+                                        <div className="text-xs text-slate-500 font-mono">{conn.id}</div>
+                                      </div>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(conn.id);
+                                          toast({
+                                            title: "ID copiado",
+                                            description: `ID de ${conn.name} copiado al portapapeles`
+                                          });
+                                        }}
+                                      >
+                                        <Copy className="w-3 h-3 mr-1" />
+                                        Copiar ID
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                           {sqlConnections.length > 0 ? (
                             <div className="space-y-0.5">
-                              {sqlConnections.slice(0, 3).map(conn => (
-                                <div key={conn.id} className="flex items-center justify-between">
+                              {sqlConnections.slice(0, 2).map(conn => (
+                                <div key={conn.id} className="flex items-center justify-between group">
                                   <span className="truncate flex-1">{conn.name}</span>
-                                  <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{conn.id.slice(0, 8)}</code>
+                                  <div className="flex items-center space-x-1">
+                                    <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{conn.id.slice(0, 8)}</code>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="opacity-0 group-hover:opacity-100 h-4 w-4 p-0"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(conn.id);
+                                        toast({
+                                          title: "ID copiado",
+                                          description: `${conn.name} copiado`
+                                        });
+                                      }}
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               ))}
-                              {sqlConnections.length > 3 && (
-                                <div className="text-slate-500">+{sqlConnections.length - 3} más...</div>
+                              {sqlConnections.length > 2 && (
+                                <div className="text-slate-500 text-center">+{sqlConnections.length - 2} más...</div>
                               )}
                             </div>
                           ) : (
@@ -1085,17 +1162,88 @@ units:`;
                           SFTP Upload
                         </Button>
                         <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
-                          <div className="font-semibold mb-1">SFTP Links:</div>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="font-semibold">SFTP Links:</div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-5 px-1 text-xs">
+                                  Ver todos ({sftpOptions.length})
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Enlaces SFTP Disponibles</DialogTitle>
+                                  <DialogDescription>
+                                    Selecciona un enlace para copiar su ID
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                  <Input 
+                                    placeholder="Buscar enlace SFTP..."
+                                    className="mb-2"
+                                    value={sftpSearchTerm}
+                                    onChange={(e) => {
+                                      const search = e.target.value;
+                                      setSftpSearchTerm(search);
+                                      const filtered = sftpOptions.filter(link => 
+                                        link.name.toLowerCase().includes(search.toLowerCase()) || 
+                                        link.id.toLowerCase().includes(search.toLowerCase())
+                                      );
+                                      setFilteredSftpOptions(filtered);
+                                    }}
+                                  />
+                                  {filteredSftpOptions.map(link => (
+                                    <div key={link.id} className="flex items-center justify-between p-2 border rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                                      <div className="flex-1">
+                                        <div className="font-medium">{link.name}</div>
+                                        <div className="text-xs text-slate-500 font-mono">{link.id}</div>
+                                      </div>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(link.id);
+                                          toast({
+                                            title: "ID copiado",
+                                            description: `ID de ${link.name} copiado al portapapeles`
+                                          });
+                                        }}
+                                      >
+                                        <Copy className="w-3 h-3 mr-1" />
+                                        Copiar ID
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                           {sftpOptions.length > 0 ? (
                             <div className="space-y-0.5">
-                              {sftpOptions.slice(0, 3).map(link => (
-                                <div key={link.id} className="flex items-center justify-between">
+                              {sftpOptions.slice(0, 2).map(link => (
+                                <div key={link.id} className="flex items-center justify-between group">
                                   <span className="truncate flex-1">{link.name}</span>
-                                  <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{link.id.slice(0, 8)}</code>
+                                  <div className="flex items-center space-x-1">
+                                    <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{link.id.slice(0, 8)}</code>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="opacity-0 group-hover:opacity-100 h-4 w-4 p-0"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(link.id);
+                                        toast({
+                                          title: "ID copiado",
+                                          description: `${link.name} copiado`
+                                        });
+                                      }}
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               ))}
-                              {sftpOptions.length > 3 && (
-                                <div className="text-slate-500">+{sftpOptions.length - 3} más...</div>
+                              {sftpOptions.length > 2 && (
+                                <div className="text-slate-500 text-center">+{sftpOptions.length - 2} más...</div>
                               )}
                             </div>
                           ) : (
@@ -1147,18 +1295,65 @@ units:`;
                         Aplicar Cambios YAML
                       </Button>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Ver Agentes ({agentOptions.length})
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Agentes Disponibles</DialogTitle>
+                            <DialogDescription>
+                              Selecciona un agente para copiar su ID
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            <Input 
+                              placeholder="Buscar agente..."
+                              className="mb-2"
+                            />
+                            {agentOptions.map(agent => (
+                              <div key={agent.id} className="flex items-center justify-between p-2 border rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                                <div className="flex-1">
+                                  <div className="font-medium">{agent.name}</div>
+                                  <div className="text-xs text-slate-500 font-mono">{agent.id}</div>
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(agent.id);
+                                    toast({
+                                      title: "ID copiado",
+                                      description: `ID de agente ${agent.name} copiado al portapapeles`
+                                    });
+                                  }}
+                                >
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copiar ID
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                   
                   <textarea
                     value={yamlContent}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleYamlChange(e.target.value)}
-                    placeholder="# Pipeline YAML
+                    placeholder={`# Pipeline YAML
 name: 'Mi Pipeline'
 description: 'Descripción del pipeline'
 configuration:
-  agent_passport_id: 'agent-id'
+  agent_passport_id: '${agentOptions.length > 0 ? agentOptions[0].id : 'agent-id'}'  # Agentes disponibles: ${agentOptions.map(a => a.name).join(', ')}
   abort_on_error: true
-units: []"
+units: []
+
+# Tip: Usa el botón 'Ver Agentes' para copiar IDs de agentes disponibles`}
                     className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg bg-[#1e293b]"
                     readOnly={editorMode === 'view'}
                   />
