@@ -574,10 +574,26 @@ export default function PipelineStudio() {
     depends_on: []
     force_parallel_creation: false`,
       
-      query_queue: `  - name: "Consulta SQL"
-    query_queue_id: ""  # ID de la consulta SQL (dejar vacío para crear nueva)
+      query_queue: `  - name: "Query Queue"
+    query_queue_id: ""  # ID del Query Queue (dejar vacío para crear nuevo)
     depends_on: []
-    force_parallel_creation: false`,
+    force_parallel_creation: false
+    # Configuración del Query Queue:
+    # queries:
+    #   - order: 1
+    #     name: "Mi Primera Query"
+    #     statement: "SELECT * FROM tabla WHERE condicion = ?"
+    #     path: "/ruta/salida/archivo.csv"
+    #     sqlconn_id: ""  # ID de conexión SQL
+    #     return_output: true
+    #     print_headers: true
+    #     separator: ","
+    #     timeout: 30000
+    #   - order: 2
+    #     name: "Mi Segunda Query"
+    #     statement: "INSERT INTO log VALUES (?, ?)"
+    #     sqlconn_id: ""
+    #     return_output: false`,
       
       sftp_downloader: `  - name: "Descargar SFTP"
     sftp_downloader_id: ""  # ID del descargador SFTP (dejar vacío para crear nuevo)
