@@ -35,7 +35,7 @@ import {
   AlertTriangle, Info, TerminalSquare, CheckCircle2, PlusCircle, Copy, ArrowLeftRight,
   FolderOpen, Search, Edit, Loader2, ChevronLeft, ChevronRight, Settings2, Database,
   Download, Upload, FileArchive, File as FileIcon, ExternalLink, X, LayoutPanelLeft,
-  LayoutPanelTop, Maximize2, Minimize2
+  LayoutPanelTop, Maximize2, Minimize2, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PipelineLayoutManager } from "@/lib/pipeline-layout-manager";
@@ -201,7 +201,9 @@ export default function PipelineStudio() {
       try {
         const yaml = pipelineToYaml(pipelineData);
         setYamlContent(yaml);
-        setYamlErrors([]);
+        // Validar solo cuando se cambia a modo YAML
+        const validation = validateYamlStructure(yaml);
+        setYamlErrors(validation.errors);
       } catch (error) {
         console.error("Error al convertir a YAML:", error);
         setYamlErrors([error instanceof Error ? error.message : 'Error al convertir a YAML']);
@@ -214,16 +216,37 @@ export default function PipelineStudio() {
   const handleYamlChange = (newYamlContent: string) => {
     setYamlContent(newYamlContent);
     setUnsavedChanges(true);
-    
-    // Validar YAML en tiempo real
-    const validation = validateYamlStructure(newYamlContent);
+    // Validación eliminada - ahora se valida solo cuando se aplican cambios o se solicita explícitamente
+  };
+
+  // Función para validar YAML manualmente
+  const validateYaml = () => {
+    const validation = validateYamlStructure(yamlContent);
     setYamlErrors(validation.errors);
+    
+    if (validation.errors.length === 0) {
+      toast({
+        title: "YAML válido",
+        description: "No se encontraron errores en la estructura YAML",
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Errores encontrados",
+        description: `Se encontraron ${validation.errors.length} errores en el YAML`,
+        variant: "destructive"
+      });
+    }
   };
   
   // Función para aplicar cambios del YAML al pipeline
   const applyYamlChanges = () => {
     try {
-      if (yamlErrors.length > 0) {
+      // Validar antes de aplicar
+      const validation = validateYamlStructure(yamlContent);
+      setYamlErrors(validation.errors);
+      
+      if (validation.errors.length > 0) {
         toast({
           title: "Error en YAML",
           description: "Corrige los errores antes de aplicar los cambios",
@@ -1285,6 +1308,14 @@ units:`;
                 <div className="flex-1 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={validateYaml}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        Validar YAML
+                      </Button>
                       <Button
                         onClick={applyYamlChanges}
                         disabled={yamlErrors.length > 0 || !yamlContent.trim() || editorMode === 'view'}
