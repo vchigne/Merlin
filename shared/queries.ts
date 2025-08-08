@@ -67,15 +67,8 @@ export const PIPELINE_UNITS_QUERY = `
     merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
       id
       pipeline_id
-      pipeline_unit_id
       posx
       posy
-      comment
-      retry_count
-      retry_after_milliseconds
-      timeout_milliseconds
-      continue_on_error
-      abort_on_timeout
       command_id
       query_queue_id
       sftp_downloader_id
@@ -105,15 +98,6 @@ export const PIPELINE_UNITS_QUERY = `
           path
           query_string
           return_output
-          print_headers
-          separator
-          chunks
-          trim_columns
-          force_dot_decimal_separator
-          date_format
-          target_encoding
-          retry_count
-          retry_after_milliseconds
           SQLConn {
             id
             driver
@@ -126,29 +110,11 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
-        input
-        output
-        return_output
-        SFTPLink {
-          id
-          server
-          port
-          user
-          name
-        }
-        FileStreamSftpDownloaders {
-          id
-          input
-          output
-          return_output
-        }
       }
       SFTPUploader {
         id
         name
         description
-        input
-        output
         return_output
         SFTPLink {
           id
@@ -156,12 +122,6 @@ export const PIPELINE_UNITS_QUERY = `
           port
           user
           name
-        }
-        FileStreamSftpUploaders {
-          id
-          input
-          output
-          return_output
         }
       }
       Zip {
@@ -169,7 +129,6 @@ export const PIPELINE_UNITS_QUERY = `
         name
         description
         output
-        zip_name
         return_output
         FileStreamZips {
           id
@@ -182,17 +141,8 @@ export const PIPELINE_UNITS_QUERY = `
         id
         name
         description
-        input
-        output
-        return_output
-        FileStreamUnzips {
-          id
-          input
-          output
-          return_output
-        }
       }
-      CalledPipeline: Pipeline {
+      Pipeline {
         id
         name
         description

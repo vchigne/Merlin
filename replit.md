@@ -1,8 +1,8 @@
 # Overview
 
-Merlin Observer is a modern web-based monitoring dashboard for the Merlin automation system. It provides real-time visibility into a distributed network of autonomous .NET agents that execute complex pipeline workflows. The application serves as the central control plane, allowing users to monitor agent health, track pipeline executions, view logs, manage system configurations, and generate comprehensive YAML representations of pipelines through an intuitive interface.
+Merlin Observer is a modern web-based monitoring dashboard for the Merlin automation system. It provides real-time visibility into a distributed network of autonomous .NET agents that execute complex pipeline workflows. The application serves as the central control plane, allowing users to monitor agent health, track pipeline executions, view logs, and manage system configurations through an intuitive interface.
 
-The system operates in a distributed architecture where multiple C# agents execute automation tasks while reporting their status and results to a centralized Hasura GraphQL backend. The dashboard provides comprehensive monitoring, alerting, and management capabilities for this distributed automation infrastructure, including advanced YAML Studio functionality for bidirectional pipeline conversion.
+The system operates in a distributed architecture where multiple C# agents execute automation tasks while reporting their status and results to a centralized Hasura GraphQL backend. The dashboard provides comprehensive monitoring, alerting, and management capabilities for this distributed automation infrastructure.
 
 # User Preferences
 
@@ -73,25 +73,3 @@ Preferred communication style: Simple, everyday language.
 **Vite**: Modern build tool providing fast development server, hot module replacement, and optimized production builds.
 
 **React Query**: Server state management with caching, background updates, and error handling for all data fetching operations.
-
-# Recent Changes
-
-## YAML Generation Enhancement (January 2025)
-
-Enhanced the YAML Studio functionality to generate complete and accurate YAML representations of pipelines with all element configurations:
-
-**Improvements Made:**
-- Complete runner configuration extraction for all element types (Command, Query Queue, SFTP, Zip/Unzip, Call Pipeline)
-- Added position data (x, y coordinates) for visual pipeline representation
-- Included execution configurations (retry count, timeout, abort settings) for each unit
-- Implemented connection mapping between units based on pipeline_unit_id relationships
-- Enhanced query configurations with output settings (separators, encoding, date formats)
-- Added file stream configurations with wildcard support for Zip operations
-- Improved SFTP configurations with connection details and file stream mappings
-- Complete SQL connection details with retry settings for Query Queue runners
-
-**Technical Details:**
-- Updated `yaml-converter.ts` with comprehensive configuration extraction
-- Enhanced GraphQL queries to fetch all necessary fields including comment, position, and execution settings
-- Improved unit naming using the comment field when available
-- Added proper null safety and default values for all configurations
