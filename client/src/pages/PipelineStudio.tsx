@@ -563,6 +563,136 @@ export default function PipelineStudio() {
     setUnsavedChanges(true);
   };
   
+  // Insertar un componente YAML con valores por defecto
+  const insertYamlComponent = (type: string) => {
+    let componentYaml = '';
+    
+    // Plantillas YAML para cada tipo de componente
+    const templates: { [key: string]: string } = {
+      command: `  - name: "Ejecutar Comando"
+    type: command
+    command:
+      id: ""  # Dejar vacío para nuevo comando
+      name: "Mi Comando"
+      target: "bash"
+      args: "echo 'Hola Mundo'"
+      timeout_millis: 30000
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      query_queue: `  - name: "Consulta SQL"
+    type: query_queue
+    queries:
+      - id: ""  # Dejar vacío para nueva consulta
+        query: "SELECT * FROM tabla WHERE condicion = true"
+        sql_conn_id: ""  # Agregar ID de conexión SQL existente
+        name: "Mi Consulta"
+        abort_on_error: true
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      sftp_downloader: `  - name: "Descargar SFTP"
+    type: sftp_downloader
+    sftp_link_id: ""  # Agregar ID de enlace SFTP existente
+    download_config:
+      source_directory: "/ruta/origen/"
+      target_directory: "/ruta/destino/"
+      file_pattern: "*.txt"
+      delete_after_download: false
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      sftp_uploader: `  - name: "Subir SFTP"
+    type: sftp_uploader
+    sftp_link_id: ""  # Agregar ID de enlace SFTP existente
+    upload_config:
+      source_directory: "/ruta/origen/"
+      target_directory: "/ruta/destino/"
+      file_pattern: "*.txt"
+      delete_after_upload: false
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      api_call: `  - name: "Llamada API"
+    type: api_call
+    api_config:
+      url: "https://api.ejemplo.com/endpoint"
+      method: "GET"
+      headers:
+        Content-Type: "application/json"
+      body: ""
+      timeout_millis: 30000
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      error_control: `  - name: "Control de Error"
+    type: error_control
+    error_config:
+      error_pattern: ".*ERROR.*"
+      action: "abort"  # abort | continue | retry
+      max_retries: 3
+      retry_delay_millis: 5000
+    depends_on: []
+    force_parallel_creation: false`,
+      
+      console_output: `  - name: "Salida de Consola"
+    type: console_output
+    output_config:
+      message: "Pipeline ejecutándose - Estado: {status}"
+      level: "info"  # info | warning | error
+    depends_on: []
+    force_parallel_creation: false`
+    };
+    
+    componentYaml = templates[type] || '';
+    
+    if (componentYaml) {
+      // Obtener el contenido actual del YAML
+      let currentYaml = yamlContent || '';
+      
+      // Si el YAML está vacío, crear estructura básica
+      if (!currentYaml.trim()) {
+        currentYaml = `name: "Nuevo Pipeline"
+description: ""
+configuration:
+  agent_passport_id: ""
+  abort_on_error: false
+units:`;
+      }
+      
+      // Buscar la sección 'units:' y agregar el componente
+      if (currentYaml.includes('units:')) {
+        // Si ya hay units, agregar después
+        const unitsIndex = currentYaml.lastIndexOf('units:');
+        const afterUnits = currentYaml.substring(unitsIndex);
+        
+        // Verificar si units está vacío (solo tiene units: o units: [])
+        const isEmptyUnits = afterUnits.match(/^units:\s*(\[\])?$/m);
+        
+        if (isEmptyUnits) {
+          // Si units está vacío, reemplazar con el nuevo componente
+          currentYaml = currentYaml.substring(0, unitsIndex) + 'units:\n' + componentYaml;
+        } else {
+          // Si ya hay units, agregar al final
+          currentYaml = currentYaml + '\n' + componentYaml;
+        }
+      } else {
+        // Si no hay sección units, agregarla
+        currentYaml += '\nunits:\n' + componentYaml;
+      }
+      
+      // Actualizar el contenido del YAML
+      setYamlContent(currentYaml);
+      handleYamlChange(currentYaml);
+      
+      toast({
+        title: "Componente Agregado",
+        description: `Se agregó un componente tipo ${type} al YAML`,
+        variant: "default"
+      });
+    }
+  };
+
   // Crear un nuevo pipeline en memoria
   const handleCreateNewPipeline = (name: string) => {
     try {
@@ -900,34 +1030,114 @@ export default function PipelineStudio() {
                 </Alert>
               )}
               
-              {/* Editor YAML simple */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={applyYamlChanges}
-                      disabled={yamlErrors.length > 0 || !yamlContent.trim() || editorMode === 'view'}
-                      size="sm"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Aplicar Cambios YAML
-                    </Button>
-                  </div>
+              {/* Editor YAML con paleta de herramientas */}
+              <div className="flex gap-4">
+                {/* Paleta de herramientas lateral */}
+                <div className="w-48 shrink-0">
+                  <Card className="p-3">
+                    <CardHeader className="p-0 pb-3">
+                      <CardTitle className="text-sm font-semibold">Componentes</CardTitle>
+                      <CardDescription className="text-xs">
+                        Click para agregar al pipeline
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('command')}
+                      >
+                        <TerminalSquare className="mr-2 h-3 w-3" />
+                        Command
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('query_queue')}
+                      >
+                        <Database className="mr-2 h-3 w-3" />
+                        Query Queue
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('sftp_downloader')}
+                      >
+                        <Download className="mr-2 h-3 w-3" />
+                        SFTP Download
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('sftp_uploader')}
+                      >
+                        <Upload className="mr-2 h-3 w-3" />
+                        SFTP Upload
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('api_call')}
+                      >
+                        <ExternalLink className="mr-2 h-3 w-3" />
+                        API Call
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('error_control')}
+                      >
+                        <AlertTriangle className="mr-2 h-3 w-3" />
+                        Error Control
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('console_output')}
+                      >
+                        <Info className="mr-2 h-3 w-3" />
+                        Console Output
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
                 
-                <textarea
-                  value={yamlContent}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleYamlChange(e.target.value)}
-                  placeholder="# Pipeline YAML
+                {/* Editor YAML */}
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={applyYamlChanges}
+                        disabled={yamlErrors.length > 0 || !yamlContent.trim() || editorMode === 'view'}
+                        size="sm"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Aplicar Cambios YAML
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <textarea
+                    value={yamlContent}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleYamlChange(e.target.value)}
+                    placeholder="# Pipeline YAML
 name: 'Mi Pipeline'
 description: 'Descripción del pipeline'
 configuration:
   agent_passport_id: 'agent-id'
   abort_on_error: true
 units: []"
-                  className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg bg-[#1e293b]"
-                  readOnly={editorMode === 'view'}
-                />
+                    className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg bg-[#1e293b]"
+                    readOnly={editorMode === 'view'}
+                  />
+                </div>
               </div>
             </TabsContent>
           </Tabs>
