@@ -710,7 +710,6 @@ export default function PipelineStudio() {
           )}
         </div>
       </div>
-      
       {unsavedChanges && (
         <Alert className="mb-4 border-amber-500 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-4 w-4" />
@@ -720,7 +719,6 @@ export default function PipelineStudio() {
           </AlertDescription>
         </Alert>
       )}
-      
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -848,7 +846,7 @@ configuration:
   agent_passport_id: 'agent-id'
   abort_on_error: true
 units: []"
-                  className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg"
+                  className="min-h-[500px] font-mono text-sm w-full p-3 border rounded-lg bg-[#1e293b]"
                   readOnly={editorMode === 'view'}
                 />
               </div>
