@@ -101,7 +101,7 @@ configuration:
   agent_passport_id: 'agent-id'
   abort_on_error: true
 units: []"
-          className="min-h-[500px] font-mono text-sm border-0 resize-none bg-background text-foreground dark:bg-gray-900 dark:text-gray-100"
+          className="min-h-[500px] font-mono text-sm border-0 resize-none bg-white text-black dark:bg-gray-900 dark:text-white"
           readOnly={readOnly}
         />
       </div>
