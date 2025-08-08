@@ -641,6 +641,109 @@ export default function PipelineStudio() {
       message: "Pipeline ejecutándose - Estado: {status}"
       level: "info"  # info | warning | error
     depends_on: []
+    force_parallel_creation: false`,
+    
+      file_mover: `  - name: "Mover Archivos"
+    type: file_mover
+    file_config:
+      source_path: "/ruta/origen/"
+      destination_path: "/ruta/destino/"
+      file_pattern: "*.txt"
+      create_destination: true
+      overwrite: false
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      file_copy: `  - name: "Copiar Archivos"
+    type: file_copy
+    file_config:
+      source_path: "/ruta/origen/"
+      destination_path: "/ruta/destino/"
+      file_pattern: "*.txt"
+      create_destination: true
+      overwrite: false
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      file_delete: `  - name: "Eliminar Archivos"
+    type: file_delete
+    file_config:
+      target_path: "/ruta/archivos/"
+      file_pattern: "*.tmp"
+      recursive: false
+      safe_mode: true  # Solicita confirmación
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      compress: `  - name: "Comprimir Archivos"
+    type: compress
+    compress_config:
+      source_path: "/ruta/origen/"
+      output_file: "/ruta/archivo.zip"
+      format: "zip"  # zip | tar | 7z
+      compression_level: 5  # 1-9
+      include_pattern: "*.*"
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      decompress: `  - name: "Descomprimir Archivos"
+    type: decompress
+    decompress_config:
+      archive_file: "/ruta/archivo.zip"
+      destination_path: "/ruta/destino/"
+      format: "auto"  # auto | zip | tar | 7z
+      overwrite: false
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      webhook: `  - name: "Webhook Notification"
+    type: webhook
+    webhook_config:
+      url: "https://hooks.ejemplo.com/webhook"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+      payload:
+        pipeline: "{pipeline_name}"
+        status: "{status}"
+        timestamp: "{timestamp}"
+      retry_count: 3
+      timeout_millis: 10000
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      wait: `  - name: "Esperar/Retraso"
+    type: wait
+    wait_config:
+      delay_millis: 5000  # 5 segundos
+      condition: ""  # Condición opcional para esperar
+      max_wait_millis: 60000  # Máximo tiempo de espera
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      conditional: `  - name: "Ejecución Condicional"
+    type: conditional
+    condition_config:
+      condition: "status == 'success'"  # Expresión a evaluar
+      if_true:
+        - action: "continue"
+          target_unit: ""  # ID de la unidad a ejecutar
+      if_false:
+        - action: "abort"
+          message: "Condición no cumplida"
+    depends_on: []
+    force_parallel_creation: false`,
+    
+      loop: `  - name: "Bucle/Iteración"
+    type: loop
+    loop_config:
+      type: "count"  # count | while | foreach
+      count: 5  # Para tipo count
+      condition: ""  # Para tipo while
+      items: []  # Para tipo foreach
+      body_units: []  # IDs de unidades a ejecutar en cada iteración
+      max_iterations: 100  # Límite de seguridad
+    depends_on: []
     force_parallel_creation: false`
     };
     
@@ -1041,7 +1144,7 @@ units:`;
                         Click para agregar al pipeline
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0 space-y-2">
+                    <CardContent className="p-0 space-y-2 max-h-[600px] overflow-y-auto">
                       <Button
                         variant="outline"
                         size="sm"
@@ -1082,10 +1185,91 @@ units:`;
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('file_mover')}
+                      >
+                        <ArrowLeftRight className="mr-2 h-3 w-3" />
+                        File Mover
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('file_copy')}
+                      >
+                        <Copy className="mr-2 h-3 w-3" />
+                        File Copy
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('file_delete')}
+                      >
+                        <X className="mr-2 h-3 w-3" />
+                        File Delete
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('compress')}
+                      >
+                        <FileArchive className="mr-2 h-3 w-3" />
+                        Compress
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('decompress')}
+                      >
+                        <FileArchive className="mr-2 h-3 w-3" />
+                        Decompress
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
                         onClick={() => insertYamlComponent('api_call')}
                       >
                         <ExternalLink className="mr-2 h-3 w-3" />
                         API Call
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('webhook')}
+                      >
+                        <ExternalLink className="mr-2 h-3 w-3" />
+                        Webhook
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('wait')}
+                      >
+                        <Loader2 className="mr-2 h-3 w-3" />
+                        Wait/Delay
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('conditional')}
+                      >
+                        <Settings2 className="mr-2 h-3 w-3" />
+                        Conditional
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => insertYamlComponent('loop')}
+                      >
+                        <ArrowLeftRight className="mr-2 h-3 w-3" />
+                        Loop
                       </Button>
                       <Button
                         variant="outline"
