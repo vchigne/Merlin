@@ -584,7 +584,7 @@ export default function PipelineStudio() {
     #     name: "Mi Primera Query"
     #     statement: "SELECT * FROM tabla WHERE condicion = ?"
     #     path: "/ruta/salida/archivo.csv"
-    #     sqlconn_id: ""  # ID de conexión SQL
+    #     sqlconn_id: ""  # Usa una SQL Connection existente o crea una nueva
     #     return_output: true
     #     print_headers: true
     #     separator: ","
@@ -592,18 +592,26 @@ export default function PipelineStudio() {
     #   - order: 2
     #     name: "Mi Segunda Query"
     #     statement: "INSERT INTO log VALUES (?, ?)"
-    #     sqlconn_id: ""
+    #     sqlconn_id: ""  # Usa la misma conexión o diferente
     #     return_output: false`,
       
       sftp_downloader: `  - name: "Descargar SFTP"
     sftp_downloader_id: ""  # ID del descargador SFTP (dejar vacío para crear nuevo)
     depends_on: []
-    force_parallel_creation: false`,
+    force_parallel_creation: false
+    # Configuración SFTP Download:
+    # sftp_link_id: ""  # Usa un SFTP Link existente o crea uno nuevo
+    # remote_path: "/ruta/archivo.txt"
+    # local_path: "/destino/local/"`,
       
       sftp_uploader: `  - name: "Subir SFTP"
     sftp_uploader_id: ""  # ID del subidor SFTP (dejar vacío para crear nuevo)
     depends_on: []
-    force_parallel_creation: false`,
+    force_parallel_creation: false
+    # Configuración SFTP Upload:
+    # sftp_link_id: ""  # Usa un SFTP Link existente o crea uno nuevo  
+    # local_path: "/origen/archivo.txt"
+    # remote_path: "/destino/remoto/"`,
       
       zip: `  - name: "Comprimir Archivos"
     zip_id: ""  # ID del compresor (dejar vacío para crear nuevo)
@@ -1028,33 +1036,73 @@ units:`;
                         <TerminalSquare className="mr-2 h-3 w-3" />
                         Command
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('query_queue')}
-                      >
-                        <Database className="mr-2 h-3 w-3" />
-                        Query Queue
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('sftp_downloader')}
-                      >
-                        <Download className="mr-2 h-3 w-3" />
-                        SFTP Download
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('sftp_uploader')}
-                      >
-                        <Upload className="mr-2 h-3 w-3" />
-                        SFTP Upload
-                      </Button>
+                      <div className="space-y-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                          onClick={() => insertYamlComponent('query_queue')}
+                        >
+                          <Database className="mr-2 h-3 w-3" />
+                          Query Queue
+                        </Button>
+                        <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
+                          <div className="font-semibold mb-1">SQL Connections:</div>
+                          {sqlConnections.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {sqlConnections.slice(0, 3).map(conn => (
+                                <div key={conn.id} className="flex items-center justify-between">
+                                  <span className="truncate flex-1">{conn.name}</span>
+                                  <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{conn.id.slice(0, 8)}</code>
+                                </div>
+                              ))}
+                              {sqlConnections.length > 3 && (
+                                <div className="text-slate-500">+{sqlConnections.length - 3} más...</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">No hay conexiones</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                          onClick={() => insertYamlComponent('sftp_downloader')}
+                        >
+                          <Download className="mr-2 h-3 w-3" />
+                          SFTP Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                          onClick={() => insertYamlComponent('sftp_uploader')}
+                        >
+                          <Upload className="mr-2 h-3 w-3" />
+                          SFTP Upload
+                        </Button>
+                        <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded text-xs">
+                          <div className="font-semibold mb-1">SFTP Links:</div>
+                          {sftpOptions.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {sftpOptions.slice(0, 3).map(link => (
+                                <div key={link.id} className="flex items-center justify-between">
+                                  <span className="truncate flex-1">{link.name}</span>
+                                  <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">{link.id.slice(0, 8)}</code>
+                                </div>
+                              ))}
+                              {sftpOptions.length > 3 && (
+                                <div className="text-slate-500">+{sftpOptions.length - 3} más...</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">No hay enlaces SFTP</span>
+                          )}
+                        </div>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
