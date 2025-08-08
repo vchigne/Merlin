@@ -13,15 +13,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2 } from "lucide-react";
 
 interface QuickCreateSFTPLinkProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCreated?: (link: any) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export default function QuickCreateSFTPLink({ 
-  isOpen, 
-  onClose, 
-  onCreated 
+  open, 
+  onOpenChange, 
+  onSuccess 
 }: QuickCreateSFTPLinkProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -86,8 +86,8 @@ export default function QuickCreateSFTPLink({
         variant: "default"
       });
 
-      onCreated?.(newLink);
-      onClose();
+      onSuccess?.();
+      onOpenChange(false);
       
       // Reset form
       setFormData({
@@ -111,7 +111,7 @@ export default function QuickCreateSFTPLink({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -186,7 +186,7 @@ export default function QuickCreateSFTPLink({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               disabled={isCreating}
             >
               Cancelar

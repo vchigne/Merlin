@@ -20,15 +20,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2 } from "lucide-react";
 
 interface QuickCreateSQLConnectionProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCreated?: (connection: any) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export default function QuickCreateSQLConnection({ 
-  isOpen, 
-  onClose, 
-  onCreated 
+  open, 
+  onOpenChange, 
+  onSuccess 
 }: QuickCreateSQLConnectionProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -91,8 +91,8 @@ export default function QuickCreateSQLConnection({
         variant: "default"
       });
 
-      onCreated?.(newConnection);
-      onClose();
+      onSuccess?.();
+      onOpenChange(false);
       
       // Reset form
       setFormData({
@@ -114,7 +114,7 @@ export default function QuickCreateSQLConnection({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function QuickCreateSQLConnection({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               disabled={isCreating}
             >
               Cancelar
