@@ -563,6 +563,56 @@ export default function PipelineStudio() {
     setUnsavedChanges(true);
   };
   
+  // Crear un nuevo pipeline en memoria
+  const handleCreateNewPipeline = (name: string) => {
+    try {
+      // Generar un ID temporal para el pipeline (lo marcaremos con 'temp-' para identificarlo)
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Crear estructura de pipeline vacío
+      const newPipeline = {
+        id: tempId,
+        name: name,
+        description: '',
+        abort_on_error: false,
+        notify_on_abort_email_id: null,
+        notify_on_abort_webhook_id: null,
+        agent_passport_id: agentOptions[0]?.id || null, // Usar el primer agente disponible por defecto
+        disposable: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        PipelineUnits: [] // Sin unidades inicialmente
+      };
+      
+      // Establecer el pipeline como el actual
+      setPipelineData(newPipeline);
+      setPipelineFlowData({ nodes: [], edges: [] });
+      
+      // Cambiar a modo creación
+      setEditorMode('create');
+      setUnsavedChanges(false); // No hay cambios sin guardar porque es nuevo
+      
+      // Si estamos en modo YAML, generar el YAML vacío
+      if (yamlMode) {
+        const yamlText = pipelineToYaml(newPipeline);
+        setYamlContent(yamlText);
+      }
+      
+      toast({
+        title: "Nuevo Pipeline Creado",
+        description: `Pipeline "${name}" creado en memoria. Recuerda guardarlo cuando termines de configurarlo.`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error al crear nuevo pipeline:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo crear el nuevo pipeline",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Cargar una plantilla de pipeline
   const handleTemplateSelect = async (templateId: string) => {
     try {
@@ -745,36 +795,65 @@ export default function PipelineStudio() {
                 {/* Dialog para cargar pipeline existente */}
                 <SimplePipelineLoader onPipelineSelect={handlePipelineSelect} />
                 
-                {/* Dialog para cargar plantilla */}
+                {/* Dialog para crear nuevo pipeline */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
-                      <FolderOpen className="mr-2 h-4 w-4" />
-                      Cargar Plantilla
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Crear Nuevo Pipeline
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Seleccionar Plantilla</DialogTitle>
+                      <DialogTitle>Crear Nuevo Pipeline</DialogTitle>
                       <DialogDescription>
-                        Elige una plantilla predefinida para comenzar tu pipeline.
+                        Ingresa el nombre para tu nuevo pipeline.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid grid-cols-2 gap-3 p-4">
-                      {templates.map(template => (
-                        <Card 
-                          key={template.id} 
-                          className="cursor-pointer hover:bg-secondary/30 transition-colors"
-                          onClick={() => handleTemplateSelect(template)}
-                        >
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-lg">{template.name}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">{template.description}</p>
-                          </CardContent>
-                        </Card>
-                      ))}
+                    <div className="space-y-4 p-4">
+                      <div>
+                        <label htmlFor="pipeline-name" className="block text-sm font-medium mb-2">
+                          Nombre del Pipeline
+                        </label>
+                        <Input
+                          id="pipeline-name"
+                          placeholder="Ej: Mi Pipeline de Procesamiento"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const inputElement = e.target as HTMLInputElement;
+                              const name = inputElement.value.trim();
+                              if (name) {
+                                handleCreateNewPipeline(name);
+                                // Cerrar el diálogo
+                                const closeButton = e.currentTarget.closest('[role="dialog"]')?.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                                closeButton?.click();
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        className="w-full"
+                        onClick={() => {
+                          const input = document.getElementById('pipeline-name') as HTMLInputElement;
+                          const name = input?.value?.trim();
+                          if (name) {
+                            handleCreateNewPipeline(name);
+                            // Cerrar el diálogo
+                            const closeButton = document.querySelector('[role="dialog"] [aria-label="Close"]') as HTMLButtonElement;
+                            closeButton?.click();
+                          } else {
+                            toast({
+                              title: "Nombre requerido",
+                              description: "Por favor ingresa un nombre para el pipeline",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Crear Pipeline
+                      </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
