@@ -567,182 +567,40 @@ export default function PipelineStudio() {
   const insertYamlComponent = (type: string) => {
     let componentYaml = '';
     
-    // Plantillas YAML para cada tipo de componente
+    // Plantillas YAML para cada tipo de componente REAL del sistema Merlin
     const templates: { [key: string]: string } = {
       command: `  - name: "Ejecutar Comando"
-    type: command
-    command:
-      id: ""  # Dejar vacío para nuevo comando
-      name: "Mi Comando"
-      target: "bash"
-      args: "echo 'Hola Mundo'"
-      timeout_millis: 30000
+    command_id: ""  # ID del comando (dejar vacío para crear nuevo)
     depends_on: []
     force_parallel_creation: false`,
       
       query_queue: `  - name: "Consulta SQL"
-    type: query_queue
-    queries:
-      - id: ""  # Dejar vacío para nueva consulta
-        query: "SELECT * FROM tabla WHERE condicion = true"
-        sql_conn_id: ""  # Agregar ID de conexión SQL existente
-        name: "Mi Consulta"
-        abort_on_error: true
+    query_queue_id: ""  # ID de la consulta SQL (dejar vacío para crear nueva)
     depends_on: []
     force_parallel_creation: false`,
       
       sftp_downloader: `  - name: "Descargar SFTP"
-    type: sftp_downloader
-    sftp_link_id: ""  # Agregar ID de enlace SFTP existente
-    download_config:
-      source_directory: "/ruta/origen/"
-      target_directory: "/ruta/destino/"
-      file_pattern: "*.txt"
-      delete_after_download: false
+    sftp_downloader_id: ""  # ID del descargador SFTP (dejar vacío para crear nuevo)
     depends_on: []
     force_parallel_creation: false`,
       
       sftp_uploader: `  - name: "Subir SFTP"
-    type: sftp_uploader
-    sftp_link_id: ""  # Agregar ID de enlace SFTP existente
-    upload_config:
-      source_directory: "/ruta/origen/"
-      target_directory: "/ruta/destino/"
-      file_pattern: "*.txt"
-      delete_after_upload: false
+    sftp_uploader_id: ""  # ID del subidor SFTP (dejar vacío para crear nuevo)
     depends_on: []
     force_parallel_creation: false`,
       
-      api_call: `  - name: "Llamada API"
-    type: api_call
-    api_config:
-      url: "https://api.ejemplo.com/endpoint"
-      method: "GET"
-      headers:
-        Content-Type: "application/json"
-      body: ""
-      timeout_millis: 30000
-    depends_on: []
-    force_parallel_creation: false`,
-      
-      error_control: `  - name: "Control de Error"
-    type: error_control
-    error_config:
-      error_pattern: ".*ERROR.*"
-      action: "abort"  # abort | continue | retry
-      max_retries: 3
-      retry_delay_millis: 5000
-    depends_on: []
-    force_parallel_creation: false`,
-      
-      console_output: `  - name: "Salida de Consola"
-    type: console_output
-    output_config:
-      message: "Pipeline ejecutándose - Estado: {status}"
-      level: "info"  # info | warning | error
+      zip: `  - name: "Comprimir Archivos"
+    zip_id: ""  # ID del compresor (dejar vacío para crear nuevo)
     depends_on: []
     force_parallel_creation: false`,
     
-      file_mover: `  - name: "Mover Archivos"
-    type: file_mover
-    file_config:
-      source_path: "/ruta/origen/"
-      destination_path: "/ruta/destino/"
-      file_pattern: "*.txt"
-      create_destination: true
-      overwrite: false
+      unzip: `  - name: "Descomprimir Archivos"
+    unzip_id: ""  # ID del descompresor (dejar vacío para crear nuevo)
     depends_on: []
     force_parallel_creation: false`,
     
-      file_copy: `  - name: "Copiar Archivos"
-    type: file_copy
-    file_config:
-      source_path: "/ruta/origen/"
-      destination_path: "/ruta/destino/"
-      file_pattern: "*.txt"
-      create_destination: true
-      overwrite: false
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      file_delete: `  - name: "Eliminar Archivos"
-    type: file_delete
-    file_config:
-      target_path: "/ruta/archivos/"
-      file_pattern: "*.tmp"
-      recursive: false
-      safe_mode: true  # Solicita confirmación
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      compress: `  - name: "Comprimir Archivos"
-    type: compress
-    compress_config:
-      source_path: "/ruta/origen/"
-      output_file: "/ruta/archivo.zip"
-      format: "zip"  # zip | tar | 7z
-      compression_level: 5  # 1-9
-      include_pattern: "*.*"
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      decompress: `  - name: "Descomprimir Archivos"
-    type: decompress
-    decompress_config:
-      archive_file: "/ruta/archivo.zip"
-      destination_path: "/ruta/destino/"
-      format: "auto"  # auto | zip | tar | 7z
-      overwrite: false
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      webhook: `  - name: "Webhook Notification"
-    type: webhook
-    webhook_config:
-      url: "https://hooks.ejemplo.com/webhook"
-      method: "POST"
-      headers:
-        Content-Type: "application/json"
-      payload:
-        pipeline: "{pipeline_name}"
-        status: "{status}"
-        timestamp: "{timestamp}"
-      retry_count: 3
-      timeout_millis: 10000
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      wait: `  - name: "Esperar/Retraso"
-    type: wait
-    wait_config:
-      delay_millis: 5000  # 5 segundos
-      condition: ""  # Condición opcional para esperar
-      max_wait_millis: 60000  # Máximo tiempo de espera
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      conditional: `  - name: "Ejecución Condicional"
-    type: conditional
-    condition_config:
-      condition: "status == 'success'"  # Expresión a evaluar
-      if_true:
-        - action: "continue"
-          target_unit: ""  # ID de la unidad a ejecutar
-      if_false:
-        - action: "abort"
-          message: "Condición no cumplida"
-    depends_on: []
-    force_parallel_creation: false`,
-    
-      loop: `  - name: "Bucle/Iteración"
-    type: loop
-    loop_config:
-      type: "count"  # count | while | foreach
-      count: 5  # Para tipo count
-      condition: ""  # Para tipo while
-      items: []  # Para tipo foreach
-      body_units: []  # IDs de unidades a ejecutar en cada iteración
-      max_iterations: 100  # Límite de seguridad
+      call_pipeline: `  - name: "Llamar Pipeline"
+    call_pipeline_id: ""  # ID del pipeline a llamar (dejar vacío para seleccionar)
     depends_on: []
     force_parallel_creation: false`
     };
@@ -1185,109 +1043,28 @@ units:`;
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('file_mover')}
-                      >
-                        <ArrowLeftRight className="mr-2 h-3 w-3" />
-                        File Mover
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('file_copy')}
-                      >
-                        <Copy className="mr-2 h-3 w-3" />
-                        File Copy
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('file_delete')}
-                      >
-                        <X className="mr-2 h-3 w-3" />
-                        File Delete
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('compress')}
+                        onClick={() => insertYamlComponent('zip')}
                       >
                         <FileArchive className="mr-2 h-3 w-3" />
-                        Compress
+                        Zip (Comprimir)
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('decompress')}
+                        onClick={() => insertYamlComponent('unzip')}
                       >
                         <FileArchive className="mr-2 h-3 w-3" />
-                        Decompress
+                        Unzip (Descomprimir)
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('api_call')}
+                        onClick={() => insertYamlComponent('call_pipeline')}
                       >
                         <ExternalLink className="mr-2 h-3 w-3" />
-                        API Call
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('webhook')}
-                      >
-                        <ExternalLink className="mr-2 h-3 w-3" />
-                        Webhook
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('wait')}
-                      >
-                        <Loader2 className="mr-2 h-3 w-3" />
-                        Wait/Delay
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('conditional')}
-                      >
-                        <Settings2 className="mr-2 h-3 w-3" />
-                        Conditional
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('loop')}
-                      >
-                        <ArrowLeftRight className="mr-2 h-3 w-3" />
-                        Loop
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('error_control')}
-                      >
-                        <AlertTriangle className="mr-2 h-3 w-3" />
-                        Error Control
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => insertYamlComponent('console_output')}
-                      >
-                        <Info className="mr-2 h-3 w-3" />
-                        Console Output
+                        Call Pipeline
                       </Button>
                     </CardContent>
                   </Card>
