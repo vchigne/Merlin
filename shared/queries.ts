@@ -75,7 +75,6 @@ export const PIPELINE_UNITS_QUERY = `
       retry_after_milliseconds
       timeout_milliseconds
       continue_on_error
-      abort_on_error
       abort_on_timeout
       command_id
       query_queue_id

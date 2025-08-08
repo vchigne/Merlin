@@ -294,7 +294,7 @@ export function pipelineToYaml(pipelineData: any): string {
         retry_after_milliseconds: unit.retry_after_milliseconds ?? 5000,
         timeout_milliseconds: unit.timeout_milliseconds ?? 30000,
         continue_on_error: unit.continue_on_error ?? false,
-        abort_on_error: unit.abort_on_error ?? false,
+        abort_on_error: false, // Este campo no existe en PipelineUnit, se usa valor por defecto
         abort_on_timeout: unit.abort_on_timeout ?? false
       },
       configuration: extractRunnerConfiguration(unit),
