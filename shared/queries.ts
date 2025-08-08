@@ -67,6 +67,16 @@ export const PIPELINE_UNITS_QUERY = `
     merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
       id
       pipeline_id
+      comment
+      retry_after_milliseconds
+      retry_count
+      timeout_milliseconds
+      abort_on_timeout
+      continue_on_error
+      notify_on_error_email
+      notify_on_error_webhook
+      notify_on_timeout_email
+      notify_on_timeout_webhook
       posx
       posy
       command_id
