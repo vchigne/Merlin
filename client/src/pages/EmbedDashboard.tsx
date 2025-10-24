@@ -24,8 +24,11 @@ import {
 const ERROR_LOGS_QUERY = `
   query GetRecentErrors {
     merlin_agent_PipelineJobLogV2Body(
-      where: {level: {_eq: "ERROR"}}
-      limit: 20
+      where: {
+        level: {_eq: "ERROR"}
+        created_at: {_gte: "7 days ago"}
+      }
+      limit: 100
       order_by: {created_at: desc}
     ) {
       id
@@ -33,18 +36,43 @@ const ERROR_LOGS_QUERY = `
       exception_message
       created_at
       pipeline_job_id
+      PipelineJobQueue {
+        id
+        pipeline_id
+        started_by_agent
+        Pipeline {
+          name
+        }
+        AgentPassport {
+          name
+        }
+      }
     }
   }
 `;
 
 const ACTIVITY_LOGS_QUERY = `
   query GetRecentLogs {
-    merlin_agent_PipelineJobLogV2Body(limit: 20, order_by: {created_at: desc}) {
+    merlin_agent_PipelineJobLogV2Body(
+      limit: 50
+      order_by: {created_at: desc}
+    ) {
       id
       message
       level
       created_at
       pipeline_job_id
+      PipelineJobQueue {
+        id
+        pipeline_id
+        started_by_agent
+        Pipeline {
+          name
+        }
+        AgentPassport {
+          name
+        }
+      }
     }
   }
 `;
@@ -150,17 +178,16 @@ export default function EmbedDashboard() {
       error.pipeline_job_id && filteredJobIds.has(error.pipeline_job_id)
     ) || [];
 
-    // Filter activity by filtered jobs (only if filter is applied)
-    // Si hay filtro pero no hay logs con job_id, mostrar todos los logs para que haya actividad
-    let filteredActivity = activityData || [];
-    if (filterParam && filteredJobIds.size > 0) {
-      const activityWithJobId = activityData?.filter((log: any) => 
-        log.pipeline_job_id && filteredJobIds.has(log.pipeline_job_id)
-      ) || [];
-      
-      // Si hay logs filtrados, usarlos; sino mostrar todos para que no quede vacío
-      filteredActivity = activityWithJobId.length > 0 ? activityWithJobId : (activityData || []);
-    }
+    // Filter activity by filtered pipelines
+    const filteredActivity = filterParam && activityData
+      ? activityData.filter((log: any) => {
+          // Si tiene job asociado, filtrar por pipeline del job
+          if (log.PipelineJobQueue?.pipeline_id) {
+            return filteredPipelineIds.has(log.PipelineJobQueue.pipeline_id);
+          }
+          return false;
+        })
+      : (activityData || []);
 
     // Ordenar agentes por gravedad de problema: primero error, luego warning, luego healthy
     const sortedAgents = [...filteredAgents].sort((a: any, b: any) => {
@@ -396,21 +423,39 @@ export default function EmbedDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-2 sm:space-y-3 pr-4">
-                      {filteredData.errors.slice(0, 8).map((error: any) => (
-                        <div key={error.id} className="text-xs border-l-2 border-red-500 pl-3 py-1">
-                          <p className="font-medium text-slate-900 dark:text-white line-clamp-2">
-                            {error.exception_message || error.message}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <GitBranch className="h-3 w-3" />
-                              {error.PipelineJobQueue?.Pipeline?.name || 'N/A'}
-                            </span>
-                            <span>•</span>
-                            <span>{formatRelativeTime(error.created_at)}</span>
+                      {filteredData.errors.slice(0, 8).map((error: any) => {
+                        const pipelineName = error.PipelineJobQueue?.Pipeline?.name;
+                        const agentName = error.PipelineJobQueue?.AgentPassport?.name;
+                        
+                        return (
+                          <div key={error.id} className="text-xs border-l-2 border-red-500 pl-3 py-1">
+                            <p className="font-medium text-slate-900 dark:text-white line-clamp-2">
+                              {error.exception_message || error.message}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
+                              {pipelineName && (
+                                <>
+                                  <span className="flex items-center gap-1">
+                                    <GitBranch className="h-3 w-3" />
+                                    {pipelineName}
+                                  </span>
+                                  <span>•</span>
+                                </>
+                              )}
+                              {agentName && (
+                                <>
+                                  <span className="flex items-center gap-1">
+                                    <Bot className="h-3 w-3" />
+                                    {agentName}
+                                  </span>
+                                  <span>•</span>
+                                </>
+                              )}
+                              <span>{formatRelativeTime(error.created_at)}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </ScrollArea>
@@ -427,22 +472,49 @@ export default function EmbedDashboard() {
               </CardHeader>
               <CardContent className="pb-2 sm:pb-3">
                 <ScrollArea className="h-[240px] sm:h-[280px]">
-                  <div className="space-y-2 pr-4">
-                    {filteredData.activity.slice(0, 15).map((log: any) => {
-                      const level = log.level || 'INFO';
-                      return (
-                        <div key={log.id} className="flex items-start gap-2 text-xs">
-                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getLevelColor(level)}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-slate-900 dark:text-white line-clamp-2">{log.message}</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                              {formatRelativeTime(log.created_at)}
-                            </p>
+                  {filteredData.activity.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">No hay actividad reciente</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pr-4">
+                      {filteredData.activity.slice(0, 15).map((log: any) => {
+                        const level = log.level || 'INFO';
+                        const pipelineName = log.PipelineJobQueue?.Pipeline?.name;
+                        const agentName = log.PipelineJobQueue?.AgentPassport?.name;
+                        
+                        return (
+                          <div key={log.id} className="flex items-start gap-2 text-xs">
+                            <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getLevelColor(level)}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-slate-900 dark:text-white line-clamp-2">{log.message}</p>
+                              <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                {pipelineName && (
+                                  <>
+                                    <span className="flex items-center gap-1">
+                                      <GitBranch className="h-3 w-3" />
+                                      {pipelineName}
+                                    </span>
+                                    <span>•</span>
+                                  </>
+                                )}
+                                {agentName && (
+                                  <>
+                                    <span className="flex items-center gap-1">
+                                      <Bot className="h-3 w-3" />
+                                      {agentName}
+                                    </span>
+                                    <span>•</span>
+                                  </>
+                                )}
+                                <span>{formatRelativeTime(log.created_at)}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>
