@@ -45,6 +45,7 @@ const ACTIVITY_LOGS_QUERY = `
       message
       level
       created_at
+      pipeline_job_id
     }
   }
 `;
@@ -146,7 +147,12 @@ export default function EmbedDashboard() {
       error.pipeline_job_id && filteredJobIds.has(error.pipeline_job_id)
     ) || [];
 
-    const filteredActivity = activityData || [];
+    // Filter activity by filtered jobs (only if filter is applied)
+    const filteredActivity = filterParam && activityData
+      ? activityData.filter((log: any) => 
+          log.pipeline_job_id && filteredJobIds.has(log.pipeline_job_id)
+        )
+      : (activityData || []);
 
     return {
       pipelines: filteredPipelines,
