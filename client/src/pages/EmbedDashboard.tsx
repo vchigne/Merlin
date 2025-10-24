@@ -4,8 +4,7 @@ import { executeQuery } from "@/lib/hasura-client";
 import { 
   PIPELINE_QUERY, 
   AGENT_HEALTH_STATUS_QUERY,
-  PIPELINE_JOBS_QUERY,
-  PIPELINE_JOB_LOGS_V2_BODY_QUERY
+  PIPELINE_JOBS_QUERY
 } from "@shared/queries";
 import { filterByRegex } from "@/lib/regex-parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

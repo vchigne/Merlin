@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplos de Dashboard Embebido - Merlin</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4f46e5;
+            padding-bottom: 10px;
+        }
+        .example {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .example h2 {
+            color: #4f46e5;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .iframe-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+        .filter-info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .filter-info code {
+            background: #dbeafe;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 Dashboard Embebido de Merlin - Ejemplos de Uso</h1>
+    
+    <p>
+        El dashboard embebido de Merlin te permite insertar visualizaciones filtradas en cualquier página web.
+        Usa el parámetro <code>filter</code> con una expresión regular para mostrar solo los pipelines que necesites.
+    </p>
+
+    <!-- Ejemplo 1: Sin filtro -->
+    <div class="example">
+        <h2>Ejemplo 1: Dashboard Sin Filtro (Todos los Pipelines)</h2>
+        <div class="filter-info">
+            <strong>URL:</strong> <code>/embed/dashboard</code> (sin parámetros)
+        </div>
+        <p>Muestra todos los pipelines, agentes, trabajos y errores del sistema.</p>
+        
+        <div class="code-block">&lt;iframe 
+  src="http://localhost:5000/embed/dashboard"
+  width="100%" 
+  height="800px"
+  frameborder="0"&gt;
+&lt;/iframe&gt;</div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:5000/embed/dashboard" height="800px"></iframe>
+        </div>
+    </div>
+
+    <!-- Ejemplo 2: Filtro case-insensitive -->
+    <div class="example">
+        <h2>Ejemplo 2: Filtro Case-Insensitive "Alicorp"</h2>
+        <div class="filter-info">
+            <strong>Filtro:</strong> <code>(?i).*alicorp.*</code><br>
+            <strong>Descripción:</strong> Pipelines que contengan "alicorp" en cualquier parte del nombre, sin importar mayúsculas/minúsculas
+        </div>
+        
+        <div class="code-block">&lt;iframe 
+  src="http://localhost:5000/embed/dashboard?filter=(?i).*alicorp.*"
+  width="100%" 
+  height="800px"
+  frameborder="0"&gt;
+&lt;/iframe&gt;</div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*alicorp.*" height="800px"></iframe>
+        </div>
+    </div>
+
+    <!-- Ejemplo 3: Pipelines que empiezan con "prod" -->
+    <div class="example">
+        <h2>Ejemplo 3: Pipelines que Empiezan con "prod"</h2>
+        <div class="filter-info">
+            <strong>Filtro:</strong> <code>^prod.*</code><br>
+            <strong>Descripción:</strong> Solo pipelines que comiencen con "prod"
+        </div>
+        
+        <div class="code-block">&lt;iframe 
+  src="http://localhost:5000/embed/dashboard?filter=^prod.*"
+  width="100%" 
+  height="800px"
+  frameborder="0"&gt;
+&lt;/iframe&gt;</div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:5000/embed/dashboard?filter=^prod.*" height="800px"></iframe>
+        </div>
+    </div>
+
+    <!-- Ejemplo 4: Pipelines que terminan con "test" -->
+    <div class="example">
+        <h2>Ejemplo 4: Pipelines que Terminan con "test"</h2>
+        <div class="filter-info">
+            <strong>Filtro:</strong> <code>.*test$</code><br>
+            <strong>Descripción:</strong> Solo pipelines que terminen con "test"
+        </div>
+        
+        <div class="code-block">&lt;iframe 
+  src="http://localhost:5000/embed/dashboard?filter=.*test$"
+  width="100%" 
+  height="800px"
+  frameborder="0"&gt;
+&lt;/iframe&gt;</div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:5000/embed/dashboard?filter=.*test$" height="800px"></iframe>
+        </div>
+    </div>
+
+    <!-- Ejemplo 5: Múltiples palabras con OR -->
+    <div class="example">
+        <h2>Ejemplo 5: Múltiples Palabras (ETL o Sync)</h2>
+        <div class="filter-info">
+            <strong>Filtro:</strong> <code>(?i).*(etl|sync).*</code><br>
+            <strong>Descripción:</strong> Pipelines que contengan "etl" o "sync" (case insensitive)
+        </div>
+        
+        <div class="code-block">&lt;iframe 
+  src="http://localhost:5000/embed/dashboard?filter=(?i).*(etl|sync).*"
+  width="100%" 
+  height="800px"
+  frameborder="0"&gt;
+&lt;/iframe&gt;</div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*(etl|sync).*" height="800px"></iframe>
+        </div>
+    </div>
+
+    <!-- Guía de Referencia -->
+    <div class="example">
+        <h2>📚 Guía de Referencia de Regex</h2>
+        
+        <h3>Flags Soportados:</h3>
+        <ul>
+            <li><code>(?i)</code> - Case insensitive (no distingue mayúsculas/minúsculas)</li>
+            <li><code>(?m)</code> - Multiline mode</li>
+            <li><code>(?s)</code> - Dotall mode (. coincide con saltos de línea)</li>
+        </ul>
+
+        <h3>Patrones Comunes:</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f3f4f6;">
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e7eb;">Patrón</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e7eb;">Descripción</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e7eb;">Ejemplo</th>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>.*palabra.*</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">Contiene "palabra"</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>.*produccion.*</code></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>^palabra</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">Empieza con "palabra"</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>^prod</code></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>palabra$</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">Termina con "palabra"</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>test$</code></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>(?i)palabra</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">Case insensitive</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>(?i)alicorp</code></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>(a|b)</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">A o B</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>(prod|test)</code></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>[0-9]+</code></td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;">Uno o más dígitos</td>
+                <td style="padding: 8px; border: 1px solid #e5e7eb;"><code>pipeline[0-9]+</code></td>
+            </tr>
+        </table>
+
+        <h3>Consejos de Uso:</h3>
+        <ul>
+            <li>🔹 Usa <code>(?i)</code> al inicio para búsquedas sin importar mayúsculas/minúsculas</li>
+            <li>🔹 Usa <code>.*</code> para "contiene" en cualquier parte</li>
+            <li>🔹 Usa <code>^</code> y <code>$</code> para coincidencias exactas al inicio/final</li>
+            <li>🔹 Combina con <code>|</code> para múltiples opciones</li>
+            <li>🔹 Prueba primero en la URL del navegador antes de embedir</li>
+        </ul>
+    </div>
+
+    <div class="example">
+        <h2>🚀 Uso en Producción</h2>
+        <p>Para usar en producción, reemplaza <code>http://localhost:5000</code> con tu URL de Replit:</p>
+        <div class="code-block">&lt;iframe 
+  src="https://tu-app.replit.app/embed/dashboard?filter=(?i).*alicorp.*"
+  width="100%" 
+  height="800px"
+  frameborder="0"
+  allow="fullscreen"&gt;
+&lt;/iframe&gt;</div>
+    </div>
+
+    <footer style="text-align: center; padding: 40px 0; color: #6b7280; border-top: 1px solid #e5e7eb; margin-top: 40px;">
+        <p>Merlin Observer Dashboard - Sistema de Monitoreo de Agentes Distribuidos</p>
+    </footer>
+</body>
+</html>
