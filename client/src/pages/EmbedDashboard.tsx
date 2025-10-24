@@ -1,7 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
-import { useLocation } from "wouter";
 import { filterByRegex } from "@/lib/regex-parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,9 +50,13 @@ const ACTIVITY_LOGS_QUERY = `
 `;
 
 export default function EmbedDashboard() {
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split('?')[1]);
-  const filterParam = searchParams.get('filter') || '';
+  // Get filter from URL query string
+  const [filterParam, setFilterParam] = useState('');
+  
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    setFilterParam(searchParams.get('filter') || '');
+  }, []);
 
   // Fetch data
   const { data: pipelinesData, isLoading: loadingPipelines } = useQuery({
