@@ -17,8 +17,7 @@ import {
 import { formatRelativeTime } from "@/lib/utils";
 import { 
   PIPELINE_QUERY,
-  AGENT_HEALTH_STATUS_QUERY,
-  PIPELINE_JOBS_QUERY
+  AGENT_HEALTH_STATUS_QUERY
 } from "@shared/queries";
 
 // Calcular fecha de hace 7 días
@@ -59,9 +58,12 @@ const ERROR_LOGS_QUERY = `
 `;
 
 const ACTIVITY_LOGS_QUERY = `
-  query GetRecentLogs {
+  query GetRecentLogs($sevenDaysAgo: timestamptz!) {
     merlin_agent_PipelineJobLogV2Body(
-      limit: 50
+      where: {
+        created_at: {_gte: $sevenDaysAgo}
+      }
+      limit: 200
       order_by: {created_at: desc}
     ) {
       id
@@ -80,6 +82,26 @@ const ACTIVITY_LOGS_QUERY = `
           name
         }
       }
+    }
+  }
+`;
+
+const JOBS_LAST_WEEK_QUERY = `
+  query GetJobsLastWeek($sevenDaysAgo: timestamptz!) {
+    merlin_agent_PipelineJobQueue(
+      where: {
+        created_at: {_gte: $sevenDaysAgo}
+      }
+      order_by: {created_at: desc}
+    ) {
+      id
+      pipeline_id
+      completed
+      created_at
+      updated_at
+      running
+      aborted
+      started_by_agent
     }
   }
 `;
@@ -117,7 +139,7 @@ export default function EmbedDashboard() {
   const { data: jobsData, isLoading: loadingJobs } = useQuery({
     queryKey: ['/api/embed/jobs'],
     queryFn: async () => {
-      const result = await executeQuery(PIPELINE_JOBS_QUERY, { limit: 500, offset: 0 });
+      const result = await executeQuery(JOBS_LAST_WEEK_QUERY, { sevenDaysAgo: getSevenDaysAgo() });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobQueue;
     },
@@ -137,7 +159,7 @@ export default function EmbedDashboard() {
   const { data: activityData, isLoading: loadingActivity } = useQuery({
     queryKey: ['/api/embed/activity'],
     queryFn: async () => {
-      const result = await executeQuery(ACTIVITY_LOGS_QUERY);
+      const result = await executeQuery(ACTIVITY_LOGS_QUERY, { sevenDaysAgo: getSevenDaysAgo() });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobLogV2Body;
     },
