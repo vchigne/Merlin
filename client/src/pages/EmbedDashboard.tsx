@@ -139,7 +139,12 @@ export default function EmbedDashboard() {
       filteredPipelineIds.has(job.pipeline_id)
     ) || [];
 
-    const filteredErrors = errorLogsData || [];
+    // Get job IDs from filtered jobs to filter errors
+    const filteredJobIds = new Set(filteredJobs.map((j: any) => j.id));
+
+    const filteredErrors = errorLogsData?.filter((error: any) =>
+      error.pipeline_job_id && filteredJobIds.has(error.pipeline_job_id)
+    ) || [];
 
     const filteredActivity = activityData || [];
 
@@ -205,15 +210,49 @@ export default function EmbedDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-3 sm:p-4">
         <div className="max-w-[1600px] mx-auto space-y-3">
-          <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-64 animate-pulse" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <Skeleton className="h-4 w-24 animate-pulse" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-700" />
+                    <Skeleton className="h-6 w-12 bg-slate-300 dark:bg-slate-600" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+            ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <Skeleton className="h-80" />
-            <Skeleton className="h-80" />
+            <div className="space-y-3">
+              {[1, 2].map(i => (
+                <div key={i} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
+                  <Skeleton className="h-5 w-32 mb-3 bg-slate-200 dark:bg-slate-700" />
+                  <div className="space-y-2">
+                    {[1, 2, 3].map(j => <Skeleton key={j} className="h-16 bg-slate-100 dark:bg-slate-800" />)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3">
+              {[1, 2].map(i => (
+                <div key={i} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
+                  <Skeleton className="h-5 w-32 mb-3 bg-slate-200 dark:bg-slate-700" />
+                  <div className="space-y-2">
+                    {[1, 2, 3].map(j => <Skeleton key={j} className="h-16 bg-slate-100 dark:bg-slate-800" />)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -450,6 +489,36 @@ export default function EmbedDashboard() {
                       const completed = pipelineJobs.filter((j: any) => j.completed && !j.aborted).length;
                       const aborted = pipelineJobs.filter((j: any) => j.aborted).length;
                       
+                      // Determinar el estado principal del pipeline
+                      let mainStatus = 'idle';
+                      let statusBadge = null;
+                      
+                      if (running > 0) {
+                        mainStatus = 'running';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-medium">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                            En proceso
+                          </span>
+                        );
+                      } else if (aborted > 0) {
+                        mainStatus = 'error';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-[10px] font-medium">
+                            <XCircle className="h-3 w-3" />
+                            Con errores
+                          </span>
+                        );
+                      } else if (completed > 0) {
+                        mainStatus = 'success';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-medium">
+                            <CheckCircle className="h-3 w-3" />
+                            Completado
+                          </span>
+                        );
+                      }
+                      
                       return (
                         <div
                           key={pipeline.id}
@@ -457,9 +526,12 @@ export default function EmbedDashboard() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate">
-                                {pipeline.name}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate">
+                                  {pipeline.name}
+                                </p>
+                                {statusBadge}
+                              </div>
                               {pipeline.description && (
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                                   {pipeline.description}
@@ -469,25 +541,25 @@ export default function EmbedDashboard() {
                           </div>
                           <div className="flex items-center gap-3 mt-2 text-[10px]">
                             {running > 0 && (
-                              <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                              <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
                                 <Clock className="h-3 w-3" />
                                 {running} activos
                               </span>
                             )}
                             {completed > 0 && (
-                              <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
                                 <CheckCircle className="h-3 w-3" />
-                                {completed}
+                                {completed} ok
                               </span>
                             )}
                             {aborted > 0 && (
-                              <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                              <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
                                 <XCircle className="h-3 w-3" />
-                                {aborted}
+                                {aborted} errores
                               </span>
                             )}
                             {pipelineJobs.length === 0 && (
-                              <span className="text-slate-400 dark:text-slate-500">Sin jobs</span>
+                              <span className="text-slate-400 dark:text-slate-500">Sin jobs recientes</span>
                             )}
                           </div>
                         </div>
