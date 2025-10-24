@@ -12,7 +12,10 @@ import {
   GitBranch, 
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  WifiOff,
+  Wifi,
+  AlertTriangle
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { 
@@ -654,12 +657,22 @@ export default function EmbedDashboard() {
                         );
                         const lastJob = sortedJobs[0];
                         
+                        // Determinar icono de ping
+                        let pingIcon;
+                        if (status === 'offline') {
+                          pingIcon = <WifiOff className="h-3.5 w-3.5 text-red-500" />;
+                        } else if (status === 'warning') {
+                          pingIcon = <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />;
+                        } else {
+                          pingIcon = <Wifi className="h-3.5 w-3.5 text-green-500" />;
+                        }
+                        
                         return (
                           <div
                             key={agent.id}
                             className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600"
                           >
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(status)}`} />
+                            {pingIcon}
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
                                 {agent.name}
