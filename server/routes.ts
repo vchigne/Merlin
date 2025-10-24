@@ -43,27 +43,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const result = await hasuraClient.query(query, variables) as HasuraGraphQLResponse;
-      
-      // DEBUG: Log activity/error queries to see AgentPassport relationship
-      const queryName = query.match(/query\s+(\w+)/)?.[1];
-      if (queryName === 'GetRecentLogs' || queryName === 'GetRecentErrors') {
-        const logs = result.data?.merlin_agent_PipelineJobLogV2Body;
-        if (logs && logs.length > 0) {
-          console.log(`\n=== DEBUG ${queryName} Result ===`);
-          console.log('Sample log:', JSON.stringify({
-            id: logs[0].id,
-            message: logs[0].message?.substring(0, 50),
-            PipelineJobQueue: logs[0].PipelineJobQueue ? {
-              id: logs[0].PipelineJobQueue.id,
-              started_by_agent: logs[0].PipelineJobQueue.started_by_agent,
-              Pipeline: logs[0].PipelineJobQueue.Pipeline,
-              AgentPassport: logs[0].PipelineJobQueue.AgentPassport
-            } : null
-          }, null, 2));
-          console.log('===\n');
-        }
-      }
-      
       res.json(result);
     } catch (error) {
       console.error('GraphQL query error:', error);
