@@ -117,7 +117,7 @@ export default function EmbedDashboard() {
   const { data: jobsData, isLoading: loadingJobs } = useQuery({
     queryKey: ['/api/embed/jobs'],
     queryFn: async () => {
-      const result = await executeQuery(PIPELINE_JOBS_QUERY, { limit: 20, offset: 0 });
+      const result = await executeQuery(PIPELINE_JOBS_QUERY, { limit: 500, offset: 0 });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobQueue;
     },
