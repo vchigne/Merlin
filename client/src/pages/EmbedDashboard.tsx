@@ -298,86 +298,118 @@ export default function EmbedDashboard() {
         return { pipelines: [], agents: [], jobs: [], errors: [], activity: [] };
       }
 
+      // Validación temprana: si hay demasiados datos, limitar inmediatamente
+      const MAX_ITEMS = 100;
+      
       // Los pipelines ya están filtrados en filteredPipelineIds
-      const filteredPipelines = pipelinesData.filter((p: any) => 
-        filteredPipelineIds.includes(p.id)
-      );
+      const filteredPipelines = pipelinesData
+        .filter((p: any) => filteredPipelineIds.includes(p.id))
+        .slice(0, MAX_ITEMS);
       
       // Jobs, errores y actividad ya vienen filtrados de las queries
-      // Crear copias para evitar mutaciones que causen problemas
-      const filteredJobs = jobsData ? [...jobsData] : [];
-      const filteredErrors = errorLogsData ? [...errorLogsData] : [];
-      const filteredActivity = activityData ? [...activityData] : [];
+      // Limitar cantidad desde el inicio
+      const filteredJobs = jobsData ? jobsData.slice(0, 500) : [];
+      const filteredErrors = errorLogsData ? errorLogsData.slice(0, 200) : [];
+      const filteredActivity = activityData ? activityData.slice(0, 200) : [];
 
     // Ordenar agentes por gravedad de problema: primero offline, luego warning, luego healthy
     // Dentro de cada categoría, ordenar por último job (más reciente primero)
     // Limitar a 100 agentes para evitar problemas de rendimiento
     const agentsList = agentsData || [];
-    const limitedAgents = agentsList.slice(0, 100);
-    const sortedAgents = [...limitedAgents].sort((a: any, b: any) => {
+    const limitedAgents = agentsList.slice(0, MAX_ITEMS);
+    
+    // Función auxiliar para obtener prioridad (fuera del sort)
+    const getStatusPriority = (agent: any) => {
       try {
-        // Determinar status priority
-        const getStatusPriority = (agent: any) => {
-          const hasPing = agent.AgentPassportPing?.last_ping_at;
-          if (!agent.is_healthy && !hasPing) return 0; // offline - máxima prioridad
-          if (!agent.is_healthy && hasPing) return 1; // warning
-          return 2; // healthy
-        };
-        
+        const hasPing = agent?.AgentPassportPing?.last_ping_at;
+        if (!agent?.is_healthy && !hasPing) return 0; // offline
+        if (!agent?.is_healthy && hasPing) return 1; // warning
+        return 2; // healthy
+      } catch (e) {
+        return 2;
+      }
+    };
+    
+    const sortedAgents = limitedAgents.slice().sort((a: any, b: any) => {
+      try {
         const priorityA = getStatusPriority(a);
         const priorityB = getStatusPriority(b);
         
-        // Si tienen diferente prioridad, ordenar por prioridad
         if (priorityA !== priorityB) {
           return priorityA - priorityB;
         }
         
-        // Si tienen la misma prioridad, ordenar por último job (más reciente primero)
-        const lastJobA = a.PipelineJobQueues?.[0]?.created_at;
-        const lastJobB = b.PipelineJobQueues?.[0]?.created_at;
+        // Si tienen la misma prioridad, ordenar por último job
+        const lastJobA = a?.PipelineJobQueues?.[0]?.created_at;
+        const lastJobB = b?.PipelineJobQueues?.[0]?.created_at;
         
         if (!lastJobA && !lastJobB) return 0;
         if (!lastJobA) return 1;
         if (!lastJobB) return -1;
         
-        return new Date(lastJobB).getTime() - new Date(lastJobA).getTime();
+        const timeA = new Date(lastJobA).getTime();
+        const timeB = new Date(lastJobB).getTime();
+        
+        if (isNaN(timeA) || isNaN(timeB)) return 0;
+        
+        return timeB - timeA;
       } catch (e) {
-        console.error('Error ordenando agentes:', e);
         return 0;
       }
     });
 
     // Ordenar pipelines por actividad más reciente (último job)
-    // Limitar a 100 pipelines para evitar problemas de rendimiento
-    const limitedPipelines = filteredPipelines.slice(0, 100);
-    const pipelinesWithActivity = limitedPipelines.map((pipeline: any) => {
+    const pipelinesWithActivity = filteredPipelines.map((pipeline: any) => {
       try {
-        const pipelineJobs = filteredJobs.filter((j: any) => j.pipeline_id === pipeline.id);
-        const lastJob = pipelineJobs.length > 0 
-          ? [...pipelineJobs].sort((a: any, b: any) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )[0]
-          : null;
+        // Buscar jobs de este pipeline de forma más eficiente
+        let lastJobDate = null;
+        let lastAgentId = null;
+        let maxTime = 0;
         
+        // En lugar de filter + loop, hacer un solo recorrido
+        for (let i = 0; i < Math.min(filteredJobs.length, 200); i++) {
+          const job = filteredJobs[i];
+          if (job?.pipeline_id === pipeline?.id) {
+            const jobTime = new Date(job.created_at || 0).getTime();
+            if (!isNaN(jobTime) && jobTime > maxTime) {
+              maxTime = jobTime;
+              lastJobDate = job.created_at;
+              lastAgentId = job.started_by_agent;
+            }
+          }
+        }
+        
+        // Crear objeto plano sin spread operator para evitar referencias circulares
         return {
-          ...pipeline,
-          lastJobDate: lastJob?.created_at,
-          lastAgentId: lastJob?.started_by_agent
+          id: pipeline?.id,
+          name: pipeline?.name || '',
+          description: pipeline?.description || '',
+          abort_on_error: pipeline?.abort_on_error,
+          lastJobDate,
+          lastAgentId
         };
       } catch (e) {
-        console.error('Error procesando pipeline:', e);
-        return pipeline;
+        return {
+          id: pipeline?.id,
+          name: pipeline?.name || '',
+          description: pipeline?.description || ''
+        };
       }
     });
     
-    const sortedPipelines = [...pipelinesWithActivity].sort((a: any, b: any) => {
+    const sortedPipelines = pipelinesWithActivity.slice().sort((a: any, b: any) => {
       try {
-        if (!a.lastJobDate && !b.lastJobDate) return 0;
-        if (!a.lastJobDate) return 1;
-        if (!b.lastJobDate) return -1;
-        return new Date(b.lastJobDate).getTime() - new Date(a.lastJobDate).getTime();
+        if (!a?.lastJobDate && !b?.lastJobDate) return 0;
+        if (!a?.lastJobDate) return 1;
+        if (!b?.lastJobDate) return -1;
+        
+        const timeA = new Date(a.lastJobDate).getTime();
+        const timeB = new Date(b.lastJobDate).getTime();
+        
+        if (isNaN(timeA) || isNaN(timeB)) return 0;
+        
+        return timeB - timeA;
       } catch (e) {
-        console.error('Error ordenando pipelines:', e);
         return 0;
       }
     });
