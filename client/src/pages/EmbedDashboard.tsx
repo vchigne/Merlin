@@ -579,7 +579,7 @@ export default function EmbedDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-2 pr-4">
-                      {filteredData.activity.slice(0, 15).map((log: any) => {
+                      {filteredData.activity.map((log: any) => {
                         const level = log.level || 'INFO';
                         const pipelineName = log.PipelineJobQueue?.Pipeline?.name;
                         const agentName = log.PipelineJobQueue?.AgentPassport?.name;
