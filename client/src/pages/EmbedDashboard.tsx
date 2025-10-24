@@ -151,15 +151,31 @@ export default function EmbedDashboard() {
     ) || [];
 
     // Filter activity by filtered jobs (only if filter is applied)
-    const filteredActivity = filterParam && activityData
-      ? activityData.filter((log: any) => 
-          log.pipeline_job_id && filteredJobIds.has(log.pipeline_job_id)
-        )
-      : (activityData || []);
+    // Si hay filtro pero no hay logs con job_id, mostrar todos los logs para que haya actividad
+    let filteredActivity = activityData || [];
+    if (filterParam && filteredJobIds.size > 0) {
+      const activityWithJobId = activityData?.filter((log: any) => 
+        log.pipeline_job_id && filteredJobIds.has(log.pipeline_job_id)
+      ) || [];
+      
+      // Si hay logs filtrados, usarlos; sino mostrar todos para que no quede vacío
+      filteredActivity = activityWithJobId.length > 0 ? activityWithJobId : (activityData || []);
+    }
+
+    // Ordenar agentes por gravedad de problema: primero error, luego warning, luego healthy
+    const sortedAgents = [...filteredAgents].sort((a: any, b: any) => {
+      const getStatusPriority = (agent: any) => {
+        const lastPing = agent.AgentPassportPing?.last_ping_at;
+        if (!agent.is_healthy && !lastPing) return 0; // offline - máxima prioridad
+        if (!agent.is_healthy && lastPing) return 1; // warning
+        return 2; // healthy
+      };
+      return getStatusPriority(a) - getStatusPriority(b);
+    });
 
     return {
       pipelines: filteredPipelines,
-      agents: filteredAgents,
+      agents: sortedAgents,
       jobs: filteredJobs,
       errors: filteredErrors,
       activity: filteredActivity
@@ -458,6 +474,13 @@ export default function EmbedDashboard() {
                           ? 'warning' 
                           : 'offline';
                         
+                        // Buscar el último job de este agente
+                        const agentJobs = filteredData.jobs.filter((j: any) => j.started_by_agent === agent.id);
+                        const sortedJobs = agentJobs.sort((a: any, b: any) => 
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                        );
+                        const lastJob = sortedJobs[0];
+                        
                         return (
                           <div
                             key={agent.id}
@@ -469,8 +492,13 @@ export default function EmbedDashboard() {
                                 {agent.name}
                               </p>
                               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                                {agent.PipelineJobQueues?.length || 0} jobs
+                                {agentJobs.length || 0} jobs
                               </p>
+                              {lastJob && (
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                                  Último: {formatRelativeTime(lastJob.created_at)}
+                                </p>
+                              )}
                             </div>
                           </div>
                         );
