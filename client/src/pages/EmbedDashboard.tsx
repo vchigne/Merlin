@@ -141,15 +141,57 @@ export default function EmbedDashboard() {
     refetchInterval: 30000,
   });
 
-  // 2. Filtrar pipelines y obtener IDs
-  const filteredPipelineIds = useMemo(() => {
-    if (!pipelinesData) return [];
+  // 2. Filtrar pipelines y obtener IDs + palabras clave
+  const { filteredPipelineIds, pipelineKeywords } = useMemo(() => {
+    if (!pipelinesData) return { filteredPipelineIds: [], pipelineKeywords: [] };
     
     const filtered = filterParam
       ? filterByRegex(pipelinesData, filterParam, (p: any) => `${p.name} ${p.description || ''}`)
       : pipelinesData;
     
-    return filtered.map((p: any) => p.id);
+    // Extraer palabras clave de los nombres de pipelines filtrados
+    const keywords = new Set<string>();
+    const stopWords = ['de', 'el', 'la', 'los', 'las', 'pipeline', 'para', 'con', 'en', 'y', 'o', 'a'];
+    
+    filtered.forEach((pipeline: any) => {
+      const name = pipeline.name || '';
+      
+      // 1. Extraer texto entre corchetes [ALICORP], [DIJISA], etc.
+      const bracketMatches = name.match(/\[([^\]]+)\]/g);
+      if (bracketMatches) {
+        bracketMatches.forEach((match: string) => {
+          const content = match.replace(/[\[\]]/g, '');
+          // Separar por guiones y espacios
+          content.split(/[-\s]+/).forEach((word: string) => {
+            const cleaned = word.trim().toUpperCase();
+            if (cleaned.length > 2 && !stopWords.includes(cleaned.toLowerCase())) {
+              keywords.add(cleaned);
+            }
+          });
+        });
+      }
+      
+      // 2. Extraer palabras significativas del nombre completo
+      const words = name.split(/[\s\-_]+/);
+      words.forEach((word: string) => {
+        const cleaned = word.replace(/[\[\]]/g, '').trim().toUpperCase();
+        if (cleaned.length > 2 && !stopWords.includes(cleaned.toLowerCase())) {
+          keywords.add(cleaned);
+        }
+      });
+    });
+    
+    const result = {
+      filteredPipelineIds: filtered.map((p: any) => p.id),
+      pipelineKeywords: Array.from(keywords)
+    };
+    
+    // Debug: mostrar palabras clave extraídas
+    if (result.pipelineKeywords.length > 0) {
+      console.log('🔍 Palabras clave extraídas de pipelines:', result.pipelineKeywords);
+    }
+    
+    return result;
   }, [pipelinesData, filterParam]);
 
   // 3. Cargar jobs, errores y actividad solo de los pipelines filtrados
@@ -198,22 +240,57 @@ export default function EmbedDashboard() {
     refetchInterval: 30000,
   });
 
-  // 4. Cargar todos los agentes (no filtrar por agentIds porque started_by_agent puede ser null)
+  // 4. Cargar agentes filtrados por palabras clave de pipelines
   const { data: agentsData, isLoading: loadingAgents } = useQuery({
-    queryKey: ['/api/embed/agents', filteredPipelineIds],
+    queryKey: ['/api/embed/agents', filteredPipelineIds, pipelineKeywords],
     queryFn: async () => {
       if (filteredPipelineIds.length === 0) return [];
       const result = await executeQuery(AGENT_HEALTH_STATUS_QUERY);
       if (result.errors) throw new Error(result.errors[0].message);
       
-      // Retornar todos los agentes que tienen jobs relacionados con los pipelines filtrados
       const allAgents = result.data.merlin_agent_AgentPassport;
       
-      // Filtrar agentes que tienen al menos un job en los últimos 30 días de los pipelines filtrados
-      return allAgents.filter((agent: any) => {
+      // Filtrar agentes que coincidan con palabras clave de pipelines o filtro regex
+      const filtered = allAgents.filter((agent: any) => {
+        const agentName = (agent.name || '').toUpperCase();
+        
+        // Opción 1: Coincide con el regex del filtro directamente
+        if (filterParam) {
+          try {
+            const regex = new RegExp(filterParam, 'i');
+            if (regex.test(agent.name || '')) {
+              console.log(`✅ Agente "${agent.name}" coincide con filtro regex "${filterParam}"`);
+              return true;
+            }
+          } catch (e) {
+            // Si el regex es inválido, hacer búsqueda simple
+            if (agentName.includes(filterParam.toUpperCase())) {
+              console.log(`✅ Agente "${agent.name}" coincide con filtro "${filterParam}"`);
+              return true;
+            }
+          }
+        }
+        
+        // Opción 2: Contiene alguna palabra clave de los pipelines filtrados
+        const matchingKeyword = pipelineKeywords.find(keyword => 
+          agentName.includes(keyword)
+        );
+        
+        if (matchingKeyword) {
+          console.log(`✅ Agente "${agent.name}" coincide con palabra clave "${matchingKeyword}"`);
+          return true;
+        }
+        
+        // Opción 3: Tiene jobs relacionados (fallback)
         const hasRelevantJobs = agent.PipelineJobQueues && agent.PipelineJobQueues.length > 0;
+        if (hasRelevantJobs) {
+          console.log(`✅ Agente "${agent.name}" tiene jobs relacionados (fallback)`);
+        }
         return hasRelevantJobs;
       });
+      
+      console.log(`📊 Total agentes filtrados: ${filtered.length} de ${allAgents.length}`);
+      return filtered;
     },
     enabled: filteredPipelineIds.length > 0,
     refetchInterval: 30000,
