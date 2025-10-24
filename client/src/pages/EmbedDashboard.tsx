@@ -41,7 +41,6 @@ const ERROR_LOGS_QUERY = `
         level: {_eq: "ERROR"}
         created_at: {_gte: $sevenDaysAgo}
       }
-      limit: 100
       order_by: {created_at: desc}
     ) {
       id
@@ -70,7 +69,6 @@ const ACTIVITY_LOGS_QUERY = `
       where: {
         created_at: {_gte: $sevenDaysAgo}
       }
-      limit: 200
       order_by: {created_at: desc}
     ) {
       id
@@ -185,31 +183,47 @@ export default function EmbedDashboard() {
 
     const filteredPipelineIds = new Set(filteredPipelines.map((p: any) => p.id));
     
-    // Get agents that have jobs for these pipelines
+    // Filtrar jobs por pipelines
+    const filteredJobs = jobsData?.filter((job: any) =>
+      filterParam ? filteredPipelineIds.has(job.pipeline_id) : true
+    ) || [];
+    
+    // Get agents that have jobs for these pipelines OR that appear in errors/activity
     const agentIds = new Set<string>();
-    if (jobsData) {
-      const jobsToCheck = filterParam 
-        ? jobsData.filter((job: any) => filteredPipelineIds.has(job.pipeline_id))
-        : jobsData;
-      
-      jobsToCheck.forEach((job: any) => {
-        if (job.started_by_agent) {
-          agentIds.add(job.started_by_agent);
+    
+    // De los jobs filtrados
+    filteredJobs.forEach((job: any) => {
+      if (job.started_by_agent) {
+        agentIds.add(job.started_by_agent);
+      }
+    });
+    
+    // De los errores (para incluir agentes que tuvieron errores)
+    errorLogsData?.forEach((error: any) => {
+      if (error.PipelineJobQueue?.started_by_agent) {
+        const jobPipelineId = error.PipelineJobQueue.pipeline_id;
+        if (!filterParam || filteredPipelineIds.has(jobPipelineId)) {
+          agentIds.add(error.PipelineJobQueue.started_by_agent);
         }
-      });
-    }
+      }
+    });
+    
+    // De la actividad
+    activityData?.forEach((log: any) => {
+      if (log.PipelineJobQueue?.started_by_agent) {
+        const jobPipelineId = log.PipelineJobQueue.pipeline_id;
+        if (!filterParam || filteredPipelineIds.has(jobPipelineId)) {
+          agentIds.add(log.PipelineJobQueue.started_by_agent);
+        }
+      }
+    });
 
-    // Si hay filtro, mostrar solo agentes que tienen jobs en pipelines filtrados
-    // Si no hay filtro, mostrar todos los agentes
+    // Filtrar agentes
     const filteredAgents = agentsData && agentsData.length > 0
-      ? (filterParam
+      ? (filterParam && agentIds.size > 0
         ? agentsData.filter((agent: any) => agentIds.has(agent.id))
         : agentsData)
       : [];
-
-    const filteredJobs = jobsData?.filter((job: any) =>
-      filteredPipelineIds.has(job.pipeline_id)
-    ) || [];
 
     // Get job IDs from filtered jobs to filter errors
     const filteredJobIds = new Set(filteredJobs.map((j: any) => j.id));
@@ -241,19 +255,61 @@ export default function EmbedDashboard() {
       console.log('✅ Actividad filtrada:', filteredActivity.length);
     }
 
-    // Ordenar agentes por gravedad de problema: primero error, luego warning, luego healthy
+    // Ordenar agentes por gravedad de problema: primero offline, luego warning, luego healthy
+    // Dentro de cada categoría, ordenar por último job (más reciente primero)
     const sortedAgents = [...filteredAgents].sort((a: any, b: any) => {
+      // Determinar status priority
       const getStatusPriority = (agent: any) => {
-        const lastPing = agent.AgentPassportPing?.last_ping_at;
-        if (!agent.is_healthy && !lastPing) return 0; // offline - máxima prioridad
-        if (!agent.is_healthy && lastPing) return 1; // warning
+        const hasPing = agent.AgentPassportPing?.last_ping_at;
+        if (!agent.is_healthy && !hasPing) return 0; // offline - máxima prioridad
+        if (!agent.is_healthy && hasPing) return 1; // warning
         return 2; // healthy
       };
-      return getStatusPriority(a) - getStatusPriority(b);
+      
+      const priorityA = getStatusPriority(a);
+      const priorityB = getStatusPriority(b);
+      
+      // Si tienen diferente prioridad, ordenar por prioridad
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // Si tienen la misma prioridad, ordenar por último job (más reciente primero)
+      const lastJobA = a.PipelineJobQueues?.[0]?.created_at;
+      const lastJobB = b.PipelineJobQueues?.[0]?.created_at;
+      
+      if (!lastJobA && !lastJobB) return 0;
+      if (!lastJobA) return 1;
+      if (!lastJobB) return -1;
+      
+      return new Date(lastJobB).getTime() - new Date(lastJobA).getTime();
+    });
+
+    // Ordenar pipelines por actividad más reciente (último job)
+    const pipelinesWithActivity = filteredPipelines.map((pipeline: any) => {
+      const pipelineJobs = filteredJobs.filter((j: any) => j.pipeline_id === pipeline.id);
+      const lastJob = pipelineJobs.length > 0 
+        ? pipelineJobs.sort((a: any, b: any) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]
+        : null;
+      
+      return {
+        ...pipeline,
+        lastJobDate: lastJob?.created_at,
+        lastAgentId: lastJob?.started_by_agent
+      };
+    });
+    
+    const sortedPipelines = pipelinesWithActivity.sort((a: any, b: any) => {
+      if (!a.lastJobDate && !b.lastJobDate) return 0;
+      if (!a.lastJobDate) return 1;
+      if (!b.lastJobDate) return -1;
+      return new Date(b.lastJobDate).getTime() - new Date(a.lastJobDate).getTime();
     });
 
     return {
-      pipelines: filteredPipelines,
+      pipelines: sortedPipelines,
       agents: sortedAgents,
       jobs: filteredJobs,
       errors: filteredErrors,
@@ -650,6 +706,9 @@ export default function EmbedDashboard() {
                       const completed = pipelineJobs.filter((j: any) => j.completed && !j.aborted).length;
                       const aborted = pipelineJobs.filter((j: any) => j.aborted).length;
                       
+                      // Buscar el agente que ejecutó este pipeline
+                      const lastAgent = filteredData.agents.find((a: any) => a.id === pipeline.lastAgentId);
+                      
                       // Determinar el estado principal del pipeline
                       let mainStatus = 'idle';
                       let statusBadge = null;
@@ -700,7 +759,16 @@ export default function EmbedDashboard() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 mt-2 text-[10px]">
+                          <div className="flex items-center gap-3 mt-2 text-[10px] flex-wrap">
+                            {lastAgent && (
+                              <>
+                                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium">
+                                  <Bot className="h-3 w-3" />
+                                  {lastAgent.name}
+                                </span>
+                                <span className="text-slate-400">•</span>
+                              </>
+                            )}
                             {running > 0 && (
                               <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
                                 <Clock className="h-3 w-3" />
