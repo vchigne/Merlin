@@ -21,12 +21,19 @@ import {
   PIPELINE_JOBS_QUERY
 } from "@shared/queries";
 
+// Calcular fecha de hace 7 días
+const getSevenDaysAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toISOString();
+};
+
 const ERROR_LOGS_QUERY = `
-  query GetRecentErrors {
+  query GetRecentErrors($sevenDaysAgo: timestamptz!) {
     merlin_agent_PipelineJobLogV2Body(
       where: {
         level: {_eq: "ERROR"}
-        created_at: {_gte: "7 days ago"}
+        created_at: {_gte: $sevenDaysAgo}
       }
       limit: 100
       order_by: {created_at: desc}
@@ -120,7 +127,7 @@ export default function EmbedDashboard() {
   const { data: errorLogsData, isLoading: loadingErrors } = useQuery({
     queryKey: ['/api/embed/errors'],
     queryFn: async () => {
-      const result = await executeQuery(ERROR_LOGS_QUERY);
+      const result = await executeQuery(ERROR_LOGS_QUERY, { sevenDaysAgo: getSevenDaysAgo() });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobLogV2Body;
     },
@@ -149,20 +156,24 @@ export default function EmbedDashboard() {
 
     const filteredPipelineIds = new Set(filteredPipelines.map((p: any) => p.id));
     
-    // Get agents that have jobs for these pipelines or all agents if no filter
+    // Get agents that have jobs for these pipelines
     const agentIds = new Set<string>();
-    if (filterParam && jobsData) {
-      jobsData
-        .filter((job: any) => filteredPipelineIds.has(job.pipeline_id))
-        .forEach((job: any) => {
-          if (job.started_by_agent) {
-            agentIds.add(job.started_by_agent);
-          }
-        });
+    if (jobsData) {
+      const jobsToCheck = filterParam 
+        ? jobsData.filter((job: any) => filteredPipelineIds.has(job.pipeline_id))
+        : jobsData;
+      
+      jobsToCheck.forEach((job: any) => {
+        if (job.started_by_agent) {
+          agentIds.add(job.started_by_agent);
+        }
+      });
     }
 
+    // Si hay filtro, mostrar solo agentes que tienen jobs en pipelines filtrados
+    // Si no hay filtro, mostrar todos los agentes
     const filteredAgents = agentsData && agentsData.length > 0
-      ? (filterParam && agentIds.size > 0 
+      ? (filterParam
         ? agentsData.filter((agent: any) => agentIds.has(agent.id))
         : agentsData)
       : [];
