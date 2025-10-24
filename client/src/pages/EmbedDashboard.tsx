@@ -16,64 +16,11 @@ import {
   XCircle
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
-
-const PIPELINE_QUERY = `
-  query GetPipelines {
-    merlin_agent_Pipeline {
-      id
-      name
-      description
-      aborted_on_failure
-      timeout_minutes
-      notify_on_success
-      notify_on_failure
-      queue_name
-      AgentPipeline {
-        AgentPassport {
-          id
-          name
-        }
-      }
-    }
-  }
-`;
-
-const AGENT_HEALTH_STATUS_QUERY = `
-  query GetAgentHealthStatus {
-    merlin_agent_AgentPassport {
-      id
-      name
-      is_healthy
-      last_ping_at
-      PipelineJobQueue_aggregate {
-        aggregate {
-          count
-        }
-      }
-    }
-  }
-`;
-
-const PIPELINE_JOBS_QUERY = `
-  query GetPipelineJobs {
-    merlin_agent_PipelineJobQueue(limit: 20, order_by: {created_at: desc}) {
-      id
-      pipeline_id
-      running
-      completed
-      aborted
-      created_at
-      completed_at
-      agent_id
-      Pipeline {
-        name
-      }
-      AgentPassport {
-        name
-      }
-    }
-  }
-`;
+import { 
+  PIPELINE_QUERY,
+  AGENT_HEALTH_STATUS_QUERY,
+  PIPELINE_JOBS_QUERY
+} from "@shared/queries";
 
 const ERROR_LOGS_QUERY = `
   query GetRecentErrors {
@@ -87,12 +34,6 @@ const ERROR_LOGS_QUERY = `
       exception_message
       created_at
       pipeline_job_id
-      PipelineJobQueue {
-        pipeline_id
-        Pipeline {
-          name
-        }
-      }
     }
   }
 `;
@@ -137,7 +78,7 @@ export default function EmbedDashboard() {
   const { data: jobsData, isLoading: loadingJobs } = useQuery({
     queryKey: ['/api/embed/jobs'],
     queryFn: async () => {
-      const result = await executeQuery(PIPELINE_JOBS_QUERY);
+      const result = await executeQuery(PIPELINE_JOBS_QUERY, { limit: 20, offset: 0 });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobQueue;
     },
@@ -167,49 +108,47 @@ export default function EmbedDashboard() {
   // Filter data based on regex
   const filteredData = useMemo(() => {
     if (!pipelinesData) {
-      return { pipelines: [], agents: [], jobs: [], errors: [], activity: [], agentIds: new Set() };
+      return { pipelines: [], agents: [], jobs: [], errors: [], activity: [] };
     }
 
     const filteredPipelines = filterParam
-      ? filterByRegex(pipelinesData, filterParam, ['name', 'description'])
+      ? filterByRegex(pipelinesData, filterParam, (p: any) => `${p.name} ${p.description || ''}`)
       : pipelinesData;
 
     const filteredPipelineIds = new Set(filteredPipelines.map((p: any) => p.id));
     
+    // Get agents that have jobs for these pipelines or all agents if no filter
     const agentIds = new Set<string>();
-    filteredPipelines.forEach((p: any) => {
-      p.AgentPipeline?.forEach((ap: any) => {
-        if (ap.AgentPassport?.id) {
-          agentIds.add(ap.AgentPassport.id);
-        }
-      });
-    });
+    if (filterParam && jobsData) {
+      jobsData
+        .filter((job: any) => filteredPipelineIds.has(job.pipeline_id))
+        .forEach((job: any) => {
+          if (job.started_by_agent) {
+            agentIds.add(job.started_by_agent);
+          }
+        });
+    }
 
-    const filteredAgents = agentsData?.filter((agent: any) =>
-      agentIds.has(agent.id)
-    ) || [];
+    const filteredAgents = agentsData && agentsData.length > 0
+      ? (filterParam && agentIds.size > 0 
+        ? agentsData.filter((agent: any) => agentIds.has(agent.id))
+        : agentsData)
+      : [];
 
     const filteredJobs = jobsData?.filter((job: any) =>
       filteredPipelineIds.has(job.pipeline_id)
     ) || [];
 
-    const filteredErrors = errorLogsData?.filter((error: any) =>
-      filteredPipelineIds.has(error.PipelineJobQueue?.pipeline_id)
-    ) || [];
+    const filteredErrors = errorLogsData || [];
 
-    const filteredActivity = activityData?.filter((log: any) => {
-      const jobQueue = log.PipelineJobQueue;
-      if (!jobQueue) return true;
-      return filteredPipelineIds.has(jobQueue.pipeline_id);
-    }) || [];
+    const filteredActivity = activityData || [];
 
     return {
       pipelines: filteredPipelines,
       agents: filteredAgents,
       jobs: filteredJobs,
       errors: filteredErrors,
-      activity: filteredActivity,
-      agentIds
+      activity: filteredActivity
     };
   }, [pipelinesData, agentsData, jobsData, errorLogsData, activityData, filterParam]);
 
@@ -464,9 +403,10 @@ export default function EmbedDashboard() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-4">
                       {filteredData.agents.map((agent: any) => {
+                        const lastPing = agent.AgentPassportPing?.last_ping_at;
                         const status = agent.is_healthy 
                           ? 'healthy' 
-                          : agent.last_ping_at 
+                          : lastPing 
                           ? 'warning' 
                           : 'offline';
                         
@@ -481,7 +421,7 @@ export default function EmbedDashboard() {
                                 {agent.name}
                               </p>
                               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                                {agent.PipelineJobQueue_aggregate?.aggregate?.count || 0} jobs
+                                {agent.PipelineJobQueues?.length || 0} jobs
                               </p>
                             </div>
                           </div>
