@@ -189,7 +189,21 @@ export default function EmbedDashboard() {
         pipelineIds: filteredPipelineIds
       });
       if (result.errors) throw new Error(result.errors[0].message);
-      return result.data.merlin_agent_PipelineJobLogV2Body;
+      const activityLogs = result.data.merlin_agent_PipelineJobLogV2Body;
+      
+      // DEBUG: Ver qué está devolviendo la query
+      console.log('Activity logs sample:', activityLogs.slice(0, 2).map((log: any) => ({
+        id: log.id,
+        message: log.message,
+        pipelineJobQueue: log.PipelineJobQueue ? {
+          id: log.PipelineJobQueue.id,
+          started_by_agent: log.PipelineJobQueue.started_by_agent,
+          Pipeline: log.PipelineJobQueue.Pipeline,
+          AgentPassport: log.PipelineJobQueue.AgentPassport
+        } : null
+      })));
+      
+      return activityLogs;
     },
     enabled: filteredPipelineIds.length > 0,
     refetchInterval: 30000,
