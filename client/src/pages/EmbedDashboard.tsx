@@ -198,40 +198,24 @@ export default function EmbedDashboard() {
     refetchInterval: 30000,
   });
 
-  // 4. Obtener IDs de agentes de los datos cargados
-  const agentIds = useMemo(() => {
-    const ids = new Set<string>();
-    
-    jobsData?.forEach((job: any) => {
-      if (job.started_by_agent) ids.add(job.started_by_agent);
-    });
-    
-    errorLogsData?.forEach((error: any) => {
-      if (error.PipelineJobQueue?.started_by_agent) {
-        ids.add(error.PipelineJobQueue.started_by_agent);
-      }
-    });
-    
-    activityData?.forEach((log: any) => {
-      if (log.PipelineJobQueue?.started_by_agent) {
-        ids.add(log.PipelineJobQueue.started_by_agent);
-      }
-    });
-    
-    return Array.from(ids);
-  }, [jobsData, errorLogsData, activityData]);
-
-  // 5. Cargar solo los agentes necesarios
+  // 4. Cargar todos los agentes (no filtrar por agentIds porque started_by_agent puede ser null)
   const { data: agentsData, isLoading: loadingAgents } = useQuery({
-    queryKey: ['/api/embed/agents', agentIds],
+    queryKey: ['/api/embed/agents', filteredPipelineIds],
     queryFn: async () => {
-      if (agentIds.length === 0) return [];
+      if (filteredPipelineIds.length === 0) return [];
       const result = await executeQuery(AGENT_HEALTH_STATUS_QUERY);
       if (result.errors) throw new Error(result.errors[0].message);
-      // Filtrar solo los agentes que necesitamos
-      return result.data.merlin_agent_AgentPassport.filter((a: any) => agentIds.includes(a.id));
+      
+      // Retornar todos los agentes que tienen jobs relacionados con los pipelines filtrados
+      const allAgents = result.data.merlin_agent_AgentPassport;
+      
+      // Filtrar agentes que tienen al menos un job en los últimos 30 días de los pipelines filtrados
+      return allAgents.filter((agent: any) => {
+        const hasRelevantJobs = agent.PipelineJobQueues && agent.PipelineJobQueues.length > 0;
+        return hasRelevantJobs;
+      });
     },
-    enabled: agentIds.length > 0,
+    enabled: filteredPipelineIds.length > 0,
     refetchInterval: 30000,
   });
 
