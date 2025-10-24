@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ejemplos de Dashboard Embebido - Merlin</title>
+    <title>Ejemplos de Dashboard Embebido - Merlin Control Center</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
             background: #f5f5f5;
@@ -61,33 +61,56 @@
             border-radius: 3px;
             font-family: monospace;
         }
+        .feature-list {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .feature-list li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
-    <h1>📊 Dashboard Embebido de Merlin - Ejemplos de Uso</h1>
+    <h1>🎛️ Merlin Control Center - Dashboard Embebido</h1>
     
+    <div class="feature-list">
+        <strong>✨ Características del Dashboard:</strong>
+        <ul>
+            <li>📊 Métricas en tiempo real de agentes, ejecuciones, tasa de éxito y errores</li>
+            <li>🤖 Estado compacto de agentes con indicadores visuales</li>
+            <li>⚠️ Panel de errores recientes con detalles completos</li>
+            <li>📋 Tabla de trabajos recientes con estados</li>
+            <li>⚡ Feed de actividad en tiempo real</li>
+            <li>🔍 Filtrado por regex con soporte para flags inline</li>
+            <li>🔄 Actualización automática cada 10-30 segundos</li>
+            <li>🎨 Diseño profesional estilo centro de control</li>
+        </ul>
+    </div>
+
     <p>
-        El dashboard embebido de Merlin te permite insertar visualizaciones filtradas en cualquier página web.
+        El dashboard embebido de Merlin te permite insertar un centro de control completo en cualquier página web.
         Usa el parámetro <code>filter</code> con una expresión regular para mostrar solo los pipelines que necesites.
     </p>
 
     <!-- Ejemplo 1: Sin filtro -->
     <div class="example">
-        <h2>Ejemplo 1: Dashboard Sin Filtro (Todos los Pipelines)</h2>
+        <h2>Ejemplo 1: Dashboard Completo (Sin Filtro)</h2>
         <div class="filter-info">
-            <strong>URL:</strong> <code>/embed/dashboard</code> (sin parámetros)
+            <strong>URL:</strong> <code>/embed/dashboard</code> (sin parámetros)<br>
+            <strong>Muestra:</strong> Todos los pipelines, agentes, trabajos y errores del sistema
         </div>
-        <p>Muestra todos los pipelines, agentes, trabajos y errores del sistema.</p>
         
         <div class="code-block">&lt;iframe 
   src="http://localhost:5000/embed/dashboard"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"&gt;
 &lt;/iframe&gt;</div>
 
         <div class="iframe-container">
-            <iframe src="http://localhost:5000/embed/dashboard" height="800px"></iframe>
+            <iframe src="http://localhost:5000/embed/dashboard" height="900px"></iframe>
         </div>
     </div>
 
@@ -96,78 +119,82 @@
         <h2>Ejemplo 2: Filtro Case-Insensitive "Alicorp"</h2>
         <div class="filter-info">
             <strong>Filtro:</strong> <code>(?i).*alicorp.*</code><br>
-            <strong>Descripción:</strong> Pipelines que contengan "alicorp" en cualquier parte del nombre, sin importar mayúsculas/minúsculas
+            <strong>Descripción:</strong> Pipelines que contengan "alicorp" en cualquier parte del nombre, sin importar mayúsculas/minúsculas<br>
+            <strong>Uso:</strong> Ideal para dashboards específicos de clientes
         </div>
         
         <div class="code-block">&lt;iframe 
   src="http://localhost:5000/embed/dashboard?filter=(?i).*alicorp.*"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"&gt;
 &lt;/iframe&gt;</div>
 
         <div class="iframe-container">
-            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*alicorp.*" height="800px"></iframe>
+            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*alicorp.*" height="900px"></iframe>
         </div>
     </div>
 
     <!-- Ejemplo 3: Pipelines que empiezan con "prod" -->
     <div class="example">
-        <h2>Ejemplo 3: Pipelines que Empiezan con "prod"</h2>
+        <h2>Ejemplo 3: Pipelines de Producción</h2>
         <div class="filter-info">
             <strong>Filtro:</strong> <code>^prod.*</code><br>
-            <strong>Descripción:</strong> Solo pipelines que comiencen con "prod"
+            <strong>Descripción:</strong> Solo pipelines que comiencen con "prod"<br>
+            <strong>Uso:</strong> Monitoreo de entornos de producción
         </div>
         
         <div class="code-block">&lt;iframe 
   src="http://localhost:5000/embed/dashboard?filter=^prod.*"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"&gt;
 &lt;/iframe&gt;</div>
 
         <div class="iframe-container">
-            <iframe src="http://localhost:5000/embed/dashboard?filter=^prod.*" height="800px"></iframe>
+            <iframe src="http://localhost:5000/embed/dashboard?filter=^prod.*" height="900px"></iframe>
         </div>
     </div>
 
     <!-- Ejemplo 4: Pipelines que terminan con "test" -->
     <div class="example">
-        <h2>Ejemplo 4: Pipelines que Terminan con "test"</h2>
+        <h2>Ejemplo 4: Pipelines de Testing</h2>
         <div class="filter-info">
             <strong>Filtro:</strong> <code>.*test$</code><br>
-            <strong>Descripción:</strong> Solo pipelines que terminen con "test"
+            <strong>Descripción:</strong> Solo pipelines que terminen con "test"<br>
+            <strong>Uso:</strong> Dashboard de entorno de pruebas
         </div>
         
         <div class="code-block">&lt;iframe 
   src="http://localhost:5000/embed/dashboard?filter=.*test$"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"&gt;
 &lt;/iframe&gt;</div>
 
         <div class="iframe-container">
-            <iframe src="http://localhost:5000/embed/dashboard?filter=.*test$" height="800px"></iframe>
+            <iframe src="http://localhost:5000/embed/dashboard?filter=.*test$" height="900px"></iframe>
         </div>
     </div>
 
     <!-- Ejemplo 5: Múltiples palabras con OR -->
     <div class="example">
-        <h2>Ejemplo 5: Múltiples Palabras (ETL o Sync)</h2>
+        <h2>Ejemplo 5: Múltiples Categorías (ETL o Sync)</h2>
         <div class="filter-info">
             <strong>Filtro:</strong> <code>(?i).*(etl|sync).*</code><br>
-            <strong>Descripción:</strong> Pipelines que contengan "etl" o "sync" (case insensitive)
+            <strong>Descripción:</strong> Pipelines que contengan "etl" o "sync" (case insensitive)<br>
+            <strong>Uso:</strong> Agrupación de pipelines por tipo de operación
         </div>
         
         <div class="code-block">&lt;iframe 
   src="http://localhost:5000/embed/dashboard?filter=(?i).*(etl|sync).*"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"&gt;
 &lt;/iframe&gt;</div>
 
         <div class="iframe-container">
-            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*(etl|sync).*" height="800px"></iframe>
+            <iframe src="http://localhost:5000/embed/dashboard?filter=(?i).*(etl|sync).*" height="900px"></iframe>
         </div>
     </div>
 
@@ -237,14 +264,35 @@
         <div class="code-block">&lt;iframe 
   src="https://tu-app.replit.app/embed/dashboard?filter=(?i).*alicorp.*"
   width="100%" 
-  height="800px"
+  height="900px"
   frameborder="0"
-  allow="fullscreen"&gt;
+  allow="fullscreen"
+  style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"&gt;
 &lt;/iframe&gt;</div>
+
+        <h3>💡 Casos de Uso Recomendados:</h3>
+        <ul>
+            <li><strong>Dashboards de Clientes:</strong> Filtra por nombre de cliente para mostrar solo sus pipelines</li>
+            <li><strong>Monitoreo por Entorno:</strong> Separa producción, staging y desarrollo</li>
+            <li><strong>Vistas por Departamento:</strong> Filtra pipelines de ventas, finanzas, operaciones, etc.</li>
+            <li><strong>Pantallas de TV:</strong> Muestra en modo kiosko en la oficina para monitoreo en tiempo real</li>
+            <li><strong>Reportes Embebidos:</strong> Integra en portales web o aplicaciones internas</li>
+        </ul>
+
+        <h3>⚙️ Características Técnicas:</h3>
+        <ul>
+            <li>✅ Actualización automática cada 10-30 segundos</li>
+            <li>✅ Totalmente responsive (móvil, tablet, desktop)</li>
+            <li>✅ Sin autenticación requerida para embedido</li>
+            <li>✅ Soporta modo oscuro automático</li>
+            <li>✅ Optimizado para rendimiento</li>
+            <li>✅ Sin límite de instancias embebidas</li>
+        </ul>
     </div>
 
     <footer style="text-align: center; padding: 40px 0; color: #6b7280; border-top: 1px solid #e5e7eb; margin-top: 40px;">
-        <p>Merlin Observer Dashboard - Sistema de Monitoreo de Agentes Distribuidos</p>
+        <p><strong>Merlin Observer Dashboard</strong> - Sistema de Monitoreo de Agentes Distribuidos</p>
+        <p style="font-size: 14px; margin-top: 10px;">Centro de Control en Tiempo Real para Infraestructura de Automatización</p>
     </footer>
 </body>
 </html>
