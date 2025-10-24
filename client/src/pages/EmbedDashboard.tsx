@@ -186,13 +186,6 @@ export default function EmbedDashboard() {
       pipelineKeywords: Array.from(keywords)
     };
     
-    // Debug: mostrar palabras clave extraídas
-    console.log('========================');
-    console.log('🔍 PIPELINES FILTRADOS:', filtered.length);
-    console.log('🔍 PALABRAS CLAVE EXTRAÍDAS:', result.pipelineKeywords);
-    console.log('🔍 NOMBRES DE PIPELINES FILTRADOS:', filtered.map((p: any) => p.name));
-    console.log('========================');
-    
     return result;
   }, [pipelinesData, filterParam]);
 
@@ -253,12 +246,6 @@ export default function EmbedDashboard() {
       const allAgents = result.data.merlin_agent_AgentPassport;
       
       // Filtrar agentes que coincidan con palabras clave de pipelines o filtro regex
-      console.log('========================');
-      console.log('🔍 FILTRANDO AGENTES...');
-      console.log('🔍 Total agentes en BD:', allAgents.length);
-      console.log('🔍 Palabras clave a buscar:', pipelineKeywords);
-      console.log('========================');
-      
       const filtered = allAgents.filter((agent: any) => {
         const agentName = (agent.name || '').toUpperCase();
         
@@ -267,13 +254,11 @@ export default function EmbedDashboard() {
           try {
             const regex = new RegExp(filterParam, 'i');
             if (regex.test(agent.name || '')) {
-              console.log(`✅ AGENTE "${agent.name}" → coincide con filtro regex "${filterParam}"`);
               return true;
             }
           } catch (e) {
             // Si el regex es inválido, hacer búsqueda simple
             if (agentName.includes(filterParam.toUpperCase())) {
-              console.log(`✅ AGENTE "${agent.name}" → coincide con filtro "${filterParam}"`);
               return true;
             }
           }
@@ -285,7 +270,6 @@ export default function EmbedDashboard() {
         );
         
         if (matchingKeyword) {
-          console.log(`✅ AGENTE "${agent.name}" → coincide con palabra clave "${matchingKeyword}"`);
           return true;
         }
         
@@ -295,17 +279,12 @@ export default function EmbedDashboard() {
         ) || [];
         
         if (relevantJobs.length > 0) {
-          console.log(`✅ AGENTE "${agent.name}" → tiene ${relevantJobs.length} jobs de pipelines filtrados (FALLBACK)`);
           return true;
         }
         
         return false;
       });
       
-      console.log('========================');
-      console.log(`📊 RESULTADO: ${filtered.length} agentes filtrados de ${allAgents.length} totales`);
-      console.log('📊 AGENTES SELECCIONADOS:', filtered.map((a: any) => a.name));
-      console.log('========================');
       return filtered;
     },
     enabled: filteredPipelineIds.length > 0,
