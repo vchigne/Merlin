@@ -27,6 +27,13 @@ const getSevenDaysAgo = () => {
   return date.toISOString();
 };
 
+// Calcular fecha de hace 30 días
+const getThirtyDaysAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 30);
+  return date.toISOString();
+};
+
 const ERROR_LOGS_QUERY = `
   query GetRecentErrors($sevenDaysAgo: timestamptz!) {
     merlin_agent_PipelineJobLogV2Body(
@@ -86,11 +93,11 @@ const ACTIVITY_LOGS_QUERY = `
   }
 `;
 
-const JOBS_LAST_WEEK_QUERY = `
-  query GetJobsLastWeek($sevenDaysAgo: timestamptz!) {
+const JOBS_LAST_MONTH_QUERY = `
+  query GetJobsLastMonth($thirtyDaysAgo: timestamptz!) {
     merlin_agent_PipelineJobQueue(
       where: {
-        created_at: {_gte: $sevenDaysAgo}
+        created_at: {_gte: $thirtyDaysAgo}
       }
       order_by: {created_at: desc}
     ) {
@@ -139,7 +146,7 @@ export default function EmbedDashboard() {
   const { data: jobsData, isLoading: loadingJobs } = useQuery({
     queryKey: ['/api/embed/jobs'],
     queryFn: async () => {
-      const result = await executeQuery(JOBS_LAST_WEEK_QUERY, { sevenDaysAgo: getSevenDaysAgo() });
+      const result = await executeQuery(JOBS_LAST_MONTH_QUERY, { thirtyDaysAgo: getThirtyDaysAgo() });
       if (result.errors) throw new Error(result.errors[0].message);
       return result.data.merlin_agent_PipelineJobQueue;
     },
@@ -212,15 +219,27 @@ export default function EmbedDashboard() {
     ) || [];
 
     // Filter activity by filtered pipelines
-    const filteredActivity = filterParam && activityData
-      ? activityData.filter((log: any) => {
-          // Si tiene job asociado, filtrar por pipeline del job
-          if (log.PipelineJobQueue?.pipeline_id) {
-            return filteredPipelineIds.has(log.PipelineJobQueue.pipeline_id);
+    let filteredActivity = activityData || [];
+    if (filterParam && activityData) {
+      console.log('🔍 Filtrando actividad. Total logs:', activityData.length);
+      console.log('📊 Pipelines filtrados IDs:', Array.from(filteredPipelineIds));
+      
+      filteredActivity = activityData.filter((log: any) => {
+        // Si tiene job asociado, filtrar por pipeline del job
+        if (log.PipelineJobQueue?.pipeline_id) {
+          const matches = filteredPipelineIds.has(log.PipelineJobQueue.pipeline_id);
+          if (matches) {
+            console.log('✅ Log coincide:', log.message.substring(0, 50), 'Pipeline:', log.PipelineJobQueue.Pipeline?.name);
           }
-          return false;
-        })
-      : (activityData || []);
+          return matches;
+        }
+        // Si no tiene job, incluirlo de todos modos
+        console.log('⚠️ Log sin job asociado:', log.message.substring(0, 50));
+        return false;
+      });
+      
+      console.log('✅ Actividad filtrada:', filteredActivity.length);
+    }
 
     // Ordenar agentes por gravedad de problema: primero error, luego warning, luego healthy
     const sortedAgents = [...filteredAgents].sort((a: any, b: any) => {
