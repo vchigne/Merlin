@@ -289,12 +289,17 @@ export default function EmbedDashboard() {
           return true;
         }
         
-        // Opción 3: Tiene jobs relacionados (fallback)
-        const hasRelevantJobs = agent.PipelineJobQueues && agent.PipelineJobQueues.length > 0;
-        if (hasRelevantJobs) {
-          console.log(`✅ AGENTE "${agent.name}" → tiene ${agent.PipelineJobQueues.length} jobs relacionados (FALLBACK)`);
+        // Opción 3: Tiene jobs relacionados con los pipelines filtrados (fallback)
+        const relevantJobs = agent.PipelineJobQueues?.filter((job: any) => 
+          filteredPipelineIds.includes(job.pipeline_id)
+        ) || [];
+        
+        if (relevantJobs.length > 0) {
+          console.log(`✅ AGENTE "${agent.name}" → tiene ${relevantJobs.length} jobs de pipelines filtrados (FALLBACK)`);
+          return true;
         }
-        return hasRelevantJobs;
+        
+        return false;
       });
       
       console.log('========================');

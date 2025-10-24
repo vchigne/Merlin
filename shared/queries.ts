@@ -259,6 +259,7 @@ export const AGENT_HEALTH_STATUS_QUERY = `
       }
       PipelineJobQueues(limit: 20, order_by: {created_at: desc}) {
         id
+        pipeline_id
         completed
         running
         aborted
