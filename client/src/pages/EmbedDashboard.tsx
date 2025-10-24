@@ -269,7 +269,7 @@ export default function EmbedDashboard() {
     const pipelinesWithActivity = filteredPipelines.map((pipeline: any) => {
       const pipelineJobs = filteredJobs.filter((j: any) => j.pipeline_id === pipeline.id);
       const lastJob = pipelineJobs.length > 0 
-        ? pipelineJobs.sort((a: any, b: any) => 
+        ? [...pipelineJobs].sort((a: any, b: any) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )[0]
         : null;
@@ -350,49 +350,66 @@ export default function EmbedDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-3 sm:p-4">
-        <div className="max-w-[1600px] mx-auto space-y-3">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-8 w-64 animate-pulse" />
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <Skeleton className="h-4 w-24 animate-pulse" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-700" />
-                    <Skeleton className="h-6 w-12 bg-slate-300 dark:bg-slate-600" />
-                  </div>
-                  <Skeleton className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+        <div className="text-center">
+          {/* Animated Robot/Bot */}
+          <div className="relative inline-block mb-6">
+            {/* Robot Body */}
+            <div className="relative">
+              {/* Antenna */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-8">
+                <div className="w-1 h-6 bg-gradient-to-t from-blue-500 to-transparent mx-auto animate-pulse" />
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce shadow-lg shadow-blue-500/50" />
+              </div>
+              
+              {/* Head */}
+              <div className="w-24 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-2xl relative overflow-hidden">
+                {/* Eyes */}
+                <div className="flex gap-4 justify-center mt-6">
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                </div>
+                {/* Mouth/Display */}
+                <div className="mt-2 mx-auto w-12 h-1 bg-white/60 rounded-full" />
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              </div>
+              
+              {/* Body */}
+              <div className="mt-2 w-28 h-16 bg-gradient-to-br from-slate-600 to-slate-700 dark:from-slate-700 dark:to-slate-800 rounded-xl shadow-xl relative -ml-2">
+                {/* Control panel */}
+                <div className="flex gap-1 justify-center pt-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
+                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '400ms' }} />
+                </div>
+                
+                {/* Loading bar */}
+                <div className="mt-2 mx-auto w-16 h-1.5 bg-slate-800 dark:bg-slate-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full animate-pulse" style={{ width: '60%' }} />
                 </div>
               </div>
-            ))}
+              
+              {/* Arms */}
+              <div className="absolute top-24 -left-6 w-5 h-12 bg-gradient-to-b from-slate-600 to-slate-700 dark:from-slate-700 dark:to-slate-800 rounded-lg shadow-lg animate-bounce" style={{ animationDuration: '1s', animationDelay: '0ms' }} />
+              <div className="absolute top-24 -right-6 w-5 h-12 bg-gradient-to-b from-slate-600 to-slate-700 dark:from-slate-700 dark:to-slate-800 rounded-lg shadow-lg animate-bounce" style={{ animationDuration: '1s', animationDelay: '500ms' }} />
+            </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="space-y-3">
-              {[1, 2].map(i => (
-                <div key={i} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
-                  <Skeleton className="h-5 w-32 mb-3 bg-slate-200 dark:bg-slate-700" />
-                  <div className="space-y-2">
-                    {[1, 2, 3].map(j => <Skeleton key={j} className="h-16 bg-slate-100 dark:bg-slate-800" />)}
-                  </div>
-                </div>
-              ))}
+          
+          {/* Loading Text */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Cargando Merlin
+            </h2>
+            <div className="flex items-center justify-center gap-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <div className="space-y-3">
-              {[1, 2].map(i => (
-                <div key={i} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-lg p-3 sm:p-4 animate-pulse border border-slate-200 dark:border-slate-700 shadow-lg">
-                  <Skeleton className="h-5 w-32 mb-3 bg-slate-200 dark:bg-slate-700" />
-                  <div className="space-y-2">
-                    {[1, 2, 3].map(j => <Skeleton key={j} className="h-16 bg-slate-100 dark:bg-slate-800" />)}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Conectando con los agentes...
+            </p>
           </div>
         </div>
       </div>
