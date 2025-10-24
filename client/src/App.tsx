@@ -22,6 +22,7 @@ import Connections from "@/pages/Connections";
 import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
 import SQLConnectionDetail from "@/pages/SQLConnectionDetail";
 import CommandDetail from "@/pages/CommandDetail";
+import EmbedDashboard from "@/pages/EmbedDashboard";
 import NotFound from "@/pages/not-found";
 import { initializeSocket } from "./lib/socket";
 
@@ -40,30 +41,38 @@ function Router() {
   }, []);
 
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/agents" component={Agents} />
-        <Route path="/agents/create" component={CreateAgent} />
-        <Route path="/agents/:id" component={AgentDetails} />
-        <Route path="/pipelines" component={Pipelines} />
-        <Route path="/pipelines/:id" component={PipelineDetails} />
-        <Route path="/pipeline-studio" component={PipelineStudio} />
-        <Route path="/pipeline-studio/:id" component={PipelineStudio} />
-        <Route path="/studio" component={PipelineStudio} />
-        <Route path="/studio/:id" component={PipelineStudio} />
-        <Route path="/jobs" component={Jobs} />
-        <Route path="/jobs/:id" component={PipelineDetails} />
-        <Route path="/logs" component={Logs} />
-        <Route path="/explorer" component={Explorer} />
-        <Route path="/connections" component={Connections} />
-        <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
-        <Route path="/connections/sql/:id" component={SQLConnectionDetail} />
-        <Route path="/connections/command/:id" component={CommandDetail} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      {/* Rutas embebidas sin Layout */}
+      <Route path="/embed/dashboard" component={EmbedDashboard} />
+      
+      {/* Rutas normales con Layout */}
+      <Route>
+        <Layout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/agents" component={Agents} />
+            <Route path="/agents/create" component={CreateAgent} />
+            <Route path="/agents/:id" component={AgentDetails} />
+            <Route path="/pipelines" component={Pipelines} />
+            <Route path="/pipelines/:id" component={PipelineDetails} />
+            <Route path="/pipeline-studio" component={PipelineStudio} />
+            <Route path="/pipeline-studio/:id" component={PipelineStudio} />
+            <Route path="/studio" component={PipelineStudio} />
+            <Route path="/studio/:id" component={PipelineStudio} />
+            <Route path="/jobs" component={Jobs} />
+            <Route path="/jobs/:id" component={PipelineDetails} />
+            <Route path="/logs" component={Logs} />
+            <Route path="/explorer" component={Explorer} />
+            <Route path="/connections" component={Connections} />
+            <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
+            <Route path="/connections/sql/:id" component={SQLConnectionDetail} />
+            <Route path="/connections/command/:id" component={CommandDetail} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
+      </Route>
+    </Switch>
   );
 }
 
