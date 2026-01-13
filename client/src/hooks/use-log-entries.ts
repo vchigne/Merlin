@@ -188,11 +188,26 @@ export function useLogEntry(logId: number | string) {
             created_at
             PipelineJobQueue {
               id
+              completed
+              running
+              aborted
+              created_at
+              updated_at
+              started_by_agent
               Pipeline {
                 id
                 name
+                description
               }
-              started_by_agent
+              AgentPassport {
+                id
+                name
+              }
+            }
+            PipelineUnit {
+              id
+              name
+              unit_type
             }
           }
         }

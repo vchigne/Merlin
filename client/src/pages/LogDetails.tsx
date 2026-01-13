@@ -4,7 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle, AlertTriangle, Info, Bug, FileText, Clock, Workflow, Server, Copy, Check } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { 
+  ArrowLeft, AlertCircle, AlertTriangle, Info, Bug, FileText, 
+  Clock, Workflow, Server, Copy, Check, Bot, Play, CheckCircle, 
+  XCircle, Loader2, Settings
+} from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 
@@ -46,6 +51,14 @@ function getLevelConfig(level: string) {
   }
 }
 
+function getJobStatus(job: any) {
+  if (!job) return { label: "Unknown", color: "bg-gray-500/10 text-gray-500", icon: Info };
+  if (job.aborted) return { label: "Aborted", color: "bg-red-500/10 text-red-500", icon: XCircle };
+  if (job.completed) return { label: "Completed", color: "bg-green-500/10 text-green-500", icon: CheckCircle };
+  if (job.running) return { label: "Running", color: "bg-blue-500/10 text-blue-500", icon: Loader2 };
+  return { label: "Pending", color: "bg-yellow-500/10 text-yellow-500", icon: Clock };
+}
+
 export default function LogDetails() {
   const [, params] = useRoute("/logs/:id");
   const logId = params?.id;
@@ -73,10 +86,15 @@ export default function LogDetails() {
           <Skeleton className="h-10 w-10" />
           <Skeleton className="h-8 w-64" />
         </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
         <Card>
           <CardContent className="p-6 space-y-4">
             <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-32 w-full" />
           </CardContent>
         </Card>
@@ -109,9 +127,13 @@ export default function LogDetails() {
   
   const levelConfig = getLevelConfig(log.level);
   const LevelIcon = levelConfig.icon;
-  const pipelineName = log.PipelineJobQueue?.Pipeline?.name || "Unknown Pipeline";
-  const pipelineId = log.PipelineJobQueue?.Pipeline?.id;
-  const jobId = log.pipeline_job_id;
+  
+  const job = log.PipelineJobQueue;
+  const pipeline = job?.Pipeline;
+  const agent = job?.AgentPassport;
+  const pipelineUnit = log.PipelineUnit;
+  const jobStatus = getJobStatus(job);
+  const JobStatusIcon = jobStatus.icon;
   
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -121,7 +143,7 @@ export default function LogDetails() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-bold">Log Entry #{log.id}</h1>
           <Badge className={levelConfig.color}>
             <LevelIcon className="h-3 w-3 mr-1" />
@@ -130,7 +152,7 @@ export default function LogDetails() {
         </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -153,15 +175,18 @@ export default function LogDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {pipelineId ? (
-              <Link href={`/pipelines/${pipelineId}`}>
-                <span className="text-lg font-semibold text-primary hover:underline cursor-pointer">
-                  {pipelineName}
+            {pipeline?.id ? (
+              <Link href={`/pipelines/${pipeline.id}`}>
+                <span className="text-lg font-semibold text-primary hover:underline cursor-pointer block truncate">
+                  {pipeline.name || "Unnamed Pipeline"}
                 </span>
               </Link>
             ) : (
-              <p className="text-lg font-semibold text-muted-foreground">
-                {pipelineName}
+              <p className="text-lg font-semibold text-muted-foreground">N/A</p>
+            )}
+            {pipeline?.id && (
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                ID: {pipeline.id}
               </p>
             )}
           </CardContent>
@@ -170,23 +195,93 @@ export default function LogDetails() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Server className="h-4 w-4" />
-              Job ID
+              <Bot className="h-4 w-4" />
+              Agent
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {jobId ? (
-              <Link href={`/jobs/${jobId}`}>
-                <span className="text-lg font-semibold text-primary hover:underline cursor-pointer">
-                  {jobId}
+            {agent?.id ? (
+              <Link href={`/agents/${agent.id}`}>
+                <span className="text-lg font-semibold text-primary hover:underline cursor-pointer block truncate">
+                  {agent.name || "Unnamed Agent"}
+                </span>
+              </Link>
+            ) : job?.started_by_agent ? (
+              <Link href={`/agents/${job.started_by_agent}`}>
+                <span className="text-sm font-mono text-primary hover:underline cursor-pointer block truncate">
+                  {job.started_by_agent}
                 </span>
               </Link>
             ) : (
               <p className="text-lg font-semibold text-muted-foreground">N/A</p>
             )}
+            {agent?.id && (
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                ID: {agent.id}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Play className="h-4 w-4" />
+              Job Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Badge className={jobStatus.color}>
+                <JobStatusIcon className="h-3 w-3 mr-1" />
+                {jobStatus.label}
+              </Badge>
+            </div>
+            {log.pipeline_job_id && (
+              <Link href={`/jobs/${log.pipeline_job_id}`}>
+                <p className="text-xs text-primary hover:underline mt-2 font-mono cursor-pointer truncate">
+                  {log.pipeline_job_id}
+                </p>
+              </Link>
+            )}
           </CardContent>
         </Card>
       </div>
+      
+      {pipelineUnit && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Pipeline Unit
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold">
+                {pipelineUnit.name || "Unnamed Unit"}
+              </span>
+              {pipelineUnit.unit_type && (
+                <Badge variant="outline">{pipelineUnit.unit_type}</Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 font-mono">
+              ID: {pipelineUnit.id || log.pipeline_unit_id}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {pipeline?.description && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Pipeline Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">{pipeline.description}</p>
+          </CardContent>
+        </Card>
+      )}
       
       <Card>
         <CardHeader>
@@ -221,7 +316,7 @@ export default function LogDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <code className="text-sm bg-muted px-2 py-1 rounded">
+            <code className="text-sm bg-muted px-3 py-2 rounded block overflow-x-auto">
               {log.callsite}
             </code>
           </CardContent>
@@ -252,7 +347,7 @@ export default function LogDetails() {
             {log.exception && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">Exception Type</p>
-                <code className="text-sm bg-red-500/10 text-red-500 px-2 py-1 rounded">
+                <code className="text-sm bg-red-500/10 text-red-500 px-3 py-2 rounded block">
                   {log.exception}
                 </code>
               </div>
@@ -279,17 +374,41 @@ export default function LogDetails() {
         </Card>
       )}
       
-      {log.pipeline_unit_id && (
+      {(job || log.pipeline_unit_id) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Additional Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Pipeline Unit ID:</span>
-                <span className="font-mono">{log.pipeline_unit_id}</span>
-              </div>
+            <div className="grid gap-3 text-sm">
+              {log.pipeline_unit_id && !pipelineUnit && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Pipeline Unit ID:</span>
+                  <span className="font-mono text-xs">{log.pipeline_unit_id}</span>
+                </div>
+              )}
+              {job?.created_at && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Job Created:</span>
+                  <span>{formatDate(job.created_at)}</span>
+                </div>
+              )}
+              {job?.updated_at && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Job Updated:</span>
+                  <span>{formatDate(job.updated_at)}</span>
+                </div>
+              )}
+              {job?.started_by_agent && !agent && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Started By Agent ID:</span>
+                  <Link href={`/agents/${job.started_by_agent}`}>
+                    <span className="font-mono text-xs text-primary hover:underline cursor-pointer">
+                      {job.started_by_agent}
+                    </span>
+                  </Link>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
