@@ -202,11 +202,16 @@ export function determineAgentStatus(
     result.status = 'error';
   }
   
-  // El ping viene como un objeto, no como array
+  // El ping puede venir como objeto o como array
   let lastPing = null;
   if (agent.AgentPassportPing) {
-    // @ts-ignore - Ignorar errores de tipo ya que sabemos que la estructura es correcta
-    lastPing = agent.AgentPassportPing.last_ping_at;
+    if (Array.isArray(agent.AgentPassportPing)) {
+      // Si es un array, tomamos el primer elemento
+      lastPing = agent.AgentPassportPing[0]?.last_ping_at;
+    } else {
+      // Si es un objeto, accedemos directamente
+      lastPing = agent.AgentPassportPing.last_ping_at;
+    }
   }
   
   console.log('Último ping:', lastPing ? new Date(lastPing).toISOString() : 'ninguno');
