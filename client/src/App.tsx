@@ -13,6 +13,7 @@ import Agents from "@/pages/Agents";
 import Pipelines from "@/pages/Pipelines";
 import Jobs from "@/pages/Jobs";
 import Logs from "@/pages/Logs";
+import LogDetails from "@/pages/LogDetails";
 import Explorer from "@/pages/Explorer";
 import AgentDetails from "@/pages/AgentDetails";
 import CreateAgent from "@/pages/CreateAgent";
@@ -63,6 +64,7 @@ function Router() {
             <Route path="/jobs" component={Jobs} />
             <Route path="/jobs/:id" component={PipelineDetails} />
             <Route path="/logs" component={Logs} />
+            <Route path="/logs/:id" component={LogDetails} />
             <Route path="/explorer" component={Explorer} />
             <Route path="/connections" component={Connections} />
             <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
