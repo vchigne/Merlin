@@ -199,15 +199,6 @@ export function useLogEntry(logId: number | string) {
                 name
                 description
               }
-              AgentPassport {
-                id
-                name
-              }
-            }
-            PipelineUnit {
-              id
-              name
-              unit_type
             }
           }
         }
@@ -217,7 +208,29 @@ export function useLogEntry(logId: number | string) {
         throw new Error(result.errors[0].message);
       }
       
-      return result.data.merlin_agent_PipelineJobLogV2Body[0];
+      const logEntry = result.data.merlin_agent_PipelineJobLogV2Body[0];
+      
+      // Si tenemos started_by_agent, buscar el nombre del agente
+      if (logEntry?.PipelineJobQueue?.started_by_agent) {
+        try {
+          const agentResult = await executeQuery(`
+            query GetAgentName($agentId: uuid!) {
+              merlin_agent_AgentPassport(where: {id: {_eq: $agentId}}) {
+                id
+                name
+              }
+            }
+          `, { agentId: logEntry.PipelineJobQueue.started_by_agent });
+          
+          if (agentResult.data?.merlin_agent_AgentPassport?.[0]) {
+            logEntry.agent = agentResult.data.merlin_agent_AgentPassport[0];
+          }
+        } catch (e) {
+          // Si falla la búsqueda del agente, continuar sin el nombre
+        }
+      }
+      
+      return logEntry;
     },
     enabled: !!logId,
   });

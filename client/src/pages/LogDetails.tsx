@@ -130,8 +130,7 @@ export default function LogDetails() {
   
   const job = log.PipelineJobQueue;
   const pipeline = job?.Pipeline;
-  const agent = job?.AgentPassport;
-  const pipelineUnit = log.PipelineUnit;
+  const agent = log.agent;
   const jobStatus = getJobStatus(job);
   const JobStatusIcon = jobStatus.icon;
   
@@ -248,7 +247,7 @@ export default function LogDetails() {
         </Card>
       </div>
       
-      {pipelineUnit && (
+      {log.pipeline_unit_id && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -257,16 +256,8 @@ export default function LogDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold">
-                {pipelineUnit.name || "Unnamed Unit"}
-              </span>
-              {pipelineUnit.unit_type && (
-                <Badge variant="outline">{pipelineUnit.unit_type}</Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 font-mono">
-              ID: {pipelineUnit.id || log.pipeline_unit_id}
+            <p className="text-xs text-muted-foreground font-mono">
+              ID: {log.pipeline_unit_id}
             </p>
           </CardContent>
         </Card>
@@ -374,19 +365,13 @@ export default function LogDetails() {
         </Card>
       )}
       
-      {(job || log.pipeline_unit_id) && (
+      {job && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Additional Information</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 text-sm">
-              {log.pipeline_unit_id && !pipelineUnit && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Pipeline Unit ID:</span>
-                  <span className="font-mono text-xs">{log.pipeline_unit_id}</span>
-                </div>
-              )}
               {job?.created_at && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Job Created:</span>
