@@ -7,8 +7,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { GitBranch, Calendar, Link2, Bot, AlertTriangle } from "lucide-react";
+import { GitBranch, Calendar, Link2, Bot, AlertTriangle, Play } from "lucide-react";
+import { useExecutePipeline } from "@/hooks/use-execute-pipeline";
 
 interface PipelineCardProps {
   pipeline: {
@@ -34,6 +36,8 @@ interface PipelineCardProps {
 }
 
 export default function PipelineCard({ pipeline }: PipelineCardProps) {
+  const { executePipeline, isExecuting } = useExecutePipeline();
+  
   // Compute last execution status
   const lastJob = pipeline.PipelineJobQueues?.[0];
   let status = "none";
@@ -119,17 +123,33 @@ export default function PipelineCard({ pipeline }: PipelineCardProps) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="pt-0 flex justify-between">
+      <CardFooter className="pt-0 flex justify-between items-center">
         <Badge className={`flex items-center space-x-1 ${getStatusClass()}`}>
           <GitBranch className="h-3 w-3 mr-1" />
           <span>{statusLabel}</span>
         </Badge>
         
-        {lastJob && (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Last run: {formatDate(lastJob.created_at)}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {lastJob && (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Last run: {formatDate(lastJob.created_at)}
+            </span>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2"
+            disabled={isExecuting || status === "running"}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              executePipeline(pipeline.id, pipeline.name);
+            }}
+          >
+            <Play className="h-3 w-3 mr-1" />
+            Run
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

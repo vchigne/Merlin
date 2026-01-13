@@ -21,8 +21,10 @@ import {
   Bot,
   GitBranch,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Play
 } from "lucide-react";
+import { useExecutePipeline } from "@/hooks/use-execute-pipeline";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -111,6 +113,7 @@ export default function PipelineDetails() {
   const [_, navigate] = useLocation();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const { executePipeline, isExecuting } = useExecutePipeline();
   
   // Determinar si estamos viendo un pipeline o un job
   const pathname = window.location.pathname;
@@ -507,16 +510,33 @@ export default function PipelineDetails() {
                     )}
                   </CardDescription>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={isLoading || isRefreshing}
-                  className="self-end sm:self-start"
-                >
-                  <RefreshCw className={`mr-1 sm:mr-2 h-3.5 sm:h-4 w-3.5 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  <span className="text-xs sm:text-sm">Refresh</span>
-                </Button>
+                <div className="flex gap-2 self-end sm:self-start">
+                  {!isJobView && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (id && pipeline?.name) {
+                          executePipeline(id, pipeline.name);
+                        } else if (id) {
+                          executePipeline(id);
+                        }
+                      }}
+                      disabled={isLoading || isExecuting}
+                    >
+                      <Play className="mr-1 sm:mr-2 h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                      <span className="text-xs sm:text-sm">Run</span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isLoading || isRefreshing}
+                  >
+                    <RefreshCw className={`mr-1 sm:mr-2 h-3.5 sm:h-4 w-3.5 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span className="text-xs sm:text-sm">Refresh</span>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pb-3">

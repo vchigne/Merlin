@@ -535,30 +535,33 @@ function isReadOnlyQuery(query: string): boolean {
   }
 }
 
-// Function to check if a mutation is specifically for agent creation
+// Function to check if a mutation is specifically allowed (agent creation or pipeline execution)
 function isAgentCreationMutation(query: string): boolean {
   try {
     // Remove comments and normalize whitespace
     const queryWithoutComments = query.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
     const normalizedQuery = queryWithoutComments.replace(/\s+/g, ' ').trim();
     
-    // If it's not a mutation, it's not an agent creation
+    // If it's not a mutation, it's not allowed
     if (!normalizedQuery.toLowerCase().startsWith('mutation')) {
       return false;
     }
     
-    // Check for specific patterns that indicate agent creation
-    const agentCreationPatterns = [
+    // Check for specific patterns that indicate allowed mutations
+    const allowedMutationPatterns = [
       // Pattern for the specific CreateAgent mutation
       /mutation\s+CreateAgent/i,
       
       // Pattern for inserting into AgentPassport table
-      /insert_merlin_agent_AgentPassport/i
+      /insert_merlin_agent_AgentPassport/i,
+      
+      // Pattern for executing pipelines (inserting into job queue)
+      /insert_merlin_agent_PipelineJobQueue/i
     ];
     
-    for (const pattern of agentCreationPatterns) {
+    for (const pattern of allowedMutationPatterns) {
       if (pattern.test(normalizedQuery)) {
-        console.log('Allowed agent creation mutation detected');
+        console.log('Allowed mutation detected:', pattern.toString());
         return true;
       }
     }

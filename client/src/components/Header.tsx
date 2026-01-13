@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, RefreshCw, Menu } from "lucide-react";
+import { RefreshCw, Menu } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useMerlinContext } from "@/context/MerlinContext";
+import { NotificationBell } from "@/components/NotificationBell";
+import { RunningPipelinesPanel } from "@/components/RunningPipelinesPanel";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -109,12 +111,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           {/* Theme toggle */}
           <ThemeToggle />
           
+          {/* Running Pipelines Panel */}
+          <RunningPipelinesPanel />
+          
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative px-2">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full"></span>
-            <span className="sr-only">Notifications</span>
-          </Button>
+          <NotificationBell />
         </div>
       </div>
     </header>

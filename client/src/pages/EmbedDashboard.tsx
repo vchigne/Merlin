@@ -5,6 +5,7 @@ import { filterByRegex } from "@/lib/regex-parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { 
   AlertCircle, 
   Activity, 
@@ -15,13 +16,16 @@ import {
   XCircle,
   WifiOff,
   Wifi,
-  AlertTriangle
+  AlertTriangle,
+  Play
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { 
   PIPELINE_QUERY,
   AGENT_HEALTH_STATUS_QUERY
 } from "@shared/queries";
+import { useExecutePipeline } from "@/hooks/use-execute-pipeline";
+import { useNotifications } from "@/context/NotificationContext";
 
 // Calcular fecha de hace 7 días
 const getSevenDaysAgo = () => {
@@ -124,6 +128,8 @@ const JOBS_LAST_MONTH_QUERY = `
 export default function EmbedDashboard() {
   // Get filter from URL query string
   const [filterParam, setFilterParam] = useState('');
+  const { executePipeline, isExecuting } = useExecutePipeline();
+  const { addNotification } = useNotifications();
   
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -896,6 +902,19 @@ export default function EmbedDashboard() {
                                 </p>
                               )}
                             </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 flex-shrink-0"
+                              disabled={isExecuting || running > 0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                executePipeline(pipeline.id, pipeline.name);
+                              }}
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              <span className="text-xs">Run</span>
+                            </Button>
                           </div>
                           <div className="flex items-center gap-3 mt-2 text-[10px] flex-wrap">
                             {lastAgent && (
