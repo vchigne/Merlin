@@ -247,15 +247,62 @@ export default function LogDetails() {
         </Card>
       </div>
       
-      {log.pipeline_unit_id && (
+      {(log.pipelineUnit || log.pipeline_unit_id) && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Pipeline Unit
+              Pipeline Unit {log.pipelineUnit?.name && `- ${log.pipelineUnit.name}`}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            {log.pipelineUnit?.unit_type && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Type:</span>
+                <Badge variant="outline">{log.pipelineUnit.unit_type}</Badge>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.Command && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Command Details:</p>
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  {log.pipelineUnit.Command.target && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-muted-foreground">Target:</span>
+                      <code className="text-xs bg-background px-2 py-0.5 rounded">
+                        {log.pipelineUnit.Command.target}
+                      </code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.Command.args && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-muted-foreground">Args:</span>
+                      <code className="text-xs bg-background px-2 py-0.5 rounded break-all">
+                        {log.pipelineUnit.Command.args}
+                      </code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.Command.working_directory && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-muted-foreground">Working Dir:</span>
+                      <code className="text-xs bg-background px-2 py-0.5 rounded">
+                        {log.pipelineUnit.Command.working_directory}
+                      </code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.Command.raw_script && (
+                    <div className="mt-2">
+                      <span className="text-xs text-muted-foreground block mb-1">Script:</span>
+                      <pre className="text-xs bg-background p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
+                        {log.pipelineUnit.Command.raw_script}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <p className="text-xs text-muted-foreground font-mono">
               ID: {log.pipeline_unit_id}
             </p>

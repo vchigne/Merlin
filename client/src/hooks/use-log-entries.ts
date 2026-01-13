@@ -230,6 +230,35 @@ export function useLogEntry(logId: number | string) {
         }
       }
       
+      // Si tenemos pipeline_unit_id, buscar los detalles del comando
+      if (logEntry?.pipeline_unit_id) {
+        try {
+          const unitResult = await executeQuery(`
+            query GetPipelineUnitWithCommand($unitId: uuid!) {
+              merlin_agent_PipelineUnit(where: {id: {_eq: $unitId}}) {
+                id
+                name
+                unit_type
+                Command {
+                  id
+                  target
+                  args
+                  working_directory
+                  raw_script
+                  return_output
+                }
+              }
+            }
+          `, { unitId: logEntry.pipeline_unit_id });
+          
+          if (unitResult.data?.merlin_agent_PipelineUnit?.[0]) {
+            logEntry.pipelineUnit = unitResult.data.merlin_agent_PipelineUnit[0];
+          }
+        } catch (e) {
+          // Si falla la búsqueda del unit, continuar sin los detalles
+        }
+      }
+      
       return logEntry;
     },
     enabled: !!logId,
