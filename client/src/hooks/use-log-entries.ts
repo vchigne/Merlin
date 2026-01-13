@@ -237,15 +237,35 @@ export function useLogEntry(logId: number | string) {
             query GetPipelineUnitWithCommand($unitId: uuid!) {
               merlin_agent_PipelineUnit(where: {id: {_eq: $unitId}}) {
                 id
-                name
-                unit_type
+                comment
+                command_id
+                query_queue_id
+                sftp_downloader_id
+                sftp_uploader_id
                 Command {
                   id
+                  name
+                  description
                   target
                   args
                   working_directory
                   raw_script
                   return_output
+                }
+                QueryQueue {
+                  id
+                  name
+                  description
+                }
+                SFTPDownloader {
+                  id
+                  name
+                  description
+                }
+                SFTPUploader {
+                  id
+                  name
+                  description
                 }
               }
             }

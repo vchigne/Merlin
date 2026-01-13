@@ -252,20 +252,29 @@ export default function LogDetails() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Pipeline Unit {log.pipelineUnit?.name && `- ${log.pipelineUnit.name}`}
+              Pipeline Unit
+              {log.pipelineUnit?.Command?.name && ` - ${log.pipelineUnit.Command.name}`}
+              {log.pipelineUnit?.QueryQueue?.name && ` - ${log.pipelineUnit.QueryQueue.name}`}
+              {log.pipelineUnit?.SFTPDownloader?.name && ` - ${log.pipelineUnit.SFTPDownloader.name}`}
+              {log.pipelineUnit?.SFTPUploader?.name && ` - ${log.pipelineUnit.SFTPUploader.name}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {log.pipelineUnit?.unit_type && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Type:</span>
-                <Badge variant="outline">{log.pipelineUnit.unit_type}</Badge>
+            {log.pipelineUnit?.comment && (
+              <div>
+                <span className="text-sm text-muted-foreground">Comment: </span>
+                <span className="text-sm">{log.pipelineUnit.comment}</span>
               </div>
             )}
             
             {log.pipelineUnit?.Command && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Command Details:</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Command</Badge>
+                  {log.pipelineUnit.Command.description && (
+                    <span className="text-sm text-muted-foreground">{log.pipelineUnit.Command.description}</span>
+                  )}
+                </div>
                 <div className="bg-muted rounded-lg p-3 space-y-2">
                   {log.pipelineUnit.Command.target && (
                     <div className="flex flex-wrap gap-2">
@@ -298,6 +307,39 @@ export default function LogDetails() {
                         {log.pipelineUnit.Command.raw_script}
                       </pre>
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.QueryQueue && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Query Queue</Badge>
+                  {log.pipelineUnit.QueryQueue.description && (
+                    <span className="text-sm text-muted-foreground">{log.pipelineUnit.QueryQueue.description}</span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.SFTPDownloader && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">SFTP Download</Badge>
+                  {log.pipelineUnit.SFTPDownloader.description && (
+                    <span className="text-sm text-muted-foreground">{log.pipelineUnit.SFTPDownloader.description}</span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.SFTPUploader && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">SFTP Upload</Badge>
+                  {log.pipelineUnit.SFTPUploader.description && (
+                    <span className="text-sm text-muted-foreground">{log.pipelineUnit.SFTPUploader.description}</span>
                   )}
                 </div>
               </div>
