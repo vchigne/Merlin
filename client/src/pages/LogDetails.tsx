@@ -257,6 +257,8 @@ export default function LogDetails() {
               {log.pipelineUnit?.QueryQueue?.name && ` - ${log.pipelineUnit.QueryQueue.name}`}
               {log.pipelineUnit?.SFTPDownloader?.name && ` - ${log.pipelineUnit.SFTPDownloader.name}`}
               {log.pipelineUnit?.SFTPUploader?.name && ` - ${log.pipelineUnit.SFTPUploader.name}`}
+              {log.pipelineUnit?.Zip?.name && ` - ${log.pipelineUnit.Zip.name}`}
+              {log.pipelineUnit?.Unzip?.name && ` - ${log.pipelineUnit.Unzip.name}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -320,6 +322,35 @@ export default function LogDetails() {
                     <span className="text-sm text-muted-foreground">{log.pipelineUnit.QueryQueue.description}</span>
                   )}
                 </div>
+                {log.pipelineUnit.QueryQueue.Queries && log.pipelineUnit.QueryQueue.Queries.length > 0 && (
+                  <div className="bg-muted rounded-lg p-3 space-y-3">
+                    <span className="text-xs text-muted-foreground font-medium">SQL Queries:</span>
+                    {log.pipelineUnit.QueryQueue.Queries.slice(0, 5).map((query: any, idx: number) => (
+                      <div key={query.id || idx} className="space-y-1 border-l-2 border-primary/30 pl-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">#{query.order || idx + 1}</span>
+                          {query.name && <span className="font-medium">{query.name}</span>}
+                          {query.SQLConn?.name && (
+                            <Badge variant="secondary" className="text-xs">{query.SQLConn.name}</Badge>
+                          )}
+                        </div>
+                        {query.query_string && (
+                          <pre className="text-xs bg-background p-2 rounded overflow-x-auto max-h-32 overflow-y-auto">
+                            {query.query_string.substring(0, 500)}{query.query_string.length > 500 ? '...' : ''}
+                          </pre>
+                        )}
+                        {query.path && (
+                          <div className="text-xs text-muted-foreground">
+                            Output: <code className="bg-background px-1 rounded">{query.path}</code>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {log.pipelineUnit.QueryQueue.Queries.length > 5 && (
+                      <p className="text-xs text-muted-foreground">...and {log.pipelineUnit.QueryQueue.Queries.length - 5} more queries</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             
@@ -329,6 +360,29 @@ export default function LogDetails() {
                   <Badge variant="outline">SFTP Download</Badge>
                   {log.pipelineUnit.SFTPDownloader.description && (
                     <span className="text-sm text-muted-foreground">{log.pipelineUnit.SFTPDownloader.description}</span>
+                  )}
+                </div>
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  {log.pipelineUnit.SFTPDownloader.SFTPLink?.name && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">Server:</span>
+                      <Badge variant="secondary">{log.pipelineUnit.SFTPDownloader.SFTPLink.name}</Badge>
+                      {log.pipelineUnit.SFTPDownloader.SFTPLink.server && (
+                        <code className="bg-background px-1 rounded">{log.pipelineUnit.SFTPDownloader.SFTPLink.server}</code>
+                      )}
+                    </div>
+                  )}
+                  {log.pipelineUnit.SFTPDownloader.input && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Remote path: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.SFTPDownloader.input}</code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.SFTPDownloader.output && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Local path: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.SFTPDownloader.output}</code>
+                    </div>
                   )}
                 </div>
               </div>
@@ -341,6 +395,100 @@ export default function LogDetails() {
                   {log.pipelineUnit.SFTPUploader.description && (
                     <span className="text-sm text-muted-foreground">{log.pipelineUnit.SFTPUploader.description}</span>
                   )}
+                </div>
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  {log.pipelineUnit.SFTPUploader.SFTPLink?.name && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">Server:</span>
+                      <Badge variant="secondary">{log.pipelineUnit.SFTPUploader.SFTPLink.name}</Badge>
+                      {log.pipelineUnit.SFTPUploader.SFTPLink.server && (
+                        <code className="bg-background px-1 rounded">{log.pipelineUnit.SFTPUploader.SFTPLink.server}</code>
+                      )}
+                    </div>
+                  )}
+                  {log.pipelineUnit.SFTPUploader.input && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Local path: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.SFTPUploader.input}</code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.SFTPUploader.output && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Remote path: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.SFTPUploader.output}</code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.Zip && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Zip</Badge>
+                  {log.pipelineUnit.Zip.name && (
+                    <span className="text-sm font-medium">{log.pipelineUnit.Zip.name}</span>
+                  )}
+                </div>
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  {log.pipelineUnit.Zip.output && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Output: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.Zip.output}</code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.Zip.FileStreamZips && log.pipelineUnit.Zip.FileStreamZips.length > 0 && (
+                    <div className="text-xs space-y-1">
+                      <span className="text-muted-foreground">Input files:</span>
+                      {log.pipelineUnit.Zip.FileStreamZips.slice(0, 5).map((file: any) => (
+                        <div key={file.id}>
+                          <code className="bg-background px-1 rounded break-all">{file.input}</code>
+                        </div>
+                      ))}
+                      {log.pipelineUnit.Zip.FileStreamZips.length > 5 && (
+                        <span className="text-muted-foreground">...and {log.pipelineUnit.Zip.FileStreamZips.length - 5} more</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.Unzip && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Unzip</Badge>
+                  {log.pipelineUnit.Unzip.name && (
+                    <span className="text-sm font-medium">{log.pipelineUnit.Unzip.name}</span>
+                  )}
+                </div>
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  {log.pipelineUnit.Unzip.input && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Input: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.Unzip.input}</code>
+                    </div>
+                  )}
+                  {log.pipelineUnit.Unzip.output && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Output: </span>
+                      <code className="bg-background px-1 rounded break-all">{log.pipelineUnit.Unzip.output}</code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {log.pipelineUnit?.call_pipeline && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Call Pipeline</Badge>
+                </div>
+                <div className="bg-muted rounded-lg p-3">
+                  <div className="text-xs">
+                    <span className="text-muted-foreground">Calls pipeline: </span>
+                    <code className="bg-background px-1 rounded">{log.pipelineUnit.call_pipeline}</code>
+                  </div>
                 </div>
               </div>
             )}

@@ -242,6 +242,9 @@ export function useLogEntry(logId: number | string) {
                 query_queue_id
                 sftp_downloader_id
                 sftp_uploader_id
+                zip_id
+                unzip_id
+                call_pipeline
                 Command {
                   id
                   name
@@ -256,16 +259,58 @@ export function useLogEntry(logId: number | string) {
                   id
                   name
                   description
+                  Queries {
+                    id
+                    order
+                    name
+                    query_string
+                    path
+                    SQLConn {
+                      name
+                      driver
+                    }
+                  }
                 }
                 SFTPDownloader {
                   id
                   name
                   description
+                  input
+                  output
+                  SFTPLink {
+                    name
+                    server
+                  }
                 }
                 SFTPUploader {
                   id
                   name
                   description
+                  input
+                  output
+                  SFTPLink {
+                    name
+                    server
+                  }
+                }
+                Zip {
+                  id
+                  name
+                  output
+                  FileStreamZips {
+                    id
+                    input
+                  }
+                }
+                Unzip {
+                  id
+                  name
+                  input
+                  output
+                  FileStreamUnzips {
+                    id
+                    output
+                  }
                 }
               }
             }
