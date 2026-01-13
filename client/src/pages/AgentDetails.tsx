@@ -158,7 +158,7 @@ export default function AgentDetails() {
     enabled: !!id && activeTab === "pipelines",
   });
   
-  // Fetch agent jobs
+  // Fetch agent jobs - buscar jobs de pipelines asociadas a este agente o jobs ejecutados por este agente
   const {
     data: jobs,
     isLoading: isJobsLoading,
@@ -169,9 +169,14 @@ export default function AgentDetails() {
       const result = await executeQuery(`
         query GetAgentJobs($id: uuid!) {
           merlin_agent_PipelineJobQueue(
-            where: {started_by_agent: {_eq: $id}}
+            where: {
+              _or: [
+                {started_by_agent: {_eq: $id}},
+                {Pipeline: {agent_passport_id: {_eq: $id}}}
+              ]
+            }
             order_by: {created_at: desc}
-            limit: 10
+            limit: 20
           ) {
             id
             pipeline_id
@@ -254,7 +259,7 @@ export default function AgentDetails() {
         </Button>
         <Separator orientation="vertical" className="h-6 mx-2" />
         <h1 className="text-2xl font-bold dark:text-white">
-          Agent Details
+          {agent?.name || "Agent Details"}
         </h1>
       </div>
       
