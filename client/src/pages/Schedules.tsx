@@ -20,6 +20,29 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -45,7 +68,11 @@ import {
   Upload,
   FileCode,
   Pencil,
-  X
+  X,
+  Search,
+  Filter,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
 import type { ScheduleConfig, ScheduleTarget } from "@shared/schema";
 
@@ -163,6 +190,19 @@ export default function Schedules() {
     enabled: true,
   });
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [frequencyFilter, setFrequencyFilter] = useState<"all" | "daily" | "weekly" | "monthly">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "enabled" | "disabled">("all");
+
+  // Confirmation dialogs
+  const [deleteScheduleConfirm, setDeleteScheduleConfirm] = useState<number | null>(null);
+  const [deleteTargetConfirm, setDeleteTargetConfirm] = useState<{ scheduleId: number; targetId: number; targetName: string } | null>(null);
+
+  // Pipeline selector popover
+  const [pipelinePopoverOpen, setPipelinePopoverOpen] = useState(false);
+  const [pipelineSearch, setPipelineSearch] = useState("");
+
   // Fetch schedules
   const { data: schedules, isLoading: isLoadingSchedules, refetch: refetchSchedules } = useQuery<ScheduleWithTargets[]>({
     queryKey: ['/api/schedules'],
@@ -265,6 +305,7 @@ export default function Schedules() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      setDeleteScheduleConfirm(null);
       toast({ title: "Schedule eliminado" });
     },
   });
@@ -313,6 +354,7 @@ export default function Schedules() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      setDeleteTargetConfirm(null);
       toast({ title: "Pipeline eliminado del schedule" });
     },
     onError: () => {
@@ -358,18 +400,41 @@ export default function Schedules() {
     }
   }, [schedules]);
 
+  // Filter schedules
+  const filteredSchedules = useMemo(() => {
+    if (!schedules) return [];
+    return schedules.filter(s => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesLabel = s.label.toLowerCase().includes(query);
+        const matchesTime = s.timeOfDay.includes(query);
+        const matchesPipeline = s.targets.some(t => 
+          t.pipelineName?.toLowerCase().includes(query) || 
+          t.pipelineId.toLowerCase().includes(query)
+        );
+        if (!matchesLabel && !matchesTime && !matchesPipeline) return false;
+      }
+      // Frequency filter
+      if (frequencyFilter !== "all" && s.frequencyType !== frequencyFilter) return false;
+      // Status filter
+      if (statusFilter === "enabled" && !s.enabled) return false;
+      if (statusFilter === "disabled" && s.enabled) return false;
+      return true;
+    });
+  }, [schedules, searchQuery, frequencyFilter, statusFilter]);
+
   // Group schedules by time
   const schedulesByTime = useMemo(() => {
-    if (!schedules) return {};
     const grouped: Record<string, ScheduleWithTargets[]> = {};
-    schedules.forEach(s => {
+    filteredSchedules.forEach(s => {
       if (!grouped[s.timeOfDay]) {
         grouped[s.timeOfDay] = [];
       }
       grouped[s.timeOfDay].push(s);
     });
     return grouped;
-  }, [schedules]);
+  }, [filteredSchedules]);
 
   // Calculate upcoming executions
   const upcomingExecutions = useMemo(() => {
@@ -554,6 +619,51 @@ export default function Schedules() {
         </TabsList>
 
         <TabsContent value="schedules" className="mt-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 mb-4">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, hora o pipeline..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={frequencyFilter} onValueChange={(v) => setFrequencyFilter(v as any)}>
+              <SelectTrigger className="w-[140px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Frecuencia" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="daily">Diario</SelectItem>
+                <SelectItem value="weekly">Semanal</SelectItem>
+                <SelectItem value="monthly">Mensual</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="enabled">Habilitados</SelectItem>
+                <SelectItem value="disabled">Deshabilitados</SelectItem>
+              </SelectContent>
+            </Select>
+            {(searchQuery || frequencyFilter !== "all" || statusFilter !== "all") && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => { setSearchQuery(""); setFrequencyFilter("all"); setStatusFilter("all"); }}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+          
           {isLoadingSchedules ? (
             <div className="space-y-4">
               {[1, 2, 3].map(i => (
@@ -625,7 +735,8 @@ export default function Schedules() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => deleteScheduleMutation.mutate(schedule.id)}
+                              onClick={() => setDeleteScheduleConfirm(schedule.id)}
+                              title="Eliminar schedule"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -842,8 +953,12 @@ export default function Schedules() {
                             variant="ghost"
                             size="icon"
                             className="shrink-0"
-                            onClick={() => deleteTargetMutation.mutate({ scheduleId: editingSchedule.id, targetId: target.id })}
-                            disabled={deleteTargetMutation.isPending}
+                            onClick={() => setDeleteTargetConfirm({ 
+                              scheduleId: editingSchedule.id, 
+                              targetId: target.id, 
+                              targetName: target.pipelineName || target.pipelineId 
+                            })}
+                            title="Eliminar pipeline del schedule"
                           >
                             <X className="h-4 w-4 text-destructive" />
                           </Button>
@@ -853,40 +968,68 @@ export default function Schedules() {
                   )}
                 </ScrollArea>
 
-                {/* Add Pipeline */}
-                <div className="flex gap-2">
-                  <Select
-                    onValueChange={(pipelineId) => {
-                      const pipeline = pipelines?.find(p => p.id === pipelineId);
-                      if (pipeline && editingSchedule) {
-                        addTargetMutation.mutate({
-                          scheduleId: editingSchedule.id,
-                          pipelineId: pipeline.id,
-                          pipelineName: pipeline.name,
-                          clientName: pipeline.AgentPassport?.name
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Agregar pipeline..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <ScrollArea className="h-[200px]">
-                        {pipelines?.filter(p => !editingSchedule.targets.some(t => t.pipelineId === p.id))
-                          .map(pipeline => (
-                            <SelectItem key={pipeline.id} value={pipeline.id}>
-                              {pipeline.name}
-                              {pipeline.AgentPassport?.name && (
-                                <span className="text-muted-foreground ml-2">({pipeline.AgentPassport.name})</span>
-                              )}
-                            </SelectItem>
-                          ))
-                        }
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Add Pipeline with Search */}
+                <Popover open={pipelinePopoverOpen} onOpenChange={setPipelinePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={pipelinePopoverOpen}
+                      className="w-full justify-between"
+                    >
+                      <span className="text-muted-foreground">Agregar pipeline...</span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput 
+                        placeholder="Buscar pipeline..." 
+                        value={pipelineSearch}
+                        onValueChange={setPipelineSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>No se encontraron pipelines</CommandEmpty>
+                        <CommandGroup>
+                          {pipelines
+                            ?.filter(p => !editingSchedule.targets.some(t => t.pipelineId === p.id))
+                            .filter(p => {
+                              if (!pipelineSearch) return true;
+                              const search = pipelineSearch.toLowerCase();
+                              return p.name.toLowerCase().includes(search) || 
+                                     p.id.toLowerCase().includes(search) ||
+                                     p.AgentPassport?.name?.toLowerCase().includes(search);
+                            })
+                            .slice(0, 50)
+                            .map(pipeline => (
+                              <CommandItem
+                                key={pipeline.id}
+                                value={pipeline.id}
+                                onSelect={() => {
+                                  addTargetMutation.mutate({
+                                    scheduleId: editingSchedule.id,
+                                    pipelineId: pipeline.id,
+                                    pipelineName: pipeline.name,
+                                    clientName: pipeline.AgentPassport?.name
+                                  });
+                                  setPipelinePopoverOpen(false);
+                                  setPipelineSearch("");
+                                }}
+                              >
+                                <div className="flex flex-col">
+                                  <span>{pipeline.name}</span>
+                                  {pipeline.AgentPassport?.name && (
+                                    <span className="text-xs text-muted-foreground">{pipeline.AgentPassport.name}</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))
+                          }
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           )}
@@ -908,6 +1051,69 @@ export default function Schedules() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Schedule Confirmation */}
+      <AlertDialog open={deleteScheduleConfirm !== null} onOpenChange={(open) => !open && setDeleteScheduleConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este schedule?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará el schedule y todos sus pipelines asociados de la programación.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteScheduleConfirm !== null) {
+                  deleteScheduleMutation.mutate(deleteScheduleConfirm);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteScheduleMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Target Confirmation */}
+      <AlertDialog open={deleteTargetConfirm !== null} onOpenChange={(open) => !open && setDeleteTargetConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pipeline del schedule?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El pipeline "{deleteTargetConfirm?.targetName}" será removido de este schedule y ya no se ejecutará automáticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTargetConfirm) {
+                  deleteTargetMutation.mutate({ 
+                    scheduleId: deleteTargetConfirm.scheduleId, 
+                    targetId: deleteTargetConfirm.targetId 
+                  });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteTargetMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <X className="h-4 w-4 mr-2" />
+              )}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
