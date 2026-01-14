@@ -638,7 +638,11 @@ export default function PipelineDetails() {
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-slate-500 mr-2" />
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {isJobView ? "Executed" : "Created"}: {isLoading ? (
+                      {isJobView 
+                        ? (jobDetails?.running || jobDetails?.completed || jobDetails?.aborted 
+                            ? "Executed" 
+                            : "Queued")
+                        : "Created"}: {isLoading ? (
                         <Skeleton className="h-4 w-32 inline-block" />
                       ) : (
                         formatRelativeTime(
