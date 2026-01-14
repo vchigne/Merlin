@@ -4,6 +4,21 @@ import { usePipeline, usePipelineUnits } from "@/hooks/use-pipeline";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { Button } from "@/components/ui/button";
+import { Calendar, Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PipelineJob {
   id: string;
@@ -466,6 +481,33 @@ export default function PipelineDetails() {
     enabled: !!id && !isJobView && activeTab === "logs",
   });
   
+  // Fetch schedules that include this pipeline (solo para vista de pipeline)
+  interface ScheduleInfo {
+    id: number;
+    label: string;
+    timeOfDay: string;
+    timezone: string;
+    frequencyType: string;
+    enabled: boolean;
+  }
+  
+  const {
+    data: pipelineSchedules,
+    isLoading: isSchedulesLoading
+  } = useQuery<ScheduleInfo[]>({
+    queryKey: ['/api/pipeline-schedules', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/schedules/by-pipeline/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch schedules');
+      }
+      return response.json();
+    },
+    enabled: !!id && !isJobView,
+  });
+  
+  const [schedulesDialogOpen, setSchedulesDialogOpen] = useState(false);
+  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -770,6 +812,38 @@ export default function PipelineDetails() {
                               Success Rate: {jobStats.total > 0 ? `${Math.round((jobStats.completed / jobStats.total) * 100)}%` : "N/A"}
                             </Badge>
                           )}
+                          
+                          {/* Schedule indicator */}
+                          {isSchedulesLoading ? (
+                            <Skeleton className="h-8 w-32" />
+                          ) : pipelineSchedules && pipelineSchedules.length > 0 ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge 
+                                    variant="outline" 
+                                    className="bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800 flex items-center cursor-pointer"
+                                    onClick={() => setSchedulesDialogOpen(true)}
+                                  >
+                                    <Calendar className="h-3.5 w-3.5 mr-1" />
+                                    {pipelineSchedules.length} {pipelineSchedules.length === 1 ? 'Schedule' : 'Schedules'}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Click to view/manage schedules</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <Badge 
+                              variant="outline" 
+                              className="bg-slate-50 text-slate-500 dark:bg-slate-900/20 dark:text-slate-400 border-slate-200 dark:border-slate-700 flex items-center cursor-pointer"
+                              onClick={() => setSchedulesDialogOpen(true)}
+                            >
+                              <Calendar className="h-3.5 w-3.5 mr-1" />
+                              No Schedules
+                            </Badge>
+                          )}
                         </>
                       )}
                     </>
@@ -949,6 +1023,71 @@ export default function PipelineDetails() {
           )}
         </>
       )}
+      
+      {/* Schedules Management Dialog */}
+      <Dialog open={schedulesDialogOpen} onOpenChange={setSchedulesDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Pipeline Schedules
+            </DialogTitle>
+            <DialogDescription>
+              {pipelineSchedules && pipelineSchedules.length > 0 
+                ? `This pipeline is included in ${pipelineSchedules.length} scheduled task(s).`
+                : "This pipeline is not included in any scheduled tasks."}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {pipelineSchedules && pipelineSchedules.length > 0 ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {pipelineSchedules.map((schedule) => (
+                  <div 
+                    key={schedule.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                    onClick={() => {
+                      setSchedulesDialogOpen(false);
+                      navigate(`/schedules?edit=${schedule.id}`);
+                    }}
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{schedule.label}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {schedule.timeOfDay} ({schedule.timezone}) • {schedule.frequencyType}
+                      </p>
+                    </div>
+                    <Badge variant={schedule.enabled ? "default" : "secondary"} className="text-xs">
+                      {schedule.enabled ? "Active" : "Disabled"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <Calendar className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  No schedules configured for this pipeline yet.
+                </p>
+              </div>
+            )}
+            
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setSchedulesDialogOpen(false);
+                  navigate(`/schedules?pipeline=${id}&name=${encodeURIComponent(pipeline?.name || '')}`);
+                }}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                {pipelineSchedules && pipelineSchedules.length > 0 ? "Manage All" : "Add to Schedule"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

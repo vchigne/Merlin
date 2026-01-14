@@ -506,6 +506,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get schedules that include a specific pipeline (must be before :id route)
+  app.get('/api/schedules/by-pipeline/:pipelineId', async (req, res) => {
+    try {
+      const { pipelineId } = req.params;
+      const schedules = await storage.getSchedulesByPipelineId(pipelineId);
+      res.json(schedules);
+    } catch (error) {
+      console.error('Error fetching schedules by pipeline:', error);
+      res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+  });
+  
   // Get single schedule config
   app.get('/api/schedules/:id', async (req, res) => {
     try {

@@ -23,6 +23,7 @@ export interface IStorage {
   createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget>;
   deleteScheduleTarget(id: number): Promise<boolean>;
   deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean>;
+  getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -111,6 +112,33 @@ export class DatabaseStorage implements IStorage {
   async deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean> {
     await db.delete(scheduleTargets).where(eq(scheduleTargets.scheduleId, scheduleId));
     return true;
+  }
+  
+  async getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]> {
+    // Find all schedule targets that reference this pipeline
+    const targets = await db.select()
+      .from(scheduleTargets)
+      .where(eq(scheduleTargets.pipelineId, pipelineId));
+    
+    if (targets.length === 0) {
+      return [];
+    }
+    
+    // Get unique schedule IDs
+    const scheduleIds = Array.from(new Set(targets.map(t => t.scheduleId)));
+    
+    // Fetch the schedule configs for those IDs
+    const configs: ScheduleConfig[] = [];
+    for (const schedId of scheduleIds) {
+      const [config] = await db.select()
+        .from(scheduleConfigs)
+        .where(eq(scheduleConfigs.id, schedId));
+      if (config) {
+        configs.push(config);
+      }
+    }
+    
+    return configs;
   }
 }
 
