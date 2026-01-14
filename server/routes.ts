@@ -12,6 +12,8 @@ import {
   isPipelineYAMLUpToDate
 } from "./yaml-manager";
 import { PipelineTemplateManager } from "../client/src/lib/pipeline-template-manager";
+import { insertScheduleConfigSchema, insertScheduleTargetSchema } from "@shared/schema";
+import { parseSchedulerFile } from "./schedule-parser";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -480,6 +482,261 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error syncing pipeline YAML:', error);
       res.status(500).json({ error: 'Failed to sync pipeline YAML' });
+    }
+  });
+
+  // ============ SCHEDULE CONFIGURATION ROUTES ============
+  
+  // Get all schedule configs with their targets
+  app.get('/api/schedules', async (req, res) => {
+    try {
+      const configs = await storage.getScheduleConfigs();
+      const targets = await storage.getAllScheduleTargets();
+      
+      // Combine configs with their targets
+      const schedulesWithTargets = configs.map(config => ({
+        ...config,
+        targets: targets.filter(t => t.scheduleId === config.id)
+      }));
+      
+      res.json(schedulesWithTargets);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+  });
+  
+  // Get single schedule config
+  app.get('/api/schedules/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const config = await storage.getScheduleConfig(id);
+      
+      if (!config) {
+        return res.status(404).json({ error: 'Schedule not found' });
+      }
+      
+      const targets = await storage.getScheduleTargets(id);
+      res.json({ ...config, targets });
+    } catch (error) {
+      console.error('Error fetching schedule:', error);
+      res.status(500).json({ error: 'Failed to fetch schedule' });
+    }
+  });
+  
+  // Create schedule config
+  app.post('/api/schedules', async (req, res) => {
+    try {
+      const parsed = insertScheduleConfigSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid schedule data', details: parsed.error.errors });
+      }
+      
+      const config = await storage.createScheduleConfig(parsed.data);
+      res.status(201).json(config);
+    } catch (error) {
+      console.error('Error creating schedule:', error);
+      res.status(500).json({ error: 'Failed to create schedule' });
+    }
+  });
+  
+  // Update schedule config
+  app.patch('/api/schedules/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateScheduleConfig(id, req.body);
+      
+      if (!updated) {
+        return res.status(404).json({ error: 'Schedule not found' });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      res.status(500).json({ error: 'Failed to update schedule' });
+    }
+  });
+  
+  // Delete schedule config
+  app.delete('/api/schedules/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteScheduleConfig(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: 'Schedule not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      res.status(500).json({ error: 'Failed to delete schedule' });
+    }
+  });
+  
+  // Add target to schedule
+  app.post('/api/schedules/:id/targets', async (req, res) => {
+    try {
+      const scheduleId = parseInt(req.params.id);
+      const schedule = await storage.getScheduleConfig(scheduleId);
+      
+      if (!schedule) {
+        return res.status(404).json({ error: 'Schedule not found' });
+      }
+      
+      const targetData = { ...req.body, scheduleId };
+      const parsed = insertScheduleTargetSchema.safeParse(targetData);
+      
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid target data', details: parsed.error.errors });
+      }
+      
+      const target = await storage.createScheduleTarget(parsed.data);
+      res.status(201).json(target);
+    } catch (error) {
+      console.error('Error adding schedule target:', error);
+      res.status(500).json({ error: 'Failed to add schedule target' });
+    }
+  });
+  
+  // Delete target from schedule
+  app.delete('/api/schedules/:scheduleId/targets/:targetId', async (req, res) => {
+    try {
+      const targetId = parseInt(req.params.targetId);
+      const deleted = await storage.deleteScheduleTarget(targetId);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: 'Target not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting schedule target:', error);
+      res.status(500).json({ error: 'Failed to delete schedule target' });
+    }
+  });
+  
+  // Bulk import schedules (for migration from Python file)
+  app.post('/api/schedules/import', async (req, res) => {
+    try {
+      const { schedules } = req.body;
+      
+      if (!Array.isArray(schedules)) {
+        return res.status(400).json({ error: 'schedules must be an array' });
+      }
+      
+      const results = [];
+      
+      for (const scheduleData of schedules) {
+        const { targets, ...configData } = scheduleData;
+        
+        // Create schedule config
+        const config = await storage.createScheduleConfig(configData);
+        
+        // Create targets
+        const createdTargets = [];
+        if (Array.isArray(targets)) {
+          for (const targetData of targets) {
+            const target = await storage.createScheduleTarget({
+              ...targetData,
+              scheduleId: config.id
+            });
+            createdTargets.push(target);
+          }
+        }
+        
+        results.push({ ...config, targets: createdTargets });
+      }
+      
+      res.status(201).json({ imported: results.length, schedules: results });
+    } catch (error) {
+      console.error('Error importing schedules:', error);
+      res.status(500).json({ error: 'Failed to import schedules' });
+    }
+  });
+  
+  // Parse scheduler.py file and return schedules
+  app.post('/api/schedules/parse', async (req, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ error: 'content is required and must be a string' });
+      }
+      
+      const schedules = parseSchedulerFile(content);
+      
+      res.json({ 
+        parsed: schedules.length, 
+        totalPipelines: schedules.reduce((acc, s) => acc + s.targets.length, 0),
+        schedules 
+      });
+    } catch (error) {
+      console.error('Error parsing scheduler file:', error);
+      res.status(500).json({ error: 'Failed to parse scheduler file' });
+    }
+  });
+  
+  // Parse and import in one step
+  app.post('/api/schedules/parse-and-import', async (req, res) => {
+    try {
+      const { content, clearExisting = true } = req.body;
+      
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ error: 'content is required and must be a string' });
+      }
+      
+      const parsedSchedules = parseSchedulerFile(content);
+      
+      // Clear existing schedules if requested (default: true for idempotent imports)
+      if (clearExisting) {
+        const existingSchedules = await storage.getScheduleConfigs();
+        for (const schedule of existingSchedules) {
+          // Delete targets first
+          const targets = await storage.getScheduleTargets(schedule.id);
+          for (const target of targets) {
+            await storage.deleteScheduleTarget(target.id);
+          }
+          // Delete schedule
+          await storage.deleteScheduleConfig(schedule.id);
+        }
+      }
+      
+      const results = [];
+      
+      for (const scheduleData of parsedSchedules) {
+        const { targets, ...configData } = scheduleData;
+        
+        // Create schedule config
+        const config = await storage.createScheduleConfig(configData as any);
+        
+        // Create targets
+        const createdTargets = [];
+        if (Array.isArray(targets)) {
+          for (const targetData of targets) {
+            const target = await storage.createScheduleTarget({
+              pipelineId: targetData.pipelineId,
+              pipelineName: targetData.pipelineName,
+              clientName: targetData.clientName,
+              scheduleId: config.id,
+              enabled: true
+            });
+            createdTargets.push(target);
+          }
+        }
+        
+        results.push({ ...config, targets: createdTargets });
+      }
+      
+      res.status(201).json({ 
+        imported: results.length,
+        totalPipelines: results.reduce((acc, s) => acc + s.targets.length, 0),
+        schedules: results,
+        clearedExisting: clearExisting
+      });
+    } catch (error) {
+      console.error('Error parsing and importing schedules:', error);
+      res.status(500).json({ error: 'Failed to parse and import schedules' });
     }
   });
 

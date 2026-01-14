@@ -24,6 +24,7 @@ import SFTPLinkDetail from "@/pages/SFTPLinkDetail";
 import SQLConnectionDetail from "@/pages/SQLConnectionDetail";
 import CommandDetail from "@/pages/CommandDetail";
 import EmbedDashboard from "@/pages/EmbedDashboard";
+import Schedules from "@/pages/Schedules";
 import NotFound from "@/pages/not-found";
 import { initializeSocket } from "./lib/socket";
 
@@ -70,6 +71,7 @@ function Router() {
             <Route path="/connections/sftp/:id" component={SFTPLinkDetail} />
             <Route path="/connections/sql/:id" component={SQLConnectionDetail} />
             <Route path="/connections/command/:id" component={CommandDetail} />
+            <Route path="/schedules" component={Schedules} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

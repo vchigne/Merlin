@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
 // Keep the original users table for authentication if needed
 export const users = pgTable("users", {
@@ -71,3 +72,54 @@ export type QueryHistory = typeof queryHistory.$inferSelect;
 export type InsertQueryHistory = z.infer<typeof insertQueryHistorySchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// ============ SCHEDULE CONFIGURATION TABLES ============
+
+export const frequencyTypeEnum = z.enum(["daily", "weekly", "monthly"]);
+export type FrequencyType = z.infer<typeof frequencyTypeEnum>;
+
+export const scheduleConfigs = pgTable("schedule_configs", {
+  id: serial("id").primaryKey(),
+  label: text("label").notNull(),
+  timeOfDay: text("time_of_day").notNull(),
+  timezone: text("timezone").default("America/Lima"),
+  frequencyType: text("frequency_type").notNull().default("daily"),
+  daysOfWeek: text("days_of_week"),
+  daysOfMonth: text("days_of_month"),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const scheduleTargets = pgTable("schedule_targets", {
+  id: serial("id").primaryKey(),
+  scheduleId: integer("schedule_id").notNull().references(() => scheduleConfigs.id, { onDelete: "cascade" }),
+  pipelineId: text("pipeline_id").notNull(),
+  pipelineName: text("pipeline_name"),
+  clientName: text("client_name"),
+  notes: text("notes"),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schedule Schemas
+export const insertScheduleConfigSchema = createInsertSchema(scheduleConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  frequencyType: frequencyTypeEnum,
+  daysOfWeek: z.string().optional(),
+  daysOfMonth: z.string().optional(),
+});
+
+export const insertScheduleTargetSchema = createInsertSchema(scheduleTargets).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Schedule Types
+export type ScheduleConfig = typeof scheduleConfigs.$inferSelect;
+export type InsertScheduleConfig = z.infer<typeof insertScheduleConfigSchema>;
+export type ScheduleTarget = typeof scheduleTargets.$inferSelect;
+export type InsertScheduleTarget = z.infer<typeof insertScheduleTargetSchema>;

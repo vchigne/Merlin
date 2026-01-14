@@ -16,7 +16,8 @@ import {
   ServerCog,
   Plus,
   Workflow,
-  PenTool
+  PenTool,
+  CalendarClock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -149,6 +150,10 @@ export default function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             <Link href="/connections" className={cn("sidebar-item", location.startsWith("/connections") && "active")}>
                 <Network className="w-5 h-5 mr-3" />
                 {!collapsed && <span>Connections</span>}
+            </Link>
+            <Link href="/schedules" className={cn("sidebar-item", location.startsWith("/schedules") && "active")}>
+                <CalendarClock className="w-5 h-5 mr-3" />
+                {!collapsed && <span>Schedules</span>}
             </Link>
           </nav>
           

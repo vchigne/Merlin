@@ -1,0 +1,1282 @@
+from typing import List
+import schedule
+import time
+from api.engine.hasura import Hasura
+from api.engine.graphql.graph_scheduler import mutation_add_to_pipeline_job_queue
+from scheduler_external import day_of_every_month, day_of_every_week
+from loguru import logger
+
+hasura = Hasura()
+
+def add_ppls_to_cron(ppl_ids: List[str]):
+  hasura.makeRequest(
+    data=mutation_add_to_pipeline_job_queue(pipeline_ids=ppl_ids)
+  )
+
+def cron_00_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "a74c0cd6-7018-434a-b8a6-ae9a68290f8f", # [SOFTYS] pipeline de EDUSA
+    "09e041ca-a6d7-446c-8ff4-7ca0be47eeab", # [SOFTYS] pipeline de EDUFARMA
+    "1ba5bf7e-69f7-492b-9eee-2377d5079ca0", # [ALICORP] pipeline de EDUSA
+    "7118f033-7719-4aba-8ca9-edb29e23cfc1", # [ALICORP] pipeline de EDUFARMA
+    "50fcc364-5c22-41af-901f-5056cd71ddc2", # [JNJ] pipeline de EDUSA
+    "1fa302b9-44b5-4b5f-9e77-26ec8166cb90", # [JNJ] pipeline de EDUFARMA
+    "7f70ecfe-9d92-4e42-93b0-83ac31329879", # [CLOROX] pipeline de EDUSA
+    "ca02c485-c0e8-4476-85f9-4ab8eddf5fbe", # [SUPER_ALIMENTOS] pipeline de AMERICA
+    "ed3b1161-7184-4c7f-ab15-0254f7347a67", # [SUPER_ALIMENTOS] pipeline de MERKOSUR
+    "fabc50a9-b398-4fa8-a795-bebcfe8060ae", # [SOFTYS] pipeline de CASA_GRANDE
+    "c35d86e5-6112-4375-ad79-39efef100413", # [MDLZ] pipeline de PERU TT
+    "03fbdd42-5e1f-4339-8540-44704922ce74", # [CNCH] pipeline de BRENMA
+    "5df34223-a1b8-48fc-9e2e-a182de2938f9", # [YICHANG] pipeline de BRENMA
+    "5f7a4265-0f1b-45f3-9bd8-a86ce03417ba", # [PACIFIC] pipeline de PACIFIC
+    "165f94e9-9390-43ca-be1d-1278ce317775", # [JNJ] pipeline de TULIPAN
+    "23e34c3b-57a6-45a9-9c1b-aace1f7e8a75", # [ALICORP] pipeline de TULIPAN
+    "02c23657-c5e9-46b9-84c2-5a4babbd2bed", # [SUPER ALIMENTOS] pipeline de DIJISA LIMA - LABOCER
+    "1a93c907-76bf-412a-827e-6fadf2ffb71d", # [YICHANG] pipeline de CODIFIER
+    "b528e078-0e78-49ac-ac52-380a03685e41", # [AJINOMOTO] pipeline de DIMEGSA
+    "b46f7d9f-d901-40e3-a3d2-0068aada435b", # [ALICORP] pipeline de PLAZAMAR
+    "3634cd6e-e380-4b13-9856-d530a5d693e8", # [CNCH] pipeline de MONKEY
+    "b6578165-7e91-4ea5-852c-d79a1791555d", # [BDF] pipeline de MOLISAC
+    "e73e5672-7a19-4b50-8147-cff501bda66e", # [CLOROX] pipeline de MYL
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_00_15_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:15 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "721a15fd-d2a3-4f45-a93f-0a8e45e93d1e", # [CONFITECA] pipeline de ALSE MOYOBAMBA
+    "095a3164-d382-495d-a0d6-7e79d787b8b0", # [ALICORP] pipeline de Dolphins
+    "3cfcd0d6-a1d7-4920-a400-7debb1c435bd", # [ALICORP] pipeline de Lider Trujillo
+    "3324a2e4-c4b3-4624-87ce-947357a774be", # [CLOROX] pipeline de Dismar Huacho
+    "1bd2c89c-9fd6-478f-a96f-86e790fc05b4", # [CLOROX] pipeline de Dolphins
+    "4fbccc3f-4814-40ac-a783-c66a1e6e954c", # [UNILEVER] pipeline de Dolphins
+    "2f312272-468c-4678-932d-8acb2dbf31cd", # [UNILEVER] pipeline de Lider Trujillo
+    "3f0673da-2dc9-40c9-8cbf-c236fa804452", # [UNILEVER] pipeline de Lider Huacho
+    "950d6c9d-c706-423b-be51-dac2dc9d8c18", # [UNILEVER] pipeline de Dismar Huacho
+    "6dd3df35-c3c1-4f2e-8941-1601d0922772", # [SOFTYS] pipeline de Lider Trujillo
+    "9722e02b-49ce-4791-91cb-c3a85da411d3", # [UNILEVER] pipeline de Lider Chepen
+    "23a274ad-b19b-4f1c-9762-0614f67b26f4", # [UNILEVER] pipeline de Dismar Trujillo
+    "cfbdfe8c-9a8e-4a3a-a983-82819135a4bc", # [CLOROX] pipeline de Dismar Trujillo
+    "971e3769-1e40-4263-8c67-74db4518dcd8", # [SOFTYS] pipeline de GIANELA
+    "45ac6418-3385-40ed-8243-cf76a1886523", # [CLOROX] pipeline de GIANELA
+    "430619bd-8220-477f-a759-f94d58432240", # [UNILEVER] pipeline de DESPENSA
+    "593bcf15-84ca-4f7e-b4c3-81e4ee0f34b5", # [JNJ] pipeline de MOLISAC
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_00_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:30 AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "dd50bc1c-7a39-4907-be70-8083e99e8a1a", # [SOFTYS] ECONOMYSA
+    "c382211b-4783-4188-bf66-0923aa6f2465", # [UNILEVER] ECONOMYSA
+    "a32855e6-35d4-4bc9-a001-72786f6545fb", # [CLOROX] ECONOMYSA
+    "78a6449b-2cf2-4f4c-aaef-6a7b43f278b6", # [CONFITECA] pipeline de ALSE PUCALLPA
+    "53385c3a-c3ac-4802-8814-6e0144c3bbf3", # [CONFITECA] pipeline de ALSE TARAPOTO
+    "01dc1fc2-35a6-42e3-9314-5f1cb226b4f8", # [CONFITECA] pipeline de DESPENSA DETALLISTA
+    "983c9040-6589-4a63-ad53-7a4872ee024b", # [CONFITECA] pipeline de DESPENSA HUANCAYO
+    "aa1ffb98-44c7-4ca4-8818-96ff63cd0303", # [CONFITECA] pipeline de DESPENSA IQUITOS
+    "006dda3e-9b3e-4bfe-9fff-5b16a879dd74", # [CONFITECA] pipeline de DESPENSA MAYORISTA
+    "ff97cae8-e3fd-4bcb-bfa9-b2645592ce29", # [CONFITECA] pipeline de DESPENSA PIURA
+    "f5c3966e-6405-4843-b686-495f217c609c", # [CONFITECA] pipeline de DESPENSA TRUJILLO
+    "e41362da-91c0-4231-9b4d-cfb5e92f60d0", # [SOFTYS] pipeline de ELPRADO
+    "70d97748-34d8-45c3-ba27-17e63eb62195", # [VIDA SOFTWARE] pipeline de MDLZ CHILE PG
+    "da416365-0e18-428d-852d-509029c674da", # [CBC] pipeline de DESPESNA PERUANA
+    "09e84927-43d9-471f-b588-4c9717b2c5c1", # [YICHANG] pipeline de SAQRAS
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_00_20_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:20 AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "657e8a05-d86e-48a0-babc-7f5ed3de4814", # [SOFTYS] pipeline de TIERRA SUR
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_00_45_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:45 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "00f17042-2bdd-4557-b360-81c260d53c3a", # [ALICORP] pipeline de LIDERCLOUD
+    "84c950aa-fa80-4f00-9d3a-0c2e17697402", # [YICNAHG] pipeline de LIDER
+    #"15a347a8-2df3-4bbb-85f9-3c0b4de0c13e", # [TODOBOT - SOFTYS] softys_dimexanew-sales
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_01_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 01:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "6d27f0a2-b549-4f64-b175-fb84d0a75481", # [SOFTYS] pipeline de PERUFARMA
+    "280fdfa8-9004-4087-b50c-89501a39df07", # [CLOROX] pipeline de CYC GARCILAZO SEDE UNICACHI
+    "7be1c2e3-0077-4c16-a9c9-5780b61b03d9", # [CLOROX] pipeline de CyC Garcilazo
+    "67818e3f-4d8b-4950-88a6-2c92d6908605", # [CLOROX] pipeline de JANDY
+    "c368f4dc-ed3f-4347-8713-ae2d7d299f07", # [TODOBOT - MDLZ_COL] mdlz_col_baymax-all
+    "2221d966-cf37-492d-ba39-1cb3dbefe69d", # [CARTAVIO] pipeline de DESPENSA
+    "017829ef-d1be-4772-9856-ad2cad002d7b", # [CONFITECA] pipeline de CORPORA LA REGIONAL
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_01_15_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 01:15 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "ccde9e95-ce8b-4057-ad52-736d8c702b69", # [VIDA SOFTWARE] pipeline de SOFTYS
+    "1517893f-1989-49dc-aa2d-ce2dbe07d63f", # [CNCH] pipeline de SAN_FRANCISCO
+    "a459ddf0-5c30-499b-8a97-1b237474728a", # [ALICORP] pipeline de DESPENSA
+    # "cd38d8b5-a2c7-4e34-956a-525736c889c9", # [ARCOR] pipeline de GOLOMIX
+    "f16b9705-3509-46f1-81d7-9c11ef1ce448", # [ALICORP] pipeline de DEHOCA
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_01_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 01:30 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    #"c368f4dc-ed3f-4347-8713-ae2d7d299f07", # [TODOBOT - MDLZ_COL] mdlz_col_baymax-all
+    "d1197317-c30a-4205-9cf3-1be1fe47946e", # [UNILEVER] pipeline de LUCKY EL PRADO
+    "1692c7db-72fa-4fb1-ac63-4753eb59b2fc", # [CLOROX] pipeline de DEHOCA
+    "05031558-6f6f-45d3-83e7-7cf91a71ac25", # [YICHANG] pipeline de DEHOCA
+    "5c49fc12-7f90-46a0-b3d6-e74b26a29059", # [CLOROX] pipeline de DIJISA
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_02_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 2:30 AM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "f062feb1-4c7d-40a8-8dc4-271b12fa1ce5", # [YICHANG] pipeline de VEGA
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_02_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 2:00 AM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "af653196-3b73-47f1-920a-570b5c47541c", # [SOFTYS] pipeline de LUCKY
+    "f22c6e3d-289a-4773-a062-b25a60dfd83d", # [AJINOMOTO] pipeline de GRUPO VEGA
+    "1e090714-f243-4f3c-9ee9-5d65d632bae9", # [SUPER_ALIMENTOS] pipeline de DIJISA
+    "a1ef0e5d-96b9-4784-a4ea-95c960846626", # [MDLZ_TEST] pipeline de JANDY
+    #"e2d95c0d-a3dd-4f25-aa7a-bb7bb94e38e6", # [TODOBOT - CONFITECA] confiteca_dimexanew-sales
+    "3c931fcf-833f-4373-988a-2777b04c422e", # [MDLZ_TEST] pipeline de DON_TEO_CAJAMARCA
+    "0bdbe11b-4542-4822-8399-75f96f4e1d59", # [MDLZ_TEST] pipeline de CSM_PUCALLPA
+    "fa5722aa-ec0c-4c67-9183-59b9fb8e4ca2", # [INKACROPS] pipeline de JANDY
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_03_00_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 03:00 AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "faea8179-dddd-484f-a69d-2ea5dde74c1a", # [ARCOR] pipeline de MICKYS
+    "54711a8e-42cb-482f-9344-041cb92ea737", # [TODOBOT - CLOROX] clorox_grupo_jimenez-all
+    "c7d65759-60d3-4eb8-93a2-b7828707c127", # [CARTAVIO] pipeline de LUCKY HUACHO
+    "045d5f5d-e9e8-429e-9ac4-5e47c2c58352", # [CARTAVIO] pipeline de LUCKY CAJAMARCA
+    "9557ab8c-536f-4484-85c7-460454fccb98", # [CARTAVIO] pipeline de LUCKY HUANCAYO
+    "c960451f-f7bb-46e2-9be8-168d92322341", # [CARTAVIO] pipeline de LUCKY CHICLAYO
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_03_30_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 03:30 AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "44a519e1-77ed-4838-b2db-9d97427dcfe4", # [CLOROX] pipeline de LUCKY
+    "f5fbb0c1-202e-4632-a33a-5afa629f0346", # [TODOBOT - ARCOR] arcor_ecu_mobilvendor-all
+    "ab1fa8a4-6431-4402-bb70-a66f4984b1a0", # [TODOBOT - ARCOR] arcor_ecu_mobilvendor_buenano-all
+    "e8272236-13fe-4fa4-9197-f006893765ff", # [BDF] pipeline de OSHIRO
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_04_30_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 04:30 AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "bae58fb6-3bfd-4bbe-b063-a8bb9174f0e8", # [TODOBOT - BDF] bdf_bol_ketal-all
+    "42cb13f4-c8d6-4581-a003-a419afa43a5e", # [TODOBOT - AJINOMOTO] ajinomoto_grupo_jimenez-all
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_05_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 05:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    #"186167d4-7425-47b5-845e-69e635bbdf15", # [TODOBOT - ABBOTT] abbott_dimexanew-sales
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+
+def cron_05_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 05:30 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "1730f071-579b-4b2d-ae3a-6afa7a33d99a", # [TODOBOT - BDF_COLEC] bdf_colec_copidrogas-inventory
+    "9eb66bff-80ef-4d53-94fa-0e30729f6ff4", # [MDLZ_GJ]: Proceso General
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_06_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 06:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "17e8f71e-cd8f-487c-a5b0-5d3815aa7180", # [TODOBOT - CONFITECA] confiteca_dimexa-inventory
+    "37164b69-d035-46e6-a652-1a8e0a8d5f6c", # [SAN FERNANDO] pipeline de ENVIO DE DATOS POR SFTP
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_6_10_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 06:10AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "10f03faf-0a27-4d53-881c-e7f73be91c70", # [TODOBOT - BDF] bdf_pe_codijisa-all
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_06_15_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 06:15 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    # "c368f4dc-ed3f-4347-8713-ae2d7d299f07", # [TODOBOT - MDLZ_COL] mdlz_col_baymax-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_07_00_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 07:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "034c0bc3-dacc-4e7b-bdeb-e233db4d7da0", # [CLOROX] pipeline de SHAREPOINT CLOROX
+    "f9c772bd-7a5d-43f9-8789-f7241ce196a5", # [MOLITALIA SELL IN] pipeline de P1 MOLITALIA SELL IN
+  ])
+
+  day_of_every_week(day=[0, 1, 2, 3, 4, 5], method=add_ppls_to_cron, args=[
+    "efb91216-a7ef-4545-b166-ba8f231a7047" # [AJINOMOTO] pipeline de AJINOMOTO
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_08_15_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 08:15 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "d69705af-937d-4c58-908a-6764c4af6a16", # [ALICORP] pipeline de DISTRIBUCIONES CYG
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_08_00_am_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 08:00 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "b9ba315b-8879-47c1-8574-1c3e1e495c2c", # [AJINOMOTO] pipeline de MERCOPERU PUNO
+    "50ff1638-ca5e-459e-b35d-7c94efb9a938", # [CONFITECA] CYJ
+	  "4c12ed23-0d37-4de1-9e05-737057901e64", # [YICHANG] pipeline de SAN FRANCISCO
+    "eeb179d4-9937-4a43-bea8-4fe1ac15289d", # [SAN FERNANDO] pipeline de SAN FRANCISCO
+    "db6ac6eb-f374-4909-a0f2-ee4460d36a31", # [CNCH] pipeline de RED ORIENTE
+    "d5cdeb5e-f182-4326-bc06-4be1b904f480", # [CNCH] pipeline de DEL VALLE
+    "5267033e-32ed-44f1-b9fa-043d8ad05cdd", # [CNCH] pipeline de AGB
+    "01e8da94-7ad6-4232-9403-0737973fd65f", # [TODOBOT - CARTAVIO] cartavio_backus-all
+  ])
+  
+  day_of_every_week(day=[3], method=add_ppls_to_cron, args=[
+    "3fcfc402-8c98-463f-92b0-e4ced1667e15" # [TODOBOT - CLOROX] clorox_ecu_gerardo_ortiz-logistica
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_08_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 08:30 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "b3073e28-5bc7-4f0e-bb88-024b4ad086a6", # [CLOROX] pipeline de TERRANOVA
+    "d0c7d1a6-93ca-49ca-b4fb-6e1e70a624d6", # [TODOBOT - MDLZ] mdlz_grupo_jimenez-all
+    "f0ca570e-36d5-41d3-adb3-227300a2cfbe", # [TODOBOT - OTROS] castillo_abbott-all
+    "417c4439-b4d9-46ce-a68b-6908a08a2b98", # [SAN FERNANDO] pipeline de MERCONOR HUACHO
+    "ff9a354b-d04d-47f8-aa0d-97bf4889a845", # [SAN FERNANDO] pipeline de MERCONOR HUARAL
+    "37b501b4-c07e-458f-911f-6df670acdf6a", # [SAN FERNANDO] pipeline de MERCONOR HUARAZ
+    "f473c57e-7f32-4574-9192-47cc47bfb65d", # [TODOBOT - ARCOR] yichang_backus-all
+    "eb69462d-b0b7-4326-a41e-30023f8ee068", # [YICHANG] pipeline de TOMS
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_09_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 09:00 AM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "553851f3-cbab-4501-ac76-d77c93b4ef52", # [CONFITECA] ARANZAZU
+    #"ab820d7f-e8bd-44e3-b2c1-dc44dca95997", # [TODOBOT - BDF_COLE] bdf_ecu_supermaxi-all
+    "8947a7a1-ac7e-4de0-838d-0bfda00d012d", # [TODOBOT - ALICORP] alicorp_dex_aliet-all
+    "1568503c-6137-4ed1-8e02-e7f3d9013912", # [ALICORP] pipeline de DL
+    "71155528-3b4f-4105-97f6-8a5d2240f799", # [ARCOR] pipeline de DL
+    "018f183c-36bd-4e22-a9ce-140f9c3dbd39", # [TODOBOT - CLOROX] clorox_spsa_paletas-all
+  ])
+
+  day_of_every_month(day=[5], method=add_ppls_to_cron, args=[
+    #"cc517645-be5d-4d8a-911f-5e6c8e79f5d0", # [TODOBOT - MDLZ_COLEC] mdlz_colec_koba-all
+  ])
+
+  day_of_every_week(day=[0], method=add_ppls_to_cron, args=[
+    "8006069b-de49-4f76-b897-b9b07373b9b4", # [TODOBOT - CLOROX] clorox_sodimac-purchase_orders
+  ])
+  
+  day_of_every_week(day=[1], method=add_ppls_to_cron, args=[
+    "d9b8bc84-b231-4783-a540-f3c6c996050d", # [TODOBOT - CLOROX] clorox_ecu_tia-logistica
+    "9f780934-8df2-49d6-8ae1-51b729802d5b", # [TODOBOT - CNCH] cnch_cencosud-SOM
+  ])
+  
+  day_of_every_week(day=[0, 2, 4], method=add_ppls_to_cron, args=[
+    "461c0271-2016-4e8f-952a-e8e13cd17674", # [TODOBOT - CLOROX] clorox_ecu_corporativo_rosado-logistica
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+
+def cron_09_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 09:30 AM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "bd9e3fb3-8b00-4978-b889-97137d5f6825", # [MOLITALIA SELL IN] pipeline de P2 MOLITALIA SELL IN
+    "81c12e42-0d04-4a05-b186-09ffde0f3aa2", # [TODOBOT - CLOROX] intercorpb2b_clorox_spsa-order
+    "eab4c5e4-0149-427c-ae40-6180aadca158", # [TODOBOT - CLOROX] intercorpb2b_clorox_spsa-inventory
+    "971e67f7-6c72-4eda-b4e5-f283e0cac6b3", # [TODOBOT - CLOROX] cencosud_clorox-all
+    "47775bb7-3571-4f3d-9490-b414dedd447c", # [TODOBOT - CLOROX] clorox_falabella_tottus-all
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+  
+  day_of_every_week([1], add_ppls_to_cron, args=[
+    "d3e4fd69-849b-439f-8e41-bdda56b3d156", # [TODOBOT - CLOROX] clorox_cencosud_SOM-all
+  ])
+
+
+def cron_09_40_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 09:40 AM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "48b08e92-5f57-4246-9b67-cb4b71e200d7", # [TODOBOT - BDF_COLE] bdf_col_locatel-sales
+    "b25c53cb-416c-481e-8a55-e927222c1838", # [TODOBOT - BDF_COLE] bdf_col_locatel-inventory
+    #"db1b7145-c1b4-4c38-9c37-096ce56f65e9", # [TODOBOT - BDF_COLEC] bdf_colec_farmatodo-sales
+    #"f4dd1b1f-54fd-4b7e-a589-14ac46830c48", # [TODOBOT - BDF_COLEC] bdf_colec_farmatodo-inventory
+    "509f8d49-5099-4e8d-8d4a-bb3cf40bb86d", # [TODOBOT - BDF_COLE] bdf_ecu_santa_maria-sales
+    "f2e251fc-a4f0-461c-9fb3-b08fba1e2d13", # [TODOBOT - BDF_COLE] bdf_ecu_santa_maria-inventory
+    "fef8219f-7dcb-4a6d-9549-1462b88a52c8", # [TODOBOT - PARACAS] paracas_spsa-order
+    "ab8616bc-2453-4c14-b38e-7ca3b6c68b8c", # [TODOBOT - PARACAS] paracas_spsa-inventory
+    "b0e5dcbe-08d6-41b4-a1fa-e6d8fa7f8b42", # [TODOBOT - PARACAS] paracas_cencosud-all
+    "19efad3a-f499-4c92-8e8b-3d3676caade1", # [TODOBOT - PARACAS] paracas_vega-all
+    "bda29ff0-5d18-4d9f-a642-06f3c506b1d7", # [TODOBOT - PARACAS] paracas_falabella_tottus-all
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:00AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "ee2b953b-f79b-43bc-a769-6d282b86d883", # [CONFITECA] pipeline de CESFA
+    # "e105dbd1-f354-487c-a079-fedd24d05e12", # [MDLZ] pipeline de GENOVESA_TACNA
+    "cc7de048-3bcc-4d9a-9a31-a09c8aa20363", # [TODOBOT - BDF_COLEC] bdf_colec_pasteur-all
+    #"3fa40c74-4368-453d-91e0-2a7928ab7a83", # [TODOBOT - BDF_COLEC] bdf_colec_copservir-all
+    "017d77b4-c826-4459-8137-471013881068", # [TODOBOT - BDF_COLEC] bdf_colec_grupo_tropi-all
+    "f2c668e8-bec3-4e42-b6a2-2ac4499921f5", # [TODOBOT - BDF_COLEC] bdf_colec_copidrogas-sales
+    # "32c267e7-cbf5-4cc2-a3ab-7e5cc2e802f3", # [TODOBOT - ARCOR] arcor_ecu_corporativo_rosado-all
+    "77475c89-8ac3-41e4-979e-35c083299d88", # [TODOBOT - BDF COL] bdf_col_cencosud-all
+    "1c77ad47-01b9-45f0-8d3f-c5bb10bed94a", # [TODOBOT - BDF_ECU] bdf_ecu_corporativo_rosado-all
+    "18e02fd6-232a-42ad-9a3a-2322c50184fd", # [TODOBOT - MDLZ ECU] mdlz_ecu_corporativo_rosado-all
+    "27180b91-61c4-456d-9a87-8a217ba432fe", # [TODOBOT - ARCOR ECU] arcor_ecu_tia-inventory
+    "8255bd53-e084-4b32-8edb-5b5e3d693593", # [TODOBOT - ARCOR] arcor_ecu_tia-sales
+    "74777136-d614-4dd1-b28b-d28886df4e2c", # [TODOBOT - BDF_COLEC] bdf_colec_cen_olimpica-inventory
+    "2d0337c2-e9dc-464d-a263-24a3e9fddd5f", # [TODOBOT - BDF_COLEC] bdf_colec_cen_olimpica-sales
+    "5036056f-cce4-4fdf-8a84-8c3b30a8cf31", # [TODOBOT - BDF_COLEC] bdf_colec_cen_exito-sales
+    "c0adc2d7-c02b-4070-9f50-a0fd60285dd1", # [TODOBOT - BDF_COLEC] bdf_colec_cen_exito-inventory
+    "f325ba7a-6d6e-44c5-aef2-d508771de5c8", # [TODOBOT - ARCOR] arcor_ecu_corporativo_rosado-all
+    "381c6cfb-cfca-4083-bb85-cfe9b06f5c42", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_spsa-order
+    "175411fc-3cb1-4217-932b-06853e30c4cd", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_spsa-inventory
+    "7a6d4bc1-bd4e-4c38-af8f-f625ce136dce", # [TODOBOT - GRUPO CALA] cala_vega-all
+    "6d982cc9-1467-4a12-b6ec-4163b97fb548", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_promart-order
+    "231e0cc3-eaff-4042-aeb4-efd248abe850", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_promart-inventory
+    "5094046e-5fe5-47a0-aaeb-be91e3f85b8b", # [TODOBOT - GRUPO CALA] cala_cencosud-all
+    "a335c908-6d0c-4d1b-9c71-fd35e1d1ce05", # [TODOBOT - GRUPO CALA] cala_mayorsa-sales
+    "5f79f0b7-541e-4591-8b7f-4c1077907b56", # [TODOBOT - GRUPO CALA] cala_mayorsa-inventory
+    "4ae56c39-626e-4bed-bf2d-755e5d1d0ae5", # [TODOBOT - CALA] cala_falabella_tottus-all
+  ])
+
+  day_of_every_week(day=[0], method=add_ppls_to_cron, args=[
+    "f710e13d-789b-48fc-8f06-9d79563d1ff4", # [TODOBOT - GRUPO CALA] saga_cala_sodimac-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_20_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:20AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "d32ca8fc-fd57-4abf-8992-351afb71f89b", # [TODOBOT - BDF_COLE] bdf_col_axa-all
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:30AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "69573bb2-1af3-46a9-8000-1f1d9bf13b37", # [SOFTYS] FOTO_PERU
+    "7047726a-e0e8-4a72-9339-6dd35dfaf5b8", # [SOFTYS] pipeline de SHEMA
+    # "2578d08c-6e74-432d-b59b-eba91e88d450", # (onetime) [VIDASOFT] pipeline de SERVIDOR MONDELEZ
+    # "32b5263c-27ee-4ab8-81fd-0738330edd47", # (onetime) [SOFTYS] pipeline de DARYZA
+    "2ab00f27-952b-419b-89ee-76d7099b94cf", # [SOFTYS] pipeline de OPERADOR_COMERCIAL
+    "e5144072-68b7-43f2-9827-1bef9675d9fb", # [TODOBOT - MDLZ ECU] mdlz_ecu_tia-sales
+    "81819b6c-d26f-46c1-b939-3ec8ee5026b0", # [TODOBOT - MDLZ] mdlz_ecu_tia-inventory
+    "8d5659cc-de4f-4a2c-a413-0ba5113857ca", # [MDLZ_BOLIVIA]: Proceso general
+    "8abe88b8-3416-420a-905f-b0a6340e09a6", # [TODOBOT - MDLZ_COL] mdlz_col_cencosud-all
+    "4ff5bd7a-4193-4599-92b3-d4f61a33cc40", # [TODOBOT - ARCOR] arcor_favorita-all
+    "58ef02ba-c288-4e38-ad7b-e2ae2cc60a65", # [TODOBOT - ARCOR] arcor_backus-all
+    "7be1bb45-6eea-4039-bb48-6fc85e9e61a5", # [ALICORP] pipeline de CORDOVA
+  ])
+
+  day_of_every_week(day = [0], method=add_ppls_to_cron, args = [
+    "cb76c395-e759-4069-801a-872394b6efa0", # [TODOBOT - MDLZ] mdlz_share-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_45_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:45 AM (PE)")
+  
+  # add_ppls_to_cron(ppl_ids=[
+
+  # ])
+
+  day_of_every_month(day=[1], method=add_ppls_to_cron, args=[
+    "3d74fd45-49fe-426c-92bd-590e830b3106", # [MOLITALIA SELL IN] pipeline de C2 MOLITALIA SELL IN
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_00_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 11:00AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    #"beb8dacb-2bf8-47b7-a25e-f3d6e928c102", # [VIDA SOFTWARE] tottus-main
+    #"9d5a974b-8bf4-4ef4-bc8a-72c229346f97", # [TODOBOT - UNILEVER] unilever_paletas-paleta
+    "4d44f95a-7982-4b32-809f-d0e4dcd6592b", # [TODOBOT - MDLZ] mdlz_tambo-all
+    "ce2c8c21-27b2-452c-af75-ea33d5259b76", # [TODOBOT - CLOROX] clorox_mayorsa-sales
+    "46a083b0-6b73-408b-b436-59d7df67959f", # [TODOBOT - CLOROX] clorox_mayorsa-inventory
+    "cfbaa55e-c531-49eb-9395-4e4e115e008f", # [TODOBOT - MDLZ] mdlz_mayorsa-sales
+    "c9428549-ec96-4a75-94d9-c31ab6aa8fc9", # [TODOBOT - MDLZ] mdlz_mayorsa-inventory
+    "b7c63c1b-5b0a-45fd-9b28-49e66bcefc85", # [TODOBOT - BDF] intercorpb2b_bdf_farma-ecommerce
+    #"a867667b-d34c-4cba-aa73-0dd34a839415", # [TODOBOT - MDLZ] mdlz_vega_oxxo-order
+    "a543e270-d2b2-4c70-94c1-7cd5b4bdc4c0", # [TODOBOT - MDLZ] mdlz_vega-all
+    #"b17f9a6c-61a1-485a-a414-7d6466179b48", # [TODOBOT - BDF_COLEC] bdf_colec_farmatodo-all
+    #"4dad4b58-649b-490a-a184-9e45240c6592", # [TODOBOT - MDLZ] mdlz_falabella_tottus-all
+    "aa0d9206-e7f8-4251-9085-7bca9ced94be", # [TODOBOT - SAN FERNANDO] san_fernando_vega-all
+    "edffa8f3-0ae5-4a5d-b836-bdd5d0606a13", # [TODOBOT - SAN FERNANDO] san_fernando_mayorsa-sales
+    "edb2d01a-0992-451e-a8ac-1db8e442b3c9", # [TODOBOT - SAN FERNANDO] san_fernando_mayorsa-inventory
+    "e8a9483a-74f7-4935-b475-ff081367ba6d", # [TODOBOT - ARCOR] ripley_arcor-sales
+    "2cfada4d-2af6-44c1-ae08-7008ad5968e9", # [TODOBOT - ARCOR] vega_arcor-all
+    "1ca4cea6-06ae-41d0-8cc2-48f5c2d600a2", # [TODOBOT - MDLZ] mdlz_falabella_tottus-all
+    "229cd0ca-16d3-4c65-8d5d-2fb7dc1c48df", # [TODOBOT - BDF] bdf_falabella_tottus-all
+    "fe0448ef-1371-4b67-8a8e-9b2ae1890451", # [TODOBOT - ARCOR] arcor_oechsle-sales
+    "e985f8c3-434d-421f-94e9-12308bc433c6", # [TODOBOT - ARCOR] arcor_oechsle-inventory
+    "ed646c2f-9697-40ea-9f09-10eea0a8c379", # [TODOBOT - INDUPSA] indupsa_mayorsa-order
+    "9162e383-3b9c-4b4e-83ff-5d4acd4743f6", # [TODOBOT - INDUPSA] indupsa_mayorsa-inventory
+    "e68753dc-2465-407a-ad4b-e4b00791db6c", # [TODOBOT - INDUPSA] indupsa_vega-all
+  ])
+  
+  day_of_every_week([0], add_ppls_to_cron, args=[
+    "d9c8c708-9520-449d-a77d-1d159063a751", # [TODOBOT - CLOROX] clorox_ecu_favorita-logistica
+  ])
+
+  day_of_every_month(day=[16,17,18], method=add_ppls_to_cron, args=[
+    "e2937712-ac60-454e-af62-3d02627f4e82", # [MOLITALIA SELL IN] pipeline de C1 MOLITALIA SELL IN
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_wednesday_11_00_am_PE():
+  logger.info("EJECUTANDO CRON WEDNESDAY DE LAS 11:00AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_15_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 11:15 AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "931082d8-9df3-4e61-8308-0b812dc37f03", # [TODOBOT - STANLEY] stanley_promart-sales
+    "ebd0ad7a-85b0-40e9-9abc-ee2553787834", # [TODOBOT - STANLEY] stanley_promart-inventory
+    #"2085f71e-727b-4662-95a2-418b1e093f50", # [TODOBOT - MDLZ_COL] mdlz_col_jeronimo-sales
+    #"711f3cd8-8a56-4630-a531-376edb58451a", # [TODOBOT - MDLZ_COL] mdlz_col_jeronimo-inventory
+  ])
+
+  day_of_every_week(day = [0], method=add_ppls_to_cron, args = [
+    "33a1ba25-caf0-4e98-83f4-750489878b7d", # [TODOBOT - STANLEY] stanley_importados_sodimac-all
+    "f4b02797-a715-4d8f-8dd8-49cd66b32dfe", # [TODOBOT - STANLEY] stanley_local_sodimac-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_30_am_PE():
+  logger.info("EJECUTANDO CRON DE LAS 11:30AM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "3ec5f0cc-66ef-4f9e-9dd6-9ae567c2a822", # [VIDA SOFTWARE] spsa-order
+    "2dc5aad0-7682-4dea-81c3-3747143f02fa", # [VIDA SOFTWARE] spsa-inventory
+    "99c500bb-b67c-4dbc-879e-00cb78846f4f", # [TODOBOT - MDLZ] cencosud_mdlz-all
+    "59704330-3124-4178-96b0-91f8f1da59cb", # [SOFTYS FDH] divama
+    "44843727-e3b2-4de8-a5be-91909f79969b", # [TODOBOT - CLOROX] intercorpb2b_clorox_promart-sales
+    "1e2e0679-a7d7-4cab-91a4-8ae93d6e1678", # [TODOBOT - CLOROX] intercorpb2b_clorox_promart-inventory
+    #"57eea994-d9a7-4dab-95d9-9529e4d5a6cc", # [TODOBOT - CLOROX] tottus_clorox-sales
+    "f6c0b29a-7749-4f02-96db-53ed7149b88d", # [TODOBOT - UNILEVER] intercorpb2b_unilever_spsa-sales
+    "6075720d-c4b0-41a8-a87b-2f48330583b2", # [TODOBOT - UNILEVER] intercorpb2b_unilever_spsa-inventory
+    "98de649a-13ff-42b0-8946-62ad5f127d7f", # [TODOBOT - UNILEVER] intercorpb2b_unilever_fp-sales
+    "e7debcdc-2d8f-4a45-ae06-3e3e75560f5c", # [TODOBOT - UNILEVER] intercorpb2b_unilever_fp-inventory
+    # "c11a7abd-2b2b-4927-a319-84874c6dc849", # [TODOBOT - UNILEVER] intercorpb2b_unilever_promart-sales
+    # "199a87c0-5739-4554-a1a7-3cdcf14d53e5", # [TODOBOT - UNILEVER] intercorpb2b_unilever_promart-inventory
+    "9a943d28-0e82-4e6d-92df-f6a6faab4d2b", # [TODOBOT - ARCOR] cencosud_arcor-all
+    "f51e403a-251d-4222-8967-d4efb5466b48", # [TODOBOT - ARCOR] intercorpb2b_arcor_spsa-sales
+    "577025b8-b33f-4501-952e-487099b42fbf", # [TODOBOT - ARCOR] intercorpb2b_arcor_spsa-inventory
+    "18440dd4-4c84-4ab6-8cfc-7848a3434bb8", # [TODOBOT - ARCOR] tottus_arcor-sales
+    "955e6301-76a7-4652-ad2b-387e1bf03b5f", # [TODOBOT - ARCOR] ripley_arcor-sales
+    "17dc9f8b-66e1-4add-a7a7-d2d7e9f338d4", # [TODOBOT - ARCOR] mayorsa_arcor-sales
+    "b07636f9-1dd9-4f41-813e-1c50b28567fe", # [TODOBOT - ARCOR] mayorsa_arcor-inventory
+    "101a49e5-3411-4797-b758-11331610c093", # [TODOBOT - ARCOR] vega_arcor-sales
+    "becb7d81-3f1e-4536-bca5-97d60a1349b7", # [TODOBOT - ARCOR] vega_arcor-inventory
+    "a3adda22-2bca-4eb3-8e36-8d815f216a25", # [TODOBOT - BDF] intercorpb2b_bdf_spsa-sales
+    "83eb61c4-8035-4017-ae3b-a9a69ff91656", # [TODOBOT - BDF] intercorpb2b_bdf_spsa-inventory
+    #"9f6e3ff7-aa34-4922-8b12-a8a3e98795c4", # [TODOBOT - BDF] tottus_bdf-sales
+    "d66e29ee-8977-446a-a548-8426feed2c8c", # [TODOBOT - BDF] intercorpb2b_bdf_farma-sales
+    "fb2d911e-8ec4-4ae6-85de-e71aa9844730", # [TODOBOT - BDF] intercorpb2b_bdf_farma-inventory
+    "e72a0010-6559-4235-b99c-d66bd36d5bec", # [TODOBOT - BDF] cencosud_bdf-all
+    "ba8b6d2c-b25c-401c-862c-dea2f62f0b14", # [TODOBOT - ABBOT] dimexanew_abbott-inventory
+    "06ab97dd-a510-4134-965e-5f17410a7f92", # [TODOBOT - CNCH] cnch_spsa-sales
+    "c78eb9d2-429b-49e8-bed5-894e4f815437", # [TODOBOT - CNCH] cnch_spsa-inventory
+    "8d79ff02-486e-4fd0-9bbe-ce95ef2487f1", # [TODOBOT - CNCH] cnch_tottus-sales
+    "74795e83-75fe-4e3c-af04-c9e598decc3f", # [TODOBOT - CNCH] cnch_cencosud-all
+    "3c02ff52-aaeb-4218-9836-03737d61072c", # [TODOBOT - CNCH] cnch_mayorsa-sales
+    "002ebbf9-a7e2-4152-ac68-aef78519c1df", # [TODOBOT - CNCH] cnch_mayorsa-inventory
+    "187a60ef-282f-4481-86ea-3e2fac67d887", # [TODOBOT - UNILEVER] cencosud_unilever-all
+    "26e81cfc-b244-41d3-961c-5b20a64e6662", # [TODOBOT - UNILEVER] intercorpb2b_unilever_spsa-sales_cost
+    "7345068c-cf6e-4920-8a60-9daf16ac0da4", # [TODOBOT - CNCH] cnch_tambo-all
+    "0037376c-103a-41a1-a87b-800974ca5202", # [TODOBOT - ARCOR] arcor_tambo-all
+    "332c7080-56c2-4ec6-a009-e17c60deb8aa", # [TODOBOT - CLOROX] clorox_vega-all
+    # "4dec605d-fa7e-48a1-9ac3-22fc308d4a5c", # [TODOBOT - STANLEY] stanley_local_sodimac-accumulated
+    # "2b8813f6-e7e0-44f3-a882-cf5050bfba9b", # [TODOBOT - STANLEY] stanley_importados_sodimac-accumulated
+    "3fba3d78-10c5-4d07-beae-34b9b85d8702", # [TODOBOT - ARCOR] arcor_oxxo-order
+    "a38201ca-3b47-4f16-b5ee-5e376d65378d", # [ALICORP] pipeline de KADMIEL TINGO MARIA
+    "8ba4b0a4-87d9-41e7-b1e1-86cf461cb7b0", # [CLOROX] pipeline de EL SOL
+    "01af99a2-d83a-43db-af79-c5fb94fa1e30", # [TODOBOT - BDF] bdf_bol_farmacorp-all
+    "f1001c07-2cd8-42fb-8bc3-5ab814949aaf", # [ALICORP] pipeline de DEX - EJECUTAR RPA
+    "9d0bc1f8-e84f-4d90-a5a2-6f7ff490f88d", # [TODOBOT - ISM] ism_cencosud-all
+    "fade4f91-7b13-4d3a-84ac-3d9dd703027e", # [TODOBOT - ISM] ism_spsa-sales
+    "eb5efa02-07f4-4045-9f00-f69eb5d8793c", # [TODOBOT - ISM] ism_spsa-inventory
+    "ac101cf9-3230-4dec-9061-62f6bec546b2", # [TODOBOT - ISM] ism_vega-all
+    "92bfc170-aa29-49a3-886e-f1114a3fb9ae", # [TODOBOT - BDF_COLE] bdf_ecu_tia-sales
+    "463ccc62-69f5-4696-8119-9a75c0c33e84", # [TODOBOT - BDF_COLE] bdf_ecu_tia-inventory
+    "23971911-ba7f-4e95-9780-f4aa4ab8dd2d", # [TODOBOT - SAN FERNANDO] san_fernando_spsa-sales
+    "9c2985c5-6ffb-4745-928f-0243c7db20fd", # [TODOBOT - SAN FERNANDO] san_fernando_spsa-inventory
+    "8b3c49f4-2888-449b-90cb-3e8ef80e5553", # [TODOBOT - SAN FERNANDO] san_fernando_cencosud-all
+    "95f54c0e-6ec6-4ca3-8a35-7642b971d549", # [TODOBOT - CLOROX] clorox_vega-all
+    "81993fa9-7a93-4666-b9df-c1d101b43ac1", # [TODOBOT - UNILEVER] unilever_falabella_tottus-all
+    "b8cb8f49-e9ec-45a5-b398-828203a656e8", # [TODOBOT - ARCOR] arcor_falabella_tottus-all
+    "0ca530d9-f5b4-4729-be32-6c5203428390", # [TODOBOT - ISM] ism_falabella_tottus-all
+    "2b829352-2389-4698-992d-ad7828396737", # [TODOBOT - SAN FERNANDO] san_fernando_falabella_tottus-all
+    "a30985a9-4e45-45a3-bbe4-8513a575384e", # [TODOBOT - ARCOR] arcor_falabella_saga-all
+    "fef8219f-7dcb-4a6d-9549-1462b88a52c8", # [TODOBOT - PARACAS] paracas_spsa-order
+    "ab8616bc-2453-4c14-b38e-7ca3b6c68b8c", # [TODOBOT - PARACAS] paracas_spsa-inventory
+    "b0e5dcbe-08d6-41b4-a1fa-e6d8fa7f8b42", # [TODOBOT - PARACAS] paracas_cencosud-all
+    "19efad3a-f499-4c92-8e8b-3d3676caade1", # [TODOBOT - PARACAS] paracas_vega-all
+    "bda29ff0-5d18-4d9f-a642-06f3c506b1d7", # [TODOBOT - PARACAS] paracas_falabella_tottus-all
+    "92e626bf-a0d1-4d65-8ee3-80b732ab0b37", # [TODOBOT - INDUPSA] indupsa_cencosud-all
+    "d545f303-61ef-4445-b111-6ab4835d3776", # [TODOBOT - INDUPSA] indupsa_falabella_tottus-all
+    "381c6cfb-cfca-4083-bb85-cfe9b06f5c42", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_spsa-order
+    "175411fc-3cb1-4217-932b-06853e30c4cd", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_spsa-inventory
+    "7a6d4bc1-bd4e-4c38-af8f-f625ce136dce", # [TODOBOT - GRUPO CALA] cala_vega-all
+    "6d982cc9-1467-4a12-b6ec-4163b97fb548", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_promart-order
+    "231e0cc3-eaff-4042-aeb4-efd248abe850", # [TODOBOT - GRUPO CALA] intercorpb2b_cala_promart-inventory
+    "5094046e-5fe5-47a0-aaeb-be91e3f85b8b", # [TODOBOT - GRUPO CALA] cala_cencosud-all
+    "a335c908-6d0c-4d1b-9c71-fd35e1d1ce05", # [TODOBOT - GRUPO CALA] cala_mayorsa-sales
+    "5f79f0b7-541e-4591-8b7f-4c1077907b56", # [TODOBOT - GRUPO CALA] cala_mayorsa-inventory
+    "4ae56c39-626e-4bed-bf2d-755e5d1d0ae5", # [TODOBOT - CALA] cala_falabella_tottus-all
+    "9a589b75-83c2-4667-a4bb-ff7f88f5f12f", # [TODOBOT - INDUPSA] indupsa_spsa-sales
+    "774ac063-254e-430d-930b-c10e7816f835", # [TODOBOT - INDUPSA] indupsa_spsa-inventory
+  ])
+
+  day_of_every_week(day=[1], method=add_ppls_to_cron, args=[
+    "c4a52a96-f49b-4739-970d-8f0bcba6909d", # [TODOBOT - CLOROX] clorox_spsa_som-all
+    "993536b6-c914-492a-9eb3-95493df698ba", # [TODOBOT - GRUPO CALA] cala_cencosud-share
+  ])
+
+  day_of_every_week(day=[0], method=add_ppls_to_cron, args=[
+    "f710e13d-789b-48fc-8f06-9d79563d1ff4", # [TODOBOT - GRUPO CALA] saga_cala_sodimac-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_monday_11_30_am_PE():
+  logger.info("EJECUTANDO CRON MONDAY DE LAS 11:30AM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "acc5d80a-8f88-42f4-9a26-cdb870e3707a", # [TODOBOT - CLOROX] tottus_clorox_sodimac-sales
+    "a28feff7-b7ac-4f92-94ca-f7aa262b0cbe", # [TODOBOT - ARCOR] saga_arcor-sales
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_01_00_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 01:00 PM (PE)") 
+  add_ppls_to_cron(ppl_ids=[
+    "1d176fd1-3395-4f0b-8481-9b451d59f0b4", # [SAN FERNANDO] pipeline de PROCESO GENERAL SAN FERNANDO MT
+    "6fec831b-0074-468b-9e12-8c9770baa760", # [INDUPSA] pipeline de PROCESO GENERAL INDUPSA MT
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_01_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 01:30 PM (PE)") 
+  add_ppls_to_cron(ppl_ids=[
+    "032ba0c7-da33-4026-af73-08921df590bf", # [TODOBOT - MDLZ] mdlz_backus-all
+  ])
+
+  day_of_every_month(day=[23,24,25,26,27,28,29,30,31], method=add_ppls_to_cron, args=[
+    "25da9883-a117-46cc-94d4-e6976704a96c", # [MOLITALIA SELL IN] pipeline de P3 MOLITALIA SELL IN
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_02_00_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 2:00 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "37164b69-d035-46e6-a652-1a8e0a8d5f6c", # [SAN FERNANDO] pipeline de ENVIO DE DATOS POR SFTP
+  ])
+  
+  day_of_every_month(day=[4], method=add_ppls_to_cron, args=[
+    "7968c7e8-db42-4541-84e5-c3e7871bfd1b", # [TODOBOT - MDLZ] mdlz_colec_new_koba-sales
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_02_15_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 02:15 PM (PE)") 
+  
+  add_ppls_to_cron(ppl_ids=[
+    "e26060d2-eb2b-45f5-a0d2-798a7dce1ce8", # [MDLZ_BEES]: Proceso General
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_02_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 02:30 PM (PE)") 
+  
+  add_ppls_to_cron(ppl_ids=[
+
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_03_00_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 03:00 PM (PE)") 
+  
+  add_ppls_to_cron(ppl_ids=[
+    "389e724e-2f7e-4665-9a9e-20fa992fb3f7", # [TODOBOT - CLOROX] pipeline de LOGISTICA ZCarryn-all
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+
+
+def cron_03_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 03:30 PM (PE)") 
+  
+  # add_ppls_to_cron(ppl_ids=[
+  #   "389e724e-2f7e-4665-9a9e-20fa992fb3f7", # [TODOBOT - CLOROX] pipeline de LOGISTICA ZCarryn-all
+  # ])
+
+  day_of_every_month(day=[23,24,25,26,27,28,29,30,31], method=add_ppls_to_cron, args=[
+    "ad9e7a0e-9827-4809-b049-83152c51a8cc", # [MOLITALIA SELL IN] pipeline de P4 MOLITALIA SELL IN
+  ])  
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_04_45_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 04:45PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "df7ee56f-6446-4b62-978a-d010a00898da", # [EDGEWELL] pipeline de DILISA
+    "63b957a3-cc1c-4558-83d3-959c37b40b78", # [CLOROX] pipeline de DILISA
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_04_30_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 04:30PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "f2c668e8-bec3-4e42-b6a2-2ac4499921f5", # [TODOBOT - BDF_COLEC] bdf_colec_copidrogas-sales
+    "6186c477-dae0-4c71-8d6b-74df3947336e", # [SUPER ALIMENTOS] pipeline de GLCOM
+    "08ee025c-6186-4b8e-9d4f-b3609593555c", # [TODOBOT - MDLZ_COLEC] mdlz_colec_supermaxi-all
+    "2a06079e-bbc5-47e6-848d-19291df9e161", # [YICHANG] pipeline de KONSUMASS QUILLABAMBA
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_04_00_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 04:00PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_5pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 05:00PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "cb47f76c-42f6-4a53-b28b-d0aced20bf62", # [SOFTYS] pipeline de MYV
+    "b7bf9186-af2f-434c-8378-4e726a809038", # [TODOBOT - CARTAVIO] dimexanew_cartavio-inventory
+  ])
+
+  day_of_every_week(day = [1], method=add_ppls_to_cron, args = [
+    "049293be-be27-4016-b08d-ff70f7b7425d", # [TODOBOT - UNILEVER] unilever_share-all
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_05_30_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 05:30 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "389e724e-2f7e-4665-9a9e-20fa992fb3f7", # [TODOBOT - CLOROX] pipeline de LOGISTICA ZCarryn-all
+    "6784fccd-dc3c-4239-bf62-91b1527c396a", # [ARCOR] pipeline de MATROD 
+  ])
+  
+  day_of_every_month(day=[23,24,25,26,27,28,29,30,31], method=add_ppls_to_cron, args=[
+    "25b540fd-6f79-408a-a43d-1ce43f7e1d2e", # [MOLITALIA SELL IN] pipeline de P5 MOLITALIA SELL IN
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_6pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 06:00PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "d7c3cf7f-0b3f-4996-92ad-bf4b3a08d8c0", # [SOFTYS] pipeline de KONSUMASS
+    "18b05961-dda1-46a8-b739-b45f6bc86ad8", # [JNJ] pipeline de KONSUMASS
+    "486de19c-d323-45c0-b6e6-e9375a138d52", # [ALICORP] pipeline de KONSUMASS
+    "a50a692c-b992-4fb0-a19b-d4c78b1cea4e", # [UNILEVER] pipeline de ROBLES (JORGE BARON)
+    "455ad609-ab5c-4683-b4fd-37f7a6ea1eb9", # [TODOBOT - UNILEVER] qs_unilever-sales
+    "1fcfe7ee-56e0-4a5c-b228-731c88fad9fd", # [TODOBOT - UNILEVER] qs_unilever-inventory
+    #"1fb8d42d-1d01-4d38-a6f4-ad924df59660", # [TODOBOT - MDLZ COL] mdlz_col_cen_analiticos
+    "56df49c8-3ea6-48e7-bcf8-997721bbbe0d", # [ALICORP] pipeline de DON JOSE
+    "12e2abf1-8dab-4779-a535-486e7ad205ae", # [UNILEVER] pipeline de Gesa Centro
+    "833ae358-5ea1-4852-8027-63307f575095", # [RINTISA] pipeline de KONSUMASS CUZCO
+    "c6cd848a-2188-4939-9361-f4ab84522a29", # [RINTISA] pipeline de KONSUMASS SICUANI
+    "eb69462d-b0b7-4326-a41e-30023f8ee068", # [YICHANG] pipeline de TOMS
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+
+def cron_6_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 06:00PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    # "256251f8-6b9b-4261-aa82-3a3555a01542", # [MDLZ] pipeline de RODAMA
+    "0759acfc-560e-411d-a883-dd528d95bffc", # [MDLZ_TEST] pipeline de RODAMA
+    "55ec668e-cb26-482c-a5a9-4aa567e7ce97", # [CONFITECA] pipeline de LA_GOLOSINA
+    "0759acfc-560e-411d-a883-dd528d95bffc", # [MDLZ_TEST] pipeline de RODAMA
+    "6b5f3971-add1-45fe-abc9-ff0ffbdfc984", # [CNCH] pipeline de Dilep
+    "0a2689cd-191b-4d6c-a8be-7055e9c7055c", # [YICHANG] pipeline de Dilep
+    "39662e2d-2a6d-4586-8647-14ba692912a1", # [CNCH] pipeline de Felix
+    "c946abc4-7025-45f2-9ff7-840faaf7b3db", # [YICHANG] pipeline de ACUÑA DISTRIBUCiONES
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_7pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 19:00 PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "e262e8d5-fbf8-4c69-9b6a-be345bc41bce", # [ARCOR] pipeline de MICKYS
+    "b51aa5bb-f514-440d-b9fa-24053069a520", # [SOFTYS] pipeline KONSUMASS - ABANCAY
+    "1564be2f-f292-46ad-b92a-3f7d6d1ebf65", # [SUPER ALIMENTOS] pipeline de FELIX
+    "42162508-94b6-4d4f-a3e0-ae8551db04cb", # [CNCH] pipeline de CyJ
+    "1848ea7d-a347-442d-843f-0c367a0f184d", # [CNCH] pipeline de SAN JUAN
+    "9a3c9ff5-9e7f-4b3a-ab18-34191b5f277c", # [YICHANG] pipeline de JHORDAN
+    "447e14a9-3575-4de1-985c-ca51796c1389", # [CONFITECA] pipeline de FELIX
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_7_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 19:30 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "e5dea38e-9250-459e-a62b-7f5b569d5661", # [MDLZ_TEST] pipeline de ADRIAPAL
+    "165f1736-75cd-4052-ab67-fd5de56580b5", # [CNCH] pipeline de ARANZAZU
+    "327f1558-60a3-46ed-9d4f-6308d69a1136", # [CNCH] pipeline de DRAG E HIJOS
+    "442c9ee4-c0fb-44fe-9ba9-e4f6b14b6049", # [ALICORP] pipeline de JHORDAN
+    "31344027-f1ff-4622-bd97-0f7f46e1363c", # [YICHANG] pipeline de DNALO
+    "c75a802d-e363-43f3-a513-ddecf409f8de", # [UNILEVER] pipeline de CURTIS ESTE
+    "cc8718fa-f474-4a00-8b24-e946436bd5ad", # [UNILEVER] pipeline de CURTIS CALLAO
+    "20098118-3289-42d8-8fc5-51b0519bd8e4", # [UNILEVER] pipeline de CURTIS NORTE
+    "556b7db7-b994-4e4a-bf14-f6c82bc82215", # [YICHANG] pipeline de KONSUMASS ABANCAY
+    "a270707c-e91e-417a-bf7d-6f4ba53cbe37", # [YICHANG] pipeline de KONSUMASS CUZCO
+    "f486179c-0801-4d38-bf34-5ac3a5a67596", # [YICHANG] pipeline de KONSUMASS SICUANI
+    "d50dfe4d-9f9b-44b6-8f5b-261621ecd2fb", # [ALICORP] pipeline de CURTIS CALLAO
+    "6755b986-bdc0-451b-a666-dbc78a081929", # [ALICORP] pipeline de CURTIS NORTE
+    "364a338d-8461-4695-bded-e253b9237570", # [ALICORP] pipeline de CURTIS SJL
+    "7001e6c1-606d-43a2-89a1-9dbae65bfcca", # [CONFITECA] pipeline de YOYLIMAX
+    "d69705af-937d-4c58-908a-6764c4af6a16", # [ALICORP] pipeline de DISTRIBUCIONES CYG
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_08_00_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 08:00 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "79349212-ebac-4c0d-9142-d694ad785926", # [MDLZ] pipeline de DONTEO_TRUJILLO_TEST
+    "9ff17c2d-f541-4afb-8fd6-5cd3e18a4d0a", # [ALICORP] pipeline de KORESUR
+    "82026b00-5d93-4aae-8a07-ff115a23fafb", # [UNILEVER] Proceso general de UNILEVER MT
+    "be53a703-2414-482d-a72e-ac6be8670969", # [TODOBOT - CLOROX] pipeline de CLOROX TT CIERRE TD
+    "8027ed9f-d30a-44ca-b16f-ab3234f07418", # [ALICORP] pipeline de GESA CENTRO
+    "8027ed9f-d30a-44ca-b16f-ab3234f07418", # [ALICORP] pipeline de GESA CENTRO
+    "b9aa0a8f-1784-408e-ab56-b580a6f19091", # [UNILEVER] CARGA MODERNO ARCHIVOS de UNILEVER MT
+    "72a984a9-2caa-4825-9398-7f5097d03a4c", # [MDLZ_TEST] pipeline de TARMA_FOODS
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_08_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 20:30 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "fbb77ded-3c78-498f-bae4-efa629a1b6be", # [CLOROX] pipeline de GUTER PREIS
+    # "6a01cd12-3cad-4b83-b59d-af0d0c54cdfa", # [MDLZ] RANEVAS MOYOBAMBA
+    # "6548dc82-5153-46a6-ba10-1dfa17f25a6a", # [MDLZ] pipeline de GENOVESA_ILO
+    "74e095a6-9a70-4669-8054-02a6a09621c2", # [UNILEVER] pipeline de SAQRAS PUNO
+    "ab668888-21b4-4bba-931a-77acf9a0837b", # [ALICORP] pipeline de TUINFE
+    "a601180d-ebc4-436d-960a-318f5c5a7cc2", # [ALICORP] pipeline de MILENIO
+    "a279e083-60aa-4282-9e56-68e3a5995b8a", # [YICHANG] pipeline de 5M
+    "e9f49c00-4303-466a-9893-c271a1eb51d1", # [YICHANG] pipeline de DISMAR CALLAO
+    "0ec62512-d2e5-4c52-a783-630fcff0ed28", # [YICHANG] pipeline de DISMAR NORTE
+    "6ee586cf-4e24-407a-921d-69035a11250c", # [YICHANG] pipeline de DISMAR SJL
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_09_00_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 09:00 PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "6e9cee60-04f5-4d30-9a5b-51c28576ba37", # [SUPER_ALIMENTOS] pipeline de LA_GOLOSINA
+    "824ad2e0-a7e4-4be5-93cf-062ad07f3ac3", # [MDLZ_TEST] pipeline de CSM_IQUITOS
+    "7460ca1d-ed51-4c61-9b6c-ddaa660cb0e7", # [MDLZ_TEST] pipeline de CHIMU
+    "f0932105-6b14-483e-88be-013bcc06387c", # [SUPER ALIMENTOS] pipeline de MERCOPERU JULIACA
+    "d08bc2b0-fe6b-4d6d-94d7-5d7d0f434d1b", # [CLOROX] pipeline de KAYROS / BELEN
+    "90d8e55d-04d3-47b8-9ed1-f7c4100ec215", # [ALICORP] pipeline de KAYROS / BELEN
+    "6c154286-eceb-406e-9075-4d0a648e7bc5", # [UNILEVER] pipeline de KAYROS / BELEN
+    "c723175f-14d6-4fb3-bd66-793ebd84d4cc", # [YICHANG] pipeline de N&E
+    "b2e8972a-aeef-4788-ae91-46ceed7b3f5e", # [ALICORP] pipeline de MOLISAC
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_09_30_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 09:30 PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "c5498c93-306f-454a-8d50-83c5284853b0", # [UNILEVER] pipeline de LA_GENOVESA_ILO
+    "4027d8d6-565c-4f5f-8f19-418aa9910270", # [YICHANG] pipeline de DYR
+    "a458fa0e-9124-47b2-97f0-dff8f021d720", # [CNCH] pipeline de FELIX
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_00_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:00 PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "189239b9-3e71-4432-aaff-2cd2d5875e02", # [SOFTYS] pipeline de PUNTODVENTA
+    "35a7805b-03e1-4576-bd71-7020bd0e967d", # [SOFTYS] pipeline de EL GRANDE
+    "3d8cc412-5659-4001-ab21-99bdbb1c2ab5", # [MDLZ_TEST] pipeline de JOMER_CHINCHA
+    "d195d2db-6158-49ab-b9c3-cba6a2c59740", # [SUPER_ALIMENTOS] pipeline de GENOVESA_TACNA
+    "87154080-0a58-4d2f-8417-ce36d64eee14", # [SUPER_ALIMENTOS] pipeline de GENOVESA_MOQUEGUA
+    "478b10a2-6996-42f8-ab49-723da6624f74", # [SUPER_ALIMENTOS] pipeline de GENOVESA_ILO
+    "2514998c-945b-4bf8-827d-281093fe91c5", # [SUPER_ALIMENTOS] pipeline de DIAVELL
+    "3d8cc412-5659-4001-ab21-99bdbb1c2ab5", # [MDLZ_TEST] pipeline de JOMER_CHINCHA
+    "05e5e6a2-3ba5-4c47-a0e0-bc99045e844f", # [SUPER_ALIMENTOS] pipeline de SNACKS
+    "12204a47-45dc-433b-8536-1cde3425167a", # [SOFTYS] pipeline de CODIFER
+    "7b3e9c89-51c7-4a24-a75f-e9474294d6d6", # [SOFTYS] pipeline de DIJISA
+    "9bcf52ed-fea9-4b4e-aa6f-979d831e84c3", # [ALICORP] pipeline de CMS
+    "2eeb47eb-443d-4751-93ee-712ea5dd3cd7", # [YICHANG] pipeline de DIAVELL
+    "67f824af-4c39-43e5-bed7-4a7cd83387ff", # [CNCH] pipeline de KAYROS
+    "52934c31-c2e9-4a00-aa40-662f3b14d823", # [CNCH] pipeline de GOLISUR
+    "1ef703b1-12b6-41d6-8c36-24cbc54e13c6", # [CNCH] pipeline de GOLISUR ILO
+    "98e003b9-471d-4492-b303-a4eb6166b55f", # [CNCH] pipeline de SORIA
+    "6898c25e-4093-47e4-a3b4-51a9cadda60d", # [UNILEVER] pipeline de CMS
+    "7f5abc3b-2863-4a68-95d6-f61911981c02", # [SAN_FERNANDO] pipeline de MAPELLI ACOSTA DEL ORIENTE
+    "4adce1c5-cd07-48df-a08a-7730b8b27af0", # [SAN_FERNANDO] pipeline de MAPELLI ACOSTA LA MERCED
+    "7a819b39-649c-40bd-8fb0-ec55e2e4d7c6", # [SAN_FERNANDO] pipeline de MAPELLI ACOSTA WANKA
+    "eb063214-9333-4ecb-8658-9a644a4bc07f", # [UNILEVER] pipeline de LA_GENOVESA_MOQUEGUA
+    "8b9a0e7b-ba8f-4c55-bc94-dd0af70c757c", # [MDLZ] pipeline de AGA MOYOBAMBA
+    "72034c6a-051a-4c00-9965-21ca1b784272", # [MDLZ] pipeline de AGA TARAPOTO
+    "09350c91-a430-4b4f-a80a-11b42e133095", # [MDLZ] pipeline de AGA CHACHAPOYA
+    "b8c98702-2ca8-46b7-96c2-b5ffc2109309", # [MDLZ] pipeline de AGA JAEN
+    "b877f3bf-953d-40d1-a824-2c5e0d68b441", # [ALICORP] pipeline de CMS AREQUIPA
+    "0584f1ba-0741-4d27-9baf-051b0aa1abf0", # [MDLZ] pipeline de FACTORIA
+    "57c514c5-fce0-47f4-8ced-975c6cc82c1a", # [MDLZ] pipeline de CRISLEI
+    "3178002f-629f-4e89-b370-ab07734442ef", # [CONFITECA] pipeline de FELIX v2
+    "956a1f25-989a-4126-acc5-f52a03df77b0", # [SUPER ALIMENTOS] pipeline de FELIX
+    "43d2ebbb-641f-42c5-822a-78d59fe40f9b", # [INDUPSA] pipeline de KONSUMASS
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_10_30pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 10:30PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "010cb87a-232d-468c-a249-4582ce39ecf2", # [SOFTYS] pipeline de FAVAL_PROTISA
+    "dc7ad46c-adcd-40a5-832e-5d3cd75e7cfa", # [SOFTYS] pipeline de MOLISAC
+    "23ee21b0-f67c-4099-81b3-a9edbed21d6c", # [SOFTYS] pipeline de MYL
+    "0c1da9d1-703c-4ab7-ace7-cd0fb196632d", # [VERDUM] pipeline de MOLISAC
+    "3c931fcf-833f-4373-988a-2777b04c422e", # [MDLZ] pipeline de DONTEO_CAJAMARCA
+    "15cc3c33-4072-45f9-bbd9-47b463140e28", # [MDLZ] pipeline de JANDY_AREQUIPA_TEST
+    "a1ef0e5d-96b9-4784-a4ea-95c960846626", # [MDLZ_TEST] pipeline de JANDY CHANCHAMAYO
+    "6482555a-4e9f-4296-819e-dab8fd12640f", # [MDLZ_TEST] pipeline de JANDY_SUR
+    "22a40a26-8b86-481e-b3b6-fc384736b183", # [ALICORP] pipeline de DOLPHINS
+    "0bdbe11b-4542-4822-8399-75f96f4e1d59", # [MDLZ_TEST] pipeline de CSM_PUCALLPA
+    "2ab00f27-952b-419b-89ee-76d7099b94cf", # [SOFTYS] pipeline de OPERADOR_COMERCIAL
+    "39b74e21-a95f-4bf7-9ed8-5cfe0832de96", # [UNILEVER] pipeline de LIDER HUAMACHUCO
+    "bd76bd34-664c-446b-8bff-77e1b0cd8fe1", # [ALICORP] pipeline de LIDER HUAMACHUCO
+    "4b3e5290-269e-41d4-8dd7-182fcd5fa024", # [CONFITECA] pipeline de SUNSET CHICLAYO
+    "fcba40e1-13ed-431b-8a52-b749ba13bbd4", # [CNCH] pipeline de Digalca Lima
+    "3da84e46-e23c-4b0b-ae82-9fa300b13a96", # [SUPER ALIMENTOS] pipeline de EUROVA
+    "0775f3b2-a08d-4fa1-81f3-e66b4935f6f4", # [ALICORP] pipeline de RYG
+    "77a84ad7-5c17-49b3-919c-69c82e208ab9", # [MDLZ_TEST] pipeline de JOMER_HUACHO
+    "8dbb888b-5670-4ca4-8c85-2462cdca570c", # [ARCOR] pipeline de MYN
+    "39945dca-90cd-4ff9-904b-55db702c9486", # [SOFTYS] pipeline de Lider Chepen
+    "68d39623-3ca5-46eb-8e6b-dd27afb5e885", # [SUPER ALIMENTOS] pipeline de JOTA REY
+    "c64e4734-ca49-42e6-bb41-ce6c708abf47", # [UNILEVER] pipeline de L&H Representaciones
+    "47899f0d-4bb4-46f0-9dd1-8f17060d52dc", # [SOFTYS] pipeline de AGA JAEN
+    "8a3df00a-69e3-44e9-b646-7e4502cfde90", # [SOFTYS] pipeline de AGA CHACHAPOYAS
+    "38c15a49-c822-41af-9da8-eddbc4641178", # [SOFTYS] pipeline de AGA JUANJUI
+    "e759e587-4359-43dd-a0e9-2d26eb04027c", # [SOFTYS] pipeline de AGA MOYOBAMBA
+    "cc593729-5139-4d44-90a8-d71aa4d1a1d0", # [MDLZ] pipeline de LA_GENOVESA_ILO_TEST
+    "ba1995b8-05ea-4607-a1da-7407cdd8c59c", # [MDLZ] pipeline de LA_GENOVESA_MOQUEGUA_TEST
+    "7315606a-daec-4ee4-8ec5-367ee47cc021", # [MDLZ] pipeline de LA_GENOVESA_TACNA_TEST
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_05_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 11:05 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "804f2091-e447-4733-898f-239073e996a4", # [SOFTYS] pipeline de MELVIN - MICHEL
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 11PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "006b0555-6dba-4101-9dda-b29a1ca7b27c", # [CLOROX] pipeline de DON TEO
+    "294e49e6-0058-4860-8e62-34712f285159", # [SOFTYS] pipeline de DON TEO
+    "0f78a62c-fb4f-410b-9366-bcef5fc3c120", # [SOFTYS] pipeline de MARCAVENTA
+    "16b78b64-d623-4de6-9332-36eaacd9689a", # [SOFTYS] pipeline de SANTA HONORATA
+    "51ddc12e-ea64-4e26-96f6-c9bd4d0bbefb", # [JNJ] pipeline de PRIMOS (Vive en el mismo que MARCAVENTA)
+    "bb3c4276-9fdf-46a3-8a53-07923f6cdf25", # [CONFITECA] pipeline de PRIMOS (Vive en el mismo que MARCAVENTA)
+    "38717d35-6963-4b59-917f-502c124195dd", # [SOFTYS] pipeline de SIPAN
+    "611e11b4-6b8b-4074-ac99-6d4aec7750e4", # [SOFTYS] pipeline de CALLAYUC
+    "157b1531-98bb-4c94-9abb-e51a6fb1384e", # [CLOROX] pipeline de CHIMU 
+    "df7df226-6a4e-485d-b023-5f8a10fc83de", # [CLOROX] pipeline de SIPAN
+    "1ac1092b-b5b0-4acb-9aa0-3d6b77cb1947", # [CLOROX] pipeline de CALLAYUC
+    "aa1eed53-9abf-4864-9f39-fc9a2a7c57fd", # [VERDUM] pipeline de PRIMOS,
+    "426b7cc1-a702-4f39-a941-7ede86c796fb", # [SOFTYS_FDH] pipeline de AGA_JUANJUI_FDH
+    "fce53d8f-c76c-4cc9-87fb-6e6774ff58b5", # [CLOROX] pipeline de KADOSH,
+    "3accce15-7b3c-4ea8-a977-0deb2555ae07", # [AJINOMOTO] pipeline de CALLAYUC
+    "855dc4e6-4c29-41da-a61a-1684170692d7", # [AJINOMOTO] pipeline de SIPAN
+    "37353aef-ea26-46c1-823f-a6b8f9fc8461", # [CLOROX] pipeline de JORGE BARON
+    "273503d3-9603-400d-bb44-d2fb06702d78", # [CONFITECA] pipeline de SAN MARTIN
+    "22f06da1-7142-4171-84f1-bc1e0d73d47a", # [CLOROX] pipeline de SILVIA
+    "929b01d0-282f-48fb-9b0c-acfb0c2579df", # [AJINOMOTO] pipeline de MERCOPERU
+    # Por defecto le puse 11pm
+    "0008e12a-a687-4ea4-a437-252b9a43c704", # [CLOROX] pipeline de 5M
+    "db50f985-c93a-4156-a142-070df187a84e", # [WINTERS] pipeline de 5M
+    "00ecaf29-39ed-4d0d-85b5-0b3154dd84bb", # [UNILEVER] pipeline de 5M
+    "bd38e662-5d2d-4955-acbb-2435830a6dc0", # [CLOROX] pipeline de SANTO_DOMINGO
+    "0f9ddfa6-ae2d-4c37-98f7-997051221bda", # [AJINOMOTO] konsumass
+    "1e4dc88c-1d1e-4c4d-8014-67147fb4f94a", # [CLOROX] pipeline de ZV
+
+    # "34c33c4e-d5cb-457a-97c7-c0f66ed9d3ac", # [MDLZ] pipeline de JANDY_ESTE
+    "d20bd323-185f-4ee9-8435-32d5f6b2a842", # [MDLZ_TEST] pipeline de JANDY_ESTE
+    # "443da501-75e6-4322-9df2-15cba8dd952a", # [MDLZ] pipeline de DIST_SILVIA
+    "0ce205f6-999b-429b-a04a-48e2dc0793be", # [MDLZ] pipeline de AMERICA TEST
+    # "9c2bab1c-8647-4d7b-a8a5-0cb533475bc1", # [SOFTYS] pipeline de TIERRA_SUR
+    "448c88dc-104d-4b50-9ac7-cd1814e0bf73", # [ALICORP] pipeline de SILVIA
+    "62cbacf7-543d-49d2-b4db-efda8cb87e28", # [SOFTYS] pipeline de WILLIAM
+    "a9b4d89c-e5b3-4c81-ad2a-451bfe1b1847", # [CONFITECA] pipeline de GOLO_SUR
+    "765a2f8e-9ea5-4a62-a9c8-5cb2623270ec", # [UNILEVER] pipeline de ZV
+    "ce7a634e-6b29-4caa-a475-7392e90df291", # [JNJ] pipeline de CODIFER
+    "b722f189-b909-4e67-9af2-2d08b1418cb9", # [YICHANG] pipeline de DON_TEO_TRUJILLO
+    "b566322a-bc4c-4f25-a583-bd73d408cadc", # [YICHANG] pipeline de SNACKS HUARAZ
+    "5c3e725a-486a-439e-98c2-2a706c62a5a6", # [SUPER ALIMENTOS] pipeline de SNACKS HUARAZ
+    "dbffebbf-3740-4b26-b14b-3c1846ee29c4", # [SUPER_ALIMENTOS] pipeline de SILVIA
+    "6674b219-404b-414a-93c9-e930529ec8c2", # [ALICORP] pipeline de CASTRO
+    "d50b2fff-846d-45c4-9cea-74d987d330b5", # [TODOBOT - ALICORP] alicorp_grupo_jimenez-all
+    "237c46ac-5929-4596-91b8-e5626b9725b1", # [TODOBOT - ARCOR] arcor_grupo_jimenez-all
+    "869a3d15-aa55-4eae-921f-314fa4f6c555", # [CLOROX] pipeline de KANTU
+    "2b3ddbab-ecf5-4808-a7a8-bb1291e4a028", # [YICHANG] pipeline de MERKOSUR
+    "2ceb1772-21d7-4580-84ec-c73a2c7779fd", # [TODOBOT - YICHANG] yichang_grupo_jimenez-all
+    # "694f689e-3f63-4f05-b312-01b695a0bd1c", # [RINTISA] pipeline de CSM PUCALLPA
+    # "7d22de5a-98d2-4f8a-898b-9aa1a2c6cb01", # [RINTISA] pipeline de DIST CSM
+    "1d965b41-5330-4b4f-ad43-11a2b95c2760", # [ALICORP] pipeline de PATITA PUCALLPA
+    "20dac38d-fc51-494e-a3f3-1c164dc3b1cb", # [ARCOR] pipeline de SILVIA
+    "35945e6e-8c3a-4ec0-bd7c-f8e5e9a50d8a", # [ARCOR] pipeline de EUROVA
+    "4f6bd141-bfeb-48b6-8c51-df405a336152", # [TODOBOT - SUPER_ALIMENTOS] super_grupo_jimenez_provincias-all
+    "b5cf9ce1-f6e0-4ddb-9853-6cbf3a126067", # [TODOBOT - SUPER_ALIMENTOS] super_grupo_jimenez_lima-all
+    "0c942c20-06ee-458f-86b2-0128f050a909", # [RINTISA] pipeline de INVERSIONES BEA
+    "3ea2708d-666d-4a5f-9dfc-4588e9e25389", # [CLOROX] pipeline de MELVIN - MICHEL
+    "6a2551e3-fb84-4bae-836d-a8e7e7d3b30b", # [UNILEVER] pipeline de LA GENOVESA TACNA
+    "d457861a-d417-430d-8e87-ae72d14f68b7", # [YICHANG] pipeline de TOP PARTNER
+    "b2a7d8a8-f3ae-4903-99e9-7b99cd956fd3", # [TODOBOT - CNCH] cnch_grupo_jimenez-all
+    "cab49ea9-8f88-4545-a9c1-ac2ef54d2829", # [INDUPSA] pipeline de SILVIA
+    "828b5a31-d415-4e81-b938-7b6c4934cb54", # [MDLZ] pipeline de FERROL
+    "5ac35951-c8d6-4c7a-b75a-7cabc6e68890", # [CARTAVIO] pipeline de CATA
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_15_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 11:15 PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "d98e354f-4180-462f-828f-d186c0345885", # [SOFTYS] pipeline de GENOVESA MOQUEGUA
+    "45c71ab4-c216-4d9a-a865-60d9194cc2e2", # [ALICORP] pipeline de L&H
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 11:30PM (PE)")
+  add_ppls_to_cron(ppl_ids=[
+    "75e887e9-0903-46a6-b846-1ce88bdeccce", # [VERDUM] pipeline de EDUSA
+    # "00f3af00-6d86-4c63-b928-9024b98ca2e0", # [MDLZ] pipeline de SAQRAS_PUNO
+    "7d7c9cb2-e6f2-464e-81ad-24eb9cd21afb", # [MDLZ] pipeline de SAQRAS_PUNO
+    "cd9224c5-4be9-4a8d-85af-ab8336aafe03", # [MDLZ_TEST] pipeline de JOMER_HUANCAYO
+    "29128ea8-cb9d-4fc9-aec7-00305f107ced", # [ARCOR] pipeline de SUPERVENTAS
+    "8421f94d-ba28-4137-a177-d2c620417d88", # [ARCOR] pipeline de MERCO
+    # "9f1e126e-4663-4845-8dbe-46cd8b120681", # [MDLZ] pipeline de JANDY_NORTE
+    "dfeaba66-2642-4393-8186-f98b48a71cab", # [UNILEVER] pipeline de MERKOSUR
+    # "cf6b1af8-ca48-4790-bfa7-f8b049d9ff83", # [ALICORP] pipeline de LIDER_TRUJILLLO
+    "3ad42a5e-472b-4bff-ab2a-b33ed72e093e", # [CONFITECA] pipeline de PLAZA_MAR_PUCALLPA
+    "7d7c9cb2-e6f2-464e-81ad-24eb9cd21afb", # [MDLZ_TEST] pipeline de SAQRAS_PUNO
+    "b01332a9-f85f-4195-aa73-551586e4f450", # [CONFITECA] pipeline de RED_ORIENTE
+    "12086cbe-dc6f-4fb5-a3eb-9a8ed1a3d46a", # [SUPER_ALIMENTOS] pipeline de MAC VENTAS
+    "d80dc730-d868-4a6b-93b7-9fc713c2fa89", # [SOFTYS] pipeline de JORGE BARON
+    "c9fe87e4-7840-48cf-b4b8-b3a54fdfced3", # [CLOROX] pipeline de GLCOM
+    "e73ed2a6-f956-4449-8961-8d2fadd24a67", # [MDLZ] pipeline de JOMER_ICA
+    "2fa2f161-86c5-4ed5-b58d-5c8247a638af", # [CONFITECA] pipeline de KANTU
+    "818e066c-3cb0-47b8-8a59-00326e357870", # [CLOROX] pipeline de SAN FRANCISCO
+    "3712b6ec-18f2-43e2-95c8-ff5c9e4a38f5", # [BDF] pipeline de JORGE BARON
+    "692dbc59-c3c2-4a76-a4b0-04fb2e8974a9", # [YICHANG] pipeline de SODALES
+    "d18ac475-7dbd-4cb9-96df-d63db8a8c0ff", # [SUPER_ALIMENTOS] pipeline de CASA_GRANDE
+    "2b338fd8-caf3-4e96-87e5-7ac69d9be3e1", # [WINTERS] pipeline de CASA_GRANDE
+    "6885c48c-2ef0-492e-a541-dac47c7208c2", # [YICHANG] pipeline de SAN MARTIN
+    "5251c983-6723-44ac-b815-0bd701b10795", # [CONFITECA] pipeline de SNACKS HUARAZ
+    "49adb3a9-7e8b-420f-abdc-a837f47f65af", # [YICHANG] pipeline de SAN JUAN
+    "6e20640f-ba43-4267-b5a7-ba33fbfec544", # [YICHANG] pipeline de GEMINIS
+    "873a902b-0b8c-4cdc-9e09-0d7103e3976d", # [YICHANG] pipeline de TOTAL DISTRIBUIDORES
+    "0f6a9717-b6ad-48ee-b7b3-828a660b791b", # [YICHANG] pipeline de PRIMOS
+    "6be87d69-542b-453c-965f-d472e6ffafa9", # [SOFTYS] pipeline de silvia
+    "627e0ee8-7ab7-4aa1-b2d9-d537a0678806", # [ALICORP] pipeline de SALDI
+    "6ee4632b-f06a-4830-ba26-d09abebfd5be", # [SUPER ALIMENTOS] pipeline de PRIMOS
+    "c5115346-d761-4dd4-af96-2a0be6abd97d", # [SUPER ALIMENTOS] pipeline de MARCAVENTA
+    "629ea83b-ae6b-47f6-bf2d-eb3a31a9566b", # [CNCH] pipeline de SAN JUAN
+    "2b8e9555-21f9-4e02-9394-ba51ebce3cbe", # [SUPER ALIMENTOS] pipeline de CA & LU
+    "4acf7b11-2c83-4d80-937a-e5f4f6733a5e", # [CNCH] pipeline de CSM
+    "8e1a563a-5df7-4fd2-95f5-cd1360129450", # [ALICORP] pipeline de FAMCADI
+    "91192476-3c65-491f-9fc9-231a238e51ed", # [ALICORP] pipeline de CSM
+    "91e68509-9d0c-4206-83aa-71bb016df6d6", # [SOFTYS] pipeline de TAYMI NORTE
+    "3a6f0582-a324-4b63-b4db-f150383166ac", # [ALICORP] pipeline de CSM-PUCALLPA
+    "3da62832-0c0a-43b8-ba94-9509adb8afb3", # [CLOROX] pipeline de ALVAREZ BOHL
+    "bfae2582-f438-40bb-8369-a0aee7e21cd2", # [CLOROX] pipeline de LUCKY HUANCAYO
+    "7797b351-734c-4ec7-936d-ce685299f976", # [SP] pipeline de ALVAREZ BOHL
+    "43b5028a-9824-43c3-8ecd-7e236ff05eb1", # [CLOROX] pipeline de GRUPO DISART
+    "a5156156-9ce2-4700-87fc-885dbdfb3c4e", # [CLOROX] pipeline de INV DISART
+    "0ddc8e53-880c-420f-904b-cb199d676567", # [MDLZ] pipeline de ECONOMYSA
+    "c5c999d2-03e1-4112-b321-a5219ef53de9", # [YICHANG] pipeline de JANDY
+    "d2bb6e32-4674-4c7f-b605-513689673bdc", # [YICHANG] pipeline de N&J
+    "c78362b5-5c0b-4af9-a8b0-c1c490ada3ca", # [ARCOR] pipeline de N&J
+    "9b618d06-f4ae-43b1-bf74-e451d1892f4c", # [YICHANG] pipeline de SAQRAS AREQUIPA
+    "7c389990-2ea4-46b5-bc9f-39902ac69e5a", # [CLOROX] pipeline de MERCAVENTA
+    "0da7b031-3a5f-4aa8-8fc6-e2d4aa55f0dd", # [CLOROX] pipeline de PRIMOS
+    "12d3a897-4351-4091-8ecf-96c9f7dcddaf", # [ARCOR] pipeline de LUCKY
+    "8b972789-3b04-4a4d-9b64-28c5cdd73ad8", # [SOFTYS] pipeline de A y B
+    "edd56a8d-349c-4091-9597-0a47bdc3ac69", # [ALICORP] pipeline de MELVIN
+    "659222b3-ad07-44a2-919e-242f198741af", # [ALICORP] pipeline de MORAN
+    "cffc864b-6454-4bc7-9db0-3bea1bf4dfb5", # [MDLZ] pipeline de PAuSER
+    "c4a0235e-e543-449f-a4bc-9957d3381e89", # [ALICORP] pipeline de JANDY
+    "ec983f87-6867-4ca3-aa35-c227761556d8", # [ALICORP] pipeline de ALMACENES VICTORIA
+  ])
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_45_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 11:45 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "8f925564-0105-40fa-8906-f805f4dd01f7", # [ARCOR] pipeline de AYB
+    "1ba82c15-da6f-46e7-8cc4-b5fbecf22a8f", # [ALICORP] pipeline de TAMBOS
+    "4b820335-7586-476d-97b2-833a667e29f2", # [RINTISA] pipeline de CASA GRANDE
+    "e7457584-b1f6-4bf9-82be-4ed3fff73e0f", # [ALICORP] pipeline de BRENMA
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_11_55_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 11:55 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "18b9c03b-6815-45e7-9603-2cad329695b0", # [YICHANG] pipeline de AMAZONAS
+    "97cc17b9-0e0b-4165-be00-394fcedd67e0", # [YICHANG] pipeline de TCA
+    "74192aef-a926-4655-b140-6423a5a52879", # [ARCOR] pipeline de DISMAR
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_12_00_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 12:00 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "9cfb6021-2f68-466a-9a2c-49a6499f68bb", # [MDLZ_MODERNO] Proceso general de PERU MODERNO
+    "3bc8dcc4-001c-4ad9-99de-d77ef4176d3d", # [EDGEWELL] pipeline de AGA - CHACHAPOYAS
+    "76adaa56-ffdd-4487-a200-dc9b1b0074b4", # [EDGEWELL] pipeline de AGA - JAEN
+    "c3d815e4-dbf7-4955-a002-8b875c521c01", # [TODOBOT - UNILEVER] unilever_transito-all
+    "b521ec8c-b382-45d8-8cb2-aefb0e607977", # [TODOBOT - CNCH] cnch_falabella_tottus-all
+  ])
+
+  day_of_every_week([0, 1, 2, 3, 4, 5], add_ppls_to_cron, args=[
+    "9b5f6fdf-d19b-42ba-9a0e-4ab0aca5fc0f", # [SYS NOTIFICATION] Whatsapp - CONFITECA
+  ])
+
+  day_of_every_week([1], add_ppls_to_cron, args=[
+    "c3ebcec3-0cf5-4ac0-9de1-dac4db0fb563", # [TODOBOT - CNCH] cnch_cencosud_share-all
+  ])
+  
+  day_of_every_week([2], add_ppls_to_cron, args=[
+    "cea57174-c7c0-45c1-b9f7-def2b87b0f6b", # [TODOBOT - CLOROX] clorox_ecu_santa_maria-logistica
+  ])
+
+  logger.info("Job(s) agregado a la cola")
+
+def cron_12_15_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 12:15 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "36d2abe1-611b-428b-8b50-75a99b655bf6", # [ALICORP] pipeline de DARO
+    #"49f514f5-fda4-4fc7-8215-58d21320d402", # [TODOBOT - UNILEVER] tottus_unilever-sales
+    "5de8d546-2d7d-4466-8948-2a6d56ba6b85", # [ARCOR] pipeline de KAYFA
+    #"1f4abd84-c373-45ee-bf0e-35e44e94361f", # [TODOBOT - UNILEVER] unilever_falabella_tottus-all
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_12_30_pm_PE ():
+  logger.info("EJECUTANDO CRON DE LAS 12:30 PM (PE)")
+  
+  add_ppls_to_cron(ppl_ids=[
+    "bd1544e4-4768-4872-872c-d20211b54b4c", # [TODOBOT - INKACROPS] inkacrops_cencosud-all
+    "be769369-c64e-48d5-9671-36df0bc802f2", # [TODOBOT - INKACROPS] inkacrops_spsa-order
+    "a4dc2d90-e297-41e5-a73a-bc78cec294a0", # [TODOBOT - INKACROPS] inkacrops_spsa-inventory
+    "facefc80-fbf1-4483-baeb-a6ea40eb8ac5", # [TODOBOT - INKACROPS] inkacrops_tottus-all
+    "82026b00-5d93-4aae-8a07-ff115a23fafb", # [UNILEVER] Proceso general de UNILEVER MT
+    "389e724e-2f7e-4665-9a9e-20fa992fb3f7", # [TODOBOT - CLOROX] pipeline de LOGISTICA ZCarryn-all
+    "5bfdf190-96c0-4080-b26e-b6196328d179", # [YICHANG] pipeline de EL SOL
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+def cron_12_45_pm_PE():
+  logger.info("EJECUTANDO CRON DE LAS 12:45 PM (PE)")
+
+  add_ppls_to_cron(ppl_ids=[
+    "ccde9e95-ce8b-4057-ad52-736d8c702b69", # [VIDA SOFTWARE] pipeline de SOFTYS
+  ])
+  
+  logger.info("Job(s) agregado a la cola")
+
+schedule.every().day.at("04:55").do(cron_11_55_pm_PE)
+schedule.every().day.at("04:45").do(cron_11_45_pm_PE)
+schedule.every().day.at("04:30").do(cron_11_30_pm_PE)
+schedule.every().day.at("04:15").do(cron_11_15_pm_PE)
+schedule.every().day.at("04:05").do(cron_11_05_pm_PE)
+schedule.every().day.at("04:00").do(cron_11pm_PE)
+schedule.every().day.at("03:30").do(cron_10_30pm_PE)
+schedule.every().day.at("03:00").do(cron_10_00_pm_PE)
+schedule.every().day.at("02:30").do(cron_09_30_pm_PE)
+schedule.every().day.at("02:00").do(cron_09_00_pm_PE)
+schedule.every().day.at("01:30").do(cron_08_30_pm_PE)
+schedule.every().day.at("01:00").do(cron_08_00_pm_PE)
+
+schedule.every().day.at("00:30").do(cron_7_30_pm_PE)
+schedule.every().day.at("00:00").do(cron_7pm_PE)
+schedule.every().day.at("23:30").do(cron_6_30_pm_PE)
+schedule.every().day.at("23:00").do(cron_6pm_PE)
+schedule.every().day.at("22:30").do(cron_05_30_pm_PE)
+schedule.every().day.at("22:00").do(cron_5pm_PE)
+schedule.every().day.at("21:45").do(cron_04_45_pm_PE)
+schedule.every().day.at("21:30").do(cron_04_30_pm_PE)
+schedule.every().day.at("21:00").do(cron_04_00_pm_PE)
+schedule.every().day.at("20:00").do(cron_03_00_pm_PE)
+schedule.every().day.at("20:30").do(cron_03_30_pm_PE)
+schedule.every().day.at("19:30").do(cron_02_30_pm_PE)
+schedule.every().day.at("19:15").do(cron_02_15_pm_PE)
+schedule.every().day.at("19:00").do(cron_02_00_pm_PE)
+schedule.every().day.at("18:30").do(cron_01_30_pm_PE)
+schedule.every().day.at("18:00").do(cron_01_00_pm_PE)
+
+schedule.every().day.at("17:45").do(cron_12_45_pm_PE)
+schedule.every().day.at("17:30").do(cron_12_30_pm_PE)
+schedule.every().day.at("17:15").do(cron_12_15_pm_PE)
+schedule.every().day.at("17:00").do(cron_12_00_pm_PE)
+
+schedule.every().day.at("16:30").do(cron_11_30_am_PE)
+schedule.every().day.at("16:15").do(cron_11_15_am_PE)
+schedule.every().day.at("16:00").do(cron_11_00_am_PE)
+schedule.every().day.at("15:30").do(cron_10_30_am_PE)
+schedule.every().day.at("15:45").do(cron_10_45_am_PE)
+schedule.every().day.at("15:20").do(cron_10_20_am_PE)
+schedule.every().day.at("15:00").do(cron_10_00_am_PE)
+schedule.every().day.at("14:00").do(cron_09_00_am_PE)
+schedule.every().day.at("14:30").do(cron_09_30_am_PE)
+schedule.every().day.at("14:40").do(cron_09_40_am_PE)
+schedule.every().day.at("13:30").do(cron_08_30_am_PE)
+schedule.every().day.at("13:15").do(cron_08_15_am_PE)
+schedule.every().day.at("13:00").do(cron_08_00_am_PE)
+schedule.every().day.at("12:00").do(cron_07_00_am_PE)
+schedule.every().day.at("11:15").do(cron_06_15_am_PE)
+schedule.every().day.at("11:10").do(cron_6_10_am_PE)
+schedule.every().day.at("11:00").do(cron_06_00_am_PE)
+
+schedule.every().day.at("10:00").do(cron_05_00_am_PE)
+schedule.every().day.at("10:30").do(cron_05_30_am_PE)
+schedule.every().day.at("09:30").do(cron_04_30_am_PE)
+schedule.every().day.at("08:30").do(cron_03_30_am_PE)
+schedule.every().day.at("08:00").do(cron_03_00_am_PE)
+schedule.every().day.at("07:00").do(cron_02_30_am_PE)
+schedule.every().day.at("07:00").do(cron_02_00_am_PE)
+schedule.every().day.at("06:30").do(cron_01_30_am_PE)
+schedule.every().day.at("06:15").do(cron_01_15_am_PE)
+schedule.every().day.at("06:00").do(cron_01_00_am_PE)
+schedule.every().day.at("05:45").do(cron_00_45_am_PE)
+schedule.every().day.at("05:30").do(cron_00_30_am_PE)
+schedule.every().day.at("05:20").do(cron_00_20_am_PE)
+schedule.every().day.at("05:15").do(cron_00_15_am_PE)
+schedule.every().day.at("05:00").do(cron_00_00_am_PE)
+
+
+# MONDAY
+schedule.every().monday.at("16:30").do(cron_monday_11_30_am_PE)
+
+# WEDNESDAY
+schedule.every().wednesday.at("16:00").do(cron_wednesday_11_00_am_PE)
+
+while True:
+  schedule.run_pending()
+  time.sleep(1)
