@@ -338,6 +338,8 @@ export default function Schedules() {
     queryFn: async () => {
       if (!selectedDayStart || !selectedDayEnd) return { jobs: [] };
       
+      console.log('Fetching job history for:', { startDate: selectedDayStart, endDate: selectedDayEnd });
+      
       const result = await executeQuery(`
         query GetDayJobHistory($startDate: timestamptz!, $endDate: timestamptz!) {
           jobs: merlin_agent_PipelineJobQueue(
@@ -362,11 +364,13 @@ export default function Schedules() {
         }
       `, { startDate: selectedDayStart, endDate: selectedDayEnd });
       
+      console.log('Job history result:', result.data?.jobs?.length || 0, 'jobs found');
+      
       return {
         jobs: result.data?.jobs || [],
       };
     },
-    enabled: !!selectedDay,
+    enabled: !!selectedDay && calendarTab === "history",
   });
 
   // Create schedule mutation
