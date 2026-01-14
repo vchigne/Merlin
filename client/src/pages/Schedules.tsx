@@ -336,13 +336,13 @@ export default function Schedules() {
   const { data: dayJobHistory, isLoading: isLoadingDayHistory } = useQuery({
     queryKey: ['/api/jobs/history', selectedDayStart],
     queryFn: async () => {
-      if (!selectedDayStart || !selectedDayEnd) return { jobs: [], logs: [] };
+      if (!selectedDayStart || !selectedDayEnd) return { jobs: [] };
       
       const result = await executeQuery(`
         query GetDayJobHistory($startDate: timestamptz!, $endDate: timestamptz!) {
           jobs: merlin_agent_PipelineJobQueue(
             where: {
-              created_at: {_gte: $startDate, _lt: $endDate}
+              created_at: {_gte: $startDate, _lte: $endDate}
             }
             order_by: {created_at: desc}
             limit: 100
@@ -354,25 +354,9 @@ export default function Schedules() {
             running
             completed
             aborted
-            error_message
             Pipeline { 
               name 
               AgentPassport { name }
-            }
-          }
-          logs: merlin_agent_PipelineJobLogV2Body(
-            where: {
-              created_at: {_gte: $startDate, _lt: $endDate}
-            }
-            order_by: {created_at: desc}
-            limit: 50
-          ) {
-            id
-            level
-            message
-            created_at
-            PipelineJobLog {
-              Pipeline { name }
             }
           }
         }
@@ -380,7 +364,6 @@ export default function Schedules() {
       
       return {
         jobs: result.data?.jobs || [],
-        logs: result.data?.logs || [],
       };
     },
     enabled: !!selectedDay,
@@ -1044,11 +1027,11 @@ export default function Schedules() {
                       <div className="flex gap-4 text-sm mb-3">
                         <div className="flex items-center gap-1">
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          <span>{dayJobHistory.jobs.filter((j: any) => j.completed && !j.error_message).length} exitosos</span>
+                          <span>{dayJobHistory.jobs.filter((j: any) => j.completed && !j.aborted).length} exitosos</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <AlertCircle className="h-4 w-4 text-red-500" />
-                          <span>{dayJobHistory.jobs.filter((j: any) => j.error_message || j.aborted).length} errores</span>
+                          <span>{dayJobHistory.jobs.filter((j: any) => j.aborted).length} abortados</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Loader2 className="h-4 w-4 text-blue-500" />
@@ -1061,7 +1044,7 @@ export default function Schedules() {
                             <div 
                               key={job.id} 
                               className={`border rounded-lg p-3 ${
-                                job.error_message || job.aborted 
+                                job.aborted 
                                   ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800' 
                                   : job.completed 
                                     ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
@@ -1072,7 +1055,7 @@ export default function Schedules() {
                             >
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
-                                  {job.error_message || job.aborted ? (
+                                  {job.aborted ? (
                                     <AlertCircle className="h-4 w-4 text-red-500" />
                                   ) : job.completed ? (
                                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -1089,9 +1072,6 @@ export default function Schedules() {
                               </div>
                               {job.Pipeline?.AgentPassport?.name && (
                                 <p className="text-xs text-muted-foreground">{job.Pipeline.AgentPassport.name}</p>
-                              )}
-                              {job.error_message && (
-                                <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">{job.error_message}</p>
                               )}
                             </div>
                           ))}
