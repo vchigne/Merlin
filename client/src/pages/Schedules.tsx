@@ -261,6 +261,7 @@ export default function Schedules() {
   // Calendar state
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [calendarTab, setCalendarTab] = useState<"scheduled" | "history">("scheduled");
 
   // Fetch schedules
   const { data: schedules, isLoading: isLoadingSchedules, refetch: refetchSchedules } = useQuery<ScheduleWithTargets[]>({
@@ -322,6 +323,67 @@ export default function Schedules() {
       };
     },
     refetchInterval: 5000,
+  });
+
+  // Fetch job history for selected day (use UTC boundaries to match server timestamps)
+  const selectedDayStart = selectedDay 
+    ? new Date(Date.UTC(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate(), 0, 0, 0)).toISOString() 
+    : null;
+  const selectedDayEnd = selectedDay 
+    ? new Date(Date.UTC(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate(), 23, 59, 59, 999)).toISOString() 
+    : null;
+  
+  const { data: dayJobHistory, isLoading: isLoadingDayHistory } = useQuery({
+    queryKey: ['/api/jobs/history', selectedDayStart],
+    queryFn: async () => {
+      if (!selectedDayStart || !selectedDayEnd) return { jobs: [], logs: [] };
+      
+      const result = await executeQuery(`
+        query GetDayJobHistory($startDate: timestamptz!, $endDate: timestamptz!) {
+          jobs: merlin_agent_PipelineJobQueue(
+            where: {
+              created_at: {_gte: $startDate, _lt: $endDate}
+            }
+            order_by: {created_at: desc}
+            limit: 100
+          ) {
+            id
+            pipeline_id
+            created_at
+            updated_at
+            running
+            completed
+            aborted
+            error_message
+            Pipeline { 
+              name 
+              AgentPassport { name }
+            }
+          }
+          logs: merlin_agent_PipelineJobLogV2Body(
+            where: {
+              created_at: {_gte: $startDate, _lt: $endDate}
+            }
+            order_by: {created_at: desc}
+            limit: 50
+          ) {
+            id
+            level
+            message
+            created_at
+            PipelineJobLog {
+              Pipeline { name }
+            }
+          }
+        }
+      `, { startDate: selectedDayStart, endDate: selectedDayEnd });
+      
+      return {
+        jobs: result.data?.jobs || [],
+        logs: result.data?.logs || [],
+      };
+    },
+    enabled: !!selectedDay,
   });
 
   // Create schedule mutation
@@ -905,49 +967,142 @@ export default function Schedules() {
           {selectedDay && (
             <Card className="mt-4">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {selectedDay.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {selectedDay.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </CardTitle>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={calendarTab === "scheduled" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCalendarTab("scheduled")}
+                    >
+                      <Clock className="h-3 w-3 mr-1" />
+                      Programado
+                    </Button>
+                    <Button
+                      variant={calendarTab === "history" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCalendarTab("history")}
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Historial
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {schedules && getSchedulesForDay(schedules, selectedDay).length > 0 ? (
-                  <div className="space-y-3">
-                    {getSchedulesForDay(schedules, selectedDay)
-                      .sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay))
-                      .map(schedule => (
-                        <div key={schedule.id} className="border rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="font-mono">
-                                {schedule.timeOfDay}
+                {calendarTab === "scheduled" ? (
+                  schedules && getSchedulesForDay(schedules, selectedDay).length > 0 ? (
+                    <div className="space-y-3">
+                      {getSchedulesForDay(schedules, selectedDay)
+                        .sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay))
+                        .map(schedule => (
+                          <div key={schedule.id} className="border rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="font-mono">
+                                  {schedule.timeOfDay}
+                                </Badge>
+                                <span className="font-medium">{schedule.label}</span>
+                              </div>
+                              <Badge variant="secondary">
+                                {schedule.targets.length} pipeline{schedule.targets.length !== 1 ? 's' : ''}
                               </Badge>
-                              <span className="font-medium">{schedule.label}</span>
                             </div>
-                            <Badge variant="secondary">
-                              {schedule.targets.length} pipeline{schedule.targets.length !== 1 ? 's' : ''}
-                            </Badge>
+                            <div className="flex flex-wrap gap-1">
+                              {schedule.targets.slice(0, 5).map(target => (
+                                <Badge key={target.id} variant="outline" className="text-xs">
+                                  {target.pipelineName || target.pipelineId.substring(0, 8)}
+                                </Badge>
+                              ))}
+                              {schedule.targets.length > 5 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{schedule.targets.length - 5} más
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-1">
-                            {schedule.targets.slice(0, 5).map(target => (
-                              <Badge key={target.id} variant="outline" className="text-xs">
-                                {target.pipelineName || target.pipelineId.substring(0, 8)}
-                              </Badge>
-                            ))}
-                            {schedule.targets.length > 5 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{schedule.targets.length - 5} más
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
+                        ))
+                      }
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      No hay ejecuciones programadas para este día
+                    </p>
+                  )
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    No hay ejecuciones programadas para este día
-                  </p>
+                  isLoadingDayHistory ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : dayJobHistory && dayJobHistory.jobs.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex gap-4 text-sm mb-3">
+                        <div className="flex items-center gap-1">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <span>{dayJobHistory.jobs.filter((j: any) => j.completed && !j.error_message).length} exitosos</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                          <span>{dayJobHistory.jobs.filter((j: any) => j.error_message || j.aborted).length} errores</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Loader2 className="h-4 w-4 text-blue-500" />
+                          <span>{dayJobHistory.jobs.filter((j: any) => j.running).length} en ejecución</span>
+                        </div>
+                      </div>
+                      <ScrollArea className="h-[300px]">
+                        <div className="space-y-2">
+                          {dayJobHistory.jobs.map((job: any) => (
+                            <div 
+                              key={job.id} 
+                              className={`border rounded-lg p-3 ${
+                                job.error_message || job.aborted 
+                                  ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800' 
+                                  : job.completed 
+                                    ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
+                                    : job.running
+                                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
+                                      : ''
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                  {job.error_message || job.aborted ? (
+                                    <AlertCircle className="h-4 w-4 text-red-500" />
+                                  ) : job.completed ? (
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  ) : job.running ? (
+                                    <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                                  ) : (
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                  <span className="font-medium">{job.Pipeline?.name || job.pipeline_id.substring(0, 8)}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(job.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              {job.Pipeline?.AgentPassport?.name && (
+                                <p className="text-xs text-muted-foreground">{job.Pipeline.AgentPassport.name}</p>
+                              )}
+                              {job.error_message && (
+                                <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">{job.error_message}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      No hay ejecuciones registradas para este día
+                    </p>
+                  )
                 )}
               </CardContent>
             </Card>
