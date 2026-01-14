@@ -43,7 +43,9 @@ import {
   Loader2,
   Settings2,
   Upload,
-  FileCode
+  FileCode,
+  Pencil,
+  X
 } from "lucide-react";
 import type { ScheduleConfig, ScheduleTarget } from "@shared/schema";
 
@@ -141,8 +143,18 @@ export default function Schedules() {
   const [activeTab, setActiveTab] = useState("schedules");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleWithTargets | null>(null);
   const [importContent, setImportContent] = useState("");
   const [newSchedule, setNewSchedule] = useState({
+    label: "",
+    timeOfDay: "00:00",
+    frequencyType: "daily" as "daily" | "weekly" | "monthly",
+    daysOfWeek: "",
+    daysOfMonth: "",
+    enabled: true,
+  });
+  const [editForm, setEditForm] = useState({
     label: "",
     timeOfDay: "00:00",
     frequencyType: "daily" as "daily" | "weekly" | "monthly",
@@ -276,6 +288,65 @@ export default function Schedules() {
       toast({ title: "Error", description: "No se pudo importar el archivo", variant: "destructive" });
     },
   });
+
+  // Update schedule mutation
+  const updateScheduleMutation = useMutation({
+    mutationFn: async (data: { id: number } & Partial<typeof editForm>) => {
+      const { id, ...updates } = data;
+      return apiRequest('PATCH', `/api/schedules/${id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      setIsEditDialogOpen(false);
+      setEditingSchedule(null);
+      toast({ title: "Schedule actualizado", description: "Los cambios se han guardado correctamente" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo actualizar el schedule", variant: "destructive" });
+    },
+  });
+
+  // Delete target mutation
+  const deleteTargetMutation = useMutation({
+    mutationFn: async ({ scheduleId, targetId }: { scheduleId: number; targetId: number }) => {
+      return apiRequest('DELETE', `/api/schedules/${scheduleId}/targets/${targetId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      toast({ title: "Pipeline eliminado del schedule" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el pipeline", variant: "destructive" });
+    },
+  });
+
+  // Add target mutation
+  const addTargetMutation = useMutation({
+    mutationFn: async ({ scheduleId, pipelineId, pipelineName, clientName }: { scheduleId: number; pipelineId: string; pipelineName?: string; clientName?: string }) => {
+      return apiRequest('POST', `/api/schedules/${scheduleId}/targets`, { pipelineId, pipelineName, clientName });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      toast({ title: "Pipeline agregado al schedule" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo agregar el pipeline", variant: "destructive" });
+    },
+  });
+
+  // Open edit dialog
+  const openEditDialog = (schedule: ScheduleWithTargets) => {
+    setEditingSchedule(schedule);
+    setEditForm({
+      label: schedule.label,
+      timeOfDay: schedule.timeOfDay,
+      frequencyType: schedule.frequencyType as "daily" | "weekly" | "monthly",
+      daysOfWeek: schedule.daysOfWeek || "",
+      daysOfMonth: schedule.daysOfMonth || "",
+      enabled: schedule.enabled ?? true,
+    });
+    setIsEditDialogOpen(true);
+  };
 
   // Group schedules by time
   const schedulesByTime = useMemo(() => {
@@ -536,6 +607,14 @@ export default function Schedules() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => openEditDialog(schedule)}
+                              title="Editar schedule"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => deleteScheduleMutation.mutate(schedule.id)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -664,6 +743,161 @@ export default function Schedules() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) setEditingSchedule(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Schedule</DialogTitle>
+          </DialogHeader>
+          {editingSchedule && (
+            <div className="space-y-6 py-4">
+              {/* Basic Settings */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nombre</Label>
+                  <Input 
+                    value={editForm.label}
+                    onChange={(e) => setEditForm(f => ({ ...f, label: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hora de ejecución</Label>
+                  <Input 
+                    type="time"
+                    value={editForm.timeOfDay}
+                    onChange={(e) => setEditForm(f => ({ ...f, timeOfDay: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Frecuencia</Label>
+                  <Select 
+                    value={editForm.frequencyType}
+                    onValueChange={(v) => setEditForm(f => ({ ...f, frequencyType: v as any }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Diario</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="monthly">Mensual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editForm.frequencyType === "weekly" && (
+                  <div className="space-y-2">
+                    <Label>Días de la semana</Label>
+                    <Input 
+                      value={editForm.daysOfWeek}
+                      onChange={(e) => setEditForm(f => ({ ...f, daysOfWeek: e.target.value }))}
+                      placeholder="0,1,2,3,4 (0=Lun, 6=Dom)"
+                    />
+                  </div>
+                )}
+                {editForm.frequencyType === "monthly" && (
+                  <div className="space-y-2">
+                    <Label>Días del mes</Label>
+                    <Input 
+                      value={editForm.daysOfMonth}
+                      onChange={(e) => setEditForm(f => ({ ...f, daysOfMonth: e.target.value }))}
+                      placeholder="1,15,30"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Targets / Pipelines */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base">Pipelines ({editingSchedule.targets.length})</Label>
+                </div>
+                <ScrollArea className="h-[200px] border rounded-lg p-2">
+                  {editingSchedule.targets.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-2">No hay pipelines asignados</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {editingSchedule.targets.map(target => (
+                        <div key={target.id} className="flex items-center justify-between p-2 rounded border bg-muted/30">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{target.pipelineName || target.pipelineId}</p>
+                            {target.clientName && (
+                              <p className="text-xs text-muted-foreground">{target.clientName}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() => deleteTargetMutation.mutate({ scheduleId: editingSchedule.id, targetId: target.id })}
+                            disabled={deleteTargetMutation.isPending}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+
+                {/* Add Pipeline */}
+                <div className="flex gap-2">
+                  <Select
+                    onValueChange={(pipelineId) => {
+                      const pipeline = pipelines?.find(p => p.id === pipelineId);
+                      if (pipeline && editingSchedule) {
+                        addTargetMutation.mutate({
+                          scheduleId: editingSchedule.id,
+                          pipelineId: pipeline.id,
+                          pipelineName: pipeline.name,
+                          clientName: pipeline.AgentPassport?.name
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Agregar pipeline..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <ScrollArea className="h-[200px]">
+                        {pipelines?.filter(p => !editingSchedule.targets.some(t => t.pipelineId === p.id))
+                          .map(pipeline => (
+                            <SelectItem key={pipeline.id} value={pipeline.id}>
+                              {pipeline.name}
+                              {pipeline.AgentPassport?.name && (
+                                <span className="text-muted-foreground ml-2">({pipeline.AgentPassport.name})</span>
+                              )}
+                            </SelectItem>
+                          ))
+                        }
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditingSchedule(null); }}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (editingSchedule) {
+                  updateScheduleMutation.mutate({ id: editingSchedule.id, ...editForm });
+                }
+              }}
+              disabled={!editForm.label || updateScheduleMutation.isPending}
+            >
+              {updateScheduleMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
