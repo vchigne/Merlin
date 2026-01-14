@@ -60,6 +60,7 @@ import {
   Play,
   Pause,
   RefreshCw,
+  ChevronLeft,
   ChevronRight,
   AlertCircle,
   CheckCircle2,
@@ -165,6 +166,60 @@ function formatTimeUntil(date: Date): string {
   return `en ${minutes}m`;
 }
 
+function getSchedulesForDay(schedules: ScheduleWithTargets[], date: Date): ScheduleWithTargets[] {
+  const jsDayOfWeek = date.getDay();
+  const mondayBasedDay = jsDayOfWeek === 0 ? 6 : jsDayOfWeek - 1;
+  const dayOfMonth = date.getDate();
+
+  return schedules.filter(schedule => {
+    if (!schedule.enabled) return false;
+    
+    switch (schedule.frequencyType) {
+      case "daily":
+        return true;
+      case "weekly":
+        if (schedule.daysOfWeek) {
+          const allowedDays = schedule.daysOfWeek.split(",").map(Number);
+          return allowedDays.includes(mondayBasedDay);
+        }
+        return false;
+      case "monthly":
+        if (schedule.daysOfMonth) {
+          const allowedDays = schedule.daysOfMonth.split(",").map(Number);
+          return allowedDays.includes(dayOfMonth);
+        }
+        return false;
+      default:
+        return false;
+    }
+  });
+}
+
+function getCalendarDays(month: Date): (Date | null)[] {
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const firstDay = new Date(year, monthIndex, 1);
+  const lastDay = new Date(year, monthIndex + 1, 0);
+  
+  const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+  const days: (Date | null)[] = [];
+  
+  for (let i = 0; i < startOffset; i++) {
+    days.push(null);
+  }
+  
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    days.push(new Date(year, monthIndex, d));
+  }
+  
+  return days;
+}
+
+const MONTH_NAMES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
 export default function Schedules() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("schedules");
@@ -202,6 +257,10 @@ export default function Schedules() {
   // Pipeline selector popover
   const [pipelinePopoverOpen, setPipelinePopoverOpen] = useState(false);
   const [pipelineSearch, setPipelineSearch] = useState("");
+
+  // Calendar state
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Fetch schedules
   const { data: schedules, isLoading: isLoadingSchedules, refetch: refetchSchedules } = useQuery<ScheduleWithTargets[]>({
@@ -603,6 +662,10 @@ export default function Schedules() {
             <Settings2 className="h-4 w-4" />
             Schedules
           </TabsTrigger>
+          <TabsTrigger value="calendar" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Calendario
+          </TabsTrigger>
           <TabsTrigger value="queue" className="gap-2">
             <Clock className="h-4 w-4" />
             Cola
@@ -748,6 +811,146 @@ export default function Schedules() {
                 </Card>
               ))}
             </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <CardTitle className="text-lg">
+                    {MONTH_NAMES[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCalendarMonth(new Date());
+                    setSelectedDay(null);
+                  }}
+                >
+                  Hoy
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {DAYS_OF_WEEK.map(day => (
+                  <div key={day.value} className="text-center text-sm font-medium text-muted-foreground py-2">
+                    {day.label}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {getCalendarDays(calendarMonth).map((day, idx) => {
+                  if (!day) {
+                    return <div key={`empty-${idx}`} className="aspect-square" />;
+                  }
+                  
+                  const daySchedules = schedules ? getSchedulesForDay(schedules, day) : [];
+                  const totalPipelines = daySchedules.reduce((sum, s) => sum + s.targets.length, 0);
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  const isSelected = selectedDay?.toDateString() === day.toDateString();
+                  
+                  return (
+                    <button
+                      key={day.toISOString()}
+                      onClick={() => setSelectedDay(isSelected ? null : day)}
+                      className={`
+                        aspect-square p-1 rounded-lg border transition-colors relative
+                        ${isToday ? 'border-primary bg-primary/5' : 'border-transparent hover:border-muted-foreground/30'}
+                        ${isSelected ? 'ring-2 ring-primary bg-primary/10' : ''}
+                        ${totalPipelines > 0 ? 'bg-muted/50' : ''}
+                      `}
+                    >
+                      <div className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
+                        {day.getDate()}
+                      </div>
+                      {totalPipelines > 0 && (
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                          {daySchedules.length <= 3 ? (
+                            daySchedules.map((_, i) => (
+                              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            ))
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                              {daySchedules.length}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {selectedDay && (
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {selectedDay.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {schedules && getSchedulesForDay(schedules, selectedDay).length > 0 ? (
+                  <div className="space-y-3">
+                    {getSchedulesForDay(schedules, selectedDay)
+                      .sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay))
+                      .map(schedule => (
+                        <div key={schedule.id} className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono">
+                                {schedule.timeOfDay}
+                              </Badge>
+                              <span className="font-medium">{schedule.label}</span>
+                            </div>
+                            <Badge variant="secondary">
+                              {schedule.targets.length} pipeline{schedule.targets.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {schedule.targets.slice(0, 5).map(target => (
+                              <Badge key={target.id} variant="outline" className="text-xs">
+                                {target.pipelineName || target.pipelineId.substring(0, 8)}
+                              </Badge>
+                            ))}
+                            {schedule.targets.length > 5 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{schedule.targets.length - 5} más
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    No hay ejecuciones programadas para este día
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
