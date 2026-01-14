@@ -899,17 +899,15 @@ export default function Schedules() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-1 mb-2">
+              <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
                 {DAYS_OF_WEEK.map(day => (
-                  <div key={day.value} className="text-center text-sm font-medium text-muted-foreground py-2">
+                  <div key={day.value} className="text-center text-xs font-medium text-muted-foreground py-1.5 bg-muted/30">
                     {day.label}
                   </div>
                 ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1">
                 {getCalendarDays(calendarMonth).map((day, idx) => {
                   if (!day) {
-                    return <div key={`empty-${idx}`} className="aspect-square" />;
+                    return <div key={`empty-${idx}`} className="h-12 bg-background" />;
                   }
                   
                   const daySchedules = schedules ? getSchedulesForDay(schedules, day) : [];
@@ -922,26 +920,17 @@ export default function Schedules() {
                       key={day.toISOString()}
                       onClick={() => setSelectedDay(isSelected ? null : day)}
                       className={`
-                        aspect-square p-1 rounded-lg border transition-colors relative
-                        ${isToday ? 'border-primary bg-primary/5' : 'border-transparent hover:border-muted-foreground/30'}
-                        ${isSelected ? 'ring-2 ring-primary bg-primary/10' : ''}
-                        ${totalPipelines > 0 ? 'bg-muted/50' : ''}
+                        h-12 flex flex-col items-center justify-center transition-colors bg-background
+                        ${isToday ? 'bg-primary/10' : 'hover:bg-muted/50'}
+                        ${isSelected ? 'bg-primary/20 ring-1 ring-inset ring-primary' : ''}
                       `}
                     >
                       <div className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
                         {day.getDate()}
                       </div>
                       {totalPipelines > 0 && (
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                          {daySchedules.length <= 3 ? (
-                            daySchedules.map((_, i) => (
-                              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            ))
-                          ) : (
-                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                              {daySchedules.length}
-                            </Badge>
-                          )}
+                        <div className="text-[10px] text-muted-foreground">
+                          {totalPipelines}
                         </div>
                       )}
                     </button>
