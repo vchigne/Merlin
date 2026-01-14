@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { executeQuery } from "@/lib/hasura-client";
@@ -347,6 +347,16 @@ export default function Schedules() {
     });
     setIsEditDialogOpen(true);
   };
+
+  // Sync editingSchedule with updated data after mutations
+  useEffect(() => {
+    if (editingSchedule && schedules) {
+      const updated = schedules.find(s => s.id === editingSchedule.id);
+      if (updated) {
+        setEditingSchedule(updated);
+      }
+    }
+  }, [schedules]);
 
   // Group schedules by time
   const schedulesByTime = useMemo(() => {
