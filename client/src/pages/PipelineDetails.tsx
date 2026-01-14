@@ -4,6 +4,39 @@ import { usePipeline, usePipelineUnits } from "@/hooks/use-pipeline";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { Button } from "@/components/ui/button";
+
+interface PipelineJob {
+  id: string;
+  pipeline_id: string;
+  completed: boolean;
+  running: boolean;
+  aborted: boolean;
+  created_at: string;
+  updated_at: string;
+  started_by_agent?: string;
+  Pipeline?: { name: string };
+}
+
+interface PipelineLog {
+  id: string;
+  pipeline_job_id: string;
+  pipeline_unit_id?: string;
+  date: string;
+  level: string;
+  message: string;
+  callsite?: string;
+  exception?: string;
+  exception_message?: string;
+  exception_stack_trace?: string;
+  created_at: string;
+  PipelineJobQueue?: {
+    id: string;
+    pipeline_id: string;
+    started_by_agent?: string;
+    Pipeline?: { id: string; name: string };
+  };
+  PipelineUnit?: { id: string; comment?: string };
+}
 import { 
   Card, 
   CardContent, 
@@ -73,7 +106,7 @@ function useJobDetails(jobId: string) {
 
 // Hook para obtener logs de un job específico
 function useJobLogs(jobId: string) {
-  return useQuery({
+  return useQuery<PipelineLog[]>({
     queryKey: ['/api/job-logs', jobId],
     queryFn: async () => {
       const result = await executeQuery(`
@@ -296,7 +329,7 @@ export default function PipelineDetails() {
     data: jobs,
     isLoading: isJobsLoading,
     refetch: refetchJobs
-  } = useQuery({
+  } = useQuery<PipelineJob[]>({
     queryKey: ['/api/pipelines/jobs', id],
     queryFn: async () => {
       const result = await executeQuery(`
@@ -335,7 +368,7 @@ export default function PipelineDetails() {
     data: logs,
     isLoading: isLogsLoading,
     refetch: refetchLogs
-  } = useQuery({
+  } = useQuery<PipelineLog[]>({
     queryKey: ['/api/pipelines/logs', id],
     queryFn: async () => {
       const result = await executeQuery(`
@@ -748,7 +781,7 @@ export default function PipelineDetails() {
                       <CardTitle className="text-lg">Job Logs</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0 divide-y divide-slate-200 dark:divide-slate-700">
-                      {jobLogs.map((log) => (
+                      {jobLogs.map((log: PipelineLog) => (
                         <div key={log.id} className="px-4 py-2">
                           <LogEntry log={log} />
                         </div>
@@ -786,8 +819,12 @@ export default function PipelineDetails() {
                 ) : !jobs || jobs.length === 0 ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-10">
-                      <p className="text-slate-500 dark:text-slate-400 mb-2">
-                        No jobs found for this pipeline
+                      <Clock className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
+                      <p className="text-slate-500 dark:text-slate-400 mb-2 font-medium">
+                        No job executions yet
+                      </p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500">
+                        Run this pipeline to see job history here
                       </p>
                     </CardContent>
                   </Card>
@@ -821,8 +858,12 @@ export default function PipelineDetails() {
                 ) : !logs || logs.length === 0 ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-10">
-                      <p className="text-slate-500 dark:text-slate-400 mb-2">
-                        No logs found for this pipeline
+                      <GitBranch className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
+                      <p className="text-slate-500 dark:text-slate-400 mb-2 font-medium">
+                        No execution logs yet
+                      </p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500">
+                        Logs will appear here after running the pipeline
                       </p>
                     </CardContent>
                   </Card>
