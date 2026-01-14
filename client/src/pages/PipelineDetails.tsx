@@ -198,13 +198,15 @@ export default function PipelineDetails() {
     error: jobLogsError,
     refetch: refetchJobLogs
   } = useQuery({
-    queryKey: ['/api/job-logs', id],
+    queryKey: ['/api/job-logs', id, jobDetails?.Pipeline?.id],
     queryFn: async () => {
-      const result = await executeQuery(`
+      // First try to get logs by job_id
+      let result = await executeQuery(`
         query GetJobLogs($jobId: uuid!) {
           merlin_agent_PipelineJobLogV2Body(
             where: {pipeline_job_id: {_eq: $jobId}}
             order_by: {date: desc}
+            limit: 100
           ) {
             id
             pipeline_job_id
@@ -234,10 +236,59 @@ export default function PipelineDetails() {
       `, { jobId: id });
       
       if (result.errors) {
+        console.error('Error fetching job logs:', result.errors);
         throw new Error(result.errors[0].message);
       }
       
-      return result.data.merlin_agent_PipelineJobLogV2Body;
+      let logs = result.data.merlin_agent_PipelineJobLogV2Body || [];
+      console.log(`Job logs by job_id: ${logs.length} found`);
+      
+      // If no logs found and we have pipeline_id, try fetching by pipeline
+      if (logs.length === 0 && jobDetails?.Pipeline?.id) {
+        console.log(`No logs by job_id, trying pipeline_id: ${jobDetails.Pipeline.id}`);
+        const pipelineResult = await executeQuery(`
+          query GetPipelineLogs($pipelineId: uuid!) {
+            merlin_agent_PipelineJobLogV2Body(
+              where: {
+                PipelineJobQueue: {pipeline_id: {_eq: $pipelineId}}
+              }
+              order_by: {date: desc}
+              limit: 50
+            ) {
+              id
+              pipeline_job_id
+              pipeline_unit_id
+              date
+              level
+              message
+              callsite
+              exception
+              exception_message
+              exception_stack_trace
+              created_at
+              PipelineJobQueue {
+                id
+                Pipeline {
+                  id
+                  name
+                }
+                started_by_agent
+              }
+              PipelineUnit {
+                id
+                comment
+              }
+            }
+          }
+        `, { pipelineId: jobDetails.Pipeline.id });
+        
+        if (!pipelineResult.errors) {
+          logs = pipelineResult.data.merlin_agent_PipelineJobLogV2Body || [];
+          console.log(`Pipeline logs: ${logs.length} found`);
+        }
+      }
+      
+      return logs;
     },
     enabled: !!id && isJobView,
     refetchInterval: 15000, 
