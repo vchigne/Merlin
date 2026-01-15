@@ -1,3 +1,3331 @@
-schedules: []
-nextScheduleId: 2
-nextTargetId: 1
+schedules:
+  - id: 2
+    label: Cron 00:00 PE - Diario
+    timeOfDay: 00:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:36.934Z
+    updatedAt: 2026-01-15T06:11:36.934Z
+    targets:
+      - id: 1
+        pipelineId: a74c0cd6-7018-434a-b8a6-ae9a68290f8f
+        pipelineName: EDUSA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.945Z
+      - id: 2
+        pipelineId: 09e041ca-a6d7-446c-8ff4-7ca0be47eeab
+        pipelineName: EDUFARMA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.951Z
+      - id: 3
+        pipelineId: 1ba5bf7e-69f7-492b-9eee-2377d5079ca0
+        pipelineName: EDUSA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.957Z
+      - id: 4
+        pipelineId: 7118f033-7719-4aba-8ca9-edb29e23cfc1
+        pipelineName: EDUFARMA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.962Z
+      - id: 5
+        pipelineId: 50fcc364-5c22-41af-901f-5056cd71ddc2
+        pipelineName: EDUSA
+        clientName: JNJ
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.977Z
+      - id: 6
+        pipelineId: 1fa302b9-44b5-4b5f-9e77-26ec8166cb90
+        pipelineName: EDUFARMA
+        clientName: JNJ
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.989Z
+      - id: 7
+        pipelineId: 7f70ecfe-9d92-4e42-93b0-83ac31329879
+        pipelineName: EDUSA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:36.994Z
+      - id: 8
+        pipelineId: ca02c485-c0e8-4476-85f9-4ab8eddf5fbe
+        pipelineName: AMERICA
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.000Z
+      - id: 9
+        pipelineId: ed3b1161-7184-4c7f-ab15-0254f7347a67
+        pipelineName: MERKOSUR
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.004Z
+      - id: 10
+        pipelineId: fabc50a9-b398-4fa8-a795-bebcfe8060ae
+        pipelineName: CASA_GRANDE
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.009Z
+      - id: 11
+        pipelineId: c35d86e5-6112-4375-ad79-39efef100413
+        pipelineName: PERU TT
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.015Z
+      - id: 12
+        pipelineId: 03fbdd42-5e1f-4339-8540-44704922ce74
+        pipelineName: BRENMA
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.021Z
+      - id: 13
+        pipelineId: 5df34223-a1b8-48fc-9e2e-a182de2938f9
+        pipelineName: BRENMA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.026Z
+      - id: 14
+        pipelineId: 5f7a4265-0f1b-45f3-9bd8-a86ce03417ba
+        pipelineName: PACIFIC
+        clientName: PACIFIC
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.033Z
+      - id: 15
+        pipelineId: 165f94e9-9390-43ca-be1d-1278ce317775
+        pipelineName: TULIPAN
+        clientName: JNJ
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.038Z
+      - id: 16
+        pipelineId: 23e34c3b-57a6-45a9-9c1b-aace1f7e8a75
+        pipelineName: TULIPAN
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.044Z
+      - id: 17
+        pipelineId: 02c23657-c5e9-46b9-84c2-5a4babbd2bed
+        pipelineName: DIJISA LIMA - LABOCER
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.051Z
+      - id: 18
+        pipelineId: 1a93c907-76bf-412a-827e-6fadf2ffb71d
+        pipelineName: CODIFIER
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.058Z
+      - id: 19
+        pipelineId: b528e078-0e78-49ac-ac52-380a03685e41
+        pipelineName: DIMEGSA
+        clientName: AJINOMOTO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.063Z
+      - id: 20
+        pipelineId: b46f7d9f-d901-40e3-a3d2-0068aada435b
+        pipelineName: PLAZAMAR
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.069Z
+      - id: 21
+        pipelineId: 3634cd6e-e380-4b13-9856-d530a5d693e8
+        pipelineName: MONKEY
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.075Z
+      - id: 22
+        pipelineId: b6578165-7e91-4ea5-852c-d79a1791555d
+        pipelineName: MOLISAC
+        clientName: BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.082Z
+      - id: 23
+        pipelineId: e73e5672-7a19-4b50-8147-cff501bda66e
+        pipelineName: MYL
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.089Z
+  - id: 3
+    label: Cron 00:15 PE - Diario
+    timeOfDay: 00:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.094Z
+    updatedAt: 2026-01-15T06:11:37.094Z
+    targets:
+      - id: 24
+        pipelineId: 721a15fd-d2a3-4f45-a93f-0a8e45e93d1e
+        pipelineName: ALSE MOYOBAMBA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.099Z
+      - id: 25
+        pipelineId: 095a3164-d382-495d-a0d6-7e79d787b8b0
+        pipelineName: Dolphins
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.105Z
+      - id: 26
+        pipelineId: 3cfcd0d6-a1d7-4920-a400-7debb1c435bd
+        pipelineName: Lider Trujillo
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.109Z
+      - id: 27
+        pipelineId: 3324a2e4-c4b3-4624-87ce-947357a774be
+        pipelineName: Dismar Huacho
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.115Z
+      - id: 28
+        pipelineId: 1bd2c89c-9fd6-478f-a96f-86e790fc05b4
+        pipelineName: Dolphins
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.122Z
+      - id: 29
+        pipelineId: 4fbccc3f-4814-40ac-a783-c66a1e6e954c
+        pipelineName: Dolphins
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.130Z
+      - id: 30
+        pipelineId: 2f312272-468c-4678-932d-8acb2dbf31cd
+        pipelineName: Lider Trujillo
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.139Z
+      - id: 31
+        pipelineId: 3f0673da-2dc9-40c9-8cbf-c236fa804452
+        pipelineName: Lider Huacho
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.145Z
+      - id: 32
+        pipelineId: 950d6c9d-c706-423b-be51-dac2dc9d8c18
+        pipelineName: Dismar Huacho
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.155Z
+      - id: 33
+        pipelineId: 6dd3df35-c3c1-4f2e-8941-1601d0922772
+        pipelineName: Lider Trujillo
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.169Z
+      - id: 34
+        pipelineId: 9722e02b-49ce-4791-91cb-c3a85da411d3
+        pipelineName: Lider Chepen
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.177Z
+      - id: 35
+        pipelineId: 23a274ad-b19b-4f1c-9762-0614f67b26f4
+        pipelineName: Dismar Trujillo
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.188Z
+      - id: 36
+        pipelineId: cfbdfe8c-9a8e-4a3a-a983-82819135a4bc
+        pipelineName: Dismar Trujillo
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.195Z
+      - id: 37
+        pipelineId: 971e3769-1e40-4263-8c67-74db4518dcd8
+        pipelineName: GIANELA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.201Z
+      - id: 38
+        pipelineId: 45ac6418-3385-40ed-8243-cf76a1886523
+        pipelineName: GIANELA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.207Z
+      - id: 39
+        pipelineId: 430619bd-8220-477f-a759-f94d58432240
+        pipelineName: DESPENSA
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.215Z
+      - id: 40
+        pipelineId: 593bcf15-84ca-4f7e-b4c3-81e4ee0f34b5
+        pipelineName: MOLISAC
+        clientName: JNJ
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.221Z
+  - id: 4
+    label: Cron 00:30 PE - Diario
+    timeOfDay: 00:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.229Z
+    updatedAt: 2026-01-15T06:11:37.229Z
+    targets:
+      - id: 41
+        pipelineId: dd50bc1c-7a39-4907-be70-8083e99e8a1a
+        pipelineName: ECONOMYSA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.235Z
+      - id: 42
+        pipelineId: c382211b-4783-4188-bf66-0923aa6f2465
+        pipelineName: ECONOMYSA
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.242Z
+      - id: 43
+        pipelineId: a32855e6-35d4-4bc9-a001-72786f6545fb
+        pipelineName: ECONOMYSA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.249Z
+      - id: 44
+        pipelineId: 78a6449b-2cf2-4f4c-aaef-6a7b43f278b6
+        pipelineName: ALSE PUCALLPA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.256Z
+      - id: 45
+        pipelineId: 53385c3a-c3ac-4802-8814-6e0144c3bbf3
+        pipelineName: ALSE TARAPOTO
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.263Z
+      - id: 46
+        pipelineId: 01dc1fc2-35a6-42e3-9314-5f1cb226b4f8
+        pipelineName: DESPENSA DETALLISTA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.270Z
+      - id: 47
+        pipelineId: 983c9040-6589-4a63-ad53-7a4872ee024b
+        pipelineName: DESPENSA HUANCAYO
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.277Z
+      - id: 48
+        pipelineId: aa1ffb98-44c7-4ca4-8818-96ff63cd0303
+        pipelineName: DESPENSA IQUITOS
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.284Z
+      - id: 49
+        pipelineId: 006dda3e-9b3e-4bfe-9fff-5b16a879dd74
+        pipelineName: DESPENSA MAYORISTA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.292Z
+      - id: 50
+        pipelineId: ff97cae8-e3fd-4bcb-bfa9-b2645592ce29
+        pipelineName: DESPENSA PIURA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.298Z
+      - id: 51
+        pipelineId: f5c3966e-6405-4843-b686-495f217c609c
+        pipelineName: DESPENSA TRUJILLO
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.305Z
+      - id: 52
+        pipelineId: e41362da-91c0-4231-9b4d-cfb5e92f60d0
+        pipelineName: ELPRADO
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.311Z
+      - id: 53
+        pipelineId: 70d97748-34d8-45c3-ba27-17e63eb62195
+        pipelineName: MDLZ CHILE PG
+        clientName: VIDA SOFTWARE
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.319Z
+      - id: 54
+        pipelineId: da416365-0e18-428d-852d-509029c674da
+        pipelineName: DESPESNA PERUANA
+        clientName: CBC
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.328Z
+      - id: 55
+        pipelineId: 09e84927-43d9-471f-b588-4c9717b2c5c1
+        pipelineName: SAQRAS
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.337Z
+  - id: 5
+    label: Cron 00:20 PE - Diario
+    timeOfDay: 00:20
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.344Z
+    updatedAt: 2026-01-15T06:11:37.344Z
+    targets:
+      - id: 56
+        pipelineId: 657e8a05-d86e-48a0-babc-7f5ed3de4814
+        pipelineName: TIERRA SUR
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.352Z
+  - id: 6
+    label: Cron 00:45 PE - Diario
+    timeOfDay: 00:45
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.360Z
+    updatedAt: 2026-01-15T06:11:37.360Z
+    targets:
+      - id: 57
+        pipelineId: 00f17042-2bdd-4557-b360-81c260d53c3a
+        pipelineName: LIDERCLOUD
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.367Z
+      - id: 58
+        pipelineId: 84c950aa-fa80-4f00-9d3a-0c2e17697402
+        pipelineName: LIDER
+        clientName: YICNAHG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.376Z
+  - id: 7
+    label: Cron 01:00 PE - Diario
+    timeOfDay: 01:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.385Z
+    updatedAt: 2026-01-15T06:11:37.385Z
+    targets:
+      - id: 59
+        pipelineId: 6d27f0a2-b549-4f64-b175-fb84d0a75481
+        pipelineName: PERUFARMA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.395Z
+      - id: 60
+        pipelineId: 280fdfa8-9004-4087-b50c-89501a39df07
+        pipelineName: CYC GARCILAZO SEDE UNICACHI
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.406Z
+      - id: 61
+        pipelineId: 7be1c2e3-0077-4c16-a9c9-5780b61b03d9
+        pipelineName: CyC Garcilazo
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.415Z
+      - id: 62
+        pipelineId: 67818e3f-4d8b-4950-88a6-2c92d6908605
+        pipelineName: JANDY
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.428Z
+      - id: 63
+        pipelineId: c368f4dc-ed3f-4347-8713-ae2d7d299f07
+        pipelineName: mdlz_col_baymax-all
+        clientName: TODOBOT - MDLZ_COL
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.441Z
+      - id: 64
+        pipelineId: 2221d966-cf37-492d-ba39-1cb3dbefe69d
+        pipelineName: DESPENSA
+        clientName: CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.451Z
+      - id: 65
+        pipelineId: 017829ef-d1be-4772-9856-ad2cad002d7b
+        pipelineName: CORPORA LA REGIONAL
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.460Z
+  - id: 8
+    label: Cron 01:15 PE - Diario
+    timeOfDay: 01:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.468Z
+    updatedAt: 2026-01-15T06:11:37.468Z
+    targets:
+      - id: 66
+        pipelineId: ccde9e95-ce8b-4057-ad52-736d8c702b69
+        pipelineName: SOFTYS
+        clientName: VIDA SOFTWARE
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.477Z
+      - id: 67
+        pipelineId: 1517893f-1989-49dc-aa2d-ce2dbe07d63f
+        pipelineName: SAN_FRANCISCO
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.486Z
+      - id: 68
+        pipelineId: a459ddf0-5c30-499b-8a97-1b237474728a
+        pipelineName: DESPENSA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.495Z
+      - id: 69
+        pipelineId: f16b9705-3509-46f1-81d7-9c11ef1ce448
+        pipelineName: DEHOCA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.505Z
+  - id: 9
+    label: Cron 01:30 PE - Diario
+    timeOfDay: 01:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.519Z
+    updatedAt: 2026-01-15T06:11:37.519Z
+    targets:
+      - id: 70
+        pipelineId: d1197317-c30a-4205-9cf3-1be1fe47946e
+        pipelineName: LUCKY EL PRADO
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.531Z
+      - id: 71
+        pipelineId: 1692c7db-72fa-4fb1-ac63-4753eb59b2fc
+        pipelineName: DEHOCA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.543Z
+      - id: 72
+        pipelineId: 05031558-6f6f-45d3-83e7-7cf91a71ac25
+        pipelineName: DEHOCA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.558Z
+      - id: 73
+        pipelineId: 5c49fc12-7f90-46a0-b3d6-e74b26a29059
+        pipelineName: DIJISA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.573Z
+  - id: 10
+    label: Cron 02:30 PE - Diario
+    timeOfDay: 02:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.587Z
+    updatedAt: 2026-01-15T06:11:37.587Z
+    targets:
+      - id: 74
+        pipelineId: f062feb1-4c7d-40a8-8dc4-271b12fa1ce5
+        pipelineName: VEGA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.605Z
+  - id: 11
+    label: Cron 02:00 PE - Diario
+    timeOfDay: 02:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.617Z
+    updatedAt: 2026-01-15T06:11:37.617Z
+    targets:
+      - id: 75
+        pipelineId: af653196-3b73-47f1-920a-570b5c47541c
+        pipelineName: LUCKY
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.627Z
+      - id: 76
+        pipelineId: f22c6e3d-289a-4773-a062-b25a60dfd83d
+        pipelineName: GRUPO VEGA
+        clientName: AJINOMOTO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.637Z
+      - id: 77
+        pipelineId: 1e090714-f243-4f3c-9ee9-5d65d632bae9
+        pipelineName: DIJISA
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.649Z
+      - id: 78
+        pipelineId: a1ef0e5d-96b9-4784-a4ea-95c960846626
+        pipelineName: JANDY
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.662Z
+      - id: 79
+        pipelineId: 3c931fcf-833f-4373-988a-2777b04c422e
+        pipelineName: DON_TEO_CAJAMARCA
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.675Z
+      - id: 80
+        pipelineId: 0bdbe11b-4542-4822-8399-75f96f4e1d59
+        pipelineName: CSM_PUCALLPA
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.687Z
+      - id: 81
+        pipelineId: fa5722aa-ec0c-4c67-9183-59b9fb8e4ca2
+        pipelineName: JANDY
+        clientName: INKACROPS
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.700Z
+  - id: 12
+    label: Cron 03:00 PE - Diario
+    timeOfDay: 03:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.710Z
+    updatedAt: 2026-01-15T06:11:37.710Z
+    targets:
+      - id: 82
+        pipelineId: faea8179-dddd-484f-a69d-2ea5dde74c1a
+        pipelineName: MICKYS
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.724Z
+      - id: 83
+        pipelineId: 54711a8e-42cb-482f-9344-041cb92ea737
+        pipelineName: clorox_grupo_jimenez-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.742Z
+      - id: 84
+        pipelineId: c7d65759-60d3-4eb8-93a2-b7828707c127
+        pipelineName: LUCKY HUACHO
+        clientName: CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.759Z
+      - id: 85
+        pipelineId: 045d5f5d-e9e8-429e-9ac4-5e47c2c58352
+        pipelineName: LUCKY CAJAMARCA
+        clientName: CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.779Z
+      - id: 86
+        pipelineId: 9557ab8c-536f-4484-85c7-460454fccb98
+        pipelineName: LUCKY HUANCAYO
+        clientName: CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.803Z
+      - id: 87
+        pipelineId: c960451f-f7bb-46e2-9be8-168d92322341
+        pipelineName: LUCKY CHICLAYO
+        clientName: CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.819Z
+  - id: 13
+    label: Cron 03:30 PE - Diario
+    timeOfDay: 03:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.874Z
+    updatedAt: 2026-01-15T06:11:37.874Z
+    targets:
+      - id: 88
+        pipelineId: 44a519e1-77ed-4838-b2db-9d97427dcfe4
+        pipelineName: LUCKY
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.894Z
+      - id: 89
+        pipelineId: f5fbb0c1-202e-4632-a33a-5afa629f0346
+        pipelineName: arcor_ecu_mobilvendor-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.914Z
+      - id: 90
+        pipelineId: ab1fa8a4-6431-4402-bb70-a66f4984b1a0
+        pipelineName: arcor_ecu_mobilvendor_buenano-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.929Z
+      - id: 91
+        pipelineId: e8272236-13fe-4fa4-9197-f006893765ff
+        pipelineName: OSHIRO
+        clientName: BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.941Z
+  - id: 14
+    label: Cron 04:30 PE - Diario
+    timeOfDay: 04:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.953Z
+    updatedAt: 2026-01-15T06:11:37.953Z
+    targets:
+      - id: 92
+        pipelineId: bae58fb6-3bfd-4bbe-b063-a8bb9174f0e8
+        pipelineName: bdf_bol_ketal-all
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.966Z
+      - id: 93
+        pipelineId: 42cb13f4-c8d6-4581-a003-a419afa43a5e
+        pipelineName: ajinomoto_grupo_jimenez-all
+        clientName: TODOBOT - AJINOMOTO
+        enabled: true
+        createdAt: 2026-01-15T06:11:37.978Z
+  - id: 15
+    label: Cron 05:30 PE - Diario
+    timeOfDay: 05:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:37.995Z
+    updatedAt: 2026-01-15T06:11:37.995Z
+    targets:
+      - id: 94
+        pipelineId: 1730f071-579b-4b2d-ae3a-6afa7a33d99a
+        pipelineName: bdf_colec_copidrogas-inventory
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.011Z
+      - id: 95
+        pipelineId: 9eb66bff-80ef-4d53-94fa-0e30729f6ff4
+        pipelineName: ": Proceso General"
+        clientName: MDLZ_GJ
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.030Z
+  - id: 16
+    label: Cron 06:00 PE - Diario
+    timeOfDay: 06:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.054Z
+    updatedAt: 2026-01-15T06:11:38.054Z
+    targets:
+      - id: 96
+        pipelineId: 17e8f71e-cd8f-487c-a5b0-5d3815aa7180
+        pipelineName: confiteca_dimexa-inventory
+        clientName: TODOBOT - CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.075Z
+      - id: 97
+        pipelineId: 37164b69-d035-46e6-a652-1a8e0a8d5f6c
+        pipelineName: ENVIO DE DATOS POR SFTP
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.098Z
+  - id: 17
+    label: Cron 07:00 PE - Diario
+    timeOfDay: 07:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.113Z
+    updatedAt: 2026-01-15T06:11:38.113Z
+    targets:
+      - id: 98
+        pipelineId: 034c0bc3-dacc-4e7b-bdeb-e233db4d7da0
+        pipelineName: SHAREPOINT CLOROX
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.127Z
+      - id: 99
+        pipelineId: f9c772bd-7a5d-43f9-8789-f7241ce196a5
+        pipelineName: P1 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.141Z
+  - id: 18
+    label: Cron 07:00 PE - Semanal (0, 1, 2, 3, 4, 5)
+    timeOfDay: 07:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: 0, 1, 2, 3, 4, 5
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.156Z
+    updatedAt: 2026-01-15T06:11:38.156Z
+    targets:
+      - id: 100
+        pipelineId: efb91216-a7ef-4545-b166-ba8f231a7047
+        pipelineName: AJINOMOTO
+        clientName: AJINOMOTO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.170Z
+  - id: 19
+    label: Cron 08:15 PE - Diario
+    timeOfDay: 08:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.188Z
+    updatedAt: 2026-01-15T06:11:38.188Z
+    targets:
+      - id: 101
+        pipelineId: d69705af-937d-4c58-908a-6764c4af6a16
+        pipelineName: DISTRIBUCIONES CYG
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.211Z
+  - id: 20
+    label: Cron 08:00 PE - Diario
+    timeOfDay: 08:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.229Z
+    updatedAt: 2026-01-15T06:11:38.229Z
+    targets:
+      - id: 102
+        pipelineId: b9ba315b-8879-47c1-8574-1c3e1e495c2c
+        pipelineName: MERCOPERU PUNO
+        clientName: AJINOMOTO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.250Z
+      - id: 103
+        pipelineId: 50ff1638-ca5e-459e-b35d-7c94efb9a938
+        pipelineName: CYJ
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.266Z
+      - id: 104
+        pipelineId: 4c12ed23-0d37-4de1-9e05-737057901e64
+        pipelineName: SAN FRANCISCO
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.283Z
+      - id: 105
+        pipelineId: eeb179d4-9937-4a43-bea8-4fe1ac15289d
+        pipelineName: SAN FRANCISCO
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.299Z
+      - id: 106
+        pipelineId: db6ac6eb-f374-4909-a0f2-ee4460d36a31
+        pipelineName: RED ORIENTE
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.315Z
+      - id: 107
+        pipelineId: d5cdeb5e-f182-4326-bc06-4be1b904f480
+        pipelineName: DEL VALLE
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.331Z
+      - id: 108
+        pipelineId: 5267033e-32ed-44f1-b9fa-043d8ad05cdd
+        pipelineName: AGB
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.347Z
+      - id: 109
+        pipelineId: 01e8da94-7ad6-4232-9403-0737973fd65f
+        pipelineName: cartavio_backus-all
+        clientName: TODOBOT - CARTAVIO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.362Z
+  - id: 21
+    label: Cron 08:00 PE - Semanal (3)
+    timeOfDay: 08:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "3"
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.377Z
+    updatedAt: 2026-01-15T06:11:38.377Z
+    targets:
+      - id: 110
+        pipelineId: 3fcfc402-8c98-463f-92b0-e4ced1667e15
+        pipelineName: clorox_ecu_gerardo_ortiz-logistica
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.393Z
+  - id: 22
+    label: Cron 08:30 PE - Diario
+    timeOfDay: 08:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.408Z
+    updatedAt: 2026-01-15T06:11:38.408Z
+    targets:
+      - id: 111
+        pipelineId: b3073e28-5bc7-4f0e-bb88-024b4ad086a6
+        pipelineName: TERRANOVA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.428Z
+      - id: 112
+        pipelineId: d0c7d1a6-93ca-49ca-b4fb-6e1e70a624d6
+        pipelineName: mdlz_grupo_jimenez-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.455Z
+      - id: 113
+        pipelineId: f0ca570e-36d5-41d3-adb3-227300a2cfbe
+        pipelineName: castillo_abbott-all
+        clientName: TODOBOT - OTROS
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.473Z
+      - id: 114
+        pipelineId: 417c4439-b4d9-46ce-a68b-6908a08a2b98
+        pipelineName: MERCONOR HUACHO
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.491Z
+      - id: 115
+        pipelineId: ff9a354b-d04d-47f8-aa0d-97bf4889a845
+        pipelineName: MERCONOR HUARAL
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.511Z
+      - id: 116
+        pipelineId: 37b501b4-c07e-458f-911f-6df670acdf6a
+        pipelineName: MERCONOR HUARAZ
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.532Z
+      - id: 117
+        pipelineId: f473c57e-7f32-4574-9192-47cc47bfb65d
+        pipelineName: yichang_backus-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.549Z
+      - id: 118
+        pipelineId: eb69462d-b0b7-4326-a41e-30023f8ee068
+        pipelineName: TOMS
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.566Z
+  - id: 23
+    label: Cron 09:00 PE - Diario
+    timeOfDay: 09:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.587Z
+    updatedAt: 2026-01-15T06:11:38.587Z
+    targets:
+      - id: 119
+        pipelineId: 553851f3-cbab-4501-ac76-d77c93b4ef52
+        pipelineName: ARANZAZU
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.614Z
+      - id: 120
+        pipelineId: 8947a7a1-ac7e-4de0-838d-0bfda00d012d
+        pipelineName: alicorp_dex_aliet-all
+        clientName: TODOBOT - ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.653Z
+      - id: 121
+        pipelineId: 1568503c-6137-4ed1-8e02-e7f3d9013912
+        pipelineName: DL
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.674Z
+      - id: 122
+        pipelineId: 71155528-3b4f-4105-97f6-8a5d2240f799
+        pipelineName: DL
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.693Z
+      - id: 123
+        pipelineId: 018f183c-36bd-4e22-a9ce-140f9c3dbd39
+        pipelineName: clorox_spsa_paletas-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.710Z
+  - id: 24
+    label: Cron 09:00 PE - Semanal (0)
+    timeOfDay: 09:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.727Z
+    updatedAt: 2026-01-15T06:11:38.727Z
+    targets:
+      - id: 124
+        pipelineId: 8006069b-de49-4f76-b897-b9b07373b9b4
+        pipelineName: clorox_sodimac-purchase_orders
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.746Z
+  - id: 25
+    label: Cron 09:00 PE - Semanal (1)
+    timeOfDay: 09:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "1"
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.763Z
+    updatedAt: 2026-01-15T06:11:38.763Z
+    targets:
+      - id: 125
+        pipelineId: d9b8bc84-b231-4783-a540-f3c6c996050d
+        pipelineName: clorox_ecu_tia-logistica
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.781Z
+      - id: 126
+        pipelineId: 9f780934-8df2-49d6-8ae1-51b729802d5b
+        pipelineName: cnch_cencosud-SOM
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.802Z
+  - id: 26
+    label: Cron 09:00 PE - Semanal (0, 2, 4)
+    timeOfDay: 09:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: 0, 2, 4
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.831Z
+    updatedAt: 2026-01-15T06:11:38.831Z
+    targets:
+      - id: 127
+        pipelineId: 461c0271-2016-4e8f-952a-e8e13cd17674
+        pipelineName: clorox_ecu_corporativo_rosado-logistica
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.866Z
+  - id: 27
+    label: Cron 09:00 PE - Mensual (5)
+    timeOfDay: 09:00
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: "5"
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.893Z
+    updatedAt: 2026-01-15T06:11:38.893Z
+    targets:
+      - id: 128
+        pipelineId: cc517645-be5d-4d8a-911f-5e6c8e79f5d0
+        pipelineName: mdlz_colec_koba-all
+        clientName: TODOBOT - MDLZ_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.911Z
+  - id: 28
+    label: Cron 09:30 PE - Diario
+    timeOfDay: 09:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:38.941Z
+    updatedAt: 2026-01-15T06:11:38.941Z
+    targets:
+      - id: 129
+        pipelineId: bd9e3fb3-8b00-4978-b889-97137d5f6825
+        pipelineName: P2 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.975Z
+      - id: 130
+        pipelineId: 81c12e42-0d04-4a05-b186-09ffde0f3aa2
+        pipelineName: intercorpb2b_clorox_spsa-order
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:38.999Z
+      - id: 131
+        pipelineId: eab4c5e4-0149-427c-ae40-6180aadca158
+        pipelineName: intercorpb2b_clorox_spsa-inventory
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.017Z
+      - id: 132
+        pipelineId: 971e67f7-6c72-4eda-b4e5-f283e0cac6b3
+        pipelineName: cencosud_clorox-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.037Z
+      - id: 133
+        pipelineId: 47775bb7-3571-4f3d-9490-b414dedd447c
+        pipelineName: clorox_falabella_tottus-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.059Z
+  - id: 29
+    label: Cron 09:30 PE - Semanal (1)
+    timeOfDay: 09:30
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "1"
+    enabled: true
+    createdAt: 2026-01-15T06:11:39.089Z
+    updatedAt: 2026-01-15T06:11:39.089Z
+    targets:
+      - id: 134
+        pipelineId: d3e4fd69-849b-439f-8e41-bdda56b3d156
+        pipelineName: clorox_cencosud_SOM-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.128Z
+  - id: 30
+    label: Cron 09:40 PE - Diario
+    timeOfDay: 09:40
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:39.152Z
+    updatedAt: 2026-01-15T06:11:39.152Z
+    targets:
+      - id: 135
+        pipelineId: 48b08e92-5f57-4246-9b67-cb4b71e200d7
+        pipelineName: bdf_col_locatel-sales
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.176Z
+      - id: 136
+        pipelineId: b25c53cb-416c-481e-8a55-e927222c1838
+        pipelineName: bdf_col_locatel-inventory
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.197Z
+      - id: 137
+        pipelineId: 509f8d49-5099-4e8d-8d4a-bb3cf40bb86d
+        pipelineName: bdf_ecu_santa_maria-sales
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.219Z
+      - id: 138
+        pipelineId: f2e251fc-a4f0-461c-9fb3-b08fba1e2d13
+        pipelineName: bdf_ecu_santa_maria-inventory
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.240Z
+      - id: 139
+        pipelineId: fef8219f-7dcb-4a6d-9549-1462b88a52c8
+        pipelineName: paracas_spsa-order
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.270Z
+      - id: 140
+        pipelineId: ab8616bc-2453-4c14-b38e-7ca3b6c68b8c
+        pipelineName: paracas_spsa-inventory
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.304Z
+      - id: 141
+        pipelineId: b0e5dcbe-08d6-41b4-a1fa-e6d8fa7f8b42
+        pipelineName: paracas_cencosud-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.329Z
+      - id: 142
+        pipelineId: 19efad3a-f499-4c92-8e8b-3d3676caade1
+        pipelineName: paracas_vega-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.352Z
+      - id: 143
+        pipelineId: bda29ff0-5d18-4d9f-a642-06f3c506b1d7
+        pipelineName: paracas_falabella_tottus-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.375Z
+  - id: 31
+    label: Cron 10:00 PE - Diario
+    timeOfDay: 10:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:39.397Z
+    updatedAt: 2026-01-15T06:11:39.397Z
+    targets:
+      - id: 144
+        pipelineId: ee2b953b-f79b-43bc-a769-6d282b86d883
+        pipelineName: CESFA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.419Z
+      - id: 145
+        pipelineId: cc7de048-3bcc-4d9a-9a31-a09c8aa20363
+        pipelineName: bdf_colec_pasteur-all
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.443Z
+      - id: 146
+        pipelineId: 017d77b4-c826-4459-8137-471013881068
+        pipelineName: bdf_colec_grupo_tropi-all
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.464Z
+      - id: 147
+        pipelineId: f2c668e8-bec3-4e42-b6a2-2ac4499921f5
+        pipelineName: bdf_colec_copidrogas-sales
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.484Z
+      - id: 148
+        pipelineId: 77475c89-8ac3-41e4-979e-35c083299d88
+        pipelineName: bdf_col_cencosud-all
+        clientName: TODOBOT - BDF COL
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.505Z
+      - id: 149
+        pipelineId: 1c77ad47-01b9-45f0-8d3f-c5bb10bed94a
+        pipelineName: bdf_ecu_corporativo_rosado-all
+        clientName: TODOBOT - BDF_ECU
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.531Z
+      - id: 150
+        pipelineId: 18e02fd6-232a-42ad-9a3a-2322c50184fd
+        pipelineName: mdlz_ecu_corporativo_rosado-all
+        clientName: TODOBOT - MDLZ ECU
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.560Z
+      - id: 151
+        pipelineId: 27180b91-61c4-456d-9a87-8a217ba432fe
+        pipelineName: arcor_ecu_tia-inventory
+        clientName: TODOBOT - ARCOR ECU
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.582Z
+      - id: 152
+        pipelineId: 8255bd53-e084-4b32-8edb-5b5e3d693593
+        pipelineName: arcor_ecu_tia-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.609Z
+      - id: 153
+        pipelineId: 74777136-d614-4dd1-b28b-d28886df4e2c
+        pipelineName: bdf_colec_cen_olimpica-inventory
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.630Z
+      - id: 154
+        pipelineId: 2d0337c2-e9dc-464d-a263-24a3e9fddd5f
+        pipelineName: bdf_colec_cen_olimpica-sales
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.661Z
+      - id: 155
+        pipelineId: 5036056f-cce4-4fdf-8a84-8c3b30a8cf31
+        pipelineName: bdf_colec_cen_exito-sales
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.693Z
+      - id: 156
+        pipelineId: c0adc2d7-c02b-4070-9f50-a0fd60285dd1
+        pipelineName: bdf_colec_cen_exito-inventory
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.721Z
+      - id: 157
+        pipelineId: f325ba7a-6d6e-44c5-aef2-d508771de5c8
+        pipelineName: arcor_ecu_corporativo_rosado-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.771Z
+      - id: 158
+        pipelineId: 381c6cfb-cfca-4083-bb85-cfe9b06f5c42
+        pipelineName: intercorpb2b_cala_spsa-order
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.793Z
+      - id: 159
+        pipelineId: 175411fc-3cb1-4217-932b-06853e30c4cd
+        pipelineName: intercorpb2b_cala_spsa-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.817Z
+      - id: 160
+        pipelineId: 7a6d4bc1-bd4e-4c38-af8f-f625ce136dce
+        pipelineName: cala_vega-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.840Z
+      - id: 161
+        pipelineId: 6d982cc9-1467-4a12-b6ec-4163b97fb548
+        pipelineName: intercorpb2b_cala_promart-order
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.865Z
+      - id: 162
+        pipelineId: 231e0cc3-eaff-4042-aeb4-efd248abe850
+        pipelineName: intercorpb2b_cala_promart-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.905Z
+      - id: 163
+        pipelineId: 5094046e-5fe5-47a0-aaeb-be91e3f85b8b
+        pipelineName: cala_cencosud-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.947Z
+      - id: 164
+        pipelineId: a335c908-6d0c-4d1b-9c71-fd35e1d1ce05
+        pipelineName: cala_mayorsa-sales
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:39.974Z
+      - id: 165
+        pipelineId: 5f79f0b7-541e-4591-8b7f-4c1077907b56
+        pipelineName: cala_mayorsa-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.009Z
+      - id: 166
+        pipelineId: 4ae56c39-626e-4bed-bf2d-755e5d1d0ae5
+        pipelineName: cala_falabella_tottus-all
+        clientName: TODOBOT - CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.050Z
+  - id: 32
+    label: Cron 10:00 PE - Semanal (0)
+    timeOfDay: 10:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.073Z
+    updatedAt: 2026-01-15T06:11:40.073Z
+    targets:
+      - id: 167
+        pipelineId: f710e13d-789b-48fc-8f06-9d79563d1ff4
+        pipelineName: saga_cala_sodimac-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.099Z
+  - id: 33
+    label: Cron 10:20 PE - Diario
+    timeOfDay: 10:20
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.128Z
+    updatedAt: 2026-01-15T06:11:40.128Z
+    targets:
+      - id: 168
+        pipelineId: d32ca8fc-fd57-4abf-8992-351afb71f89b
+        pipelineName: bdf_col_axa-all
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.169Z
+  - id: 34
+    label: Cron 10:30 PE - Diario
+    timeOfDay: 10:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.209Z
+    updatedAt: 2026-01-15T06:11:40.209Z
+    targets:
+      - id: 169
+        pipelineId: 69573bb2-1af3-46a9-8000-1f1d9bf13b37
+        pipelineName: FOTO_PERU
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.246Z
+      - id: 170
+        pipelineId: 7047726a-e0e8-4a72-9339-6dd35dfaf5b8
+        pipelineName: SHEMA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.275Z
+      - id: 171
+        pipelineId: 2ab00f27-952b-419b-89ee-76d7099b94cf
+        pipelineName: OPERADOR_COMERCIAL
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.299Z
+      - id: 172
+        pipelineId: e5144072-68b7-43f2-9827-1bef9675d9fb
+        pipelineName: mdlz_ecu_tia-sales
+        clientName: TODOBOT - MDLZ ECU
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.332Z
+      - id: 173
+        pipelineId: 81819b6c-d26f-46c1-b939-3ec8ee5026b0
+        pipelineName: mdlz_ecu_tia-inventory
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.368Z
+      - id: 174
+        pipelineId: 8d5659cc-de4f-4a2c-a413-0ba5113857ca
+        pipelineName: ": Proceso general"
+        clientName: MDLZ_BOLIVIA
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.400Z
+      - id: 175
+        pipelineId: 8abe88b8-3416-420a-905f-b0a6340e09a6
+        pipelineName: mdlz_col_cencosud-all
+        clientName: TODOBOT - MDLZ_COL
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.426Z
+      - id: 176
+        pipelineId: 4ff5bd7a-4193-4599-92b3-d4f61a33cc40
+        pipelineName: arcor_favorita-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.453Z
+      - id: 177
+        pipelineId: 58ef02ba-c288-4e38-ad7b-e2ae2cc60a65
+        pipelineName: arcor_backus-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.478Z
+      - id: 178
+        pipelineId: 7be1bb45-6eea-4039-bb48-6fc85e9e61a5
+        pipelineName: CORDOVA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.507Z
+  - id: 35
+    label: Cron 10:30 PE - Semanal (0)
+    timeOfDay: 10:30
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.532Z
+    updatedAt: 2026-01-15T06:11:40.532Z
+    targets:
+      - id: 179
+        pipelineId: cb76c395-e759-4069-801a-872394b6efa0
+        pipelineName: mdlz_share-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.648Z
+  - id: 36
+    label: Cron 10:45 PE - Mensual (1)
+    timeOfDay: 10:45
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: "1"
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.675Z
+    updatedAt: 2026-01-15T06:11:40.675Z
+    targets:
+      - id: 180
+        pipelineId: 3d74fd45-49fe-426c-92bd-590e830b3106
+        pipelineName: C2 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.702Z
+  - id: 37
+    label: Cron 11:00 PE - Diario
+    timeOfDay: 11:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:40.745Z
+    updatedAt: 2026-01-15T06:11:40.745Z
+    targets:
+      - id: 181
+        pipelineId: 4d44f95a-7982-4b32-809f-d0e4dcd6592b
+        pipelineName: mdlz_tambo-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.802Z
+      - id: 182
+        pipelineId: ce2c8c21-27b2-452c-af75-ea33d5259b76
+        pipelineName: clorox_mayorsa-sales
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.836Z
+      - id: 183
+        pipelineId: 46a083b0-6b73-408b-b436-59d7df67959f
+        pipelineName: clorox_mayorsa-inventory
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.864Z
+      - id: 184
+        pipelineId: cfbaa55e-c531-49eb-9395-4e4e115e008f
+        pipelineName: mdlz_mayorsa-sales
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.892Z
+      - id: 185
+        pipelineId: c9428549-ec96-4a75-94d9-c31ab6aa8fc9
+        pipelineName: mdlz_mayorsa-inventory
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.921Z
+      - id: 186
+        pipelineId: b7c63c1b-5b0a-45fd-9b28-49e66bcefc85
+        pipelineName: intercorpb2b_bdf_farma-ecommerce
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:40.960Z
+      - id: 187
+        pipelineId: a543e270-d2b2-4c70-94c1-7cd5b4bdc4c0
+        pipelineName: mdlz_vega-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.005Z
+      - id: 188
+        pipelineId: aa0d9206-e7f8-4251-9085-7bca9ced94be
+        pipelineName: san_fernando_vega-all
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.045Z
+      - id: 189
+        pipelineId: edffa8f3-0ae5-4a5d-b836-bdd5d0606a13
+        pipelineName: san_fernando_mayorsa-sales
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.091Z
+      - id: 190
+        pipelineId: edb2d01a-0992-451e-a8ac-1db8e442b3c9
+        pipelineName: san_fernando_mayorsa-inventory
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.159Z
+      - id: 191
+        pipelineId: e8a9483a-74f7-4935-b475-ff081367ba6d
+        pipelineName: ripley_arcor-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.190Z
+      - id: 192
+        pipelineId: 2cfada4d-2af6-44c1-ae08-7008ad5968e9
+        pipelineName: vega_arcor-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.228Z
+      - id: 193
+        pipelineId: 1ca4cea6-06ae-41d0-8cc2-48f5c2d600a2
+        pipelineName: mdlz_falabella_tottus-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.271Z
+      - id: 194
+        pipelineId: 229cd0ca-16d3-4c65-8d5d-2fb7dc1c48df
+        pipelineName: bdf_falabella_tottus-all
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.306Z
+      - id: 195
+        pipelineId: fe0448ef-1371-4b67-8a8e-9b2ae1890451
+        pipelineName: arcor_oechsle-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.340Z
+      - id: 196
+        pipelineId: e985f8c3-434d-421f-94e9-12308bc433c6
+        pipelineName: arcor_oechsle-inventory
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.370Z
+      - id: 197
+        pipelineId: ed646c2f-9697-40ea-9f09-10eea0a8c379
+        pipelineName: indupsa_mayorsa-order
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.406Z
+      - id: 198
+        pipelineId: 9162e383-3b9c-4b4e-83ff-5d4acd4743f6
+        pipelineName: indupsa_mayorsa-inventory
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.454Z
+      - id: 199
+        pipelineId: e68753dc-2465-407a-ad4b-e4b00791db6c
+        pipelineName: indupsa_vega-all
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.485Z
+  - id: 38
+    label: Cron 11:00 PE - Semanal (0)
+    timeOfDay: 11:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:41.517Z
+    updatedAt: 2026-01-15T06:11:41.517Z
+    targets:
+      - id: 200
+        pipelineId: d9c8c708-9520-449d-a77d-1d159063a751
+        pipelineName: clorox_ecu_favorita-logistica
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.546Z
+  - id: 39
+    label: Cron 11:00 PE - Mensual (16,17,18)
+    timeOfDay: 11:00
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: 16,17,18
+    enabled: true
+    createdAt: 2026-01-15T06:11:41.575Z
+    updatedAt: 2026-01-15T06:11:41.575Z
+    targets:
+      - id: 201
+        pipelineId: e2937712-ac60-454e-af62-3d02627f4e82
+        pipelineName: C1 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.611Z
+  - id: 40
+    label: Cron 11:15 PE - Diario
+    timeOfDay: 11:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:41.647Z
+    updatedAt: 2026-01-15T06:11:41.647Z
+    targets:
+      - id: 202
+        pipelineId: 931082d8-9df3-4e61-8308-0b812dc37f03
+        pipelineName: stanley_promart-sales
+        clientName: TODOBOT - STANLEY
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.683Z
+      - id: 203
+        pipelineId: ebd0ad7a-85b0-40e9-9abc-ee2553787834
+        pipelineName: stanley_promart-inventory
+        clientName: TODOBOT - STANLEY
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.712Z
+  - id: 41
+    label: Cron 11:15 PE - Semanal (0)
+    timeOfDay: 11:15
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:41.740Z
+    updatedAt: 2026-01-15T06:11:41.740Z
+    targets:
+      - id: 204
+        pipelineId: 33a1ba25-caf0-4e98-83f4-750489878b7d
+        pipelineName: stanley_importados_sodimac-all
+        clientName: TODOBOT - STANLEY
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.779Z
+      - id: 205
+        pipelineId: f4b02797-a715-4d8f-8dd8-49cd66b32dfe
+        pipelineName: stanley_local_sodimac-all
+        clientName: TODOBOT - STANLEY
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.819Z
+  - id: 42
+    label: Cron 11:30 PE - Diario
+    timeOfDay: 11:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:41.868Z
+    updatedAt: 2026-01-15T06:11:41.868Z
+    targets:
+      - id: 206
+        pipelineId: 3ec5f0cc-66ef-4f9e-9dd6-9ae567c2a822
+        pipelineName: spsa-order
+        clientName: VIDA SOFTWARE
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.902Z
+      - id: 207
+        pipelineId: 2dc5aad0-7682-4dea-81c3-3747143f02fa
+        pipelineName: spsa-inventory
+        clientName: VIDA SOFTWARE
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.931Z
+      - id: 208
+        pipelineId: 99c500bb-b67c-4dbc-879e-00cb78846f4f
+        pipelineName: cencosud_mdlz-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:41.989Z
+      - id: 209
+        pipelineId: 59704330-3124-4178-96b0-91f8f1da59cb
+        pipelineName: divama
+        clientName: SOFTYS FDH
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.026Z
+      - id: 210
+        pipelineId: 44843727-e3b2-4de8-a5be-91909f79969b
+        pipelineName: intercorpb2b_clorox_promart-sales
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.077Z
+      - id: 211
+        pipelineId: 1e2e0679-a7d7-4cab-91a4-8ae93d6e1678
+        pipelineName: intercorpb2b_clorox_promart-inventory
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.117Z
+      - id: 212
+        pipelineId: f6c0b29a-7749-4f02-96db-53ed7149b88d
+        pipelineName: intercorpb2b_unilever_spsa-sales
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.157Z
+      - id: 213
+        pipelineId: 6075720d-c4b0-41a8-a87b-2f48330583b2
+        pipelineName: intercorpb2b_unilever_spsa-inventory
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.206Z
+      - id: 214
+        pipelineId: 98de649a-13ff-42b0-8946-62ad5f127d7f
+        pipelineName: intercorpb2b_unilever_fp-sales
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.252Z
+      - id: 215
+        pipelineId: e7debcdc-2d8f-4a45-ae06-3e3e75560f5c
+        pipelineName: intercorpb2b_unilever_fp-inventory
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.304Z
+      - id: 216
+        pipelineId: 9a943d28-0e82-4e6d-92df-f6a6faab4d2b
+        pipelineName: cencosud_arcor-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.362Z
+      - id: 217
+        pipelineId: f51e403a-251d-4222-8967-d4efb5466b48
+        pipelineName: intercorpb2b_arcor_spsa-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.416Z
+      - id: 218
+        pipelineId: 577025b8-b33f-4501-952e-487099b42fbf
+        pipelineName: intercorpb2b_arcor_spsa-inventory
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.462Z
+      - id: 219
+        pipelineId: 18440dd4-4c84-4ab6-8cfc-7848a3434bb8
+        pipelineName: tottus_arcor-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.514Z
+      - id: 220
+        pipelineId: 955e6301-76a7-4652-ad2b-387e1bf03b5f
+        pipelineName: ripley_arcor-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.557Z
+      - id: 221
+        pipelineId: 17dc9f8b-66e1-4add-a7a7-d2d7e9f338d4
+        pipelineName: mayorsa_arcor-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.599Z
+      - id: 222
+        pipelineId: b07636f9-1dd9-4f41-813e-1c50b28567fe
+        pipelineName: mayorsa_arcor-inventory
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.634Z
+      - id: 223
+        pipelineId: 101a49e5-3411-4797-b758-11331610c093
+        pipelineName: vega_arcor-sales
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.669Z
+      - id: 224
+        pipelineId: becb7d81-3f1e-4536-bca5-97d60a1349b7
+        pipelineName: vega_arcor-inventory
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.707Z
+      - id: 225
+        pipelineId: a3adda22-2bca-4eb3-8e36-8d815f216a25
+        pipelineName: intercorpb2b_bdf_spsa-sales
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.761Z
+      - id: 226
+        pipelineId: 83eb61c4-8035-4017-ae3b-a9a69ff91656
+        pipelineName: intercorpb2b_bdf_spsa-inventory
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.805Z
+      - id: 227
+        pipelineId: d66e29ee-8977-446a-a548-8426feed2c8c
+        pipelineName: intercorpb2b_bdf_farma-sales
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.852Z
+      - id: 228
+        pipelineId: fb2d911e-8ec4-4ae6-85de-e71aa9844730
+        pipelineName: intercorpb2b_bdf_farma-inventory
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.924Z
+      - id: 229
+        pipelineId: e72a0010-6559-4235-b99c-d66bd36d5bec
+        pipelineName: cencosud_bdf-all
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:42.977Z
+      - id: 230
+        pipelineId: ba8b6d2c-b25c-401c-862c-dea2f62f0b14
+        pipelineName: dimexanew_abbott-inventory
+        clientName: TODOBOT - ABBOT
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.018Z
+      - id: 231
+        pipelineId: 06ab97dd-a510-4134-965e-5f17410a7f92
+        pipelineName: cnch_spsa-sales
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.065Z
+      - id: 232
+        pipelineId: c78eb9d2-429b-49e8-bed5-894e4f815437
+        pipelineName: cnch_spsa-inventory
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.115Z
+      - id: 233
+        pipelineId: 8d79ff02-486e-4fd0-9bbe-ce95ef2487f1
+        pipelineName: cnch_tottus-sales
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.191Z
+      - id: 234
+        pipelineId: 74795e83-75fe-4e3c-af04-c9e598decc3f
+        pipelineName: cnch_cencosud-all
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.228Z
+      - id: 235
+        pipelineId: 3c02ff52-aaeb-4218-9836-03737d61072c
+        pipelineName: cnch_mayorsa-sales
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.266Z
+      - id: 236
+        pipelineId: 002ebbf9-a7e2-4152-ac68-aef78519c1df
+        pipelineName: cnch_mayorsa-inventory
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.316Z
+      - id: 237
+        pipelineId: 187a60ef-282f-4481-86ea-3e2fac67d887
+        pipelineName: cencosud_unilever-all
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.356Z
+      - id: 238
+        pipelineId: 26e81cfc-b244-41d3-961c-5b20a64e6662
+        pipelineName: intercorpb2b_unilever_spsa-sales_cost
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.409Z
+      - id: 239
+        pipelineId: 7345068c-cf6e-4920-8a60-9daf16ac0da4
+        pipelineName: cnch_tambo-all
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.451Z
+      - id: 240
+        pipelineId: 0037376c-103a-41a1-a87b-800974ca5202
+        pipelineName: arcor_tambo-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.490Z
+      - id: 241
+        pipelineId: 332c7080-56c2-4ec6-a009-e17c60deb8aa
+        pipelineName: clorox_vega-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.526Z
+      - id: 242
+        pipelineId: 3fba3d78-10c5-4d07-beae-34b9b85d8702
+        pipelineName: arcor_oxxo-order
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.588Z
+      - id: 243
+        pipelineId: a38201ca-3b47-4f16-b5ee-5e376d65378d
+        pipelineName: KADMIEL TINGO MARIA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.629Z
+      - id: 244
+        pipelineId: 8ba4b0a4-87d9-41e7-b1e1-86cf461cb7b0
+        pipelineName: EL SOL
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.662Z
+      - id: 245
+        pipelineId: 01af99a2-d83a-43db-af79-c5fb94fa1e30
+        pipelineName: bdf_bol_farmacorp-all
+        clientName: TODOBOT - BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.696Z
+      - id: 246
+        pipelineId: f1001c07-2cd8-42fb-8bc3-5ab814949aaf
+        pipelineName: DEX - EJECUTAR RPA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.732Z
+      - id: 247
+        pipelineId: 9d0bc1f8-e84f-4d90-a5a2-6f7ff490f88d
+        pipelineName: ism_cencosud-all
+        clientName: TODOBOT - ISM
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.783Z
+      - id: 248
+        pipelineId: fade4f91-7b13-4d3a-84ac-3d9dd703027e
+        pipelineName: ism_spsa-sales
+        clientName: TODOBOT - ISM
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.816Z
+      - id: 249
+        pipelineId: eb5efa02-07f4-4045-9f00-f69eb5d8793c
+        pipelineName: ism_spsa-inventory
+        clientName: TODOBOT - ISM
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.851Z
+      - id: 250
+        pipelineId: ac101cf9-3230-4dec-9061-62f6bec546b2
+        pipelineName: ism_vega-all
+        clientName: TODOBOT - ISM
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.886Z
+      - id: 251
+        pipelineId: 92bfc170-aa29-49a3-886e-f1114a3fb9ae
+        pipelineName: bdf_ecu_tia-sales
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.920Z
+      - id: 252
+        pipelineId: 463ccc62-69f5-4696-8119-9a75c0c33e84
+        pipelineName: bdf_ecu_tia-inventory
+        clientName: TODOBOT - BDF_COLE
+        enabled: true
+        createdAt: 2026-01-15T06:11:43.970Z
+      - id: 253
+        pipelineId: 23971911-ba7f-4e95-9780-f4aa4ab8dd2d
+        pipelineName: san_fernando_spsa-sales
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.034Z
+      - id: 254
+        pipelineId: 9c2985c5-6ffb-4745-928f-0243c7db20fd
+        pipelineName: san_fernando_spsa-inventory
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.076Z
+      - id: 255
+        pipelineId: 8b3c49f4-2888-449b-90cb-3e8ef80e5553
+        pipelineName: san_fernando_cencosud-all
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.135Z
+      - id: 256
+        pipelineId: 95f54c0e-6ec6-4ca3-8a35-7642b971d549
+        pipelineName: clorox_vega-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.184Z
+      - id: 257
+        pipelineId: 81993fa9-7a93-4666-b9df-c1d101b43ac1
+        pipelineName: unilever_falabella_tottus-all
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.247Z
+      - id: 258
+        pipelineId: b8cb8f49-e9ec-45a5-b398-828203a656e8
+        pipelineName: arcor_falabella_tottus-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.288Z
+      - id: 259
+        pipelineId: 0ca530d9-f5b4-4729-be32-6c5203428390
+        pipelineName: ism_falabella_tottus-all
+        clientName: TODOBOT - ISM
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.334Z
+      - id: 260
+        pipelineId: 2b829352-2389-4698-992d-ad7828396737
+        pipelineName: san_fernando_falabella_tottus-all
+        clientName: TODOBOT - SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.386Z
+      - id: 261
+        pipelineId: a30985a9-4e45-45a3-bbe4-8513a575384e
+        pipelineName: arcor_falabella_saga-all
+        clientName: TODOBOT - ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.433Z
+      - id: 262
+        pipelineId: fef8219f-7dcb-4a6d-9549-1462b88a52c8
+        pipelineName: paracas_spsa-order
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.481Z
+      - id: 263
+        pipelineId: ab8616bc-2453-4c14-b38e-7ca3b6c68b8c
+        pipelineName: paracas_spsa-inventory
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.525Z
+      - id: 264
+        pipelineId: b0e5dcbe-08d6-41b4-a1fa-e6d8fa7f8b42
+        pipelineName: paracas_cencosud-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.567Z
+      - id: 265
+        pipelineId: 19efad3a-f499-4c92-8e8b-3d3676caade1
+        pipelineName: paracas_vega-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.614Z
+      - id: 266
+        pipelineId: bda29ff0-5d18-4d9f-a642-06f3c506b1d7
+        pipelineName: paracas_falabella_tottus-all
+        clientName: TODOBOT - PARACAS
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.669Z
+      - id: 267
+        pipelineId: 92e626bf-a0d1-4d65-8ee3-80b732ab0b37
+        pipelineName: indupsa_cencosud-all
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.707Z
+      - id: 268
+        pipelineId: d545f303-61ef-4445-b111-6ab4835d3776
+        pipelineName: indupsa_falabella_tottus-all
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.745Z
+      - id: 269
+        pipelineId: 381c6cfb-cfca-4083-bb85-cfe9b06f5c42
+        pipelineName: intercorpb2b_cala_spsa-order
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.781Z
+      - id: 270
+        pipelineId: 175411fc-3cb1-4217-932b-06853e30c4cd
+        pipelineName: intercorpb2b_cala_spsa-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.823Z
+      - id: 271
+        pipelineId: 7a6d4bc1-bd4e-4c38-af8f-f625ce136dce
+        pipelineName: cala_vega-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.865Z
+      - id: 272
+        pipelineId: 6d982cc9-1467-4a12-b6ec-4163b97fb548
+        pipelineName: intercorpb2b_cala_promart-order
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.900Z
+      - id: 273
+        pipelineId: 231e0cc3-eaff-4042-aeb4-efd248abe850
+        pipelineName: intercorpb2b_cala_promart-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.937Z
+      - id: 274
+        pipelineId: 5094046e-5fe5-47a0-aaeb-be91e3f85b8b
+        pipelineName: cala_cencosud-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:44.979Z
+      - id: 275
+        pipelineId: a335c908-6d0c-4d1b-9c71-fd35e1d1ce05
+        pipelineName: cala_mayorsa-sales
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.022Z
+      - id: 276
+        pipelineId: 5f79f0b7-541e-4591-8b7f-4c1077907b56
+        pipelineName: cala_mayorsa-inventory
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.078Z
+      - id: 277
+        pipelineId: 4ae56c39-626e-4bed-bf2d-755e5d1d0ae5
+        pipelineName: cala_falabella_tottus-all
+        clientName: TODOBOT - CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.136Z
+      - id: 278
+        pipelineId: 9a589b75-83c2-4667-a4bb-ff7f88f5f12f
+        pipelineName: indupsa_spsa-sales
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.178Z
+      - id: 279
+        pipelineId: 774ac063-254e-430d-930b-c10e7816f835
+        pipelineName: indupsa_spsa-inventory
+        clientName: TODOBOT - INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.223Z
+  - id: 43
+    label: Cron 11:30 PE - Semanal (1)
+    timeOfDay: 11:30
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "1"
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.293Z
+    updatedAt: 2026-01-15T06:11:45.293Z
+    targets:
+      - id: 280
+        pipelineId: c4a52a96-f49b-4739-970d-8f0bcba6909d
+        pipelineName: clorox_spsa_som-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.347Z
+      - id: 281
+        pipelineId: 993536b6-c914-492a-9eb3-95493df698ba
+        pipelineName: cala_cencosud-share
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.398Z
+  - id: 44
+    label: Cron 11:30 PE - Semanal (0)
+    timeOfDay: 11:30
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "0"
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.446Z
+    updatedAt: 2026-01-15T06:11:45.446Z
+    targets:
+      - id: 282
+        pipelineId: f710e13d-789b-48fc-8f06-9d79563d1ff4
+        pipelineName: saga_cala_sodimac-all
+        clientName: TODOBOT - GRUPO CALA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.500Z
+  - id: 45
+    label: Cron 13:00 PE - Diario
+    timeOfDay: 13:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.554Z
+    updatedAt: 2026-01-15T06:11:45.554Z
+    targets:
+      - id: 283
+        pipelineId: 1d176fd1-3395-4f0b-8481-9b451d59f0b4
+        pipelineName: PROCESO GENERAL SAN FERNANDO MT
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.609Z
+      - id: 284
+        pipelineId: 6fec831b-0074-468b-9e12-8c9770baa760
+        pipelineName: PROCESO GENERAL INDUPSA MT
+        clientName: INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.662Z
+  - id: 46
+    label: Cron 13:30 PE - Diario
+    timeOfDay: 13:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.725Z
+    updatedAt: 2026-01-15T06:11:45.725Z
+    targets:
+      - id: 285
+        pipelineId: 032ba0c7-da33-4026-af73-08921df590bf
+        pipelineName: mdlz_backus-all
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.771Z
+  - id: 47
+    label: Cron 13:30 PE - Mensual (23,24,25,26,27,28,29,30,31)
+    timeOfDay: 13:30
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: 23,24,25,26,27,28,29,30,31
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.812Z
+    updatedAt: 2026-01-15T06:11:45.812Z
+    targets:
+      - id: 286
+        pipelineId: 25da9883-a117-46cc-94d4-e6976704a96c
+        pipelineName: P3 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.857Z
+  - id: 48
+    label: Cron 14:00 PE - Diario
+    timeOfDay: 14:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.908Z
+    updatedAt: 2026-01-15T06:11:45.908Z
+    targets:
+      - id: 287
+        pipelineId: 37164b69-d035-46e6-a652-1a8e0a8d5f6c
+        pipelineName: ENVIO DE DATOS POR SFTP
+        clientName: SAN FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:45.952Z
+  - id: 49
+    label: Cron 14:00 PE - Mensual (4)
+    timeOfDay: 14:00
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: "4"
+    enabled: true
+    createdAt: 2026-01-15T06:11:45.994Z
+    updatedAt: 2026-01-15T06:11:45.994Z
+    targets:
+      - id: 288
+        pipelineId: 7968c7e8-db42-4541-84e5-c3e7871bfd1b
+        pipelineName: mdlz_colec_new_koba-sales
+        clientName: TODOBOT - MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.033Z
+  - id: 50
+    label: Cron 14:15 PE - Diario
+    timeOfDay: 14:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.077Z
+    updatedAt: 2026-01-15T06:11:46.077Z
+    targets:
+      - id: 289
+        pipelineId: e26060d2-eb2b-45f5-a0d2-798a7dce1ce8
+        pipelineName: ": Proceso General"
+        clientName: MDLZ_BEES
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.124Z
+  - id: 51
+    label: Cron 15:00 PE - Diario
+    timeOfDay: 15:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.204Z
+    updatedAt: 2026-01-15T06:11:46.204Z
+    targets:
+      - id: 290
+        pipelineId: 389e724e-2f7e-4665-9a9e-20fa992fb3f7
+        pipelineName: LOGISTICA ZCarryn-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.246Z
+  - id: 52
+    label: Cron 15:30 PE - Mensual (23,24,25,26,27,28,29,30,31)
+    timeOfDay: 15:30
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: 23,24,25,26,27,28,29,30,31
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.293Z
+    updatedAt: 2026-01-15T06:11:46.293Z
+    targets:
+      - id: 291
+        pipelineId: ad9e7a0e-9827-4809-b049-83152c51a8cc
+        pipelineName: P4 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.367Z
+  - id: 53
+    label: Cron 16:45 PE - Diario
+    timeOfDay: 16:45
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.420Z
+    updatedAt: 2026-01-15T06:11:46.420Z
+    targets:
+      - id: 292
+        pipelineId: df7ee56f-6446-4b62-978a-d010a00898da
+        pipelineName: DILISA
+        clientName: EDGEWELL
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.477Z
+      - id: 293
+        pipelineId: 63b957a3-cc1c-4558-83d3-959c37b40b78
+        pipelineName: DILISA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.527Z
+  - id: 54
+    label: Cron 16:30 PE - Diario
+    timeOfDay: 16:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.584Z
+    updatedAt: 2026-01-15T06:11:46.584Z
+    targets:
+      - id: 294
+        pipelineId: f2c668e8-bec3-4e42-b6a2-2ac4499921f5
+        pipelineName: bdf_colec_copidrogas-sales
+        clientName: TODOBOT - BDF_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.647Z
+      - id: 295
+        pipelineId: 6186c477-dae0-4c71-8d6b-74df3947336e
+        pipelineName: GLCOM
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.702Z
+      - id: 296
+        pipelineId: 08ee025c-6186-4b8e-9d4f-b3609593555c
+        pipelineName: mdlz_colec_supermaxi-all
+        clientName: TODOBOT - MDLZ_COLEC
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.771Z
+      - id: 297
+        pipelineId: 2a06079e-bbc5-47e6-848d-19291df9e161
+        pipelineName: KONSUMASS QUILLABAMBA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.842Z
+  - id: 55
+    label: Cron 17:30 PE - Diario
+    timeOfDay: 17:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:46.900Z
+    updatedAt: 2026-01-15T06:11:46.900Z
+    targets:
+      - id: 298
+        pipelineId: 389e724e-2f7e-4665-9a9e-20fa992fb3f7
+        pipelineName: LOGISTICA ZCarryn-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:46.968Z
+      - id: 299
+        pipelineId: 6784fccd-dc3c-4239-bf62-91b1527c396a
+        pipelineName: MATROD
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.017Z
+  - id: 56
+    label: Cron 17:30 PE - Mensual (23,24,25,26,27,28,29,30,31)
+    timeOfDay: 17:30
+    timezone: America/Lima
+    frequencyType: monthly
+    daysOfMonth: 23,24,25,26,27,28,29,30,31
+    enabled: true
+    createdAt: 2026-01-15T06:11:47.066Z
+    updatedAt: 2026-01-15T06:11:47.066Z
+    targets:
+      - id: 300
+        pipelineId: 25b540fd-6f79-408a-a43d-1ce43f7e1d2e
+        pipelineName: P5 MOLITALIA SELL IN
+        clientName: MOLITALIA SELL IN
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.117Z
+  - id: 57
+    label: Cron 20:00 PE - Diario
+    timeOfDay: 20:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:47.167Z
+    updatedAt: 2026-01-15T06:11:47.167Z
+    targets:
+      - id: 301
+        pipelineId: 79349212-ebac-4c0d-9142-d694ad785926
+        pipelineName: DONTEO_TRUJILLO_TEST
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.247Z
+      - id: 302
+        pipelineId: 9ff17c2d-f541-4afb-8fd6-5cd3e18a4d0a
+        pipelineName: KORESUR
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.305Z
+      - id: 303
+        pipelineId: 82026b00-5d93-4aae-8a07-ff115a23fafb
+        pipelineName: Proceso general de UNILEVER MT
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.354Z
+      - id: 304
+        pipelineId: be53a703-2414-482d-a72e-ac6be8670969
+        pipelineName: CLOROX TT CIERRE TD
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.441Z
+      - id: 305
+        pipelineId: 8027ed9f-d30a-44ca-b16f-ab3234f07418
+        pipelineName: GESA CENTRO
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.520Z
+      - id: 306
+        pipelineId: 8027ed9f-d30a-44ca-b16f-ab3234f07418
+        pipelineName: GESA CENTRO
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.587Z
+      - id: 307
+        pipelineId: b9aa0a8f-1784-408e-ab56-b580a6f19091
+        pipelineName: CARGA MODERNO ARCHIVOS de UNILEVER MT
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.652Z
+      - id: 308
+        pipelineId: 72a984a9-2caa-4825-9398-7f5097d03a4c
+        pipelineName: TARMA_FOODS
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.720Z
+  - id: 58
+    label: Cron 20:30 PE - Diario
+    timeOfDay: 20:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:47.768Z
+    updatedAt: 2026-01-15T06:11:47.768Z
+    targets:
+      - id: 309
+        pipelineId: fbb77ded-3c78-498f-bae4-efa629a1b6be
+        pipelineName: GUTER PREIS
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.822Z
+      - id: 310
+        pipelineId: 74e095a6-9a70-4669-8054-02a6a09621c2
+        pipelineName: SAQRAS PUNO
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.894Z
+      - id: 311
+        pipelineId: ab668888-21b4-4bba-931a-77acf9a0837b
+        pipelineName: TUINFE
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.940Z
+      - id: 312
+        pipelineId: a601180d-ebc4-436d-960a-318f5c5a7cc2
+        pipelineName: MILENIO
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:47.994Z
+      - id: 313
+        pipelineId: a279e083-60aa-4282-9e56-68e3a5995b8a
+        pipelineName: 5M
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.045Z
+      - id: 314
+        pipelineId: e9f49c00-4303-466a-9893-c271a1eb51d1
+        pipelineName: DISMAR CALLAO
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.092Z
+      - id: 315
+        pipelineId: 0ec62512-d2e5-4c52-a783-630fcff0ed28
+        pipelineName: DISMAR NORTE
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.139Z
+      - id: 316
+        pipelineId: 6ee586cf-4e24-407a-921d-69035a11250c
+        pipelineName: DISMAR SJL
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.187Z
+  - id: 59
+    label: Cron 21:00 PE - Diario
+    timeOfDay: 21:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:48.235Z
+    updatedAt: 2026-01-15T06:11:48.235Z
+    targets:
+      - id: 317
+        pipelineId: 6e9cee60-04f5-4d30-9a5b-51c28576ba37
+        pipelineName: LA_GOLOSINA
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.295Z
+      - id: 318
+        pipelineId: 824ad2e0-a7e4-4be5-93cf-062ad07f3ac3
+        pipelineName: CSM_IQUITOS
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.373Z
+      - id: 319
+        pipelineId: 7460ca1d-ed51-4c61-9b6c-ddaa660cb0e7
+        pipelineName: CHIMU
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.426Z
+      - id: 320
+        pipelineId: f0932105-6b14-483e-88be-013bcc06387c
+        pipelineName: MERCOPERU JULIACA
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.493Z
+      - id: 321
+        pipelineId: d08bc2b0-fe6b-4d6d-94d7-5d7d0f434d1b
+        pipelineName: KAYROS / BELEN
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.559Z
+      - id: 322
+        pipelineId: 90d8e55d-04d3-47b8-9ed1-f7c4100ec215
+        pipelineName: KAYROS / BELEN
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.627Z
+      - id: 323
+        pipelineId: 6c154286-eceb-406e-9075-4d0a648e7bc5
+        pipelineName: KAYROS / BELEN
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.679Z
+      - id: 324
+        pipelineId: c723175f-14d6-4fb3-bd66-793ebd84d4cc
+        pipelineName: N&E
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.755Z
+      - id: 325
+        pipelineId: b2e8972a-aeef-4788-ae91-46ceed7b3f5e
+        pipelineName: MOLISAC
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.816Z
+  - id: 60
+    label: Cron 21:30 PE - Diario
+    timeOfDay: 21:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:48.868Z
+    updatedAt: 2026-01-15T06:11:48.868Z
+    targets:
+      - id: 326
+        pipelineId: c5498c93-306f-454a-8d50-83c5284853b0
+        pipelineName: LA_GENOVESA_ILO
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.942Z
+      - id: 327
+        pipelineId: 4027d8d6-565c-4f5f-8f19-418aa9910270
+        pipelineName: DYR
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:48.995Z
+      - id: 328
+        pipelineId: a458fa0e-9124-47b2-97f0-dff8f021d720
+        pipelineName: FELIX
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.051Z
+  - id: 61
+    label: Cron 22:00 PE - Diario
+    timeOfDay: 22:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:49.105Z
+    updatedAt: 2026-01-15T06:11:49.105Z
+    targets:
+      - id: 329
+        pipelineId: 189239b9-3e71-4432-aaff-2cd2d5875e02
+        pipelineName: PUNTODVENTA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.154Z
+      - id: 330
+        pipelineId: 35a7805b-03e1-4576-bd71-7020bd0e967d
+        pipelineName: EL GRANDE
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.201Z
+      - id: 331
+        pipelineId: 3d8cc412-5659-4001-ab21-99bdbb1c2ab5
+        pipelineName: JOMER_CHINCHA
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.250Z
+      - id: 332
+        pipelineId: d195d2db-6158-49ab-b9c3-cba6a2c59740
+        pipelineName: GENOVESA_TACNA
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.300Z
+      - id: 333
+        pipelineId: 87154080-0a58-4d2f-8417-ce36d64eee14
+        pipelineName: GENOVESA_MOQUEGUA
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.357Z
+      - id: 334
+        pipelineId: 478b10a2-6996-42f8-ab49-723da6624f74
+        pipelineName: GENOVESA_ILO
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.435Z
+      - id: 335
+        pipelineId: 2514998c-945b-4bf8-827d-281093fe91c5
+        pipelineName: DIAVELL
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.487Z
+      - id: 336
+        pipelineId: 3d8cc412-5659-4001-ab21-99bdbb1c2ab5
+        pipelineName: JOMER_CHINCHA
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.553Z
+      - id: 337
+        pipelineId: 05e5e6a2-3ba5-4c47-a0e0-bc99045e844f
+        pipelineName: SNACKS
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.622Z
+      - id: 338
+        pipelineId: 12204a47-45dc-433b-8536-1cde3425167a
+        pipelineName: CODIFER
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.688Z
+      - id: 339
+        pipelineId: 7b3e9c89-51c7-4a24-a75f-e9474294d6d6
+        pipelineName: DIJISA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.741Z
+      - id: 340
+        pipelineId: 9bcf52ed-fea9-4b4e-aa6f-979d831e84c3
+        pipelineName: CMS
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.821Z
+      - id: 341
+        pipelineId: 2eeb47eb-443d-4751-93ee-712ea5dd3cd7
+        pipelineName: DIAVELL
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.879Z
+      - id: 342
+        pipelineId: 67f824af-4c39-43e5-bed7-4a7cd83387ff
+        pipelineName: KAYROS
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:49.937Z
+      - id: 343
+        pipelineId: 52934c31-c2e9-4a00-aa40-662f3b14d823
+        pipelineName: GOLISUR
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.019Z
+      - id: 344
+        pipelineId: 1ef703b1-12b6-41d6-8c36-24cbc54e13c6
+        pipelineName: GOLISUR ILO
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.073Z
+      - id: 345
+        pipelineId: 98e003b9-471d-4492-b303-a4eb6166b55f
+        pipelineName: SORIA
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.133Z
+      - id: 346
+        pipelineId: 6898c25e-4093-47e4-a3b4-51a9cadda60d
+        pipelineName: CMS
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.189Z
+      - id: 347
+        pipelineId: 7f5abc3b-2863-4a68-95d6-f61911981c02
+        pipelineName: MAPELLI ACOSTA DEL ORIENTE
+        clientName: SAN_FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.239Z
+      - id: 348
+        pipelineId: 4adce1c5-cd07-48df-a08a-7730b8b27af0
+        pipelineName: MAPELLI ACOSTA LA MERCED
+        clientName: SAN_FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.292Z
+      - id: 349
+        pipelineId: 7a819b39-649c-40bd-8fb0-ec55e2e4d7c6
+        pipelineName: MAPELLI ACOSTA WANKA
+        clientName: SAN_FERNANDO
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.348Z
+      - id: 350
+        pipelineId: eb063214-9333-4ecb-8658-9a644a4bc07f
+        pipelineName: LA_GENOVESA_MOQUEGUA
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.410Z
+      - id: 351
+        pipelineId: 8b9a0e7b-ba8f-4c55-bc94-dd0af70c757c
+        pipelineName: AGA MOYOBAMBA
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.486Z
+      - id: 352
+        pipelineId: 72034c6a-051a-4c00-9965-21ca1b784272
+        pipelineName: AGA TARAPOTO
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.541Z
+      - id: 353
+        pipelineId: 09350c91-a430-4b4f-a80a-11b42e133095
+        pipelineName: AGA CHACHAPOYA
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.617Z
+      - id: 354
+        pipelineId: b8c98702-2ca8-46b7-96c2-b5ffc2109309
+        pipelineName: AGA JAEN
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.691Z
+      - id: 355
+        pipelineId: b877f3bf-953d-40d1-a824-2c5e0d68b441
+        pipelineName: CMS AREQUIPA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.766Z
+      - id: 356
+        pipelineId: 0584f1ba-0741-4d27-9baf-051b0aa1abf0
+        pipelineName: FACTORIA
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.823Z
+      - id: 357
+        pipelineId: 57c514c5-fce0-47f4-8ced-975c6cc82c1a
+        pipelineName: CRISLEI
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.900Z
+      - id: 358
+        pipelineId: 3178002f-629f-4e89-b370-ab07734442ef
+        pipelineName: FELIX v2
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:50.986Z
+      - id: 359
+        pipelineId: 956a1f25-989a-4126-acc5-f52a03df77b0
+        pipelineName: FELIX
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.067Z
+      - id: 360
+        pipelineId: 43d2ebbb-641f-42c5-822a-78d59fe40f9b
+        pipelineName: KONSUMASS
+        clientName: INDUPSA
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.133Z
+  - id: 62
+    label: Cron 23:05 PE - Diario
+    timeOfDay: 23:05
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:51.201Z
+    updatedAt: 2026-01-15T06:11:51.201Z
+    targets:
+      - id: 361
+        pipelineId: 804f2091-e447-4733-898f-239073e996a4
+        pipelineName: MELVIN - MICHEL
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.280Z
+  - id: 63
+    label: Cron 23:15 PE - Diario
+    timeOfDay: 23:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:51.330Z
+    updatedAt: 2026-01-15T06:11:51.330Z
+    targets:
+      - id: 362
+        pipelineId: d98e354f-4180-462f-828f-d186c0345885
+        pipelineName: GENOVESA MOQUEGUA
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.384Z
+      - id: 363
+        pipelineId: 45c71ab4-c216-4d9a-a865-60d9194cc2e2
+        pipelineName: L&H
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.436Z
+  - id: 64
+    label: Cron 23:30 PE - Diario
+    timeOfDay: 23:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:51.497Z
+    updatedAt: 2026-01-15T06:11:51.497Z
+    targets:
+      - id: 364
+        pipelineId: 75e887e9-0903-46a6-b846-1ce88bdeccce
+        pipelineName: EDUSA
+        clientName: VERDUM
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.573Z
+      - id: 365
+        pipelineId: 7d7c9cb2-e6f2-464e-81ad-24eb9cd21afb
+        pipelineName: SAQRAS_PUNO
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.636Z
+      - id: 366
+        pipelineId: cd9224c5-4be9-4a8d-85af-ab8336aafe03
+        pipelineName: JOMER_HUANCAYO
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.703Z
+      - id: 367
+        pipelineId: 29128ea8-cb9d-4fc9-aec7-00305f107ced
+        pipelineName: SUPERVENTAS
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.766Z
+      - id: 368
+        pipelineId: 8421f94d-ba28-4137-a177-d2c620417d88
+        pipelineName: MERCO
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.834Z
+      - id: 369
+        pipelineId: dfeaba66-2642-4393-8186-f98b48a71cab
+        pipelineName: MERKOSUR
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.889Z
+      - id: 370
+        pipelineId: 3ad42a5e-472b-4bff-ab2a-b33ed72e093e
+        pipelineName: PLAZA_MAR_PUCALLPA
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:51.974Z
+      - id: 371
+        pipelineId: 7d7c9cb2-e6f2-464e-81ad-24eb9cd21afb
+        pipelineName: SAQRAS_PUNO
+        clientName: MDLZ_TEST
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.030Z
+      - id: 372
+        pipelineId: b01332a9-f85f-4195-aa73-551586e4f450
+        pipelineName: RED_ORIENTE
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.090Z
+      - id: 373
+        pipelineId: 12086cbe-dc6f-4fb5-a3eb-9a8ed1a3d46a
+        pipelineName: MAC VENTAS
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.169Z
+      - id: 374
+        pipelineId: d80dc730-d868-4a6b-93b7-9fc713c2fa89
+        pipelineName: JORGE BARON
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.230Z
+      - id: 375
+        pipelineId: c9fe87e4-7840-48cf-b4b8-b3a54fdfced3
+        pipelineName: GLCOM
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.289Z
+      - id: 376
+        pipelineId: e73ed2a6-f956-4449-8961-8d2fadd24a67
+        pipelineName: JOMER_ICA
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.341Z
+      - id: 377
+        pipelineId: 2fa2f161-86c5-4ed5-b58d-5c8247a638af
+        pipelineName: KANTU
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.395Z
+      - id: 378
+        pipelineId: 818e066c-3cb0-47b8-8a59-00326e357870
+        pipelineName: SAN FRANCISCO
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.450Z
+      - id: 379
+        pipelineId: 3712b6ec-18f2-43e2-95c8-ff5c9e4a38f5
+        pipelineName: JORGE BARON
+        clientName: BDF
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.506Z
+      - id: 380
+        pipelineId: 692dbc59-c3c2-4a76-a4b0-04fb2e8974a9
+        pipelineName: SODALES
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.571Z
+      - id: 381
+        pipelineId: d18ac475-7dbd-4cb9-96df-d63db8a8c0ff
+        pipelineName: CASA_GRANDE
+        clientName: SUPER_ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.653Z
+      - id: 382
+        pipelineId: 2b338fd8-caf3-4e96-87e5-7ac69d9be3e1
+        pipelineName: CASA_GRANDE
+        clientName: WINTERS
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.721Z
+      - id: 383
+        pipelineId: 6885c48c-2ef0-492e-a541-dac47c7208c2
+        pipelineName: SAN MARTIN
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.799Z
+      - id: 384
+        pipelineId: 5251c983-6723-44ac-b815-0bd701b10795
+        pipelineName: SNACKS HUARAZ
+        clientName: CONFITECA
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.877Z
+      - id: 385
+        pipelineId: 49adb3a9-7e8b-420f-abdc-a837f47f65af
+        pipelineName: SAN JUAN
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:52.932Z
+      - id: 386
+        pipelineId: 6e20640f-ba43-4267-b5a7-ba33fbfec544
+        pipelineName: GEMINIS
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.005Z
+      - id: 387
+        pipelineId: 873a902b-0b8c-4cdc-9e09-0d7103e3976d
+        pipelineName: TOTAL DISTRIBUIDORES
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.085Z
+      - id: 388
+        pipelineId: 0f6a9717-b6ad-48ee-b7b3-828a660b791b
+        pipelineName: PRIMOS
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.143Z
+      - id: 389
+        pipelineId: 6be87d69-542b-453c-965f-d472e6ffafa9
+        pipelineName: silvia
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.227Z
+      - id: 390
+        pipelineId: 627e0ee8-7ab7-4aa1-b2d9-d537a0678806
+        pipelineName: SALDI
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.296Z
+      - id: 391
+        pipelineId: 6ee4632b-f06a-4830-ba26-d09abebfd5be
+        pipelineName: PRIMOS
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.352Z
+      - id: 392
+        pipelineId: c5115346-d761-4dd4-af96-2a0be6abd97d
+        pipelineName: MARCAVENTA
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.410Z
+      - id: 393
+        pipelineId: 629ea83b-ae6b-47f6-bf2d-eb3a31a9566b
+        pipelineName: SAN JUAN
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.467Z
+      - id: 394
+        pipelineId: 2b8e9555-21f9-4e02-9394-ba51ebce3cbe
+        pipelineName: CA & LU
+        clientName: SUPER ALIMENTOS
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.524Z
+      - id: 395
+        pipelineId: 4acf7b11-2c83-4d80-937a-e5f4f6733a5e
+        pipelineName: CSM
+        clientName: CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.582Z
+      - id: 396
+        pipelineId: 8e1a563a-5df7-4fd2-95f5-cd1360129450
+        pipelineName: FAMCADI
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.674Z
+      - id: 397
+        pipelineId: 91192476-3c65-491f-9fc9-231a238e51ed
+        pipelineName: CSM
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.749Z
+      - id: 398
+        pipelineId: 91e68509-9d0c-4206-83aa-71bb016df6d6
+        pipelineName: TAYMI NORTE
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.819Z
+      - id: 399
+        pipelineId: 3a6f0582-a324-4b63-b4db-f150383166ac
+        pipelineName: CSM-PUCALLPA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.892Z
+      - id: 400
+        pipelineId: 3da62832-0c0a-43b8-ba94-9509adb8afb3
+        pipelineName: ALVAREZ BOHL
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:53.961Z
+      - id: 401
+        pipelineId: bfae2582-f438-40bb-8369-a0aee7e21cd2
+        pipelineName: LUCKY HUANCAYO
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.018Z
+      - id: 402
+        pipelineId: 7797b351-734c-4ec7-936d-ce685299f976
+        pipelineName: ALVAREZ BOHL
+        clientName: SP
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.105Z
+      - id: 403
+        pipelineId: 43b5028a-9824-43c3-8ecd-7e236ff05eb1
+        pipelineName: GRUPO DISART
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.180Z
+      - id: 404
+        pipelineId: a5156156-9ce2-4700-87fc-885dbdfb3c4e
+        pipelineName: INV DISART
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.246Z
+      - id: 405
+        pipelineId: 0ddc8e53-880c-420f-904b-cb199d676567
+        pipelineName: ECONOMYSA
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.336Z
+      - id: 406
+        pipelineId: c5c999d2-03e1-4112-b321-a5219ef53de9
+        pipelineName: JANDY
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.400Z
+      - id: 407
+        pipelineId: d2bb6e32-4674-4c7f-b605-513689673bdc
+        pipelineName: N&J
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.459Z
+      - id: 408
+        pipelineId: c78362b5-5c0b-4af9-a8b0-c1c490ada3ca
+        pipelineName: N&J
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.520Z
+      - id: 409
+        pipelineId: 9b618d06-f4ae-43b1-bf74-e451d1892f4c
+        pipelineName: SAQRAS AREQUIPA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.584Z
+      - id: 410
+        pipelineId: 7c389990-2ea4-46b5-bc9f-39902ac69e5a
+        pipelineName: MERCAVENTA
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.644Z
+      - id: 411
+        pipelineId: 0da7b031-3a5f-4aa8-8fc6-e2d4aa55f0dd
+        pipelineName: PRIMOS
+        clientName: CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.720Z
+      - id: 412
+        pipelineId: 12d3a897-4351-4091-8ecf-96c9f7dcddaf
+        pipelineName: LUCKY
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.788Z
+      - id: 413
+        pipelineId: 8b972789-3b04-4a4d-9b64-28c5cdd73ad8
+        pipelineName: A y B
+        clientName: SOFTYS
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.875Z
+      - id: 414
+        pipelineId: edd56a8d-349c-4091-9597-0a47bdc3ac69
+        pipelineName: MELVIN
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:54.953Z
+      - id: 415
+        pipelineId: 659222b3-ad07-44a2-919e-242f198741af
+        pipelineName: MORAN
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.028Z
+      - id: 416
+        pipelineId: cffc864b-6454-4bc7-9db0-3bea1bf4dfb5
+        pipelineName: PAuSER
+        clientName: MDLZ
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.089Z
+      - id: 417
+        pipelineId: c4a0235e-e543-449f-a4bc-9957d3381e89
+        pipelineName: JANDY
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.177Z
+      - id: 418
+        pipelineId: ec983f87-6867-4ca3-aa35-c227761556d8
+        pipelineName: ALMACENES VICTORIA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.255Z
+  - id: 65
+    label: Cron 23:45 PE - Diario
+    timeOfDay: 23:45
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:55.329Z
+    updatedAt: 2026-01-15T06:11:55.329Z
+    targets:
+      - id: 419
+        pipelineId: 8f925564-0105-40fa-8906-f805f4dd01f7
+        pipelineName: AYB
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.412Z
+      - id: 420
+        pipelineId: 1ba82c15-da6f-46e7-8cc4-b5fbecf22a8f
+        pipelineName: TAMBOS
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.472Z
+      - id: 421
+        pipelineId: 4b820335-7586-476d-97b2-833a667e29f2
+        pipelineName: CASA GRANDE
+        clientName: RINTISA
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.534Z
+      - id: 422
+        pipelineId: e7457584-b1f6-4bf9-82be-4ed3fff73e0f
+        pipelineName: BRENMA
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.596Z
+  - id: 66
+    label: Cron 23:55 PE - Diario
+    timeOfDay: 23:55
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:55.656Z
+    updatedAt: 2026-01-15T06:11:55.656Z
+    targets:
+      - id: 423
+        pipelineId: 18b9c03b-6815-45e7-9603-2cad329695b0
+        pipelineName: AMAZONAS
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.725Z
+      - id: 424
+        pipelineId: 97cc17b9-0e0b-4165-be00-394fcedd67e0
+        pipelineName: TCA
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.848Z
+      - id: 425
+        pipelineId: 74192aef-a926-4655-b140-6423a5a52879
+        pipelineName: DISMAR
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:55.933Z
+  - id: 67
+    label: Cron 12:00 PE - Diario
+    timeOfDay: 12:00
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:56.023Z
+    updatedAt: 2026-01-15T06:11:56.023Z
+    targets:
+      - id: 426
+        pipelineId: 9cfb6021-2f68-466a-9a2c-49a6499f68bb
+        pipelineName: Proceso general de PERU MODERNO
+        clientName: MDLZ_MODERNO
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.098Z
+      - id: 427
+        pipelineId: 3bc8dcc4-001c-4ad9-99de-d77ef4176d3d
+        pipelineName: AGA - CHACHAPOYAS
+        clientName: EDGEWELL
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.164Z
+      - id: 428
+        pipelineId: 76adaa56-ffdd-4487-a200-dc9b1b0074b4
+        pipelineName: AGA - JAEN
+        clientName: EDGEWELL
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.267Z
+      - id: 429
+        pipelineId: c3d815e4-dbf7-4955-a002-8b875c521c01
+        pipelineName: unilever_transito-all
+        clientName: TODOBOT - UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.351Z
+      - id: 430
+        pipelineId: b521ec8c-b382-45d8-8cb2-aefb0e607977
+        pipelineName: cnch_falabella_tottus-all
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.457Z
+  - id: 68
+    label: Cron 12:00 PE - Semanal (0, 1, 2, 3, 4, 5)
+    timeOfDay: 12:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: 0, 1, 2, 3, 4, 5
+    enabled: true
+    createdAt: 2026-01-15T06:11:56.528Z
+    updatedAt: 2026-01-15T06:11:56.528Z
+    targets:
+      - id: 431
+        pipelineId: 9b5f6fdf-d19b-42ba-9a0e-4ab0aca5fc0f
+        pipelineName: Whatsapp - CONFITECA
+        clientName: SYS NOTIFICATION
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.587Z
+  - id: 69
+    label: Cron 12:00 PE - Semanal (1)
+    timeOfDay: 12:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "1"
+    enabled: true
+    createdAt: 2026-01-15T06:11:56.653Z
+    updatedAt: 2026-01-15T06:11:56.653Z
+    targets:
+      - id: 432
+        pipelineId: c3ebcec3-0cf5-4ac0-9de1-dac4db0fb563
+        pipelineName: cnch_cencosud_share-all
+        clientName: TODOBOT - CNCH
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.720Z
+  - id: 70
+    label: Cron 12:00 PE - Semanal (2)
+    timeOfDay: 12:00
+    timezone: America/Lima
+    frequencyType: weekly
+    daysOfWeek: "2"
+    enabled: true
+    createdAt: 2026-01-15T06:11:56.793Z
+    updatedAt: 2026-01-15T06:11:56.793Z
+    targets:
+      - id: 433
+        pipelineId: cea57174-c7c0-45c1-b9f7-def2b87b0f6b
+        pipelineName: clorox_ecu_santa_maria-logistica
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:56.897Z
+  - id: 71
+    label: Cron 12:15 PE - Diario
+    timeOfDay: 12:15
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:56.985Z
+    updatedAt: 2026-01-15T06:11:56.985Z
+    targets:
+      - id: 434
+        pipelineId: 36d2abe1-611b-428b-8b50-75a99b655bf6
+        pipelineName: DARO
+        clientName: ALICORP
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.069Z
+      - id: 435
+        pipelineId: 5de8d546-2d7d-4466-8948-2a6d56ba6b85
+        pipelineName: KAYFA
+        clientName: ARCOR
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.156Z
+  - id: 72
+    label: Cron 12:30 PE - Diario
+    timeOfDay: 12:30
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:57.223Z
+    updatedAt: 2026-01-15T06:11:57.223Z
+    targets:
+      - id: 436
+        pipelineId: bd1544e4-4768-4872-872c-d20211b54b4c
+        pipelineName: inkacrops_cencosud-all
+        clientName: TODOBOT - INKACROPS
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.310Z
+      - id: 437
+        pipelineId: be769369-c64e-48d5-9671-36df0bc802f2
+        pipelineName: inkacrops_spsa-order
+        clientName: TODOBOT - INKACROPS
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.389Z
+      - id: 438
+        pipelineId: a4dc2d90-e297-41e5-a73a-bc78cec294a0
+        pipelineName: inkacrops_spsa-inventory
+        clientName: TODOBOT - INKACROPS
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.473Z
+      - id: 439
+        pipelineId: facefc80-fbf1-4483-baeb-a6ea40eb8ac5
+        pipelineName: inkacrops_tottus-all
+        clientName: TODOBOT - INKACROPS
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.568Z
+      - id: 440
+        pipelineId: 82026b00-5d93-4aae-8a07-ff115a23fafb
+        pipelineName: Proceso general de UNILEVER MT
+        clientName: UNILEVER
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.655Z
+      - id: 441
+        pipelineId: 389e724e-2f7e-4665-9a9e-20fa992fb3f7
+        pipelineName: LOGISTICA ZCarryn-all
+        clientName: TODOBOT - CLOROX
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.735Z
+      - id: 442
+        pipelineId: 5bfdf190-96c0-4080-b26e-b6196328d179
+        pipelineName: EL SOL
+        clientName: YICHANG
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.795Z
+  - id: 73
+    label: Cron 12:45 PE - Diario
+    timeOfDay: 12:45
+    timezone: America/Lima
+    frequencyType: daily
+    enabled: true
+    createdAt: 2026-01-15T06:11:57.869Z
+    updatedAt: 2026-01-15T06:11:57.869Z
+    targets:
+      - id: 443
+        pipelineId: ccde9e95-ce8b-4057-ad52-736d8c702b69
+        pipelineName: SOFTYS
+        clientName: VIDA SOFTWARE
+        enabled: true
+        createdAt: 2026-01-15T06:11:57.952Z
+nextScheduleId: 74
+nextTargetId: 444
