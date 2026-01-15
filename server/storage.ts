@@ -48,16 +48,19 @@ export interface IStorage {
 
 export class FileBasedStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
+    if (!db) return undefined;
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    if (!db) return undefined;
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    if (!db) throw new Error("Database not configured");
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
