@@ -1,10 +1,30 @@
 import { 
-  users, type User, type InsertUser,
-  scheduleConfigs, type ScheduleConfig, type InsertScheduleConfig,
-  scheduleTargets, type ScheduleTarget, type InsertScheduleTarget
+  users, type User, type InsertUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import * as fileStorage from "./schedule-file-storage";
+import type { FileScheduleConfig, FileScheduleTarget } from "./schedule-file-storage";
+
+export type ScheduleConfig = FileScheduleConfig;
+export type ScheduleTarget = FileScheduleTarget;
+export type InsertScheduleConfig = {
+  label: string;
+  timeOfDay: string;
+  timezone?: string;
+  frequencyType: string;
+  daysOfWeek?: string;
+  daysOfMonth?: string;
+  enabled?: boolean;
+};
+export type InsertScheduleTarget = {
+  scheduleId: number;
+  pipelineId: string;
+  pipelineName?: string;
+  clientName?: string;
+  notes?: string;
+  enabled?: boolean;
+};
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -20,13 +40,13 @@ export interface IStorage {
   
   getScheduleTargets(scheduleId: number): Promise<ScheduleTarget[]>;
   getAllScheduleTargets(): Promise<ScheduleTarget[]>;
-  createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget>;
+  createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget | undefined>;
   deleteScheduleTarget(id: number): Promise<boolean>;
   deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean>;
   getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class FileBasedStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -43,103 +63,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getScheduleConfigs(): Promise<ScheduleConfig[]> {
-    return db.select().from(scheduleConfigs).orderBy(asc(scheduleConfigs.timeOfDay));
+    return fileStorage.getScheduleConfigs();
   }
 
   async getScheduleConfig(id: number): Promise<ScheduleConfig | undefined> {
-    const [config] = await db.select().from(scheduleConfigs).where(eq(scheduleConfigs.id, id));
-    return config;
+    return fileStorage.getScheduleConfig(id);
   }
 
   async createScheduleConfig(config: InsertScheduleConfig): Promise<ScheduleConfig> {
-    const [schedule] = await db.insert(scheduleConfigs).values({
-      label: config.label,
-      timeOfDay: config.timeOfDay,
-      timezone: config.timezone || "America/Lima",
-      frequencyType: config.frequencyType,
-      daysOfWeek: config.daysOfWeek || null,
-      daysOfMonth: config.daysOfMonth || null,
-      enabled: config.enabled ?? true,
-    }).returning();
-    return schedule;
+    return fileStorage.createScheduleConfig(config);
   }
 
   async updateScheduleConfig(id: number, config: Partial<InsertScheduleConfig>): Promise<ScheduleConfig | undefined> {
-    const [updated] = await db.update(scheduleConfigs)
-      .set({ ...config, updatedAt: new Date() })
-      .where(eq(scheduleConfigs.id, id))
-      .returning();
-    return updated;
+    return fileStorage.updateScheduleConfig(id, config);
   }
 
   async deleteScheduleConfig(id: number): Promise<boolean> {
-    await db.delete(scheduleTargets).where(eq(scheduleTargets.scheduleId, id));
-    const result = await db.delete(scheduleConfigs).where(eq(scheduleConfigs.id, id)).returning();
-    return result.length > 0;
+    return fileStorage.deleteScheduleConfig(id);
   }
 
   async deleteAllScheduleConfigs(): Promise<boolean> {
-    await db.delete(scheduleTargets);
-    await db.delete(scheduleConfigs);
-    return true;
+    return fileStorage.deleteAllScheduleConfigs();
   }
 
   async getScheduleTargets(scheduleId: number): Promise<ScheduleTarget[]> {
-    return db.select().from(scheduleTargets).where(eq(scheduleTargets.scheduleId, scheduleId));
+    return fileStorage.getScheduleTargets(scheduleId);
   }
 
   async getAllScheduleTargets(): Promise<ScheduleTarget[]> {
-    return db.select().from(scheduleTargets);
+    return fileStorage.getAllScheduleTargets();
   }
 
-  async createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget> {
-    const [scheduleTarget] = await db.insert(scheduleTargets).values({
-      scheduleId: target.scheduleId,
-      pipelineId: target.pipelineId,
-      pipelineName: target.pipelineName || null,
-      clientName: target.clientName || null,
-      notes: target.notes || null,
-      enabled: target.enabled ?? true,
-    }).returning();
-    return scheduleTarget;
+  async createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget | undefined> {
+    return fileStorage.createScheduleTarget(target);
   }
 
   async deleteScheduleTarget(id: number): Promise<boolean> {
-    const result = await db.delete(scheduleTargets).where(eq(scheduleTargets.id, id)).returning();
-    return result.length > 0;
+    return fileStorage.deleteScheduleTarget(id);
   }
 
   async deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean> {
-    await db.delete(scheduleTargets).where(eq(scheduleTargets.scheduleId, scheduleId));
-    return true;
+    return fileStorage.deleteScheduleTargetsBySchedule(scheduleId);
   }
   
   async getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]> {
-    // Find all schedule targets that reference this pipeline
-    const targets = await db.select()
-      .from(scheduleTargets)
-      .where(eq(scheduleTargets.pipelineId, pipelineId));
-    
-    if (targets.length === 0) {
-      return [];
-    }
-    
-    // Get unique schedule IDs
-    const scheduleIds = Array.from(new Set(targets.map(t => t.scheduleId)));
-    
-    // Fetch the schedule configs for those IDs
-    const configs: ScheduleConfig[] = [];
-    for (const schedId of scheduleIds) {
-      const [config] = await db.select()
-        .from(scheduleConfigs)
-        .where(eq(scheduleConfigs.id, schedId));
-      if (config) {
-        configs.push(config);
-      }
-    }
-    
-    return configs;
+    return fileStorage.getSchedulesByPipelineId(pipelineId);
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new FileBasedStorage();

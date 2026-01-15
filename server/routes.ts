@@ -12,8 +12,29 @@ import {
   isPipelineYAMLUpToDate
 } from "./yaml-manager";
 import { PipelineTemplateManager } from "../client/src/lib/pipeline-template-manager";
-import { insertScheduleConfigSchema, insertScheduleTargetSchema } from "@shared/schema";
 import { parseSchedulerFile } from "./schedule-parser";
+import { z } from "zod";
+
+const frequencyTypeEnum = z.enum(["daily", "weekly", "monthly"]);
+
+const insertScheduleConfigSchema = z.object({
+  label: z.string(),
+  timeOfDay: z.string(),
+  timezone: z.string().optional(),
+  frequencyType: frequencyTypeEnum,
+  daysOfWeek: z.string().optional(),
+  daysOfMonth: z.string().optional(),
+  enabled: z.boolean().optional()
+});
+
+const insertScheduleTargetSchema = z.object({
+  scheduleId: z.number(),
+  pipelineId: z.string(),
+  pipelineName: z.string().optional(),
+  clientName: z.string().optional(),
+  notes: z.string().optional(),
+  enabled: z.boolean().optional()
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
