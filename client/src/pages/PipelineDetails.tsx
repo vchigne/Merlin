@@ -493,7 +493,8 @@ export default function PipelineDetails() {
   
   const {
     data: pipelineSchedules,
-    isLoading: isSchedulesLoading
+    isLoading: isSchedulesLoading,
+    refetch: refetchPipelineSchedules
   } = useQuery<ScheduleInfo[]>({
     queryKey: ['/api/pipeline-schedules', id],
     queryFn: async () => {
@@ -506,7 +507,53 @@ export default function PipelineDetails() {
     enabled: !!id && !isJobView,
   });
   
+  const {
+    data: allSchedules,
+    isLoading: isAllSchedulesLoading
+  } = useQuery<ScheduleInfo[]>({
+    queryKey: ['/api/schedules'],
+    queryFn: async () => {
+      const response = await fetch(`/api/schedules`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch all schedules');
+      }
+      return response.json();
+    },
+    enabled: !!id && !isJobView,
+  });
+  
   const [schedulesDialogOpen, setSchedulesDialogOpen] = useState(false);
+  const [showSchedulePicker, setShowSchedulePicker] = useState(false);
+  const [addingToSchedule, setAddingToSchedule] = useState<number | null>(null);
+  
+  const handleAddToSchedule = async (scheduleId: number) => {
+    if (!id || !pipeline) return;
+    setAddingToSchedule(scheduleId);
+    try {
+      const response = await fetch(`/api/schedules/${scheduleId}/targets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pipelineId: id,
+          pipelineName: pipeline.name,
+          clientName: pipeline.description || 'Unknown',
+          enabled: true
+        })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add pipeline to schedule');
+      }
+      await refetchPipelineSchedules();
+      setShowSchedulePicker(false);
+    } catch (error) {
+      console.error('Error adding to schedule:', error);
+    }
+    setAddingToSchedule(null);
+  };
+  
+  const availableSchedules = allSchedules?.filter(
+    s => !pipelineSchedules?.some(ps => ps.id === s.id)
+  ) || [];
   
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -1025,66 +1072,131 @@ export default function PipelineDetails() {
       )}
       
       {/* Schedules Management Dialog */}
-      <Dialog open={schedulesDialogOpen} onOpenChange={setSchedulesDialogOpen}>
+      <Dialog open={schedulesDialogOpen} onOpenChange={(open) => {
+        setSchedulesDialogOpen(open);
+        if (!open) setShowSchedulePicker(false);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Pipeline Schedules
+              {showSchedulePicker ? "Select a Schedule" : "Pipeline Schedules"}
             </DialogTitle>
             <DialogDescription>
-              {pipelineSchedules && pipelineSchedules.length > 0 
-                ? `This pipeline is included in ${pipelineSchedules.length} scheduled task(s).`
-                : "This pipeline is not included in any scheduled tasks."}
+              {showSchedulePicker 
+                ? "Choose an existing schedule to add this pipeline to."
+                : pipelineSchedules && pipelineSchedules.length > 0 
+                  ? `This pipeline is included in ${pipelineSchedules.length} scheduled task(s).`
+                  : "This pipeline is not included in any scheduled tasks."}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3">
-            {pipelineSchedules && pipelineSchedules.length > 0 ? (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {pipelineSchedules.map((schedule) => (
-                  <div 
-                    key={schedule.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-                    onClick={() => {
-                      setSchedulesDialogOpen(false);
-                      navigate(`/schedules?edit=${schedule.id}`);
-                    }}
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{schedule.label}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {schedule.timeOfDay} ({schedule.timezone}) • {schedule.frequencyType}
-                      </p>
-                    </div>
-                    <Badge variant={schedule.enabled ? "default" : "secondary"} className="text-xs">
-                      {schedule.enabled ? "Active" : "Disabled"}
-                    </Badge>
+            {showSchedulePicker ? (
+              <>
+                {isAllSchedulesLoading ? (
+                  <div className="text-center py-4">
+                    <RefreshCw className="h-6 w-6 mx-auto animate-spin text-slate-400" />
+                    <p className="text-sm text-slate-500 mt-2">Loading schedules...</p>
                   </div>
-                ))}
-              </div>
+                ) : availableSchedules.length > 0 ? (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {availableSchedules.map((schedule) => (
+                      <div 
+                        key={schedule.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-colors"
+                        onClick={() => handleAddToSchedule(schedule.id)}
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{schedule.label}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {schedule.timeOfDay} ({schedule.timezone}) • {schedule.frequencyType}
+                          </p>
+                        </div>
+                        {addingToSchedule === schedule.id ? (
+                          <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
+                            + Add
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Calendar className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      This pipeline is already in all available schedules.
+                    </p>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setShowSchedulePicker(false)}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              </>
             ) : (
-              <div className="text-center py-4">
-                <Calendar className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  No schedules configured for this pipeline yet.
-                </p>
-              </div>
+              <>
+                {pipelineSchedules && pipelineSchedules.length > 0 ? (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {pipelineSchedules.map((schedule) => (
+                      <div 
+                        key={schedule.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                        onClick={() => {
+                          setSchedulesDialogOpen(false);
+                          navigate(`/schedules?edit=${schedule.id}`);
+                        }}
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{schedule.label}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {schedule.timeOfDay} ({schedule.timezone}) • {schedule.frequencyType}
+                          </p>
+                        </div>
+                        <Badge variant={schedule.enabled ? "default" : "secondary"} className="text-xs">
+                          {schedule.enabled ? "Active" : "Disabled"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Calendar className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      No schedules configured for this pipeline yet.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="default"
+                    className="flex-1"
+                    onClick={() => setShowSchedulePicker(true)}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Add to Schedule
+                  </Button>
+                  {pipelineSchedules && pipelineSchedules.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSchedulesDialogOpen(false);
+                        navigate(`/schedules`);
+                      }}
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
-            
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setSchedulesDialogOpen(false);
-                  navigate(`/schedules?pipeline=${id}&name=${encodeURIComponent(pipeline?.name || '')}`);
-                }}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                {pipelineSchedules && pipelineSchedules.length > 0 ? "Manage All" : "Add to Schedule"}
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
