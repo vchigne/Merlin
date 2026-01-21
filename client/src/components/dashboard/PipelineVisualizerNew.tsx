@@ -126,41 +126,44 @@ export default function PipelineVisualizerNew({
         const deltaX = targetCenterX - sourceCenterX;
         const deltaY = targetCenterY - sourceCenterY;
         
+        // Offset para que las líneas empiecen/terminen FUERA del borde del nodo
+        const edgeOffset = 8;
+        
         // Determinar punto de salida del nodo padre (source)
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
           if (deltaX > 0) {
-            startX = sourceRight;
+            startX = sourceRight + edgeOffset;
             startY = sourceCenterY;
           } else {
-            startX = sourceLeft;
+            startX = sourceLeft - edgeOffset;
             startY = sourceCenterY;
           }
         } else {
           if (deltaY > 0) {
             startX = sourceCenterX;
-            startY = sourceBottom;
+            startY = sourceBottom + edgeOffset;
           } else {
             startX = sourceCenterX;
-            startY = sourceTop;
+            startY = sourceTop - edgeOffset;
           }
         }
         
         // Determinar punto de entrada del nodo hijo (target)
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
           if (deltaX > 0) {
-            endX = targetLeft;
+            endX = targetLeft - edgeOffset;
             endY = targetCenterY;
           } else {
-            endX = targetRight;
+            endX = targetRight + edgeOffset;
             endY = targetCenterY;
           }
         } else {
           if (deltaY > 0) {
             endX = targetCenterX;
-            endY = targetTop;
+            endY = targetTop - edgeOffset;
           } else {
             endX = targetCenterX;
-            endY = targetBottom;
+            endY = targetBottom + edgeOffset;
           }
         }
         
@@ -1022,45 +1025,54 @@ ${sortedUnits.map((unit: any, index: number) => {
                 
                 return (
                   <>
-                    {/* NUEVO: Conexiones SVG curvas estilo n8n */}
+                    {/* NUEVO: Conexiones SVG curvas estilo n8n - z-50 para estar encima de nodos */}
                     <svg 
-                      className="absolute inset-0 pointer-events-none z-10" 
-                      style={{ width: '100%', height: '100%' }}
+                      className="absolute inset-0 pointer-events-none" 
+                      style={{ width: '100%', height: '100%', zIndex: 50 }}
                     >
-
+                      {/* Definir marcadores de flecha para cada conexión */}
+                      <defs>
+                        {dynamicConnections.map((conn) => (
+                          <marker
+                            key={`arrow-${conn.id}`}
+                            id={`arrowhead-${conn.id}`}
+                            markerWidth="10"
+                            markerHeight="7"
+                            refX="9"
+                            refY="3.5"
+                            orient="auto"
+                            markerUnits="strokeWidth"
+                          >
+                            <polygon
+                              points="0 0, 10 3.5, 0 7"
+                              fill={conn.color}
+                            />
+                          </marker>
+                        ))}
+                      </defs>
                       
                       {/* Renderizar conexiones curvas */}
                       {dynamicConnections.map((connection, idx) => (
                         <g key={connection.id}>
-                          {/* Línea principal con curva */}
+                          {/* Línea principal con curva y flecha */}
                           <path
                             d={connection.pathData}
                             stroke={connection.color}
                             strokeWidth={connection.strokeWidth}
                             fill="none"
+                            markerEnd={`url(#arrowhead-${connection.id})`}
                             className="transition-all duration-200"
+                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}
                           />
                           
                           {/* Punto de inicio (círculo pequeño) */}
                           <circle
                             cx={connection.startX}
                             cy={connection.startY}
-                            r="3"
+                            r="4"
                             fill={connection.color}
                             stroke="white"
                             strokeWidth="2"
-                            className="drop-shadow-sm"
-                          />
-                          
-                          {/* Punto final (círculo pequeño) */}
-                          <circle
-                            cx={connection.endX}
-                            cy={connection.endY}
-                            r="3"
-                            fill={connection.color}
-                            stroke="white"
-                            strokeWidth="2"
-                            className="drop-shadow-sm"
                           />
                         </g>
                       ))}
