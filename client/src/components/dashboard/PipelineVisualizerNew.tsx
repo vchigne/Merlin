@@ -4,7 +4,7 @@ import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Expand, X, Grid3X3, List, FileCode } from "lucide-react";
+import { AlertCircle, Expand, X, Grid3X3, List, FileCode, TreePine, Link2Off } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PipelineSearch from "./PipelineSearch";
 import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog";
@@ -909,6 +909,15 @@ export default function PipelineVisualizerNew({
                             >
                               {type.type}
                             </span>
+                            {!unit.pipeline_unit_id && (
+                              <span 
+                                className="text-xs px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center gap-1"
+                                title="Unidad raíz - No tiene dependencia de otra unidad"
+                              >
+                                <TreePine className="w-3 h-3" />
+                                Raíz
+                              </span>
+                            )}
                           </div>
                           <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate">
                             {getDisplayName(unit)}
@@ -1079,9 +1088,18 @@ ${sortedUnits.map((unit: any, index: number) => {
                           }}
                           onMouseDown={(e) => handleMouseDown(unitData, e)}
                         >
-                          {/* Tipo de unidad arriba a la derecha con color */}
+                          {/* Tipo de unidad arriba con indicador de raíz */}
                           <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1"></div>
+                            <div className="flex-1">
+                              {!unitData.pipeline_unit_id && (
+                                <span 
+                                  className="text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center gap-1 w-fit"
+                                  title="Unidad raíz - No depende de otra unidad"
+                                >
+                                  <TreePine className="w-3 h-3" />
+                                </span>
+                              )}
+                            </div>
                             <span 
                               className="text-xs font-semibold px-2 py-1 rounded"
                               style={{ 
