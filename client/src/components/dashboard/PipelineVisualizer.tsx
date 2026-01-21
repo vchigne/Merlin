@@ -79,17 +79,23 @@ export default function PipelineVisualizer() {
       };
     });
     
-    // Crear conexiones automáticas entre nodos consecutivos
-    const connections = [];
-    if (nodes.length > 1) {
-      for (let i = 0; i < nodes.length - 1; i++) {
-        connections.push({
-          id: `conn-${nodes[i].id}-${nodes[i + 1].id}`,
-          source: nodes[i],
-          target: nodes[i + 1]
-        });
+    // Crear conexiones basadas en relaciones padre-hijo (pipeline_unit_id)
+    const connections: any[] = [];
+    const nodeMap = new Map(nodes.map((n: any) => [n.id, n]));
+    
+    nodes.forEach((node: any) => {
+      const parentId = node.pipeline_unit_id;
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId);
+        if (parentNode) {
+          connections.push({
+            id: `conn-${parentNode.id}-${node.id}`,
+            source: parentNode,
+            target: node
+          });
+        }
       }
-    }
+    });
     
     return { nodes, connections };
   };

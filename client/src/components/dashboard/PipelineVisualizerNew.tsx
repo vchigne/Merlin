@@ -83,36 +83,41 @@ export default function PipelineVisualizerNew({
 
 
 
-  // NUEVO: Función para calcular conexiones CSS entre nodos con bordes inteligentes
-  const calculateCSSConnections = (nodes: any[]) => {
-    const connections = [];
+  // Función para calcular conexiones CSS entre nodos basándose en relaciones padre-hijo (pipeline_unit_id)
+  const calculateCSSConnections = (units: any[]) => {
+    const connections: any[] = [];
+    let connectionIndex = 0;
     
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const currentNode = nodes[i];
-      const nextNode = nodes[i + 1];
-      
-      const currentPos = nodePositions[currentNode.id];
-      const nextPos = nodePositions[nextNode.id];
-      
-      if (currentPos && nextPos) {
+    // Iterar sobre todas las unidades y crear conexiones desde el padre hacia el hijo
+    units.forEach((unit) => {
+      // Si esta unidad tiene un padre (pipeline_unit_id), crear conexión padre -> hijo
+      if (unit.pipeline_unit_id) {
+        const parentUnit = units.find(u => u.id === unit.pipeline_unit_id);
+        if (!parentUnit) return;
+        
+        const parentPos = nodePositions[parentUnit.id];
+        const childPos = nodePositions[unit.id];
+        
+        if (!parentPos || !childPos) return;
+        
         // Usar posiciones dinámicas si la unidad ha sido arrastrada
-        const currentUnitPos = unitPositions[currentNode.id];
-        const nextUnitPos = unitPositions[nextNode.id];
+        const parentUnitPos = unitPositions[parentUnit.id];
+        const childUnitPos = unitPositions[unit.id];
         
-        // Calcular posiciones actuales de los nodos
-        const sourceLeft = currentUnitPos?.x ?? currentPos.x;
-        const sourceTop = currentUnitPos?.y ?? currentPos.y;
-        const sourceRight = sourceLeft + currentPos.width;
-        const sourceBottom = sourceTop + currentPos.height;
-        const sourceCenterX = sourceLeft + currentPos.width / 2;
-        const sourceCenterY = sourceTop + currentPos.height / 2;
+        // Calcular posiciones actuales de los nodos (padre = source, hijo = target)
+        const sourceLeft = parentUnitPos?.x ?? parentPos.x;
+        const sourceTop = parentUnitPos?.y ?? parentPos.y;
+        const sourceRight = sourceLeft + parentPos.width;
+        const sourceBottom = sourceTop + parentPos.height;
+        const sourceCenterX = sourceLeft + parentPos.width / 2;
+        const sourceCenterY = sourceTop + parentPos.height / 2;
         
-        const targetLeft = nextUnitPos?.x ?? nextPos.x;
-        const targetTop = nextUnitPos?.y ?? nextPos.y;
-        const targetRight = targetLeft + nextPos.width;
-        const targetBottom = targetTop + nextPos.height;
-        const targetCenterX = targetLeft + nextPos.width / 2;
-        const targetCenterY = targetTop + nextPos.height / 2;
+        const targetLeft = childUnitPos?.x ?? childPos.x;
+        const targetTop = childUnitPos?.y ?? childPos.y;
+        const targetRight = targetLeft + childPos.width;
+        const targetBottom = targetTop + childPos.height;
+        const targetCenterX = targetLeft + childPos.width / 2;
+        const targetCenterY = targetTop + childPos.height / 2;
         
         // Determinar el borde más cercano para la salida y entrada
         let startX, startY, endX, endY;
@@ -121,98 +126,86 @@ export default function PipelineVisualizerNew({
         const deltaX = targetCenterX - sourceCenterX;
         const deltaY = targetCenterY - sourceCenterY;
         
-        // Determinar punto de salida del nodo fuente
+        // Determinar punto de salida del nodo padre (source)
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Conexión más horizontal
           if (deltaX > 0) {
-            // Target está a la derecha: salir por borde derecho
             startX = sourceRight;
             startY = sourceCenterY;
           } else {
-            // Target está a la izquierda: salir por borde izquierdo
             startX = sourceLeft;
             startY = sourceCenterY;
           }
         } else {
-          // Conexión más vertical
           if (deltaY > 0) {
-            // Target está abajo: salir por borde inferior
             startX = sourceCenterX;
             startY = sourceBottom;
           } else {
-            // Target está arriba: salir por borde superior
             startX = sourceCenterX;
             startY = sourceTop;
           }
         }
         
-        // Determinar punto de entrada del nodo destino
+        // Determinar punto de entrada del nodo hijo (target)
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Conexión más horizontal
           if (deltaX > 0) {
-            // Source está a la izquierda: entrar por borde izquierdo
             endX = targetLeft;
             endY = targetCenterY;
           } else {
-            // Source está a la derecha: entrar por borde derecho
             endX = targetRight;
             endY = targetCenterY;
           }
         } else {
-          // Conexión más vertical
           if (deltaY > 0) {
-            // Source está arriba: entrar por borde superior
             endX = targetCenterX;
             endY = targetTop;
           } else {
-            // Source está abajo: entrar por borde inferior
             endX = targetCenterX;
             endY = targetBottom;
           }
         }
         
-        // Calcular distancia y ángulo para compatibilidad CSS
+        // Calcular distancia y ángulo
         const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
         const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
         
-        // Para SVG: calcular puntos de control para la curva suave
+        // Puntos de control para curva Bezier suave
         const controlOffset = Math.min(Math.abs(endY - startY) * 0.5, Math.abs(endX - startX) * 0.5, 50);
         let control1X = startX;
         let control1Y = startY;
         let control2X = endX;
         let control2Y = endY;
         
-        // Ajustar puntos de control según la dirección de la conexión
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Conexión horizontal: offset vertical
-          control1Y = startY + (deltaY > 0 ? controlOffset : -controlOffset);
-          control2Y = endY + (deltaY > 0 ? -controlOffset : controlOffset);
-        } else {
-          // Conexión vertical: offset horizontal
           control1X = startX + (deltaX > 0 ? controlOffset : -controlOffset);
           control2X = endX + (deltaX > 0 ? -controlOffset : controlOffset);
+        } else {
+          control1Y = startY + (deltaY > 0 ? controlOffset : -controlOffset);
+          control2Y = endY + (deltaY > 0 ? -controlOffset : controlOffset);
         }
         
         const pathData = `M ${startX} ${startY} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`;
         
         connections.push({
-          id: `css-line-${i}`,
+          id: `parent-child-${connectionIndex}`,
           left: startX,
           top: startY,
           width: distance,
           rotation: angle,
-          color: `hsl(${i * 40}, 80%, 45%)`,
-          // Agregar datos SVG también
+          color: `hsl(${connectionIndex * 40}, 80%, 45%)`,
           pathData,
           startX,
           startY,
           endX,
           endY,
           strokeWidth: 3,
-          hasArrow: true
+          hasArrow: true,
+          parentId: parentUnit.id,
+          childId: unit.id
         });
+        
+        connectionIndex++;
       }
-    }
+    });
     
     return connections;
   };
@@ -618,45 +611,55 @@ export default function PipelineVisualizerNew({
     console.log('🎯 Nodos creados:', nodes.length, nodes.map(n => ({
       id: n.id,
       type: n.type,
-      pos: `${n.posX},${n.posY}`
+      pos: `${n.posX},${n.posY}`,
+      parentId: n.data.pipeline_unit_id
     })));
 
-    // Crear conexiones secuenciales adaptadas al grid 3x3
+    // Crear conexiones basadas en relaciones padre-hijo (pipeline_unit_id)
     const connections: any[] = [];
-    console.log('🔗 Creando conexiones para', nodes.length, 'nodos en grid 3x3...');
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    let connectionIndex = 0;
     
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const sourceNode = nodes[i];
-      const targetNode = nodes[i + 1];
-      
-      const connectionId = `grid-conn-${i}`;
-      console.log(`🔗 Conexión ${i}:`, {
-        from: `${sourceNode.type} (${sourceNode.row},${sourceNode.col})`,
-        to: `${targetNode.type} (${targetNode.row},${targetNode.col})`,
-        fromPos: `${sourceNode.posX + 100},${sourceNode.posY + 48}`,
-        toPos: `${targetNode.posX + 100},${targetNode.posY + 48}`
-      });
-      
-      connections.push({
-        id: connectionId,
-        source: sourceNode,
-        target: targetNode,
-        sourcePoint: {
-          x: sourceNode.posX + 100, // Centro del nodo
-          y: sourceNode.posY + 48   // Centro vertical del nodo
-        },
-        targetPoint: {
-          x: targetNode.posX + 100, // Centro del nodo
-          y: targetNode.posY + 48   // Centro vertical del nodo
+    console.log('🔗 Creando conexiones padre-hijo para', nodes.length, 'nodos...');
+    
+    // Cada unidad que tiene pipeline_unit_id se conecta DESDE su padre
+    nodes.forEach((node) => {
+      const parentId = node.data.pipeline_unit_id;
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId);
+        if (parentNode) {
+          const connectionId = `parent-child-conn-${connectionIndex}`;
+          console.log(`🔗 Conexión ${connectionIndex}:`, {
+            from: `${parentNode.type} (padre)`,
+            to: `${node.type} (hijo)`,
+            parentId: parentId,
+            childId: node.id
+          });
+          
+          connections.push({
+            id: connectionId,
+            source: parentNode,
+            target: node,
+            sourcePoint: {
+              x: parentNode.posX + 100,
+              y: parentNode.posY + 48
+            },
+            targetPoint: {
+              x: node.posX + 100,
+              y: node.posY + 48
+            }
+          });
+          
+          connectionIndex++;
         }
-      });
-    }
+      }
+    });
 
     const result = { nodes, connections };
     console.log('🔥 RESULTADO FINAL:', {
       nodes: result.nodes.length,
       connections: result.connections.length,
-      connectionsIds: result.connections.map(c => c.id)
+      raices: nodes.filter(n => !n.data.pipeline_unit_id).length
     });
 
     return result;

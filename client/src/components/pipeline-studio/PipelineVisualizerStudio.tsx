@@ -121,40 +121,43 @@ export default function PipelineVisualizerStudio({
     console.log('🎯 Nodos creados:', nodes.length, nodes.map(n => ({
       id: n.id,
       type: n.type,
-      pos: `${n.posX},${n.posY}`
+      pos: `${n.posX},${n.posY}`,
+      parentId: n.data.pipeline_unit_id
     })));
 
-    // Crear conexiones secuenciales adaptadas al grid 3x3
+    // Crear conexiones basadas en relaciones padre-hijo (pipeline_unit_id)
     const connections: any[] = [];
-    console.log('🔗 Creando conexiones para', nodes.length, 'nodos en grid 3x3...');
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    let connectionIndex = 0;
     
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const sourceNode = nodes[i];
-      const targetNode = nodes[i + 1];
-      
-      const connectionId = `grid-conn-${i}`;
-      console.log(`🔗 Conexión ${i}:`, {
-        from: `${sourceNode.type} (${sourceNode.row},${sourceNode.col})`,
-        to: `${targetNode.type} (${targetNode.row},${targetNode.col})`,
-        fromPos: `${sourceNode.posX + 100},${sourceNode.posY + 48}`,
-        toPos: `${targetNode.posX + 100},${targetNode.posY + 48}`
-      });
-      
-      connections.push({
-        id: connectionId,
-        from: sourceNode.id,
-        to: targetNode.id,
-        fromX: sourceNode.posX + 100, // Centro de la caja
-        fromY: sourceNode.posY + 48,  // Centro vertical
-        toX: targetNode.posX + 100,
-        toY: targetNode.posY + 48
-      });
-    }
+    console.log('🔗 Creando conexiones padre-hijo para', nodes.length, 'nodos...');
+    
+    nodes.forEach((node) => {
+      const parentId = node.data.pipeline_unit_id;
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId);
+        if (parentNode) {
+          const connectionId = `parent-child-conn-${connectionIndex}`;
+          
+          connections.push({
+            id: connectionId,
+            from: parentNode.id,
+            to: node.id,
+            fromX: parentNode.posX + 100,
+            fromY: parentNode.posY + 48,
+            toX: node.posX + 100,
+            toY: node.posY + 48
+          });
+          
+          connectionIndex++;
+        }
+      }
+    });
 
     console.log('🔥 RESULTADO FINAL:', {
       nodes: nodes.length,
       connections: connections.length,
-      connectionsIds: connections.map(c => c.id)
+      raices: nodes.filter(n => !n.data.pipeline_unit_id).length
     });
 
     return { nodes, connections };
@@ -211,32 +214,39 @@ export default function PipelineVisualizerStudio({
             <div ref={containerRef} className="relative w-full min-w-[400px] md:min-w-[600px] lg:min-w-[800px] h-full">
               {(() => {
                 const { nodes, connections } = processUnits(pipelineUnits);
+                const nodeMap = new Map(nodes.map(n => [n.id, n]));
                 
-                // Calcular conexiones CSS simples
-                const cssConnections = [];
-                for (let i = 0; i < nodes.length - 1; i++) {
-                  const currentNode = nodes[i];
-                  const nextNode = nodes[i + 1];
-                  
-                  const startX = currentNode.posX + 100; // Centro del nodo actual
-                  const startY = currentNode.posY + 48;
-                  const endX = nextNode.posX + 100; // Centro del siguiente nodo
-                  const endY = nextNode.posY + 48;
-                  
-                  const deltaX = endX - startX;
-                  const deltaY = endY - startY;
-                  const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                  const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-                  
-                  cssConnections.push({
-                    id: `css-conn-${i}`,
-                    left: startX,
-                    top: startY - 1,
-                    width: length,
-                    angle: angle,
-                    color: getUnitColor(currentNode.type)
-                  });
-                }
+                // Calcular conexiones CSS basadas en relaciones padre-hijo
+                const cssConnections: any[] = [];
+                let connIndex = 0;
+                
+                nodes.forEach((node) => {
+                  const parentId = node.data.pipeline_unit_id;
+                  if (parentId) {
+                    const parentNode = nodeMap.get(parentId);
+                    if (parentNode) {
+                      const startX = parentNode.posX + 100;
+                      const startY = parentNode.posY + 48;
+                      const endX = node.posX + 100;
+                      const endY = node.posY + 48;
+                      
+                      const deltaX = endX - startX;
+                      const deltaY = endY - startY;
+                      const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                      const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+                      
+                      cssConnections.push({
+                        id: `css-conn-${connIndex}`,
+                        left: startX,
+                        top: startY - 1,
+                        width: length,
+                        angle: angle,
+                        color: getUnitColor(parentNode.type)
+                      });
+                      connIndex++;
+                    }
+                  }
+                });
                 
                 return (
                   <>
