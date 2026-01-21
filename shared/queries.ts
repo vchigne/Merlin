@@ -67,6 +67,7 @@ export const PIPELINE_UNITS_QUERY = `
     merlin_agent_PipelineUnit(where: {pipeline_id: {_eq: $pipelineId}}) {
       id
       pipeline_id
+      pipeline_unit_id
       comment
       retry_after_milliseconds
       retry_count

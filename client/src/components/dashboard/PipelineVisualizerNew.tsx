@@ -4,7 +4,8 @@ import { executeQuery } from "@/lib/hasura-client";
 import { PIPELINE_QUERY, PIPELINE_UNITS_QUERY } from "@shared/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Expand, X } from "lucide-react";
+import { AlertCircle, Expand, X, Grid3X3, List, FileCode } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PipelineSearch from "./PipelineSearch";
 import UnifiedPipelineUnitDialog from "@/components/ui/UnifiedPipelineUnitDialog";
 import { 
@@ -27,6 +28,7 @@ export default function PipelineVisualizerNew({
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "sequential" | "yaml">("grid");
 
   // Hooks para persistencia YAML
   const { data: savedPositions } = usePipelinePositions(selectedPipeline);
@@ -497,16 +499,82 @@ export default function PipelineVisualizerNew({
     return 'Tipo de unidad desconocido';
   };
 
+  // Función para ordenar topológicamente las unidades basándose en pipeline_unit_id
+  const topologicalSort = (units: any[]): any[] => {
+    if (!units || units.length === 0) return [];
+    
+    // Crear mapa de unidades por ID
+    const unitMap = new Map(units.map(u => [u.id, u]));
+    
+    // Encontrar la unidad raíz (pipeline_unit_id es null)
+    const roots = units.filter(u => !u.pipeline_unit_id);
+    
+    if (roots.length === 0) {
+      // Si no hay raíz, usar ordenamiento por posición como fallback
+      console.log('⚠️ No se encontró unidad raíz, usando fallback por posición');
+      return [...units].sort((a, b) => {
+        if (a.posy !== b.posy) return (a.posy || 0) - (b.posy || 0);
+        return (a.posx || 0) - (b.posx || 0);
+      });
+    }
+    
+    // Construir mapa de hijos: parent_id -> [children]
+    const childrenMap = new Map<string, any[]>();
+    units.forEach(u => {
+      if (u.pipeline_unit_id) {
+        const children = childrenMap.get(u.pipeline_unit_id) || [];
+        children.push(u);
+        childrenMap.set(u.pipeline_unit_id, children);
+      }
+    });
+    
+    // Recorrer el árbol en orden
+    const result: any[] = [];
+    const visited = new Set<string>();
+    
+    const traverse = (unit: any) => {
+      if (visited.has(unit.id)) return;
+      visited.add(unit.id);
+      result.push(unit);
+      
+      // Obtener hijos y ordenarlos por posición para determinar orden entre hermanos
+      const children = childrenMap.get(unit.id) || [];
+      children.sort((a, b) => {
+        if (a.posy !== b.posy) return (a.posy || 0) - (b.posy || 0);
+        return (a.posx || 0) - (b.posx || 0);
+      });
+      
+      children.forEach(child => traverse(child));
+    };
+    
+    // Empezar desde las raíces (ordenadas por posición)
+    roots.sort((a, b) => {
+      if (a.posy !== b.posy) return (a.posy || 0) - (b.posy || 0);
+      return (a.posx || 0) - (b.posx || 0);
+    });
+    roots.forEach(root => traverse(root));
+    
+    // Agregar unidades huérfanas que no fueron visitadas
+    units.forEach(u => {
+      if (!visited.has(u.id)) {
+        result.push(u);
+      }
+    });
+    
+    return result;
+  };
+
   // Función principal para procesar las unidades y crear nodos y conexiones
   const processUnits = (units: any[]) => {
     if (!units || units.length === 0) {
       return { nodes: [], connections: [] };
     }
 
-    // Ordenar las unidades por índice
-    const sortedUnits = [...units].sort((a, b) => (a.index || 0) - (b.index || 0));
-    console.log('📊 Unidades ordenadas:', sortedUnits.map(u => ({
+    // Ordenar las unidades topológicamente usando pipeline_unit_id
+    const sortedUnits = topologicalSort(units);
+    console.log('📊 Unidades ordenadas topológicamente:', sortedUnits.map(u => ({
       id: u.id,
+      parentId: u.pipeline_unit_id,
       type: detectUnitType(u)
     })));
 
@@ -755,6 +823,30 @@ export default function PipelineVisualizerNew({
                 isLoading={isPipelinesLoading}
               />
             )}
+            {/* Tabs para cambiar vista */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-slate-700 shadow-sm" : "hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                title="Vista Grid"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("sequential")}
+                className={`p-2 rounded-md transition-colors ${viewMode === "sequential" ? "bg-white dark:bg-slate-700 shadow-sm" : "hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                title="Vista Secuencial"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("yaml")}
+                className={`p-2 rounded-md transition-colors ${viewMode === "yaml" ? "bg-white dark:bg-slate-700 shadow-sm" : "hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                title="Vista YAML"
+              >
+                <FileCode className="w-4 h-4" />
+              </button>
+            </div>
             {/* Botón de maximizar/minimizar */}
             <button
               onClick={() => setIsMaximized(!isMaximized)}
@@ -783,6 +875,131 @@ export default function PipelineVisualizerNew({
           ) : !pipelineUnits || pipelineUnits.length === 0 ? (
             <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
               No hay unidades definidas para este pipeline
+            </div>
+          ) : viewMode === "sequential" ? (
+            <div className="space-y-3 p-2">
+              {(() => {
+                const sortedUnits = topologicalSort(pipelineUnits);
+                return sortedUnits.map((unit: any, index: number) => {
+                  const type = detectUnitType(unit);
+                  return (
+                    <div key={unit.id} className="relative">
+                      {index > 0 && (
+                        <div className="absolute left-8 -top-3 w-0.5 h-3 bg-slate-300 dark:bg-slate-600"></div>
+                      )}
+                      <div 
+                        className="flex items-start gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
+                        style={{ borderLeft: `4px solid ${getUnitTypeColor(type.type)}` }}
+                        onClick={() => {
+                          setSelectedUnit(unit);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span 
+                              className="text-xs font-semibold px-2 py-0.5 rounded"
+                              style={{ 
+                                backgroundColor: getUnitTypeColor(type.type) + '20',
+                                color: getUnitTypeColor(type.type)
+                              }}
+                            >
+                              {type.type}
+                            </span>
+                          </div>
+                          <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {getDisplayName(unit)}
+                          </h4>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                            {getDisplayDescription(unit)}
+                          </p>
+                          <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-1 truncate">
+                            ID: {unit.id}
+                          </p>
+                        </div>
+                      </div>
+                      {index < sortedUnits.length - 1 && (
+                        <div className="absolute left-8 -bottom-3 w-0.5 h-3 bg-slate-300 dark:bg-slate-600"></div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          ) : viewMode === "yaml" ? (
+            <div className="h-full">
+              <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-auto h-full text-xs font-mono">
+                {(() => {
+                  const sortedUnits = topologicalSort(pipelineUnits);
+                  const currentPipeline = pipelinesData?.find((p: any) => p.id === selectedPipeline);
+                  
+                  const yamlContent = `pipeline:
+  id: "${currentPipeline?.id || ''}"
+  name: "${currentPipeline?.name || ''}"
+  description: "${currentPipeline?.description || ''}"
+  abort_on_error: ${currentPipeline?.abort_on_error ?? false}
+  
+units:
+${sortedUnits.map((unit: any, index: number) => {
+  const type = detectUnitType(unit);
+  const lines = [
+    `  - step: ${index + 1}`,
+    `    id: "${unit.id}"`,
+    `    type: "${type.type}"`,
+    `    name: "${getDisplayName(unit)}"`,
+    `    comment: "${unit.comment || ''}"`,
+    unit.pipeline_unit_id ? `    depends_on: "${unit.pipeline_unit_id}"` : null,
+    `    retry_count: ${unit.retry_count || 0}`,
+    `    timeout_ms: ${unit.timeout_milliseconds || 0}`,
+    `    abort_on_timeout: ${unit.abort_on_timeout ?? false}`,
+    `    continue_on_error: ${unit.continue_on_error ?? false}`,
+  ];
+  
+  if (unit.command_id && unit.Command) {
+    lines.push(`    command:`);
+    lines.push(`      id: "${unit.Command.id}"`);
+    lines.push(`      name: "${unit.Command.name || ''}"`);
+    lines.push(`      target: "${unit.Command.target || ''}"`);
+    lines.push(`      args: "${unit.Command.args || ''}"`);
+    lines.push(`      working_directory: "${unit.Command.working_directory || ''}"`);
+  }
+  
+  if (unit.query_queue_id && unit.QueryQueue) {
+    lines.push(`    query_queue:`);
+    lines.push(`      id: "${unit.QueryQueue.id}"`);
+    lines.push(`      name: "${unit.QueryQueue.name || ''}"`);
+    if (unit.QueryQueue.Queries) {
+      lines.push(`      queries: ${unit.QueryQueue.Queries.length}`);
+    }
+  }
+  
+  if (unit.sftp_downloader_id && unit.SFTPDownloader) {
+    lines.push(`    sftp_downloader:`);
+    lines.push(`      id: "${unit.SFTPDownloader.id}"`);
+    lines.push(`      name: "${unit.SFTPDownloader.name || ''}"`);
+  }
+  
+  if (unit.sftp_uploader_id && unit.SFTPUploader) {
+    lines.push(`    sftp_uploader:`);
+    lines.push(`      id: "${unit.SFTPUploader.id}"`);
+    lines.push(`      name: "${unit.SFTPUploader.name || ''}"`);
+  }
+  
+  if (unit.call_pipeline && unit.Pipeline) {
+    lines.push(`    call_pipeline:`);
+    lines.push(`      id: "${unit.Pipeline.id}"`);
+    lines.push(`      name: "${unit.Pipeline.name || ''}"`);
+  }
+  
+  return lines.filter(Boolean).join('\n');
+}).join('\n\n')}`;
+                  
+                  return yamlContent;
+                })()}
+              </pre>
             </div>
           ) : (
             <div ref={containerRef} className="relative w-full min-w-[400px] md:min-w-[600px] lg:min-w-[800px] h-full">

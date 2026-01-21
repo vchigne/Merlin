@@ -368,6 +368,11 @@ export default function UnifiedPipelineUnitDialog({
           <DialogDescription>
             {unitDetails?.description || 'Detalles de la unidad del pipeline'}
           </DialogDescription>
+          {unit?.id && (
+            <p className="text-xs font-mono text-slate-400 mt-1">
+              ID: {unit.id}
+            </p>
+          )}
         </DialogHeader>
 
         <div className="space-y-4">
