@@ -143,10 +143,10 @@ export function EditableDescription({ pipelineId, description, className = "", c
           e.preventDefault();
           setIsEditing(true);
         }}
-        className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all"
+        className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-300 transition-all flex-shrink-0"
         title="Editar descripción"
       >
-        <Pencil className="w-3.5 h-3.5" />
+        <Pencil className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
       </button>
     </div>
   );
