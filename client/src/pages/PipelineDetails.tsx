@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Settings } from "lucide-react";
+import { EditableDescription } from "@/components/EditableDescription";
 import {
   Dialog,
   DialogContent,
@@ -672,13 +673,23 @@ export default function PipelineDetails() {
                       isJobDetailsLoading ? (
                         <Skeleton className="h-4 w-full sm:w-96" />
                       ) : (
-                        jobDetails?.Pipeline?.description || "No description available"
+                        jobDetails?.Pipeline ? (
+                          <EditableDescription
+                            pipelineId={jobDetails.Pipeline.id}
+                            description={jobDetails.Pipeline.description}
+                          />
+                        ) : "No description available"
                       )
                     ) : (
                       isPipelineLoading ? (
                         <Skeleton className="h-4 w-full sm:w-96" />
                       ) : (
-                        pipeline?.description || "No description available"
+                        pipeline ? (
+                          <EditableDescription
+                            pipelineId={pipeline.id || id || ""}
+                            description={pipeline.description}
+                          />
+                        ) : "No description available"
                       )
                     )}
                   </CardDescription>

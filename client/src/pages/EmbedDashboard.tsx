@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { filterByRegex } from "@/lib/regex-parser";
+import { EditableDescription } from "@/components/EditableDescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -896,11 +897,11 @@ export default function EmbedDashboard() {
                                 </p>
                                 {statusBadge}
                               </div>
-                              {pipeline.description && (
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                  {pipeline.description}
-                                </p>
-                              )}
+                              <EditableDescription
+                                pipelineId={pipeline.id}
+                                description={pipeline.description}
+                                compact
+                              />
                             </div>
                             <Button
                               size="sm"

@@ -846,7 +846,10 @@ function isAgentCreationMutation(query: string): boolean {
       /insert_merlin_agent_AgentPassport/i,
       
       // Pattern for executing pipelines (inserting into job queue)
-      /insert_merlin_agent_PipelineJobQueue/i
+      /insert_merlin_agent_PipelineJobQueue/i,
+      
+      // Pattern for updating pipeline description only (must use update_by_pk with description in _set)
+      /update_merlin_agent_Pipeline_by_pk[\s\S]*_set[\s\S]*description/i
     ];
     
     for (const pattern of allowedMutationPatterns) {
