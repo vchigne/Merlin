@@ -4,7 +4,7 @@ import { usePipeline, usePipelineUnits } from "@/hooks/use-pipeline";
 import { useQuery } from "@tanstack/react-query";
 import { executeQuery } from "@/lib/hasura-client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Settings } from "lucide-react";
+import { Calendar, Settings, StopCircle } from "lucide-react";
 import { EditableDescription } from "@/components/EditableDescription";
 import {
   Dialog,
@@ -14,6 +14,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { differenceInMinutes } from "date-fns";
 import {
   Tooltip,
   TooltipContent,
@@ -163,6 +176,9 @@ export default function PipelineDetails() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const { executePipeline, isExecuting } = useExecutePipeline();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const { toast } = useToast();
   
   // Determinar si estamos viendo un pipeline o un job
   const pathname = window.location.pathname;
@@ -556,6 +572,49 @@ export default function PipelineDetails() {
     s => !pipelineSchedules?.some(ps => ps.id === s.id)
   ) || [];
   
+  const handleCancelJob = async () => {
+    if (!id) return;
+    setIsCancelling(true);
+    try {
+      const result = await executeQuery(`
+        mutation CancelJob($id: uuid!) {
+          update_merlin_agent_PipelineJobQueue_by_pk(
+            pk_columns: { id: $id }
+            _set: { completed: true, running: false, aborted: true }
+          ) {
+            id
+            completed
+            running
+            aborted
+          }
+        }
+      `, { id });
+
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+
+      toast({
+        title: "Job cancelado",
+        description: `El job fue cancelado correctamente.`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/graphql', 'running-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/graphql', 'recent-jobs'] });
+      await refetchJobDetails();
+    } catch (error: any) {
+      toast({
+        title: "Error al cancelar",
+        description: error.message || "No se pudo cancelar el job.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCancelling(false);
+      setShowCancelDialog(false);
+    }
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -711,6 +770,17 @@ export default function PipelineDetails() {
                       <span className="text-xs sm:text-sm">Run</span>
                     </Button>
                   )}
+                  {isJobView && jobDetails?.running && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setShowCancelDialog(true)}
+                      disabled={isCancelling}
+                    >
+                      <StopCircle className="mr-1 sm:mr-2 h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                      <span className="text-xs sm:text-sm">Cancelar Job</span>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -826,12 +896,22 @@ export default function PipelineDetails() {
                             </Badge>
                           )}
                           
-                          {jobDetails?.running && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800 flex items-center">
-                              <RefreshCw className="h-3.5 w-3.5 mr-1 animate-spin" />
-                              Running
-                            </Badge>
-                          )}
+                          {jobDetails?.running && (() => {
+                            const minutes = jobDetails?.created_at ? differenceInMinutes(new Date(), new Date(jobDetails.created_at)) : 0;
+                            const elapsed = minutes < 1 ? "< 1 min" : minutes < 60 ? `${minutes} min` : `${Math.floor(minutes/60)}h ${minutes%60}m`;
+                            const isWarning = minutes >= 15 && minutes < 60;
+                            const isCritical = minutes >= 60;
+                            return (
+                              <Badge variant="outline" className={`flex items-center ${
+                                isCritical ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800" :
+                                isWarning ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800" :
+                                "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                              }`}>
+                                <RefreshCw className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                Running ({elapsed})
+                              </Badge>
+                            );
+                          })()}
                           
                           {jobDetails?.aborted && (
                             <Badge variant="outline" className="bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800 flex items-center">
@@ -1211,6 +1291,51 @@ export default function PipelineDetails() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar este job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a cancelar el job de <strong>"{jobDetails?.Pipeline?.name || 'pipeline'}"</strong>.
+              {jobDetails?.created_at && (
+                <span className="block mt-1">
+                  Lleva ejecutándose {(() => {
+                    const minutes = differenceInMinutes(new Date(), new Date(jobDetails.created_at));
+                    if (minutes < 1) return "menos de 1 minuto";
+                    if (minutes < 60) return `${minutes} minutos`;
+                    const hours = Math.floor(minutes / 60);
+                    return `${hours}h ${minutes % 60}m`;
+                  })()}.
+                </span>
+              )}
+              <span className="block mt-2 text-amber-600 dark:text-amber-400">
+                El job se marcará como abortado.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>No, mantener</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelJob}
+              disabled={isCancelling}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isCancelling ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                <>
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  Sí, cancelar job
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

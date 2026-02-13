@@ -849,7 +849,10 @@ function isAgentCreationMutation(query: string): boolean {
       /insert_merlin_agent_PipelineJobQueue/i,
       
       // Pattern for updating pipeline description only (must use update_by_pk with description in _set)
-      /update_merlin_agent_Pipeline_by_pk[\s\S]*_set[\s\S]*description/i
+      /update_merlin_agent_Pipeline_by_pk[\s\S]*_set[\s\S]*description/i,
+      
+      // Pattern for cancelling/aborting a running job (update PipelineJobQueue by pk)
+      /update_merlin_agent_PipelineJobQueue_by_pk[\s\S]*_set[\s\S]*aborted/i
     ];
     
     for (const pattern of allowedMutationPatterns) {
