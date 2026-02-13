@@ -238,7 +238,7 @@ export default function PipelineDetails() {
           merlin_agent_PipelineJobLogV2Body(
             where: {pipeline_job_id: {_eq: $jobId}}
             order_by: {date: desc}
-            limit: 100
+            limit: 500
           ) {
             id
             pipeline_job_id
@@ -285,7 +285,7 @@ export default function PipelineDetails() {
                 PipelineJobQueue: {pipeline_id: {_eq: $pipelineId}}
               }
               order_by: {date: desc}
-              limit: 50
+              limit: 500
             ) {
               id
               pipeline_job_id

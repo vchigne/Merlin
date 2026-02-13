@@ -100,12 +100,15 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
     }
   };
 
-  // Get log message
+  const normalizeNewlines = (text: string) => {
+    return text.replace(/\\n/g, '\n').replace(/\\r/g, '');
+  };
+
   const getMessage = () => {
-    if (log.message) return log.message;
-    if (log.errors) return log.errors;
-    if (log.warnings) return log.warnings;
-    if (log.logs) return log.logs;
+    if (log.message) return normalizeNewlines(log.message);
+    if (log.errors) return normalizeNewlines(log.errors);
+    if (log.warnings) return normalizeNewlines(log.warnings);
+    if (log.logs) return normalizeNewlines(log.logs);
     return "No message";
   };
 
@@ -238,7 +241,7 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
               <div>
                 <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Stack Trace</h4>
                 <pre className="text-xs font-mono bg-slate-100 dark:bg-slate-900 p-2 rounded-md overflow-x-auto text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                  {log.exception_stack_trace}
+                  {normalizeNewlines(log.exception_stack_trace)}
                 </pre>
               </div>
             )}
@@ -247,7 +250,7 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
               <div>
                 <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400">Logs</h4>
                 <pre className="text-xs font-mono bg-slate-100 dark:bg-slate-900 p-2 rounded-md overflow-x-auto text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                  {log.logs}
+                  {normalizeNewlines(log.logs)}
                 </pre>
               </div>
             )}
