@@ -125,7 +125,6 @@ export default function AgentDetails() {
           merlin_agent_Pipeline(
             where: {agent_passport_id: {_eq: $id}}
             order_by: {created_at: desc}
-            limit: 10
           ) {
             id
             name

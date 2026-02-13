@@ -131,7 +131,7 @@ export default function LogEntry({ log, expanded = false }: LogEntryProps) {
           <div className="flex-1 ml-2">
             <div className="flex flex-wrap gap-2 items-start">
               <div className="flex-shrink-0 mt-1">{getLevelBadge()}</div>
-              <div className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 break-words max-w-full">
+              <div className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 break-words max-w-full whitespace-pre-wrap">
                 {getMessage()}
               </div>
             </div>

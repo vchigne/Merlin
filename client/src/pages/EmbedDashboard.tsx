@@ -672,7 +672,7 @@ export default function EmbedDashboard() {
                         
                         return (
                           <div key={error.id} className="text-xs border-l-2 border-red-500 pl-3 py-1">
-                            <p className="font-medium text-slate-900 dark:text-white line-clamp-2">
+                            <p className="font-medium text-slate-900 dark:text-white line-clamp-3 whitespace-pre-wrap">
                               {error.exception_message || error.message}
                             </p>
                             <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
@@ -730,7 +730,7 @@ export default function EmbedDashboard() {
                           <div key={log.id} className="flex items-start gap-2 text-xs">
                             <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getLevelColor(level)}`} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-slate-900 dark:text-white line-clamp-2">{log.message}</p>
+                              <p className="text-slate-900 dark:text-white line-clamp-3 whitespace-pre-wrap">{log.message}</p>
                               <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 dark:text-slate-400">
                                 {pipelineName && (
                                   <>
