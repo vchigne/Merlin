@@ -312,6 +312,34 @@ export function createScheduleTarget(target: {
   };
 }
 
+export function updateScheduleTarget(id: number, updates: { enabled?: boolean; pipelineName?: string; clientName?: string; notes?: string }): FileScheduleTarget | undefined {
+  const data = loadScheduleFile();
+  
+  for (const schedule of data.schedules) {
+    const target = schedule.targets.find(t => t.id === id);
+    if (target) {
+      if (updates.enabled !== undefined) target.enabled = updates.enabled;
+      if (updates.pipelineName !== undefined) target.pipelineName = updates.pipelineName;
+      if (updates.clientName !== undefined) target.clientName = updates.clientName;
+      if (updates.notes !== undefined) target.notes = updates.notes;
+      saveScheduleFile(data);
+      
+      return {
+        id: target.id,
+        scheduleId: schedule.id,
+        pipelineId: target.pipelineId,
+        pipelineName: target.pipelineName || null,
+        clientName: target.clientName || null,
+        notes: target.notes || null,
+        enabled: target.enabled,
+        createdAt: new Date(target.createdAt)
+      };
+    }
+  }
+  
+  return undefined;
+}
+
 export function deleteScheduleTarget(id: number): boolean {
   const data = loadScheduleFile();
   

@@ -73,3 +73,17 @@ Preferred communication style: Simple, everyday language.
 **Vite**: Modern build tool providing fast development server, hot module replacement, and optimized production builds.
 
 **React Query**: Server state management with caching, background updates, and error handling for all data fetching operations.
+
+# Recent Changes
+
+## Automated Cron Sync System (2026-02-14)
+
+**Batch Pipeline Execution**: `POST /api/cron/execute-batch` accepts array of pipeline IDs and queues them via single GraphQL mutation, matching the old Python scheduler's batch behavior.
+
+**Crontab Auto-Installation**: `POST /api/cron/install` regenerates crontab from current schedules and installs it to the system via `crontab` command. `GET /api/cron/status` checks whether the Merlin crontab is currently installed. All 6 schedule mutations (create, toggle, delete, update, addTarget, deleteTarget) auto-sync cron after changes.
+
+**Target Toggle**: `PATCH /api/schedules/:scheduleId/targets/:targetId` with Zod validation and scheduleId ownership check. Toggle switch in edit dialog UI shows enabled/disabled state per target with visual opacity feedback.
+
+**CrontabExport UI**: Shows green/orange installation status indicator, auto-install button, manual export fallback, and localStorage-persisted base URL for production server.
+
+**ESM Compliance**: All `require()` calls replaced with proper ESM imports for child_process, util, and fs modules.

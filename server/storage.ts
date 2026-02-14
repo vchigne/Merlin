@@ -43,6 +43,7 @@ export interface IStorage {
   createScheduleTarget(target: InsertScheduleTarget): Promise<ScheduleTarget | undefined>;
   deleteScheduleTarget(id: number): Promise<boolean>;
   deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean>;
+  updateScheduleTarget(id: number, updates: { enabled?: boolean; pipelineName?: string; clientName?: string; notes?: string }): Promise<ScheduleTarget | undefined>;
   getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]>;
 }
 
@@ -107,6 +108,10 @@ export class FileBasedStorage implements IStorage {
 
   async deleteScheduleTargetsBySchedule(scheduleId: number): Promise<boolean> {
     return fileStorage.deleteScheduleTargetsBySchedule(scheduleId);
+  }
+
+  async updateScheduleTarget(id: number, updates: { enabled?: boolean; pipelineName?: string; clientName?: string; notes?: string }): Promise<ScheduleTarget | undefined> {
+    return fileStorage.updateScheduleTarget(id, updates);
   }
   
   async getSchedulesByPipelineId(pipelineId: string): Promise<ScheduleConfig[]> {

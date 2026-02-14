@@ -222,8 +222,12 @@ const MONTH_NAMES = [
 
 function CrontabExport() {
   const { toast } = useToast();
-  const [baseUrl, setBaseUrl] = useState("http://localhost:5000");
+  const [baseUrl, setBaseUrl] = useState(() => localStorage.getItem('merlin-cron-baseurl') || 'http://localhost:5000');
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('merlin-cron-baseurl', baseUrl);
+  }, [baseUrl]);
 
   const { data: cronData, isLoading, refetch } = useQuery<{
     crontab: string;
@@ -234,6 +238,42 @@ function CrontabExport() {
       const res = await fetch(`/api/cron/export?baseUrl=${encodeURIComponent(baseUrl)}`);
       if (!res.ok) throw new Error('Failed to export');
       return res.json();
+    },
+  });
+
+  const { data: cronStatus, refetch: refetchStatus } = useQuery<{
+    isInstalled: boolean;
+    currentCrontab: string;
+    lastCheck: string;
+  }>({
+    queryKey: ['/api/cron/status'],
+    queryFn: async () => {
+      const res = await fetch('/api/cron/status');
+      if (!res.ok) throw new Error('Failed to check status');
+      return res.json();
+    },
+  });
+
+  const installMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/cron/install', { baseUrl });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      refetch();
+      refetchStatus();
+      if (data.installed) {
+        toast({ title: "Crontab instalado", description: `${data.stats?.enabledEntries || 0} entradas activas instaladas en el sistema` });
+      } else {
+        toast({ 
+          title: "Crontab generado", 
+          description: data.installError || "No se pudo instalar automáticamente. Usa la exportación manual.",
+          variant: "destructive" 
+        });
+      }
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo instalar el crontab", variant: "destructive" });
     },
   });
 
@@ -262,25 +302,53 @@ function CrontabExport() {
 
   return (
     <div className="space-y-4">
+      {/* Cron Status Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {cronStatus?.isInstalled ? (
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="font-medium">Crontab instalado en el sistema</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">Crontab no instalado</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => installMutation.mutate()} 
+                disabled={installMutation.isPending}
+                size="sm"
+              >
+                {installMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                {cronStatus?.isInstalled ? 'Reinstalar' : 'Instalar'} Crontab
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Los cambios en schedules se sincronizan automáticamente al cron del sistema cuando está disponible.
+            {cronStatus?.isInstalled && ' El cron seguirá ejecutando los pipelines incluso si Merlin Observer está detenido.'}
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileCode className="h-5 w-5" />
-            Exportar Crontab
+            Crontab
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Instrucciones</h4>
-            <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
-              <li>Configura la URL base del servidor donde corre Merlin Observer</li>
-              <li>Activa los schedules y targets que desees desde la pestaña Schedules</li>
-              <li>Copia el crontab generado</li>
-              <li>En el servidor Debian, ejecuta: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">crontab -e</code></li>
-              <li>Pega el contenido y guarda</li>
-            </ol>
-          </div>
-
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Label htmlFor="baseUrl">URL base del servidor</Label>
@@ -309,7 +377,7 @@ function CrontabExport() {
                 {cronData.stats.disabledEntries} desactivados
               </Badge>
               <Badge variant="outline">
-                {cronData.stats.enabledSchedules}/{cronData.stats.totalSchedules} schedules habilitados
+                {cronData.stats.enabledSchedules}/{cronData.stats.totalSchedules} schedules
               </Badge>
             </div>
           )}
@@ -332,6 +400,16 @@ function CrontabExport() {
                 {cronData?.crontab || '# No hay datos'}
               </pre>
             )}
+          </div>
+
+          <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Instalación manual (alternativa)</h4>
+            <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
+              <li>Configura la URL base del servidor donde corre Merlin Observer</li>
+              <li>Descarga o copia el crontab generado</li>
+              <li>En el servidor Debian, ejecuta: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">crontab -e</code></li>
+              <li>Pega el contenido y guarda</li>
+            </ol>
           </div>
         </CardContent>
       </Card>
@@ -509,6 +587,7 @@ export default function Schedules() {
         enabled: true,
       });
       toast({ title: "Schedule creado", description: "El schedule se ha creado correctamente" });
+      syncCronMutation.mutate();
     },
     onError: () => {
       toast({ title: "Error", description: "No se pudo crear el schedule", variant: "destructive" });
@@ -522,6 +601,7 @@ export default function Schedules() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      syncCronMutation.mutate();
     },
   });
 
@@ -534,6 +614,7 @@ export default function Schedules() {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
       setDeleteScheduleConfirm(null);
       toast({ title: "Schedule eliminado" });
+      syncCronMutation.mutate();
     },
   });
 
@@ -568,6 +649,7 @@ export default function Schedules() {
       setIsEditDialogOpen(false);
       setEditingSchedule(null);
       toast({ title: "Schedule actualizado", description: "Los cambios se han guardado correctamente" });
+      syncCronMutation.mutate();
     },
     onError: () => {
       toast({ title: "Error", description: "No se pudo actualizar el schedule", variant: "destructive" });
@@ -583,6 +665,7 @@ export default function Schedules() {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
       setDeleteTargetConfirm(null);
       toast({ title: "Pipeline eliminado del schedule" });
+      syncCronMutation.mutate();
     },
     onError: () => {
       toast({ title: "Error", description: "No se pudo eliminar el pipeline", variant: "destructive" });
@@ -597,9 +680,31 @@ export default function Schedules() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
       toast({ title: "Pipeline agregado al schedule" });
+      syncCronMutation.mutate();
     },
     onError: () => {
       toast({ title: "Error", description: "No se pudo agregar el pipeline", variant: "destructive" });
+    },
+  });
+
+  const syncCronMutation = useMutation({
+    mutationFn: async () => {
+      const baseUrl = localStorage.getItem('merlin-cron-baseurl') || 'http://localhost:5000';
+      return apiRequest('POST', '/api/cron/install', { baseUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cron/export'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cron/status'] });
+    },
+  });
+
+  const toggleTargetMutation = useMutation({
+    mutationFn: async ({ scheduleId, targetId, enabled }: { scheduleId: number; targetId: number; enabled: boolean }) => {
+      return apiRequest('PATCH', `/api/schedules/${scheduleId}/targets/${targetId}`, { enabled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+      syncCronMutation.mutate();
     },
   });
 
@@ -945,11 +1050,11 @@ export default function Schedules() {
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                              {schedule.targets.length} pipelines
+                              {schedule.targets.filter(t => t.enabled !== false).length}/{schedule.targets.length} pipelines activos
                               {schedule.targets.length > 0 && (
                                 <span className="ml-2">
-                                  ({schedule.targets.slice(0, 3).map(t => t.pipelineName || t.pipelineId.slice(0, 8)).join(", ")}
-                                  {schedule.targets.length > 3 && ` +${schedule.targets.length - 3} más`})
+                                  ({schedule.targets.filter(t => t.enabled !== false).slice(0, 3).map(t => t.pipelineName || t.pipelineId.slice(0, 8)).join(", ")}
+                                  {schedule.targets.filter(t => t.enabled !== false).length > 3 && ` +${schedule.targets.filter(t => t.enabled !== false).length - 3} más`})
                                 </span>
                               )}
                             </div>
@@ -1400,12 +1505,23 @@ export default function Schedules() {
                   ) : (
                     <div className="space-y-2">
                       {editingSchedule.targets.map(target => (
-                        <div key={target.id} className="flex items-center justify-between p-2 rounded border bg-muted/30">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{target.pipelineName || target.pipelineId}</p>
-                            {target.clientName && (
-                              <p className="text-xs text-muted-foreground">{target.clientName}</p>
-                            )}
+                        <div key={target.id} className={`flex items-center justify-between p-2 rounded border ${target.enabled !== false ? 'bg-muted/30' : 'bg-muted/10 opacity-60'}`}>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Switch
+                              checked={target.enabled !== false}
+                              onCheckedChange={(enabled) => toggleTargetMutation.mutate({ 
+                                scheduleId: editingSchedule.id, 
+                                targetId: target.id, 
+                                enabled 
+                              })}
+                              className="shrink-0 scale-75"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{target.pipelineName || target.pipelineId}</p>
+                              {target.clientName && (
+                                <p className="text-xs text-muted-foreground">{target.clientName}</p>
+                              )}
+                            </div>
                           </div>
                           <Button
                             variant="ghost"

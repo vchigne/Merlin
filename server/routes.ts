@@ -14,6 +14,11 @@ import {
 import { PipelineTemplateManager } from "../client/src/lib/pipeline-template-manager";
 import { parseSchedulerFile } from "./schedule-parser";
 import { z } from "zod";
+import { exec } from "child_process";
+import { promisify } from "util";
+import * as fs from "fs";
+
+const execAsync = promisify(exec);
 
 const frequencyTypeEnum = z.enum(["daily", "weekly", "monthly"]);
 
@@ -649,6 +654,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Toggle/update target
+  app.patch('/api/schedules/:scheduleId/targets/:targetId', async (req, res) => {
+    try {
+      const scheduleId = parseInt(req.params.scheduleId);
+      const targetId = parseInt(req.params.targetId);
+      
+      const updateSchema = z.object({
+        enabled: z.boolean().optional(),
+        pipelineName: z.string().optional(),
+        clientName: z.string().optional(),
+        notes: z.string().optional(),
+      });
+      const parsed = updateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid update data', details: parsed.error.errors });
+      }
+
+      const updated = await storage.updateScheduleTarget(targetId, parsed.data);
+      
+      if (!updated) {
+        return res.status(404).json({ error: 'Target not found' });
+      }
+
+      if (updated.scheduleId !== scheduleId) {
+        return res.status(400).json({ error: 'Target does not belong to this schedule' });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating target:', error);
+      res.status(500).json({ error: 'Failed to update target' });
+    }
+  });
+  
   // Bulk import schedules (for migration from Python file)
   app.post('/api/schedules/import', async (req, res) => {
     try {
@@ -820,6 +859,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Execute multiple pipelines in batch (server-side, for crontab usage)
+  app.post('/api/cron/execute-batch', async (req, res) => {
+    try {
+      const { pipelineIds } = req.body;
+      
+      if (!Array.isArray(pipelineIds) || pipelineIds.length === 0) {
+        return res.status(400).json({ error: 'pipelineIds must be a non-empty array' });
+      }
+
+      const invalidIds = pipelineIds.filter((id: string) => !/^[0-9a-f-]{36}$/i.test(id));
+      if (invalidIds.length > 0) {
+        return res.status(400).json({ error: 'Invalid pipeline IDs', invalidIds });
+      }
+
+      const objects = pipelineIds.map((id: string) => ({ pipeline_id: id }));
+
+      const result = await hasuraClient.query(`
+        mutation ExecutePipelineBatch($objects: [merlin_agent_PipelineJobQueue_insert_input!]!) {
+          insert_merlin_agent_PipelineJobQueue(objects: $objects) {
+            returning {
+              id
+              pipeline_id
+              running
+              completed
+              created_at
+            }
+          }
+        }
+      `, { objects });
+
+      if (result.errors) {
+        console.error('Cron batch execute error:', result.errors);
+        return res.status(500).json({ error: result.errors[0].message });
+      }
+
+      const jobs = result.data?.insert_merlin_agent_PipelineJobQueue?.returning || [];
+      console.log(`[CRON] Batch executed ${jobs.length} pipelines`);
+      
+      res.json({ 
+        success: true, 
+        count: jobs.length,
+        jobs: jobs.map((j: any) => ({ id: j.id, pipelineId: j.pipeline_id, createdAt: j.created_at }))
+      });
+    } catch (error: any) {
+      console.error('[CRON] Batch execute error:', error);
+      res.status(500).json({ error: error.message || 'Failed to execute batch' });
+    }
+  });
+
   // Export crontab content from enabled schedules
   app.get('/api/cron/export', async (req, res) => {
     try {
@@ -888,12 +976,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             cronTime = `${minutes} ${hours} * * *`;
         }
 
-        for (const target of enabledTargets) {
-          const comment = `${target.pipelineName || ''}${target.clientName ? ' [' + target.clientName + ']' : ''}`;
-          lines.push(`# ${comment}`);
-          lines.push(`${cronTime} curl -s -X POST ${baseUrl}/api/cron/execute/${target.pipelineId} > /dev/null 2>&1`);
-          enabledCount++;
-        }
+        const pipelineIds = enabledTargets.map(t => t.pipelineId);
+        const comments = enabledTargets.map(t => `${t.pipelineName || ''}${t.clientName ? ' [' + t.clientName + ']' : ''}`);
+        lines.push(`# Pipelines: ${comments.join(', ')}`);
+        const jsonPayload = JSON.stringify({ pipelineIds });
+        lines.push(`${cronTime} curl -s -X POST -H "Content-Type: application/json" -d '${jsonPayload}' ${baseUrl}/api/cron/execute-batch > /dev/null 2>&1`);
+        enabledCount += enabledTargets.length;
 
         disabledCount += scheduleTargets.filter((t: any) => !t.enabled).length;
 
@@ -924,6 +1012,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('[CRON] Export error:', error);
       res.status(500).json({ error: error.message || 'Failed to export crontab' });
+    }
+  });
+
+  // Install crontab to system cron (production Debian only)
+  app.post('/api/cron/install', async (req, res) => {
+    try {
+      const configs = await storage.getScheduleConfigs();
+      const targets = await storage.getAllScheduleTargets();
+
+      const baseUrl = req.body.baseUrl || process.env.MERLIN_BASE_URL || 'http://localhost:5000';
+      
+      const lines: string[] = [];
+      lines.push('# ============================================');
+      lines.push('# Merlin Observer - Auto-generated Crontab');
+      lines.push(`# Generated: ${new Date().toISOString()}`);
+      lines.push(`# Base URL: ${baseUrl}`);
+      lines.push('# DO NOT EDIT MANUALLY - managed by Merlin Observer');
+      lines.push('# ============================================');
+      lines.push('');
+      lines.push('SHELL=/bin/bash');
+      lines.push('PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin');
+      lines.push('');
+
+      let enabledCount = 0;
+      let disabledCount = 0;
+
+      for (const config of configs) {
+        const scheduleTargets = targets.filter(t => t.scheduleId === config.id);
+        const enabledTargets = scheduleTargets.filter(t => t.enabled);
+        
+        if (!config.enabled) {
+          disabledCount += scheduleTargets.length;
+          continue;
+        }
+
+        if (enabledTargets.length === 0) {
+          continue;
+        }
+
+        lines.push(`# --- ${config.label} ---`);
+
+        if (config.timezone) {
+          lines.push(`CRON_TZ=${config.timezone}`);
+        }
+
+        const [hours, minutes] = config.timeOfDay.split(':').map(Number);
+        
+        let cronTime = '';
+        switch (config.frequencyType) {
+          case 'daily':
+            cronTime = `${minutes} ${hours} * * *`;
+            break;
+          case 'weekly':
+            if (config.daysOfWeek) {
+              const mondayBasedDays = config.daysOfWeek.split(',').map(Number);
+              const cronDays = mondayBasedDays.map(d => (d + 1) % 7).join(',');
+              cronTime = `${minutes} ${hours} * * ${cronDays}`;
+            } else {
+              cronTime = `${minutes} ${hours} * * 1-5`;
+            }
+            break;
+          case 'monthly':
+            if (config.daysOfMonth) {
+              cronTime = `${minutes} ${hours} ${config.daysOfMonth} * *`;
+            } else {
+              cronTime = `${minutes} ${hours} 1 * *`;
+            }
+            break;
+          default:
+            cronTime = `${minutes} ${hours} * * *`;
+        }
+
+        const pipelineIds = enabledTargets.map(t => t.pipelineId);
+        const comments = enabledTargets.map(t => `${t.pipelineName || ''}${t.clientName ? ' [' + t.clientName + ']' : ''}`);
+        lines.push(`# Pipelines: ${comments.join(', ')}`);
+        const jsonPayload = JSON.stringify({ pipelineIds });
+        lines.push(`${cronTime} curl -s -X POST -H "Content-Type: application/json" -d '${jsonPayload}' ${baseUrl}/api/cron/execute-batch > /dev/null 2>&1`);
+        enabledCount += enabledTargets.length;
+
+        disabledCount += scheduleTargets.filter((t: any) => !t.enabled).length;
+
+        lines.push('');
+      }
+
+      lines.push('# ============================================');
+      lines.push(`# Total: ${enabledCount} active, ${disabledCount} disabled`);
+      lines.push('# ============================================');
+
+      const crontab = lines.join('\n');
+
+      let installed = false;
+      let installError = '';
+      
+      try {
+        const tmpFile = '/tmp/merlin-crontab';
+        fs.writeFileSync(tmpFile, crontab + '\n');
+        await execAsync(`crontab ${tmpFile}`);
+        fs.unlinkSync(tmpFile);
+        installed = true;
+        console.log(`[CRON] Crontab installed: ${enabledCount} active entries`);
+      } catch (err: any) {
+        installError = err.message || 'Failed to install crontab';
+        console.warn(`[CRON] Could not install crontab to system: ${installError}`);
+        // This is expected in dev environments (Replit) - not a fatal error
+      }
+
+      res.json({ 
+        success: true,
+        installed,
+        installError: installed ? undefined : installError,
+        crontab,
+        stats: {
+          enabledEntries: enabledCount,
+          disabledEntries: disabledCount,
+          totalSchedules: configs.length,
+          enabledSchedules: configs.filter(c => c.enabled).length
+        }
+      });
+    } catch (error: any) {
+      console.error('[CRON] Install error:', error);
+      res.status(500).json({ error: error.message || 'Failed to install crontab' });
+    }
+  });
+
+  // Get current cron installation status
+  app.get('/api/cron/status', async (req, res) => {
+    try {
+      let currentCrontab = '';
+      let isInstalled = false;
+      
+      try {
+        const { stdout } = await execAsync('crontab -l');
+        currentCrontab = stdout;
+        isInstalled = currentCrontab.includes('Merlin Observer');
+      } catch (err: any) {
+        // No crontab installed or command not available
+        currentCrontab = '';
+        isInstalled = false;
+      }
+
+      res.json({ 
+        isInstalled,
+        currentCrontab,
+        lastCheck: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 
