@@ -773,6 +773,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // CRON ENDPOINTS
+  // ============================================
+
+  // Execute a pipeline by ID (server-side, for crontab usage)
+  app.post('/api/cron/execute/:pipelineId', async (req, res) => {
+    try {
+      const { pipelineId } = req.params;
+      
+      if (!pipelineId || !/^[0-9a-f-]{36}$/i.test(pipelineId)) {
+        return res.status(400).json({ error: 'Invalid pipeline ID' });
+      }
+
+      const result = await hasuraClient.query(`
+        mutation ExecutePipeline($pipelineId: uuid!) {
+          insert_merlin_agent_PipelineJobQueue(objects: [{pipeline_id: $pipelineId}]) {
+            returning {
+              id
+              pipeline_id
+              running
+              completed
+              created_at
+            }
+          }
+        }
+      `, { pipelineId });
+
+      if (result.errors) {
+        console.error('Cron execute error:', result.errors);
+        return res.status(500).json({ error: result.errors[0].message });
+      }
+
+      const job = result.data?.insert_merlin_agent_PipelineJobQueue?.returning?.[0];
+      console.log(`[CRON] Pipeline ${pipelineId} executed, job: ${job?.id}`);
+      
+      res.json({ 
+        success: true, 
+        pipelineId,
+        jobId: job?.id,
+        createdAt: job?.created_at
+      });
+    } catch (error: any) {
+      console.error('[CRON] Execute error:', error);
+      res.status(500).json({ error: error.message || 'Failed to execute pipeline' });
+    }
+  });
+
+  // Export crontab content from enabled schedules
+  app.get('/api/cron/export', async (req, res) => {
+    try {
+      const configs = await storage.getScheduleConfigs();
+      const targets = await storage.getAllScheduleTargets();
+
+      const baseUrl = req.query.baseUrl as string || 'http://localhost:5000';
+      
+      const lines: string[] = [];
+      lines.push('# ============================================');
+      lines.push('# Merlin Observer - Auto-generated Crontab');
+      lines.push(`# Generated: ${new Date().toISOString()}`);
+      lines.push(`# Base URL: ${baseUrl}`);
+      lines.push('# ============================================');
+      lines.push('');
+      lines.push('SHELL=/bin/bash');
+      lines.push('PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin');
+      lines.push('');
+
+      let enabledCount = 0;
+      let disabledCount = 0;
+
+      for (const config of configs) {
+        const scheduleTargets = targets.filter(t => t.scheduleId === config.id);
+        const enabledTargets = scheduleTargets.filter(t => t.enabled);
+        
+        if (!config.enabled) {
+          disabledCount += scheduleTargets.length;
+          continue;
+        }
+
+        if (enabledTargets.length === 0) {
+          continue;
+        }
+
+        lines.push(`# --- ${config.label} ---`);
+
+        if (config.timezone) {
+          lines.push(`CRON_TZ=${config.timezone}`);
+        }
+
+        const [hours, minutes] = config.timeOfDay.split(':').map(Number);
+        
+        let cronTime = '';
+        switch (config.frequencyType) {
+          case 'daily':
+            cronTime = `${minutes} ${hours} * * *`;
+            break;
+          case 'weekly':
+            if (config.daysOfWeek) {
+              const mondayBasedDays = config.daysOfWeek.split(',').map(Number);
+              const cronDays = mondayBasedDays.map(d => (d + 1) % 7).join(',');
+              cronTime = `${minutes} ${hours} * * ${cronDays}`;
+            } else {
+              cronTime = `${minutes} ${hours} * * 1-5`;
+            }
+            break;
+          case 'monthly':
+            if (config.daysOfMonth) {
+              cronTime = `${minutes} ${hours} ${config.daysOfMonth} * *`;
+            } else {
+              cronTime = `${minutes} ${hours} 1 * *`;
+            }
+            break;
+          default:
+            cronTime = `${minutes} ${hours} * * *`;
+        }
+
+        for (const target of enabledTargets) {
+          const comment = `${target.pipelineName || ''}${target.clientName ? ' [' + target.clientName + ']' : ''}`;
+          lines.push(`# ${comment}`);
+          lines.push(`${cronTime} curl -s -X POST ${baseUrl}/api/cron/execute/${target.pipelineId} > /dev/null 2>&1`);
+          enabledCount++;
+        }
+
+        disabledCount += scheduleTargets.filter((t: any) => !t.enabled).length;
+
+        lines.push('');
+      }
+
+      lines.push('# ============================================');
+      lines.push(`# Total: ${enabledCount} active, ${disabledCount} disabled`);
+      lines.push('# ============================================');
+
+      const crontab = lines.join('\n');
+      
+      if (req.query.format === 'text') {
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', 'attachment; filename="merlin-crontab"');
+        return res.send(crontab);
+      }
+
+      res.json({ 
+        crontab,
+        stats: {
+          enabledEntries: enabledCount,
+          disabledEntries: disabledCount,
+          totalSchedules: configs.length,
+          enabledSchedules: configs.filter(c => c.enabled).length
+        }
+      });
+    } catch (error: any) {
+      console.error('[CRON] Export error:', error);
+      res.status(500).json({ error: error.message || 'Failed to export crontab' });
+    }
+  });
+
   return httpServer;
 }
 

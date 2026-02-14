@@ -220,6 +220,125 @@ const MONTH_NAMES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
+function CrontabExport() {
+  const { toast } = useToast();
+  const [baseUrl, setBaseUrl] = useState("http://localhost:5000");
+  const [copied, setCopied] = useState(false);
+
+  const { data: cronData, isLoading, refetch } = useQuery<{
+    crontab: string;
+    stats: { enabledEntries: number; disabledEntries: number; totalSchedules: number; enabledSchedules: number };
+  }>({
+    queryKey: ['/api/cron/export', baseUrl],
+    queryFn: async () => {
+      const res = await fetch(`/api/cron/export?baseUrl=${encodeURIComponent(baseUrl)}`);
+      if (!res.ok) throw new Error('Failed to export');
+      return res.json();
+    },
+  });
+
+  const handleCopy = async () => {
+    if (!cronData?.crontab) return;
+    try {
+      await navigator.clipboard.writeText(cronData.crontab);
+      setCopied(true);
+      toast({ title: "Copiado", description: "Crontab copiado al portapapeles" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Error", description: "No se pudo copiar", variant: "destructive" });
+    }
+  };
+
+  const handleDownload = () => {
+    if (!cronData?.crontab) return;
+    const blob = new Blob([cronData.crontab], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'merlin-crontab';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCode className="h-5 w-5" />
+            Exportar Crontab
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Instrucciones</h4>
+            <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
+              <li>Configura la URL base del servidor donde corre Merlin Observer</li>
+              <li>Activa los schedules y targets que desees desde la pestaña Schedules</li>
+              <li>Copia el crontab generado</li>
+              <li>En el servidor Debian, ejecuta: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">crontab -e</code></li>
+              <li>Pega el contenido y guarda</li>
+            </ol>
+          </div>
+
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Label htmlFor="baseUrl">URL base del servidor</Label>
+              <Input
+                id="baseUrl"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder="http://localhost:5000"
+                className="mt-1"
+              />
+            </div>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Regenerar
+            </Button>
+          </div>
+
+          {cronData?.stats && (
+            <div className="flex gap-4 text-sm">
+              <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                {cronData.stats.enabledEntries} activos
+              </Badge>
+              <Badge variant="outline" className="bg-slate-50 text-slate-600 dark:bg-slate-900/20 dark:text-slate-400">
+                <Pause className="h-3 w-3 mr-1" />
+                {cronData.stats.disabledEntries} desactivados
+              </Badge>
+              <Badge variant="outline">
+                {cronData.stats.enabledSchedules}/{cronData.stats.totalSchedules} schedules habilitados
+              </Badge>
+            </div>
+          )}
+
+          <div className="relative">
+            <div className="absolute top-2 right-2 flex gap-2 z-10">
+              <Button size="sm" variant="outline" onClick={handleCopy}>
+                {copied ? <Check className="h-4 w-4 mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                {copied ? "Copiado" : "Copiar"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleDownload}>
+                <FileCode className="h-4 w-4 mr-1" />
+                Descargar
+              </Button>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-[400px] w-full" />
+            ) : (
+              <pre className="bg-slate-950 text-green-400 p-4 rounded-lg overflow-auto max-h-[500px] text-xs font-mono leading-relaxed">
+                {cronData?.crontab || '# No hay datos'}
+              </pre>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function Schedules() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("schedules");
@@ -728,6 +847,10 @@ export default function Schedules() {
             <Calendar className="h-4 w-4" />
             Próximas
           </TabsTrigger>
+          <TabsTrigger value="crontab" className="gap-2">
+            <FileCode className="h-4 w-4" />
+            Crontab
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="schedules" className="mt-4">
@@ -1193,6 +1316,10 @@ export default function Schedules() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="crontab" className="mt-4">
+          <CrontabExport />
         </TabsContent>
       </Tabs>
 
