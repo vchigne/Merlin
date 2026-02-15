@@ -1,0 +1,398 @@
+================================================================================
+  MANUAL COMPLETO: ACCESO A LOGS DE MERLIN VIA HASURA GRAPHQL
+================================================================================
+
+1. URL Y ACCESO
+================================================================================
+
+URL del endpoint GraphQL:
+  https://graph.dq.strategio.cloud/v1/graphql
+
+Consola Hasura (interfaz web para ejecutar queries):
+  https://graph.dq.strategio.cloud/console
+
+Header de autenticacion (para todas las peticiones):
+  x-hasura-admin-secret: <la clave admin que ya tienen>
+
+Para probar directamente: van a la consola web, ingresan la clave admin,
+y pueden ejecutar queries desde el editor GraphQL integrado.
+
+
+2. LAS 3 TABLAS DE LOGS
+================================================================================
+
+Merlin tiene 3 tablas de logs, organizadas en dos generaciones:
+
+  Tabla                    | Nombre en Hasura                        | Generacion      | Uso actual
+  -------------------------|-----------------------------------------|-----------------|---------------------------
+  PipelineJobLog           | merlin_agent_PipelineJobLog             | Legacy (V1)     | Ya no se usa activamente
+  PipelineJobLogV2         | merlin_agent_PipelineJobLogV2           | V2 - Cabecera   | Registro resumen por unidad
+  PipelineJobLogV2Body     | merlin_agent_PipelineJobLogV2Body       | V2 - Detalle    | LOS LOGS REALES QUE IMPORTAN
+
+
+3. PipelineJobLog (Legacy V1) - YA CASI NO SE USA
+================================================================================
+
+Esta es la tabla original. Guarda todo el log en campos de texto plano
+dentro del mismo registro.
+
+Tabla: merlin_agent_PipelineJobLog
+
+Campos:
+  id                      uuid       ID unico del registro
+  pipeline_job_id         uuid       ID del trabajo (liga al job en PipelineJobQueue)
+  pipeline_unit_id        uuid       ID de la unidad/paso del pipeline que genero el log
+  logs                    text       Todo el texto de logs (texto plano, sin estructura)
+  warnings                text       Advertencias en texto plano
+  errors                  text       Errores en texto plano
+  dqprocess_status_id     text       Estado del proceso (interno)
+  log_order               integer    Orden del log dentro del job (1, 2, 3...)
+  milliseconds            integer    Cuanto tardo esa unidad en milisegundos
+  checked_by_notificator  boolean    Si el sistema de alertas ya lo reviso
+  created_at              timestamp  Cuando se creo
+  updated_at              timestamp  Cuando se actualizo
+
+Query para consultar:
+
+  query GetPipelineJobLogs($jobId: uuid!) {
+    merlin_agent_PipelineJobLog(
+      where: {pipeline_job_id: {_eq: $jobId}},
+      order_by: {log_order: asc}
+    ) {
+      id
+      pipeline_job_id
+      pipeline_unit_id
+      logs
+      warnings
+      errors
+      dqprocess_status_id
+      log_order
+      milliseconds
+      checked_by_notificator
+      created_at
+      updated_at
+    }
+  }
+
+Problema de V1: Todo esta en texto plano sin nivel de severidad, sin stack
+traces estructurados, sin informacion del callsite. Por eso se creo V2.
+
+
+4. PipelineJobLogV2 (Cabecera V2)
+================================================================================
+
+Esta tabla es la CABECERA del log V2. Tiene metadatos sobre la ejecucion
+de cada unidad, pero NO tiene el contenido del log en si.
+
+Tabla: merlin_agent_PipelineJobLogV2
+
+Campos:
+  id                      integer    ID unico
+  pipeline_job_id         uuid       ID del trabajo
+  pipeline_unit_id        uuid       ID de la unidad ejecutada
+  dqprocess_status_id     integer    Estado del proceso
+  log_order               integer    Orden de ejecucion dentro del job
+  milliseconds            integer    Tiempo de ejecucion en ms
+  checked_by_notificator  boolean    Si fue revisado por alertas
+  created_at              timestamp  Fecha de creacion
+
+Query:
+
+  query GetPipelineJobLogsV2($jobId: uuid!) {
+    merlin_agent_PipelineJobLogV2(
+      where: {pipeline_job_id: {_eq: $jobId}},
+      order_by: {log_order: asc}
+    ) {
+      id
+      pipeline_job_id
+      pipeline_unit_id
+      dqprocess_status_id
+      log_order
+      milliseconds
+      checked_by_notificator
+      created_at
+    }
+  }
+
+Relacion: Cada registro de esta tabla puede tener multiples registros
+en PipelineJobLogV2Body (relacion 1:N).
+
+
+5. PipelineJobLogV2Body (Detalle V2) - LA TABLA PRINCIPAL
+================================================================================
+
+Esta es LA TABLA QUE MAS VAN A USAR. Contiene el detalle real de cada
+entrada de log con nivel de severidad, mensajes, excepciones y stack traces.
+
+Tabla: merlin_agent_PipelineJobLogV2Body
+
+Campos:
+  id                        integer    ID unico
+  pipeline_job_id           uuid       ID del trabajo
+  pipeline_unit_id          uuid       ID de la unidad
+  pipeline_unit_context_id  uuid       ID del contexto de ejecucion
+  date                      timestamp  Fecha/hora exacta del evento
+  level                     text       Nivel: ERROR, WARNING, INFO, DEBUG
+  message                   text       EL MENSAJE DEL LOG
+  callsite                  text       Punto del codigo C# que genero el log
+  exception                 text       Nombre de la excepcion (ej: System.IO.FileNotFoundException)
+  exception_message         text       Mensaje de la excepcion
+  exception_stack_trace     text       Stack trace completo para debugging
+  created_at                timestamp  Fecha de creacion en la BD
+
+Niveles de log:
+  ERROR   - Errores que detuvieron la ejecucion
+  WARNING - Advertencias que no detienen la ejecucion
+  INFO    - Informacion general del progreso
+  DEBUG   - Informacion de depuracion detallada
+
+
+6. QUERIES UTILES PARA EL DIA A DIA
+================================================================================
+
+A) Ver los ultimos 50 logs (todos los niveles):
+
+  query RecentLogs {
+    merlin_agent_PipelineJobLogV2Body(
+      limit: 50,
+      order_by: {created_at: desc}
+    ) {
+      id
+      pipeline_job_id
+      pipeline_unit_id
+      date
+      level
+      message
+      callsite
+      exception
+      exception_message
+      exception_stack_trace
+      created_at
+    }
+  }
+
+B) Ver solo errores recientes:
+
+  query RecentErrors {
+    merlin_agent_PipelineJobLogV2Body(
+      limit: 50,
+      order_by: {created_at: desc},
+      where: {level: {_eq: "ERROR"}}
+    ) {
+      id
+      pipeline_job_id
+      date
+      level
+      message
+      exception
+      exception_message
+      exception_stack_trace
+      created_at
+    }
+  }
+
+C) Ver logs de un job especifico (necesitan el job ID):
+
+  query LogsDeUnJob($jobId: uuid!) {
+    merlin_agent_PipelineJobLogV2Body(
+      where: {pipeline_job_id: {_eq: $jobId}},
+      order_by: {date: asc}
+    ) {
+      id
+      date
+      level
+      message
+      callsite
+      exception_message
+      exception_stack_trace
+    }
+  }
+
+  Variable: {"jobId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+
+D) Contar errores (para monitoreo):
+
+  query ContarErrores {
+    merlin_agent_PipelineJobLogV2Body_aggregate(
+      where: {level: {_eq: "ERROR"}}
+    ) {
+      aggregate {
+        count
+      }
+    }
+  }
+
+E) Ver trabajos recientes (para obtener job IDs):
+
+  query TrabajosRecientes {
+    merlin_agent_PipelineJobQueue(
+      limit: 20,
+      order_by: {created_at: desc}
+    ) {
+      id
+      pipeline_id
+      completed
+      running
+      aborted
+      created_at
+      started_by_agent
+      Pipeline {
+        name
+      }
+    }
+  }
+
+
+7. DIFERENCIAS CLAVE ENTRE LOG V1 Y V2
+================================================================================
+
+  Caracteristica  | V1 (PipelineJobLog)          | V2 (LogV2 + LogV2Body)
+  ----------------|------------------------------|--------------------------------
+  Estructura      | Todo en texto plano          | Campos separados y tipados
+  Niveles         | No tiene                     | ERROR, WARNING, INFO, DEBUG
+  Filtrado        | Hay que buscar en texto      | Se filtra por campo "level"
+  Excepciones     | Mezcladas en campo "errors"  | Campos separados: exception,
+                  |                              | exception_message, exception_stack_trace
+  Callsite        | No tiene                     | Campo callsite muestra que codigo lo genero
+  Relacion        | 1 registro = 1 unidad        | Cabecera (LogV2) + N detalles (LogV2Body)
+  Contexto        | No tiene                     | pipeline_unit_context_id para agrupar
+  Uso actual      | Legacy, ya no se genera      | ACTIVO, los agentes generan estos logs
+
+CONCLUSION: Siempre usen merlin_agent_PipelineJobLogV2Body para consultas.
+La tabla legacy solo sirve para datos historicos antiguos.
+
+
+8. EL CAMPO "description" DEL PIPELINE COMO TEMPLATE
+================================================================================
+
+Tabla: merlin_agent_Pipeline
+
+Query para ver pipelines con su descripcion:
+
+  query GetPipelines {
+    merlin_agent_Pipeline {
+      id
+      name
+      description
+      abort_on_error
+      agent_passport_id
+      created_at
+      updated_at
+    }
+  }
+
+Como funciona el campo "description":
+
+El campo "description" de cada pipeline se usa en Merlin Observer como la
+base para generar templates reutilizables. Cuando se analiza un pipeline
+existente para crear un template, el sistema toma:
+
+  1. El "name" del pipeline como nombre del template
+  2. El "description" como descripcion del template
+  3. La estructura completa de PipelineUnit (los pasos) como el cuerpo del template
+
+Para actualizar la descripcion de un pipeline (la unica mutacion permitida):
+
+  mutation UpdatePipelineDescription($id: uuid!, $description: String!) {
+    update_merlin_agent_Pipeline_by_pk(
+      pk_columns: {id: $id},
+      _set: {description: $description}
+    ) {
+      id
+      name
+      description
+    }
+  }
+
+  Variable: {
+    "id": "uuid-del-pipeline",
+    "description": "Pipeline que exporta datos SQL, comprime y sube por SFTP a servidor cliente"
+  }
+
+Buenas practicas para el campo description:
+  - Describir QUE hace el pipeline en una oracion clara
+  - Incluir el tipo de operaciones (SQL, SFTP, comando, etc.)
+  - Mencionar el cliente o sistema destino
+  - Esto permite que el Pipeline Studio genere templates utiles para
+    replicar pipelines similares
+
+
+9. EJEMPLO COMPLETO: INVESTIGAR UN ERROR
+================================================================================
+
+Flujo de trabajo para investigar un problema:
+
+PASO 1 - Buscar errores recientes:
+
+  query {
+    merlin_agent_PipelineJobLogV2Body(
+      limit: 10,
+      order_by: {created_at: desc},
+      where: {level: {_eq: "ERROR"}}
+    ) {
+      id
+      pipeline_job_id
+      date
+      message
+      exception_message
+      exception_stack_trace
+    }
+  }
+
+PASO 2 - Con el pipeline_job_id del error, ver el job completo:
+
+  query($jobId: uuid!) {
+    merlin_agent_PipelineJobQueue_by_pk(id: $jobId) {
+      id
+      pipeline_id
+      completed
+      running
+      aborted
+      created_at
+      Pipeline {
+        name
+        description
+      }
+    }
+  }
+
+PASO 3 - Ver TODOS los logs de ese job (para contexto completo):
+
+  query($jobId: uuid!) {
+    merlin_agent_PipelineJobLogV2Body(
+      where: {pipeline_job_id: {_eq: $jobId}},
+      order_by: {date: asc}
+    ) {
+      date
+      level
+      message
+      callsite
+      exception
+      exception_message
+      exception_stack_trace
+    }
+  }
+
+
+10. ACCESO VIA CURL (PARA SCRIPTS)
+================================================================================
+
+  curl -X POST \
+    https://graph.dq.strategio.cloud/v1/graphql \
+    -H "Content-Type: application/json" \
+    -H "x-hasura-admin-secret: SU_CLAVE_ADMIN" \
+    -d '{
+      "query": "query { merlin_agent_PipelineJobLogV2Body(limit: 10, order_by: {created_at: desc}, where: {level: {_eq: \"ERROR\"}}) { id date message exception_message created_at } }"
+    }'
+
+
+================================================================================
+  FIN DEL MANUAL
+================================================================================
+
+Resumen rapido:
+  - URL: https://graph.dq.strategio.cloud/v1/graphql
+  - Consola: https://graph.dq.strategio.cloud/console
+  - Tabla principal de logs: merlin_agent_PipelineJobLogV2Body
+  - Tabla legacy (no usar): merlin_agent_PipelineJobLog
+  - Para templates: campo "description" en merlin_agent_Pipeline
